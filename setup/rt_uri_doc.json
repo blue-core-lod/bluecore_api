@@ -1,0 +1,106 @@
+{
+  "id": "sinopia:template:uri",
+  "user": "justinlittman",
+  "group": "ld4p",
+  "timestamp": "2020-08-06T20:37:09.126Z",
+  "data": [
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasResourceTemplate": "sinopia:template:resource"
+    },
+    {
+      "@id": "",
+      "@type": "http://sinopia.io/vocabulary/ResourceTemplate"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasResourceId": "sinopia:template:uri"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasClass": {
+        "@id": "http://sinopia.io/vocabulary/Uri"
+      }
+    },
+    {
+      "@id": "",
+      "http://www.w3.org/2000/01/rdf-schema#label": "URI"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasRemark": "A URI."
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
+        "@id": "_:b1"
+      }
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
+        "@id": "_:b2"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+    },
+    {
+      "@id": "_:b1",
+      "http://www.w3.org/2000/01/rdf-schema#label": "URI"
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasRemark": "URI"
+    },
+    {
+      "@id": "_:b1",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
+        "@id": "http://sinopia.io/vocabulary/hasUri"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasCardinality": {
+        "@id": "http://sinopia.io/vocabulary/cardinality/required"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasPropertyType": {
+        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+    },
+    {
+      "@id": "_:b2",
+      "http://www.w3.org/2000/01/rdf-schema#label": "Label"
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasRemark": "Label"
+    },
+    {
+      "@id": "_:b2",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
+        "@id": "http://www.w3.org/2000/01/rdf-schema#label"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasCardinality": {
+        "@id": "http://sinopia.io/vocabulary/cardinality/required"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasPropertyType": {
+        "@id": "http://sinopia.io/vocabulary/propertyType/literal"
+      }
+    }
+  ]
+}

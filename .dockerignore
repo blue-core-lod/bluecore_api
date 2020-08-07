@@ -1,0 +1,10 @@
+.circleci
+.git
+.gitignore
+build_support
+builds
+coverage
+docs
+dist
+node_modules
+.env

@@ -1,0 +1,5 @@
+FROM mongo:4.4
+
+COPY setup/* /scripts/
+
+CMD [ "bash", "/scripts/init-mongo.sh"]

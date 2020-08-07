@@ -1,0 +1,128 @@
+{
+  "id": "sinopia:template:property:lookup",
+  "user": "justinlittman",
+  "group": "ld4p",
+  "timestamp": "2020-08-06T20:37:09.126Z",
+  "data": [
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasResourceTemplate": "sinopia:template:resource"
+    },
+    {
+      "@id": "",
+      "@type": "http://sinopia.io/vocabulary/ResourceTemplate"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasResourceId": "sinopia:template:property:lookup"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasClass": {
+        "@id": "http://sinopia.io/vocabulary/LookupPropertyTemplate"
+      }
+    },
+    {
+      "@id": "",
+      "http://www.w3.org/2000/01/rdf-schema#label": "Lookup attributes"
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a lookup property."
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
+        "@id": "_:b1"
+      }
+    },
+    {
+      "@id": "",
+      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
+        "@id": "_:b2"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+    },
+    {
+      "@id": "_:b1",
+      "http://www.w3.org/2000/01/rdf-schema#label": "Authorities"
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasRemark": "Authorities for lookup."
+    },
+    {
+      "@id": "_:b1",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
+        "@id": "http://sinopia.io/vocabulary/hasAuthority"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasCardinality": {
+        "@id": "http://sinopia.io/vocabulary/cardinality/required"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasCardinality": {
+        "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+      }
+    },
+    {
+      "@id": "_:b1",
+      "http://sinopia.io/vocabulary/hasPropertyType": {
+        "@id": "http://sinopia.io/vocabulary/propertyType/literal"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+    },
+    {
+      "@id": "_:b2",
+      "http://www.w3.org/2000/01/rdf-schema#label": "Defaults"
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasRemark": "Default URIs."
+    },
+    {
+      "@id": "_:b2",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
+        "@id": "http://sinopia.io/vocabulary/hasDefault"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasCardinality": {
+        "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasPropertyType": {
+        "@id": "http://sinopia.io/vocabulary/propertyType/resource"
+      }
+    },
+    {
+      "@id": "_:b2",
+      "http://sinopia.io/vocabulary/hasResourceAttributes": {
+        "@id": "_:b3"
+      }
+    },
+    {
+      "@id": "_:b3",
+      "@type": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+    },
+    {
+      "@id": "_:b3",
+      "http://sinopia.io/vocabulary/hasResourceTemplateId": {
+        "@id": "sinopia:template:uri"
+      }
+    }
+  ]
+}
