@@ -25,7 +25,8 @@ connect()
   })
   .catch((error) => console.error(error))
 
-app.use(express.json())
+// Increase the allowed payload size.
+app.use(express.json({limit: '1mb'}))
 
 // CORS should probably be tightened down.
 app.use(cors({exposedHeaders: 'Location'}))
