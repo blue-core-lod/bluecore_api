@@ -1,76 +1,80 @@
 {
   "id": "sinopia:template:property:resource",
+  "uri": "http://localhost:3000/repository/sinopia:template:property:resource",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-06T20:37:09.126Z",
+  "timestamp": "2020-08-14T14:54:45.262Z",
+  "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasResourceTemplate": "sinopia:template:resource"
-    },
-    {
-      "@id": "",
-      "@type": "http://sinopia.io/vocabulary/ResourceTemplate"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasResourceId": "sinopia:template:property:resource"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasClass": {
-        "@id": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
-      }
-    },
-    {
-      "@id": "",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Resource attributes"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a nested resource."
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b1"
-      }
-    },
-    {
       "@id": "_:b1",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Resource template ids"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Resource template ids, e.g., ld4p:RT:bf2:Title:AbbrTitle."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasResourceTemplateId"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasCardinality": [
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+        },
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ]
     },
     {
-      "@id": "_:b1",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Resource template ids"
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasRemark": "Resource template ids, e.g., ld4p:RT:bf2:Title:AbbrTitle."
-    },
-    {
-      "@id": "_:b1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasResourceTemplateId"
-      }
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/required"
-      }
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
-      }
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
-      }
+      "@id": "http://localhost:3000/repository/sinopia:template:property:resource",
+      "http://sinopia!io/vocabulary/hasResourceTemplate": [
+        {
+          "@value": "sinopia:template:resource"
+        }
+      ],
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourceTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceId": [
+        {
+          "@id": "sinopia:template:property:resource"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasClass": [
+        {
+          "@id": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+        }
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Resource attributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Attributes for a nested resource."
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyTemplate": [
+        {
+          "@id": "_:b1"
+        }
+      ]
     }
   ]
 }

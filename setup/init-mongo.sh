@@ -26,13 +26,13 @@ mongo --host mongo:27017 <<EOF
     }
   )
 
-  db.resources.createIndex({id: 1}, {unique: true})
-  db.resourceVersions.createIndex({id: 1, timestamp: 1}, {unique: true})
-  db.resourceMetadata.createIndex({id: 1}, {unique: true})
+  // db.resources.createIndex({id: 1}, {unique: true})
+  // db.resourceVersions.createIndex({id: 1, timestamp: 1}, {unique: true})
+  // db.resourceMetadata.createIndex({id: 1}, {unique: true})
 EOF
 
-echo "sleeping for 20 seconds while indexing pipeline starts"
-sleep 20
+echo "sleeping for 30 seconds while indexing pipeline starts"
+sleep 30
 
 echo "Importing resource template docs"
 mongoimport --host=mongo:27017 --file=/scripts/rt_literal_property_attrs_doc.json --db=sinopia_repository --collection=resources

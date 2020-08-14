@@ -1,29 +1,24 @@
 import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import MongoClient  from 'mongodb'
 import cors from 'cors'
 import helmet from 'helmet'
 import { ttlFromJsonld, n3FromJsonld } from './utilities/rdf.js'
 import jwt from 'express-jwt'
 import jwksRsa from 'jwks-rsa'
+import { connect } from './utilities/mongo.js'
+import _ from 'lodash'
 
 const app = express()
-
-const port = process.env.PORT || 3000
-const dbUsername = process.env.MONGODB_USERNAME || 'sinopia'
-const dbPassword = process.env.MONGODB_PASSWORD || 'sekret'
-const dbName = process.env.MONGODB_DB || 'sinopia_repository'
-const dbHost = process.env.MONGODB_HOST || 'localhost'
-const dbPort = process.env.MONGODB_PORT || '27017'
 
 const cognitoUserPoolId = process.env.COGNITO_USER_POOL_ID || 'us-west-2_CGd9Wq136'
 const awsRegion = process.env.AWS_REGION || 'us-west-2'
 
-let db
 // Configure mongo and start server.
-MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`, { useUnifiedTopology: true })
-  .then((client) => {
-    db = client.db(dbName)
+const port = process.env.PORT || 3000
+let db
+connect()
+  .then((newDb) => {
+    db = newDb
     app.listen(port, () => {
       console.log(`listening on ${port}`)
     })
@@ -45,86 +40,84 @@ const publicKeySecret = jwksRsa.expressJwtSecret({
 
 // In general, trying to follow https://jsonapi.org/
 
-app.post('/repository', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
+// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
+app.post('/repository/:resourceId([^/]+/?[^/]+?)', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
   const resource = req.body
 
-  // Using the template id for a template, otherwise a uuid.
-  const resourceId = isTemplate(resource.data) ? templateIdFor(resource.data) : uuidv4()
-  const resourceUri = resourceUriFor(req.hostname, port, resourceId)
+  const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
   const timestamp = new Date().toISOString()
 
-  const saveResource = resourceForSave(resource, resourceId, timestamp)
+  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
   // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
   // Add primary copy.
-  // TBD: checkKeys allows saving documents with periods in keys. Is this a problem for querying / updating?
-  db.collection('resources').insertOne(saveResource, {checkKeys: false})
+  db.collection('resources').insertOne(saveResource)
     .then(() => {
       // And a version copy.
-      db.collection('resourceVersions').insertOne(saveResource, {checkKeys: false})
+      db.collection('resourceVersions').insertOne(saveResource)
         .then(() => {
           // Stub out resource metadata.
-          const resourceMetadata = {id: resourceId, versions: [{timestamp: timestamp, user: resource.user, group: resource.group}]}
+          const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
           db.collection('resourceMetadata').insertOne(resourceMetadata)
-            .then(() => res.location(resourceUri).status(201).send(resourceForReturn(resource, resourceUri)))
+            .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
             .catch(handleError(res))
         })
-        .catch(handleError(res))
+        .catch(handleError(res, req.params.resourceId))
     })
-    .catch(handleError(res))
+    .catch(handleError(res, req.params.resourceId))
 })
 
-app.put('/repository/:resourceId', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
+// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
+app.put('/repository/:resourceId([^/]+/?[^/]+?)', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
   const resource = req.body
   const timestamp = new Date().toISOString()
   const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
-  const saveResource = resourceForSave(resource, req.params.resourceId, timestamp)
+  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
   // Replace primary copy.
-  db.collection('resources').replaceOne({id: req.params.resourceId}, saveResource, {checkKeys: false})
+  db.collection('resources').replaceOne({id: req.params.resourceId}, saveResource)
     .then((result) => {
       if(result.matchedCount !== 1) return res.sendStatus(404)
 
       // And a version copy.
-      db.collection('resourceVersions').insertOne(saveResource, {checkKeys: false})
+      db.collection('resourceVersions').insertOne(saveResource)
         .then(() => {
           // Apppend to resource metadata.
-          db.collection('resourceMetadata').updateOne({id: req.params.resourceId}, { $push: { versions: {timestamp: timestamp, user: resource.user, group: resource.group}}})
+          db.collection('resourceMetadata').updateOne({id: req.params.resourceId}, { $push: { versions: versionEntry(saveResource)}})
             .then(() => {
-              res.send(resourceForReturn(resource, resourceUri))
+              res.send(forReturn(resource))
             })
-            .catch(res, handleError)
+            .catch(handleError(res, req.params.resourceId))
         })
-        .catch(res, handleError)
+        .catch(handleError(res, req.params.resourceId))
     })
-    .catch(res, handleError)
+    .catch(handleError(res, req.params.resourceId))
 })
 
 app.get('/repository/:resourceId/versions', (req, res) => {
   db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
       if(!resourceMetadata) return res.sendStatus(404)
-      return res.send(forReturn(resourceMetadata, resourceUri))
+      return res.send(forReturn(resourceMetadata))
     })
-    .catch(res, handleError)
+    .catch(handleError(res, req.params.resourceId))
 })
 
 app.get('/repository/:resourceId/version/:timestamp', (req, res) => {
   db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
-      const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
-      return res.send(resourceForReturn(resource, resourceUri))
+      return res.send(forReturn(resource))
     })
-    .catch(res, handleError)
+    .catch(handleError(res, req.params.resourceId))
 })
 
-app.get('/repository/:resourceId', (req, res) => {
+// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
+app.get('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
   db.collection('resources').findOne({id: req.params.resourceId})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
-      const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
-      const returnResource = resourceForReturn(resource, resourceUri)
+      const returnResource = forReturn(resource)
       res.format({
         'text/plain': () => res.send(JSON.stringify(returnResource, null, 2)),
         'text/html': () => res.send(`<pre>${JSON.stringify(returnResource, null, 2)}</pre>`),
@@ -137,10 +130,14 @@ app.get('/repository/:resourceId', (req, res) => {
         default: () => res.sendStatus(406)
       })
     })
-    .catch(handleError(res))
+    .catch(handleError(res, req.params.resourceId))
 })
 
-const handleError = (res) => {
+app.get('/', (req, res) => {
+  res.send({all: "good"})
+})
+
+const handleError = (res, id) => {
   return (err) => {
     const errors = []
     let statusCode = 500
@@ -152,43 +149,46 @@ const handleError = (res) => {
     } else {
       errors.push({title: 'Server error', details: err.toString(), code: '500'})
     }
-    console.error(err)
+    console.error(`Error for ${id}`, err)
     res.status(statusCode).send(errors)
   }
 }
 
 const resourceUriFor = (hostname, port, resourceId) => `http://${hostname}:${port}/repository/${resourceId}`
 
-const resourceForReturn = (resource, uri) => {
-  const newResource = {...resource}
-  delete newResource._id
-  newResource.uri = uri
-  return newResource
-}
-
 const forReturn = (item) => {
-  const newItem = {...item}
+  // Map ! back to . in key names
+  const newItem = replaceInKeys(item, '!', '.')
   delete newItem._id
   return newItem
 }
 
-const resourceForSave = (resource, id, timestamp) => {
-  const newResource = {...resource}
+const resourceForSave = (resource, id, uri, timestamp) => {
+  // Map . to ! in key names because Mongo doesn't like . in key names. Sigh.
+  const newResource = replaceInKeys(resource, '.', '!')
+
   newResource.id = id
+  // If resource has a uri, keep it. This is to support migrations.
+  if(!newResource.uri) newResource.uri = uri
   newResource.timestamp = timestamp
-  delete newResource.uri
   return newResource
 }
 
-const isTemplate = (data) => {
-  // Looking for:
-  // { '@id': '', '@type': 'http://sinopia.io/vocabulary/ResourceTemplate' }
-  return data.some((triple) => triple['@id'] === '' && triple['@type'] === 'http://sinopia.io/vocabulary/ResourceTemplate')
-}
+const versionEntry = (resource) => ({
+  timestamp: resource.timestamp,
+  user: resource.user,
+  group: resource.group,
+  templateId: resource.templateId
+})
 
-const templateIdFor = (data) => {
-  // Looking for:
-  // { '@id': '', 'http://sinopia.io/vocabulary/hasResourceId': { '@id': 'resourceTemplate:bf2:Title' }}
-  const resourceIdTriple = data.find((triple) => triple['@id'] === '' && triple['http://sinopia.io/vocabulary/hasResourceId'])
-  return resourceIdTriple['http://sinopia.io/vocabulary/hasResourceId']['@id']
+const replaceInKeys = (obj, from, to) => {
+  return _.cloneDeepWith(obj, function (cloneObj) {
+    if (!_.isPlainObject(cloneObj)) return
+    const newObj = {}
+    _.keys(cloneObj).forEach((key) => {
+      const newKey = key.replace(new RegExp(`\\${from}`, "g"), to)
+      newObj[newKey] = replaceInKeys(cloneObj[key], from, to)
+    })
+    return newObj
+  })
 }

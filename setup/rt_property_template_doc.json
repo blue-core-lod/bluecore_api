@@ -1,454 +1,449 @@
 {
   "id": "sinopia:template:property",
+  "uri": "http://localhost:3000/repository/sinopia:template:property",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-06T20:37:09.126Z",
+  "timestamp": "2020-08-14T14:54:14.574Z",
+  "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasResourceTemplate": "sinopia:template:resource"
-    },
-    {
-      "@id": "",
-      "@type": "http://sinopia.io/vocabulary/ResourceTemplate"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasResourceId": "sinopia:template:property"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasClass": {
-        "@id": "http://sinopia.io/vocabulary/PropertyTemplate"
-      }
-    },
-    {
-      "@id": "",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Property template"
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasRemark": "Template for creating property templates."
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b1"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b2"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b3"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b4"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b5"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b7"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b9"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b11"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b13"
-      }
-    },
-    {
-      "@id": "",
-      "http://sinopia.io/vocabulary/hasPropertyTemplate": {
-        "@id": "_:b15"
-      }
-    },
-    {
       "@id": "_:b1",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b1",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Property"
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasRemark": "The property's URI."
-    },
-    {
-      "@id": "_:b1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      }
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/required"
-      }
-    },
-    {
-      "@id": "_:b1",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
-      }
-    },
-    {
-      "@id": "_:b2",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b2",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Label"
-    },
-    {
-      "@id": "_:b2",
-      "http://sinopia.io/vocabulary/hasRemark": "The property's label."
-    },
-    {
-      "@id": "_:b2",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://www.w3.org/2000/01/rdf-schema#label"
-      }
-    },
-    {
-      "@id": "_:b2",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/required"
-      }
-    },
-    {
-      "@id": "_:b2",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/literal"
-      }
-    },
-    {
-      "@id": "_:b3",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b3",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Remark"
-    },
-    {
-      "@id": "_:b3",
-      "http://sinopia.io/vocabulary/hasRemark": "The property's remark (literal)."
-    },
-    {
-      "@id": "_:b3",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasRemark"
-      }
-    },
-    {
-      "@id": "_:b3",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/literal"
-      }
-    },
-    {
-      "@id": "_:b4",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b4",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Remark URL"
-    },
-    {
-      "@id": "_:b4",
-      "http://sinopia.io/vocabulary/hasRemark": "The property's remark (URL)."
-    },
-    {
-      "@id": "_:b4",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasRemarkUrl"
-      }
-    },
-    {
-      "@id": "_:b4",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
-      }
-    },
-    {
-      "@id": "_:b5",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b5",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Cardinality"
-    },
-    {
-      "@id": "_:b5",
-      "http://sinopia.io/vocabulary/hasRemark": "Whether is property is repeatable and/or required."
-    },
-    {
-      "@id": "_:b5",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasCardinality"
-      }
-    },
-    {
-      "@id": "_:b5",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
-      }
-    },
-    {
-      "@id": "_:b5",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
-      }
-    },
-    {
-      "@id": "_:b5",
-      "http://sinopia.io/vocabulary/hasLookupAttributes": {
-        "@id": "_:b6"
-      }
-    },
-    {
-      "@id": "_:b6",
-      "@type": "http://sinopia.io/vocabulary/LookupPropertyTemplate"
-    },
-    {
-      "@id": "_:b6",
-      "http://sinopia.io/vocabulary/hasAuthority": {
-        "@id": "file:/cardinality.json"
-      }
-    },
-    {
-      "@id": "_:b7",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b7",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Property type"
-    },
-    {
-      "@id": "_:b7",
-      "http://sinopia.io/vocabulary/hasRemark": "Type of property."
-    },
-    {
-      "@id": "_:b7",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasPropertyType"
-      }
-    },
-    {
-      "@id": "_:b7",
-      "http://sinopia.io/vocabulary/hasCardinality": {
-        "@id": "http://sinopia.io/vocabulary/cardinality/required"
-      }
-    },
-    {
-      "@id": "_:b7",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/uri"
-      }
-    },
-    {
-      "@id": "_:b7",
-      "http://sinopia.io/vocabulary/hasLookupAttributes": {
-        "@id": "_:b8"
-      }
-    },
-    {
-      "@id": "_:b8",
-      "@type": "http://sinopia.io/vocabulary/LookupPropertyTemplate"
-    },
-    {
-      "@id": "_:b8",
-      "http://sinopia.io/vocabulary/hasAuthority": {
-        "@id": "file:/propertyType.json"
-      }
-    },
-    {
-      "@id": "_:b9",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
-    },
-    {
-      "@id": "_:b9",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Literal attributes (if a literal)"
-    },
-    {
-      "@id": "_:b9",
-      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a literal."
-    },
-    {
-      "@id": "_:b9",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasLiteralAttributes"
-      }
-    },
-    {
-      "@id": "_:b9",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/resource"
-      }
-    },
-    {
-      "@id": "_:b9",
-      "http://sinopia.io/vocabulary/hasResourceAttributes": {
-        "@id": "_:b10"
-      }
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Property"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "The property's URI."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasCardinality": [
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ]
     },
     {
       "@id": "_:b10",
-      "@type": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
-    },
-    {
-      "@id": "_:b10",
-      "http://sinopia.io/vocabulary/hasResourceTemplateId": {
-        "@id": "sinopia:template:property:literal"
-      }
-    },
-    {
-      "@id": "_:b11",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceTemplateId": [
+        {
+          "@id": "sinopia:template:property:literal"
+        }
+      ]
     },
     {
       "@id": "_:b11",
-      "http://www.w3.org/2000/01/rdf-schema#label": "URI attributes (if a URI)"
-    },
-    {
-      "@id": "_:b11",
-      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a URI."
-    },
-    {
-      "@id": "_:b11",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasUriAttributes"
-      }
-    },
-    {
-      "@id": "_:b11",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/resource"
-      }
-    },
-    {
-      "@id": "_:b11",
-      "http://sinopia.io/vocabulary/hasResourceAttributes": {
-        "@id": "_:b12"
-      }
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "URI attributes (if a URI)"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Attributes for a URI."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasUriAttributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/resource"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasResourceAttributes": [
+        {
+          "@id": "_:b12"
+        }
+      ]
     },
     {
       "@id": "_:b12",
-      "@type": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
-    },
-    {
-      "@id": "_:b12",
-      "http://sinopia.io/vocabulary/hasResourceTemplateId": {
-        "@id": "sinopia:template:property:uri"
-      }
-    },
-    {
-      "@id": "_:b13",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceTemplateId": [
+        {
+          "@id": "sinopia:template:property:uri"
+        }
+      ]
     },
     {
       "@id": "_:b13",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Lookup attributes (if a lookup)"
-    },
-    {
-      "@id": "_:b13",
-      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a lookup."
-    },
-    {
-      "@id": "_:b13",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasLookupAttributes"
-      }
-    },
-    {
-      "@id": "_:b13",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/resource"
-      }
-    },
-    {
-      "@id": "_:b13",
-      "http://sinopia.io/vocabulary/hasResourceAttributes": {
-        "@id": "_:b14"
-      }
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Lookup attributes (if a lookup)"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Attributes for a lookup."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasLookupAttributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/resource"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasResourceAttributes": [
+        {
+          "@id": "_:b14"
+        }
+      ]
     },
     {
       "@id": "_:b14",
-      "@type": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
-    },
-    {
-      "@id": "_:b14",
-      "http://sinopia.io/vocabulary/hasResourceTemplateId": {
-        "@id": "sinopia:template:property:lookup"
-      }
-    },
-    {
-      "@id": "_:b15",
-      "@type": "http://sinopia.io/vocabulary/PropertyTemplate"
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceTemplateId": [
+        {
+          "@id": "sinopia:template:property:lookup"
+        }
+      ]
     },
     {
       "@id": "_:b15",
-      "http://www.w3.org/2000/01/rdf-schema#label": "Nested resource attributes (if a resource)"
-    },
-    {
-      "@id": "_:b15",
-      "http://sinopia.io/vocabulary/hasRemark": "Attributes for a nested resource."
-    },
-    {
-      "@id": "_:b15",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#": {
-        "@id": "http://sinopia.io/vocabulary/hasResourceAttributes"
-      }
-    },
-    {
-      "@id": "_:b15",
-      "http://sinopia.io/vocabulary/hasPropertyType": {
-        "@id": "http://sinopia.io/vocabulary/propertyType/resource"
-      }
-    },
-    {
-      "@id": "_:b15",
-      "http://sinopia.io/vocabulary/hasResourceAttributes": {
-        "@id": "_:b16"
-      }
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Nested resource attributes (if a resource)"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Attributes for a nested resource."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasResourceAttributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/resource"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasResourceAttributes": [
+        {
+          "@id": "_:b16"
+        }
+      ]
     },
     {
       "@id": "_:b16",
-      "@type": "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceTemplateId": [
+        {
+          "@id": "sinopia:template:property:resource"
+        }
+      ]
     },
     {
-      "@id": "_:b16",
-      "http://sinopia.io/vocabulary/hasResourceTemplateId": {
-        "@id": "sinopia:template:property:resource"
-      }
+      "@id": "_:b2",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Label"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "The property's label."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://www.w3.org/2000/01/rdf-schema#label"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasCardinality": [
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/literal"
+        }
+      ]
+    },
+    {
+      "@id": "_:b3",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Remark"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "The property's remark (literal)."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasRemark"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/literal"
+        }
+      ]
+    },
+    {
+      "@id": "_:b4",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Remark URL"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "The property's remark (URL)."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasRemarkUrl"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ]
+    },
+    {
+      "@id": "_:b5",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Cardinality"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Whether is property is repeatable and/or required."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasCardinality"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasCardinality": [
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasLookupAttributes": [
+        {
+          "@id": "_:b6"
+        }
+      ]
+    },
+    {
+      "@id": "_:b6",
+      "@type": [
+        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasAuthority": [
+        {
+          "@id": "file:/cardinality.json"
+        }
+      ]
+    },
+    {
+      "@id": "_:b7",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Property type"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Type of property."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasPropertyType"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasCardinality": [
+        {
+          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasLookupAttributes": [
+        {
+          "@id": "_:b8"
+        }
+      ]
+    },
+    {
+      "@id": "_:b8",
+      "@type": [
+        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasAuthority": [
+        {
+          "@id": "file:/propertyType.json"
+        }
+      ]
+    },
+    {
+      "@id": "_:b9",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Literal attributes (if a literal)"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Attributes for a literal."
+        }
+      ],
+      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasLiteralAttributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/resource"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasResourceAttributes": [
+        {
+          "@id": "_:b10"
+        }
+      ]
+    },
+    {
+      "@id": "http://localhost:3000/repository/sinopia:template:property",
+      "http://sinopia!io/vocabulary/hasResourceTemplate": [
+        {
+          "@value": "sinopia:template:resource"
+        }
+      ],
+      "@type": [
+        "http://sinopia.io/vocabulary/ResourceTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasResourceId": [
+        {
+          "@id": "sinopia:template:property"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasClass": [
+        {
+          "@id": "http://sinopia.io/vocabulary/PropertyTemplate"
+        }
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Property template"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Template for creating property templates."
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyTemplate": [
+        {
+          "@id": "_:b1"
+        },
+        {
+          "@id": "_:b2"
+        },
+        {
+          "@id": "_:b3"
+        },
+        {
+          "@id": "_:b4"
+        },
+        {
+          "@id": "_:b5"
+        },
+        {
+          "@id": "_:b7"
+        },
+        {
+          "@id": "_:b9"
+        },
+        {
+          "@id": "_:b11"
+        },
+        {
+          "@id": "_:b13"
+        },
+        {
+          "@id": "_:b15"
+        }
+      ]
     }
   ]
 }
