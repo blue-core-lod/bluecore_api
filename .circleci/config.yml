@@ -7,7 +7,7 @@ defaults: &defaults
   docker:
     - image: circleci/node:14.8.0
   working_directory: ~/sinopia_api
-  context: sinopia
+  context: ld4p
 
 version: 2
 jobs:
@@ -58,7 +58,6 @@ jobs:
       - run:
           name: Build & Register Images
           command: |
-            echo $DOCKER_USER
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             docker build -t ld4p/sinopia_api:latest .
             docker push ld4p/sinopia_api:latest
