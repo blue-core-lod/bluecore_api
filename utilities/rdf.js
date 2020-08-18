@@ -1,14 +1,7 @@
-// import { Writer as N3Writer } from 'n3'
 import N3 from 'n3';
-// import N3Parser from 'n3/lib/N3Parser'
 import rdf from 'rdf-ext'
-// import _ from 'lodash'
-// import Config from 'Config'
-// import CryptoJS from 'crypto-js'
-// import SerializerJsonld from '@rdfjs/serializer-jsonld'
-// const concatStream = require('concat-stream')
 import { Readable } from 'stream'
-import ParserJsonld  from '@rdfjs/parser-jsonld'
+import ParserJsonld from '@rdfjs/parser-jsonld'
 
 export const datasetFromJsonld = (jsonld) => {
   const parserJsonld = new ParserJsonld()
@@ -23,7 +16,7 @@ export const datasetFromJsonld = (jsonld) => {
   const output = parserJsonld.import(input)
   const dataset = rdf.dataset()
 
-  output.on('data', quad => {
+  output.on('data', (quad) => {
     dataset.add(quad)
   })
 

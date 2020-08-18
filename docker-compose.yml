@@ -11,14 +11,6 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: sekret
     entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
-  # mongo-setup:
-  #   image: mongo:4.4
-  #   depends_on:
-  #     - mongo
-  #   volumes:
-  #     - ./setup:/scripts
-  #   restart: "no"
-  #   entrypoint: [ "bash", "/scripts/init-mongo.sh"]
   mongo-setup:
     build:
       context: .

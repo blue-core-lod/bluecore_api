@@ -1,4 +1,4 @@
-import MongoClient  from 'mongodb'
+import MongoClient from 'mongodb'
 import fs from 'fs'
 
 export const connect = () => {
@@ -14,12 +14,14 @@ export const connect = () => {
     console.log(`connecting to DocDB at ${dbHost}`)
     const ca = [fs.readFileSync('rds-combined-ca-bundle.pem')]
 
-    connect = MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`,
+    connect = MongoClient.connect(
+`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`,
     {
       sslValidate: true,
       sslCA: ca,
       useNewUrlParser: true
-    })
+    }
+)
   } else {
     console.log(`connecting to Mongo at ${dbHost}`)
     connect = MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`, { useUnifiedTopology: true })
