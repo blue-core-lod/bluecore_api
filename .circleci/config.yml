@@ -57,8 +57,8 @@ jobs:
           at: .
       - run:
           name: Build & Register Images
-          # NOTE: the env variables holding docker credentials are stored in the CircleCI dashboard
           command: |
+            echo $DOCKER_USER
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             docker build -t ld4p/sinopia_api:latest .
             docker push ld4p/sinopia_api:latest
