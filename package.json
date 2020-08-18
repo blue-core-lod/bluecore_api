@@ -7,10 +7,12 @@
   "homepage": "https://github.com/LD4P/sinopia_api",
   "repository": "github:LD4P/sinopia_api",
   "scripts": {
-    "dev-start": "nodemon server.js",
-    "start": "node server.js",
+    "dev-start": "nodemon src/server.js",
+    "start": "node src/server.js",
     "eslint": "eslint --color -c .eslintrc.yml --ext js .",
-    "eslint-fix": "eslint --color -c .eslintrc.yml --ext js --fix ."
+    "eslint-fix": "eslint --color -c .eslintrc.yml --ext js --fix .",
+    "test": "jest --colors --runInBand",
+    "ci": "npm run eslint && npm run test"
   },
   "type": "module",
   "dependencies": {
@@ -21,12 +23,29 @@
     "helmet": "^4.0.0",
     "jwks-rsa": "^1.8.1",
     "lodash": "^4.17.20",
-    "mongodb": "^3.6.0",
+    "monk": "^7.3.1",
     "n3": "^1.6.1",
     "rdf-ext": "^1.3.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.11.0",
+    "babel-jest": "^26.3.0",
     "eslint": "^7.7.0",
-    "nodemon": "^2.0.4"
+    "jest": "^26.4.0",
+    "nodemon": "^2.0.4",
+    "supertest": "^4.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ],
+    "transform": {
+      "^.+\\.[jt]sx?$": "babel-jest"
+    }
   }
 }

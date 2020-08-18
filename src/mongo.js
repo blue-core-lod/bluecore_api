@@ -1,5 +1,6 @@
-import MongoClient from 'mongodb'
+// Import MongoClient from 'mongodb'
 import fs from 'fs'
+import monk from 'monk'
 
 export const connect = () => {
   const dbUsername = process.env.MONGODB_USERNAME || 'sinopia'
@@ -9,29 +10,20 @@ export const connect = () => {
   const dbPort = process.env.MONGODB_PORT || '27017'
   const isAws = process.env.MONGODB_IS_AWS === 'true'
 
-  let connect
   if (isAws) {
     console.log(`connecting to DocDB at ${dbHost}`)
     const ca = [fs.readFileSync('rds-combined-ca-bundle.pem')]
 
-    connect = MongoClient.connect(
+    return monk(
 `mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`,
     {
       sslValidate: true,
       sslCA: ca,
       useNewUrlParser: true
     }
-)
-  } else {
+  )
+}
     console.log(`connecting to Mongo at ${dbHost}`)
-    connect = MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`, { useUnifiedTopology: true })
-  }
-  // Configure mongo and start server.
-  return connect
-    .then((client) => {
-      return client.db(dbName)
-    })
-    .catch((error) => {
-      throw error
-    })
+    return monk(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`, { useUnifiedTopology: true })
+
 }

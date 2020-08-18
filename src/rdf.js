@@ -32,7 +32,7 @@ export const datasetFromJsonld = (jsonld) => {
 export const n3FromJsonld = (jsonld, asTurtle) => {
   return datasetFromJsonld(jsonld)
     .then((dataset) => {
-      const opts = !asTurtle ? {format: 'N-Triples'} : {format: 'Turtle'}
+      const opts = asTurtle ? {format: 'Turtle'} : {format: 'N-Triples'}
       const writer = new N3.Writer(opts)
       writer.addQuads(dataset.toArray())
       return new Promise((resolve, reject) => {

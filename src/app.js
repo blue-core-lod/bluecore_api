@@ -1,10 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
-import { ttlFromJsonld, n3FromJsonld } from './utilities/rdf.js'
+import { ttlFromJsonld, n3FromJsonld } from './rdf.js'
 import jwt from 'express-jwt'
 import jwksRsa from 'jwks-rsa'
-import { connect } from './utilities/mongo.js'
+import { connect } from './mongo.js'
 import _ from 'lodash'
 
 const app = express()
@@ -14,18 +14,6 @@ const awsRegion = process.env.AWS_REGION || 'us-west-2'
 const apiBaseUrl = process.env.API_BASE_URL
 // This allows turning off authentication, e.g., during migration.
 const noAuth = process.env.NO_AUTH === 'true'
-const port = process.env.PORT || 3000
-
-// Configure mongo and start server.
-let db
-connect()
-  .then((newDb) => {
-    db = newDb
-    app.listen(port, () => {
-      console.log(`listening on ${port}`)
-    })
-  })
-  .catch((error) => console.error(error))
 
 // Increase the allowed payload size.
 app.use(express.json({limit: '1mb'}))
@@ -47,6 +35,21 @@ app.use(jwt({ secret: publicKeySecret, algorithms: ['RS256'] }).unless({
   custom: () => noAuth,
 }))
 
+// Add the db to req
+// See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
+const db = connect()
+app.use(function (req, res, next) {
+ req.db = db
+ next()
+})
+
+const port = process.env.PORT || 3000
+app.use(function (req, res, next) {
+ req.port = port
+ next()
+})
+
+
 // In general, trying to follow https://jsonapi.org/
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
@@ -54,21 +57,21 @@ app.post('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
   const resource = req.body
-  const resourceUri = resourceUriFor(req.protocol, req.hostname, port, req.params.resourceId)
+  const resourceUri = resourceUriFor(req.protocol, req.hostname, req.port, req.params.resourceId)
   const timestamp = new Date().toISOString()
 
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
   // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
   // Add primary copy.
-  db.collection('resources').insertOne(saveResource)
+  req.db.collection('resources').insert(saveResource)
     .then(() => {
       // And a version copy.
-      db.collection('resourceVersions').insertOne(saveResource)
+      req.db.collection('resourceVersions').insert(saveResource)
         .then(() => {
           // Stub out resource metadata.
           const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
-          db.collection('resourceMetadata').insertOne(resourceMetadata)
+          req.db.collection('resourceMetadata').insert(resourceMetadata)
             .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
             .catch(handleError(res))
         })
@@ -83,19 +86,19 @@ app.put('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
 
   const resource = req.body
   const timestamp = new Date().toISOString()
-  const resourceUri = resourceUriFor(req.protocol, req.hostname, port, req.params.resourceId)
+  const resourceUri = resourceUriFor(req.protocol, req.hostname, req.port, req.params.resourceId)
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
   // Replace primary copy.
-  db.collection('resources').replaceOne({id: req.params.resourceId}, saveResource)
+  req.db.collection('resources').update({id: req.params.resourceId}, saveResource, {replaceOne: true})
     .then((result) => {
-      if(result.matchedCount !== 1) return res.sendStatus(404)
+      if(result.nModified !== 1) return res.sendStatus(404)
 
       // And a version copy.
-      db.collection('resourceVersions').insertOne(saveResource)
+      req.db.collection('resourceVersions').insert(saveResource)
         .then(() => {
           // Apppend to resource metadata.
-          db.collection('resourceMetadata').updateOne({id: req.params.resourceId}, { $push: { versions: versionEntry(saveResource)}})
+          req.db.collection('resourceMetadata').update({id: req.params.resourceId}, { $push: { versions: versionEntry(saveResource)}})
             .then(() => {
               res.send(forReturn(resource))
             })
@@ -107,7 +110,7 @@ app.put('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
 })
 
 app.get('/repository/:resourceId/versions', (req, res) => {
-  db.collection('resourceMetadata').findOne({id: req.params.resourceId})
+  req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
       if(!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
@@ -116,7 +119,7 @@ app.get('/repository/:resourceId/versions', (req, res) => {
 })
 
 app.get('/repository/:resourceId/version/:timestamp', (req, res) => {
-  db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
+  req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
@@ -126,7 +129,7 @@ app.get('/repository/:resourceId/version/:timestamp', (req, res) => {
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
 app.get('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
-  db.collection('resources').findOne({id: req.params.resourceId})
+  req.db.collection('resources').findOne({id: req.params.resourceId})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
       const returnResource = forReturn(resource)
@@ -207,3 +210,5 @@ const replaceInKeys = (obj, from, to) => {
     return newObj
   })
 }
+
+export default app
