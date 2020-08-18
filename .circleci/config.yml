@@ -7,7 +7,6 @@ defaults: &defaults
   docker:
     - image: circleci/node:14.8.0
   working_directory: ~/sinopia_api
-  context: ld4p
 
 version: 2
 jobs:
@@ -133,6 +132,7 @@ workflows:
             tags:
               ignore:
                 - /v.*/
+          context: ld4p
       - register_tag_image:
           requires:
             - build
@@ -143,6 +143,8 @@ workflows:
             tags:
               only:
                 - /v.*/
+          context: ld4p
       - update_ecs:
           requires:
             - register_latest_image
+          context: ld4p
