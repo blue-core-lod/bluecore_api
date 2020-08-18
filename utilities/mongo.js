@@ -14,7 +14,7 @@ export const connect = () => {
     console.log(`connecting to DocDB at ${dbHost}`)
     const ca = [fs.readFileSync('rds-combined-ca-bundle.pem')]
 
-    connect = MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred`,
+    connect = MongoClient.connect(`mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`,
     {
       sslValidate: true,
       sslCA: ca,
@@ -27,11 +27,7 @@ export const connect = () => {
   // Configure mongo and start server.
   return connect
     .then((client) => {
-      const db = client.db(dbName)
-      db.collection('resources').createIndex({id: 1}, {unique: true})
-      db.collection('resourceVersions').createIndex({id: 1, timestamp: 1}, {unique: true})
-      db.collection('resourceMetadata').createIndex({id: 1}, {unique: true})
-      return db
+      return client.db(dbName)
     })
     .catch((error) => {
       throw error

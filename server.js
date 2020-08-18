@@ -12,9 +12,12 @@ const app = express()
 
 const cognitoUserPoolId = process.env.COGNITO_USER_POOL_ID || 'us-west-2_CGd9Wq136'
 const awsRegion = process.env.AWS_REGION || 'us-west-2'
+const apiBaseUrl = process.env.API_BASE_URL
+// This allows turning off authentication, e.g., during migration.
+const noAuth = process.env.NO_AUTH === 'true'
+const port = process.env.PORT || 3000
 
 // Configure mongo and start server.
-const port = process.env.PORT || 3000
 let db
 connect()
   .then((newDb) => {
@@ -33,19 +36,26 @@ app.use(cors({exposedHeaders: 'Location'}))
 app.options('*', cors())
 app.use(helmet())
 
+// JWT
 const publicKeySecret = jwksRsa.expressJwtSecret({
     cache: true,
     rateLimit: true,
     jwksUri: `https://cognito-idp.${awsRegion}.amazonaws.com/${cognitoUserPoolId}/.well-known/jwks.json`
   })
 
+app.use(jwt({ secret: publicKeySecret, algorithms: ['RS256'] }).unless({
+  method: ['GET'],
+  custom: () => noAuth,
+}))
+
 // In general, trying to follow https://jsonapi.org/
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
-app.post('/repository/:resourceId([^/]+/?[^/]+?)', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
-  const resource = req.body
+app.post('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+  console.log(`Received post to ${req.params.resourceId}`)
 
-  const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
+  const resource = req.body
+  const resourceUri = resourceUriFor(req.protocol, req.hostname, port, req.params.resourceId)
   const timestamp = new Date().toISOString()
 
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
@@ -69,10 +79,12 @@ app.post('/repository/:resourceId([^/]+/?[^/]+?)', jwt({ secret: publicKeySecret
 })
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
-app.put('/repository/:resourceId([^/]+/?[^/]+?)', jwt({ secret: publicKeySecret, algorithms: ['RS256'] }), (req, res) => {
+app.put('/repository/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+  console.log(`Received put to ${req.params.resourceId}`)
+
   const resource = req.body
   const timestamp = new Date().toISOString()
-  const resourceUri = resourceUriFor(req.hostname, port, req.params.resourceId)
+  const resourceUri = resourceUriFor(req.protocol, req.hostname, port, req.params.resourceId)
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
   // Replace primary copy.
@@ -155,7 +167,10 @@ const handleError = (res, id) => {
   }
 }
 
-const resourceUriFor = (hostname, port, resourceId) => `http://${hostname}:${port}/repository/${resourceId}`
+const resourceUriFor = (protocol, hostname, port, resourceId) => {
+  if(apiBaseUrl) return `${apiBaseUrl}/repository/${resourceId}`
+  return `${protocol}://${hostname}:${port}/repository/${resourceId}`
+}
 
 const forReturn = (item) => {
   // Map ! back to . in key names
