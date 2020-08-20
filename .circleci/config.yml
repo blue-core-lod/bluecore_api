@@ -62,6 +62,8 @@ jobs:
             docker push ld4p/sinopia_api:latest
             docker build -t ld4p/sinopia_dev_setup:latest -f Dockerfile-setup .
             docker push ld4p/sinopia_dev_setup:latest
+            docker build -t ld4p/sinopia_dev_setup:cypress -f Dockerfile-setup-cypress .
+            docker push ld4p/sinopia_dev_setup:cypress
   register_tag_image:
     <<: *defaults
     steps:
