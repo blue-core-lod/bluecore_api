@@ -5,6 +5,7 @@ import jwt from 'express-jwt'
 import jwksRsa from 'jwks-rsa'
 import connect from './mongo.js'
 import resourcesRouter from './endpoints/resources.js'
+import groupsRouter from './endpoints/groups.js'
 
 const app = express()
 
@@ -54,5 +55,6 @@ app.get('/', (req, res) => {
 })
 
 app.use('/repository', resourcesRouter)
+app.use('/groups', groupsRouter)
 
 export default app
