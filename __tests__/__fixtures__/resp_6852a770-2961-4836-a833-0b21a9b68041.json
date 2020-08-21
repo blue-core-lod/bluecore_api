@@ -1,0 +1,34 @@
+{
+  "data": [
+    {
+      "@id": "https://api.development.sinopia.io/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041",
+      "@type": [
+        "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+        {
+          "@value": "foo",
+          "@language": "eng"
+        }
+      ],
+      "http://sinopia.io/vocabulary/hasResourceTemplate": [
+        {
+          "@value": "profile:bf2:Title:AbbrTitle"
+        }
+      ]
+    }
+  ],
+  "user": "havram ",
+  "bfAdminMetadataRefs": [],
+  "bfInstanceRefs": [],
+  "bfItemRefs": [],
+  "bfWorkRefs": [],
+  "group": "stanford",
+  "types": [
+    "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
+  ],
+  "templateId": "profile:bf2:Title:AbbrTitle",
+  "id": "stanford/6852a770-2961-4836-a833-0b21a9b68041",
+  "uri": "https://api.development.sinopia.io/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041",
+  "timestamp": "2020-08-20T11:34:40.887Z"
+}

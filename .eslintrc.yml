@@ -106,7 +106,7 @@ rules:
   multiline-ternary:
     - error
     - always-multiline
-  new-cap: error
+  new-cap: 'off'
   new-parens: error
   newline-after-var: 'off'
   newline-before-return: 'off'
