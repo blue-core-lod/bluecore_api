@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/LD4P/sinopia_api.svg?style=svg)](https://circleci.com/gh/LD4P/sinopia_api)
+
 # Sinopia API
 
 API for persisting resources to Mongo / AWS DocumentDB.
