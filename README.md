@@ -26,7 +26,7 @@ To start all of the supporting services (Mongo, etc.):
 `docker-compose up -d`
 
 To start the Express web server and run the application at [http://localhost:3000](http://localhost:3000):
-`npm dev-start`
+`npm run dev-start`
 
 This is in development mode and code changes will immediately be loaded without having to restart the server.
 
