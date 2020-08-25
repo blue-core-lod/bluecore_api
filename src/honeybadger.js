@@ -1,9 +1,9 @@
 import Honeybadger from 'honeybadger'
 
-const hb_key = process.env.HONEYBADGER_API_KEY || 'abc123'
+const hbKey = process.env.HONEYBADGER_API_KEY || 'abc123'
 
 const HoneybadgerNotifier = Honeybadger.configure({
-  apiKey: hb_key
+  apiKey: hbKey
 })
 
 export default HoneybadgerNotifier

@@ -49,7 +49,7 @@ app.use(function (req, res, next) {
  next()
 })
 
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
   HoneybadgerNotifier.notify(err)
   return res.status(err.status).send({
     success: false,
