@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import HoneybadgerNotifier from 'Honeybadger'
 import jwt from 'express-jwt'
 import jwksRsa from 'jwks-rsa'
 import connect from './mongo.js'
@@ -47,6 +48,14 @@ app.use(function (req, res, next) {
  req.port = port
  next()
 })
+
+app.use(function (err, req, res, next) {
+  HoneybadgerNotifier.notify(err)
+  return res.status(err.status).send({
+    success: false,
+    message: err.inner.message
+  })
+});
 
 // In general, trying to follow https://jsonapi.org/
 
