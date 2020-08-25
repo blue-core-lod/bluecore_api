@@ -34,6 +34,7 @@ app.use(jwt({ secret: publicKeySecret, algorithms: ['RS256'] }).unless({
   custom: () => noAuth,
 }))
 
+
 // Add the db to req
 // See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
 app.use(function (req, res, next) {
@@ -46,7 +47,6 @@ app.use(function (req, res, next) {
  req.port = port
  next()
 })
-
 
 // In general, trying to follow https://jsonapi.org/
 
