@@ -3,11 +3,11 @@
   "uri": "http://localhost:3000/repository/sinopia:template:property:lookup",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-17T13:22:52.240Z",
+  "timestamp": "2020-08-26T18:21:03.872Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "_:b1",
+      "@id": "_:b3",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -21,17 +21,17 @@
           "@value": "Authorities for lookup."
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://sinopia.io/vocabulary/hasAuthority"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/required"
         },
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/repeatable"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -41,7 +41,7 @@
       ]
     },
     {
-      "@id": "_:b2",
+      "@id": "_:b4",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -55,14 +55,14 @@
           "@value": "Default URIs."
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://sinopia.io/vocabulary/hasDefault"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/repeatable"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -72,12 +72,12 @@
       ],
       "http://sinopia!io/vocabulary/hasResourceAttributes": [
         {
-          "@id": "_:b3"
+          "@id": "_:b5"
         }
       ]
     },
     {
-      "@id": "_:b3",
+      "@id": "_:b5",
       "@type": [
         "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
       ],
@@ -119,10 +119,14 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyTemplate": [
         {
-          "@id": "_:b1"
-        },
-        {
-          "@id": "_:b2"
+          "@list": [
+            {
+              "@id": "_:b3"
+            },
+            {
+              "@id": "_:b4"
+            }
+          ]
         }
       ]
     }

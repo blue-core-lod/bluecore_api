@@ -3,11 +3,11 @@
   "uri": "http://localhost:3000/repository/sinopia:template:property:literal",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-14T14:53:18.215Z",
+  "timestamp": "2020-08-26T18:21:03.056Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "_:b1",
+      "@id": "_:b2",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -21,14 +21,14 @@
           "@value": "Default literals."
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://sinopia.io/vocabulary/hasDefault"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/repeatable"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -69,7 +69,11 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyTemplate": [
         {
-          "@id": "_:b1"
+          "@list": [
+            {
+              "@id": "_:b2"
+            }
+          ]
         }
       ]
     }
