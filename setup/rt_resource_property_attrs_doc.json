@@ -3,11 +3,11 @@
   "uri": "http://localhost:3000/repository/sinopia:template:property:resource",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-14T14:54:45.262Z",
+  "timestamp": "2020-08-26T18:21:05.548Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "_:b1",
+      "@id": "_:b2",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -21,17 +21,17 @@
           "@value": "Resource template ids, e.g., ld4p:RT:bf2:Title:AbbrTitle."
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://sinopia.io/vocabulary/hasResourceTemplateId"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/required"
         },
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/repeatable"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/repeatable"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -72,7 +72,11 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyTemplate": [
         {
-          "@id": "_:b1"
+          "@list": [
+            {
+              "@id": "_:b2"
+            }
+          ]
         }
       ]
     }

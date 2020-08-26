@@ -3,11 +3,11 @@
   "uri": "http://localhost:3000/repository/sinopia:template:uri",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-14T14:55:50.439Z",
+  "timestamp": "2020-08-26T18:21:07.939Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
-      "@id": "_:b1",
+      "@id": "_:b3",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -21,14 +21,14 @@
           "@value": "URI"
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://sinopia.io/vocabulary/hasUri"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/required"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "@id": "_:b2",
+      "@id": "_:b4",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -52,14 +52,14 @@
           "@value": "Label"
         }
       ],
-      "http://www!w3!org/1999/02/22-rdf-syntax-ns#": [
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
         {
           "@id": "http://www.w3.org/2000/01/rdf-schema#label"
         }
       ],
-      "http://sinopia!io/vocabulary/hasCardinality": [
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
         {
-          "@id": "http://sinopia.io/vocabulary/cardinality/required"
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/required"
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
@@ -100,10 +100,14 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyTemplate": [
         {
-          "@id": "_:b1"
-        },
-        {
-          "@id": "_:b2"
+          "@list": [
+            {
+              "@id": "_:b3"
+            },
+            {
+              "@id": "_:b4"
+            }
+          ]
         }
       ]
     }
