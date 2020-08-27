@@ -60,7 +60,7 @@ resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
     .catch(handleError(res, req.params.resourceId))
 })
 
-resourcesRouter.get('/:resourceId/versions', (req, res) => {
+resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/versions', (req, res) => {
   req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
       if(!resourceMetadata) return res.sendStatus(404)
@@ -69,7 +69,7 @@ resourcesRouter.get('/:resourceId/versions', (req, res) => {
     .catch(handleError(res, req.params.resourceId))
 })
 
-resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
+resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:timestamp', (req, res) => {
   req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: new Date(req.params.timestamp)})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
