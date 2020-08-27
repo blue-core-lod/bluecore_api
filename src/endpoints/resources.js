@@ -136,7 +136,10 @@ const resourceForSave = (resource, id, uri) => {
   // If resource has a uri, keep it. This is to support migrations.
   if(!newResource.uri) newResource.uri = uri
   // For querying, need to use a JS date
-  newResource.timestamp = new Date()
+  // Use provided timestamp or create a new one.
+  // Allowing a provided timestamp can be removed once migration is completed.
+  const timestamp = newResource.timestamp ? new Date(newResource.timestamp) : new Date()
+  newResource.timestamp = timestamp
   return newResource
 }
 
