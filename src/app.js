@@ -2,15 +2,13 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import jwt from 'express-jwt'
-import jwksRsa from 'jwks-rsa'
 import connect from './mongo.js'
+import jwtConfig from './jwt.js'
 import resourcesRouter from './endpoints/resources.js'
 import groupsRouter from './endpoints/groups.js'
 
 const app = express()
 
-const cognitoUserPoolId = process.env.COGNITO_USER_POOL_ID || 'us-west-2_CGd9Wq136'
-const awsRegion = process.env.AWS_REGION || 'us-west-2'
 // This allows turning off authentication, e.g., during migration.
 const noAuth = process.env.NO_AUTH === 'true'
 
@@ -23,13 +21,7 @@ app.options('*', cors())
 app.use(helmet())
 
 // JWT
-const publicKeySecret = jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksUri: `https://cognito-idp.${awsRegion}.amazonaws.com/${cognitoUserPoolId}/.well-known/jwks.json`
-  })
-
-app.use(jwt({ secret: publicKeySecret, algorithms: ['RS256'] }).unless({
+app.use(jwt(jwtConfig()).unless({
   method: ['GET'],
   custom: () => noAuth,
 }))

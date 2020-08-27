@@ -45,6 +45,10 @@
     "moduleDirectories": [
       "node_modules",
       "src"
-    ]
+    ],
+    "setupFiles": [
+      "<rootDir>/jest.envVars.js"
+    ],
+    "clearMocks": true
   }
 }

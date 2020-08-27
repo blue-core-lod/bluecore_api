@@ -12,9 +12,7 @@ resourcesRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
 
   const resource = req.body
   const resourceUri = resourceUriFor(req.protocol, req.hostname, req.port, req.params.resourceId)
-  const timestamp = new Date().toISOString()
-
-  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri)
 
   // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
   // Add primary copy.
@@ -26,7 +24,7 @@ resourcesRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
           // Stub out resource metadata.
           const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
           req.db.collection('resourceMetadata').insert(resourceMetadata)
-            .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
+            .then(() => res.location(resourceUri).status(201).send(forReturn(saveResource)))
             .catch(handleError(res))
         })
         .catch(handleError(res, req.params.resourceId))
@@ -39,9 +37,8 @@ resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
   console.log(`Received put to ${req.params.resourceId}`)
 
   const resource = req.body
-  const timestamp = new Date().toISOString()
   const resourceUri = resourceUriFor(req.protocol, req.hostname, req.port, req.params.resourceId)
-  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri)
 
   // Replace primary copy.
   req.db.collection('resources').update({id: req.params.resourceId}, saveResource, {replaceOne: true})
@@ -54,7 +51,7 @@ resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
           // Apppend to resource metadata.
           req.db.collection('resourceMetadata').update({id: req.params.resourceId}, { $push: { versions: versionEntry(saveResource)}})
             .then(() => {
-              res.send(forReturn(resource))
+              res.send(forReturn(saveResource))
             })
             .catch(handleError(res, req.params.resourceId))
         })
@@ -73,7 +70,7 @@ resourcesRouter.get('/:resourceId/versions', (req, res) => {
 })
 
 resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
-  req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
+  req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: new Date(req.params.timestamp)})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
@@ -131,14 +128,15 @@ const forReturn = (item) => {
   return newItem
 }
 
-const resourceForSave = (resource, id, uri, timestamp) => {
+const resourceForSave = (resource, id, uri) => {
   // Map . to ! in key names because Mongo doesn't like . in key names. Sigh.
   const newResource = replaceInKeys(resource, '.', '!')
 
   newResource.id = id
   // If resource has a uri, keep it. This is to support migrations.
   if(!newResource.uri) newResource.uri = uri
-  newResource.timestamp = timestamp
+  // For querying, need to use a JS date
+  newResource.timestamp = new Date()
   return newResource
 }
 
