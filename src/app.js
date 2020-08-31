@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import HoneybadgerNotifier from './honeybadger.js'
 import jwt from 'express-jwt'
 import connect from './mongo.js'
 import jwtConfig from './jwt.js'
@@ -26,6 +27,7 @@ app.use(jwt(jwtConfig()).unless({
   custom: () => noAuth,
 }))
 
+
 // Add the db to req
 // See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
 app.use(function (req, res, next) {
@@ -39,6 +41,11 @@ app.use(function (req, res, next) {
  next()
 })
 
+// Capture errors and notify Honeybadger
+app.use(function (err, req, res, next) {
+  HoneybadgerNotifier.notify(err)
+  next()
+});
 
 // In general, trying to follow https://jsonapi.org/
 
