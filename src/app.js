@@ -10,8 +10,9 @@ import groupsRouter from './endpoints/groups.js'
 
 const app = express()
 
-// This allows turning off authentication, e.g., during migration.
-const noAuth = process.env.NO_AUTH === 'true'
+// Use *before* all other app middleware.
+// See https://github.com/honeybadger-io/crywolf-node
+app.use(HoneybadgerNotifier.requestHandler)
 
 // Increase the allowed payload size.
 app.use(express.json({limit: '1mb'}))
@@ -22,6 +23,9 @@ app.options('*', cors())
 app.use(helmet())
 
 // JWT
+// This allows turning off authentication, e.g., during migration.
+const noAuth = process.env.NO_AUTH === 'true'
+
 app.use(jwt(jwtConfig()).unless({
   method: ['GET'],
   custom: () => noAuth,
@@ -40,12 +44,6 @@ app.use(function (req, res, next) {
  req.port = port
  next()
 })
-
-// Capture errors and notify Honeybadger
-app.use(function (err, req, res, next) {
-  HoneybadgerNotifier.notify(err)
-  next()
-});
 
 // In general, trying to follow https://jsonapi.org/
 
