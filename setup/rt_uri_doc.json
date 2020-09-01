@@ -57,11 +57,6 @@
           "@id": "http://www.w3.org/2000/01/rdf-schema#label"
         }
       ],
-      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
-        {
-          "@id": "http://sinopia.io/vocabulary/propertyAttribute/required"
-        }
-      ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
         {
           "@id": "http://sinopia.io/vocabulary/propertyType/literal"
