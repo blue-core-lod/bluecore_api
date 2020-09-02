@@ -38,9 +38,6 @@ mongo --host mongo:27017 <<EOF
   db.resourceMetadata.createIndex({id: 1}, {unique: true})
 EOF
 
-echo "sleeping for 30 seconds while indexing pipeline starts"
-sleep 30
-
 echo "Importing resource template docs"
 mongoimport --host=mongo:27017 --file=/scripts/rt_literal_property_attrs_doc.json --db=sinopia_repository --collection=resources
 mongoimport --host=mongo:27017 --file=/scripts/rt_lookup_property_attrs_doc.json --db=sinopia_repository --collection=resources
