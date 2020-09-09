@@ -30,6 +30,9 @@ To start the Express web server and run the application at [http://localhost:300
 
 This is in development mode and code changes will immediately be loaded without having to restart the server.
 
+If you are working on the MARC endpoints, supply the AWS credentials:
+`AWS_ACCESS_KEY_ID=AKIAWCX4L27WVC12345 AWS_SECRET_ACCESS_KEY=eSxHrLXdBUZSVNWvRLaOdq771rtgoj1i12345 npm run dev-start`
+
 ## Developers
 
 ### Linter for JavaScript
