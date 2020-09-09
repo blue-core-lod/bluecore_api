@@ -177,12 +177,12 @@
       ],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
-          "@value": "Label"
+          "@value": "Template Label"
         }
       ],
       "http://sinopia!io/vocabulary/hasRemark": [
         {
-          "@value": "The resource's label."
+          "@value": "The template's label."
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyUri": [
