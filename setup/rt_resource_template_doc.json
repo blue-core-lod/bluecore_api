@@ -115,12 +115,12 @@
       ],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
-          "@value": "Id"
+          "@value": "Template Id"
         }
       ],
       "http://sinopia!io/vocabulary/hasRemark": [
         {
-          "@value": "The resource's ID, e.g., ld4p:RT:bf2:Title:AbbrTitle."
+          "@value": "The resource's Template Id, e.g., ld4p:RT:bf2:Title:AbbrTitle."
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyUri": [
