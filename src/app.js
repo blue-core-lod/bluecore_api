@@ -7,6 +7,7 @@ import connect from './mongo.js'
 import jwtConfig from './jwt.js'
 import resourcesRouter from './endpoints/resources.js'
 import groupsRouter from './endpoints/groups.js'
+import marcRouter from './endpoints/marc.js'
 
 const app = express()
 
@@ -14,11 +15,19 @@ const app = express()
 // See https://github.com/honeybadger-io/crywolf-node
 app.use(HoneybadgerNotifier.requestHandler)
 
+app.use(function (req, res, next) {
+  if(process.env.NODE_ENV === 'development') console.log(`${req.method} ${req.url}`)
+  next()
+})
+
 // Increase the allowed payload size.
 app.use(express.json({limit: '1mb'}))
 
 // CORS should probably be tightened down.
-app.use(cors({exposedHeaders: 'Location'}))
+app.use(cors({exposedHeaders: [
+  'Location',
+  'Content-Location'
+]}))
 app.options('*', cors())
 app.use(helmet())
 
@@ -52,6 +61,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/repository', resourcesRouter)
+app.use('/marc', marcRouter)
 app.use('/groups', groupsRouter)
 
 export default app

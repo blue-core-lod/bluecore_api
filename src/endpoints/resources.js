@@ -1,6 +1,7 @@
 import express from 'express'
 import { ttlFromJsonld, n3FromJsonld } from '../rdf.js'
 import _ from 'lodash'
+import { handleError } from '../error.js'
 
 const resourcesRouter = express.Router()
 
@@ -25,11 +26,11 @@ resourcesRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
           const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
           req.db.collection('resourceMetadata').insert(resourceMetadata)
             .then(() => res.location(resourceUri).status(201).send(forReturn(saveResource)))
-            .catch(handleError(res))
+            .catch(handleError(req, res))
         })
-        .catch(handleError(res, req.params.resourceId))
+        .catch(handleError(req, res))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
@@ -53,11 +54,11 @@ resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
             .then(() => {
               res.send(forReturn(saveResource))
             })
-            .catch(handleError(res, req.params.resourceId))
+            .catch(handleError(req, res))
         })
-        .catch(handleError(res, req.params.resourceId))
+        .catch(handleError(req, res))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/versions', (req, res) => {
@@ -66,7 +67,7 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/versions', (req, res) => {
       if(!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:timestamp', (req, res) => {
@@ -75,7 +76,7 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:timestamp', (req, res)
       if(!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 // This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
@@ -96,25 +97,8 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
         default: () => res.sendStatus(406)
       })
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
-
-const handleError = (res, id) => {
-  return (err) => {
-    const errors = []
-    let statusCode = 500
-    // Mongo error for dupe key
-    if(err.code === 11000) {
-      // Conflict
-      errors.push({title: 'Resource id is not unique', details: err.toString(), code: '409'})
-      statusCode = 409
-    } else {
-      errors.push({title: 'Server error', details: err.toString(), code: '500'})
-    }
-    console.error(`Error for ${id}`, err)
-    res.status(statusCode).send(errors)
-  }
-}
 
 const resourceUriFor = (protocol, hostname, port, resourceId) => {
   if(apiBaseUrl) return `${apiBaseUrl}/repository/${resourceId}`
