@@ -7,8 +7,7 @@ const resourcesRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
 
-// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
-resourcesRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+resourcesRouter.post('/:resourceId', (req, res) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
   const resource = req.body
@@ -33,8 +32,7 @@ resourcesRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
     .catch(handleError(req, res))
 })
 
-// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
-resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+resourcesRouter.put('/:resourceId', (req, res) => {
   console.log(`Received put to ${req.params.resourceId}`)
 
   const resource = req.body
@@ -61,7 +59,7 @@ resourcesRouter.put('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
     .catch(handleError(req, res))
 })
 
-resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/versions', (req, res) => {
+resourcesRouter.get('/:resourceId/versions', (req, res) => {
   req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
       if(!resourceMetadata) return res.sendStatus(404)
@@ -70,7 +68,7 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/versions', (req, res) => {
     .catch(handleError(req, res))
 })
 
-resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:timestamp', (req, res) => {
+resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
   req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: new Date(req.params.timestamp)})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
@@ -79,8 +77,7 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:timestamp', (req, res)
     .catch(handleError(req, res))
 })
 
-// This regex path will match legacy uris like http://localhost:3000/repository/pcc/3a941f1e-025f-4a6f-80f1-7f23203186a2
-resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+resourcesRouter.get('/:resourceId', (req, res) => {
   req.db.collection('resources').findOne({id: req.params.resourceId})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
@@ -101,8 +98,8 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
 })
 
 const resourceUriFor = (protocol, hostname, port, resourceId) => {
-  if(apiBaseUrl) return `${apiBaseUrl}/repository/${resourceId}`
-  return `${protocol}://${hostname}:${port}/repository/${resourceId}`
+  if(apiBaseUrl) return `${apiBaseUrl}/resource/${resourceId}`
+  return `${protocol}://${hostname}:${port}/resource/${resourceId}`
 }
 
 const forReturn = (item) => {

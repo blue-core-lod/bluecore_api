@@ -7,7 +7,7 @@ const marcRouter = express.Router()
 const apiBaseUrl = process.env.API_BASE_URL
 
 // See https://jsonapi.org/recommendations/#asynchronous-processing
-marcRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
+marcRouter.post('/:resourceId', (req, res) => {
   console.log(`Received post to ${req.params.resourceId} to generate MARC`)
 
   // Make sure the record exists.
@@ -15,7 +15,7 @@ marcRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
   if(process.env.NODE_ENV === 'development') {
     // In local development, Mongo may not exist or resource may not be in db.
     findOnePromise = Promise.resolve({
-      uri: `https://api.development.sinopia.io/repository/${req.params.resourceId}`,
+      uri: `https://api.development.sinopia.io/resource/${req.params.resourceId}`,
       id: req.params.resourceId,
       timestamp: new Date()
     })
@@ -39,7 +39,7 @@ marcRouter.post('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
     .catch(handleError(req, res))
 })
 
-marcRouter.get('/:resourceId([^/]+/?[^/]+?)/job/:username/:timestamp', (req, res) => {
+marcRouter.get('/:resourceId/job/:username/:timestamp', (req, res) => {
   return hasMarc(req.params.resourceId, req.params.username, req.params.timestamp)
     .then((marcExists) => {
       if (!marcExists) {
@@ -50,7 +50,7 @@ marcRouter.get('/:resourceId([^/]+/?[^/]+?)/job/:username/:timestamp', (req, res
     .catch(handleError(req, res))
 })
 
-marcRouter.get('/:resourceId([^/]+/?[^/]+?)/version/:username/:timestamp', (req, res) => {
+marcRouter.get('/:resourceId/version/:username/:timestamp', (req, res) => {
   res.format({
     'text/plain': () => {
       getMarc(req.params.resourceId, req.params.username, req.params.timestamp, true)

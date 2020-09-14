@@ -60,7 +60,7 @@ app.get('/', (req, res) => {
   res.send({all: "good"})
 })
 
-app.use('/repository', resourcesRouter)
+app.use('/resource', resourcesRouter)
 app.use('/marc', marcRouter)
 app.use('/groups', groupsRouter)
 
