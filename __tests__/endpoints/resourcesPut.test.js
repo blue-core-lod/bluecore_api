@@ -28,7 +28,7 @@ afterAll(() => {
   clock.uninstall()
 })
 
-describe('PUT /repository/:repositoryId', () => {
+describe('PUT /resource/:resourceId', () => {
   const mockResourcesUpdate = jest.fn().mockResolvedValue({nModified: 1})
   const mockResourceVersionsInsert = jest.fn().mockResolvedValue()
   const mockResourceMetadataUpdate = jest.fn().mockResolvedValue()
@@ -44,7 +44,7 @@ describe('PUT /repository/:repositoryId', () => {
 
   it('updates existing resource', async () => {
     const res = await request(app)
-      .put('/repository/6852a770-2961-4836-a833-0b21a9b68041')
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
       .send(reqBody)
     expect(res.statusCode).toEqual(200)
@@ -65,25 +65,14 @@ describe('PUT /repository/:repositoryId', () => {
   })
   it('requires auth', async () => {
     const res = await request(app)
-      .put('/repository/6852a770-2961-4836-a833-0b21a9b68041')
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .send(reqBody)
     expect(res.statusCode).toEqual(401)
-  })
-  it('updates resources with legacy URIs', async () => {
-    const res = await request(app)
-      .put('/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
-      .send(reqBody)
-    expect(res.statusCode).toEqual(200)
-    const expectedResBody = {...resBody}
-    expectedResBody.id = 'stanford/6852a770-2961-4836-a833-0b21a9b68041'
-    expectedResBody.uri = 'https://api.development.sinopia.io/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041'
-    expect(res.body).toEqual(expectedResBody)
   })
   it('returns 404 when resource does not exist', async () => {
     mockResourcesUpdate.mockResolvedValue({nModified: 0})
     const res = await request(app)
-      .put('/repository/6852a770-2961-4836-a833-0b21a9b68041')
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
       .send(reqBody)
     expect(res.statusCode).toEqual(404)

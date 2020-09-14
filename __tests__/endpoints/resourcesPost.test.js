@@ -29,7 +29,7 @@ afterAll(() => {
   clock.uninstall()
 })
 
-describe('POST /repository/:repositoryId', () => {
+describe('POST /resource/:resourceId', () => {
   const mockResourcesInsert = jest.fn().mockResolvedValue()
   const mockResourceVersionsInsert = jest.fn().mockResolvedValue()
   const mockResourceMetadataInsert = jest.fn().mockResolvedValue()
@@ -45,12 +45,12 @@ describe('POST /repository/:repositoryId', () => {
 
   it('persists new resource', async () => {
     const res = await request(app)
-      .post('/repository/6852a770-2961-4836-a833-0b21a9b68041')
+      .post('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
       .send(reqBody)
     expect(res.statusCode).toEqual(201)
     expect(res.body).toEqual(resBody)
-    expect(res.header.location).toEqual('https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041')
+    expect(res.header.location).toEqual('https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041')
     const saveResource = {...resource}
     delete saveResource._id
     saveResource.timestamp = new Date()
@@ -63,28 +63,16 @@ describe('POST /repository/:repositoryId', () => {
   })
   it('requires auth', async () => {
     const res = await request(app)
-      .post('/repository/6852a770-2961-4836-a833-0b21a9b68041')
+      .post('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .send(reqBody)
     expect(res.statusCode).toEqual(401)
-  })
-  it('persists new resource with legacy URI', async () => {
-    const res = await request(app)
-      .post('/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
-      .send(reqBody)
-    expect(res.statusCode).toEqual(201)
-    const expectedResBody = {...resBody}
-    expectedResBody.id = 'stanford/6852a770-2961-4836-a833-0b21a9b68041'
-    expectedResBody.uri = 'https://api.development.sinopia.io/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041'
-    expect(res.body).toEqual(expectedResBody)
-    expect(res.header.location).toEqual('https://api.development.sinopia.io/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041')
   })
   it('returns 409 if resource is not unique', async () => {
     const err = new Error('Ooops')
     err.code = 11000
     mockResourcesInsert.mockRejectedValue(err)
     const res = await request(app)
-      .post('/repository/stanford/6852a770-2961-4836-a833-0b21a9b68041')
+      .post('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
       .send(reqBody)
     expect(res.statusCode).toEqual(409)

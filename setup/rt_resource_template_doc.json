@@ -1,6 +1,6 @@
 {
   "id": "sinopia:template:resource",
-  "uri": "http://localhost:3000/repository/sinopia:template:resource",
+  "uri": "http://localhost:3000/resource/sinopia:template:resource",
   "user": "justinlittman",
   "group": "ld4p",
   "timestamp": "2020-08-26T18:21:06.337Z",
@@ -228,7 +228,7 @@
       ]
     },
     {
-      "@id": "http://localhost:3000/repository/sinopia:template:resource",
+      "@id": "http://localhost:3000/resource/sinopia:template:resource",
       "http://sinopia!io/vocabulary/hasResourceTemplate": [
         {
           "@value": "sinopia:template:resource"

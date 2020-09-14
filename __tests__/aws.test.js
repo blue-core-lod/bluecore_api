@@ -25,7 +25,7 @@ describe('requestMarc', () => {
         expect(params).toEqual({
           FunctionName: 'sinopia-rdf2marc-development',
           InvokeArgs: JSON.stringify({
-            instance_uri: "https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041",
+            instance_uri: "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
             marc_path: "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
             marc_txt_path: "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.txt",
             error_path: "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
@@ -36,7 +36,7 @@ describe('requestMarc', () => {
       })
 
       expect(await requestMarc(
-'https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041',
+'https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041',
         '6852a770-2961-4836-a833-0b21a9b68041', 'jdoe', '2020-08-20T11:34:40.887Z'
 )).toEqual()
     })
@@ -48,7 +48,7 @@ describe('requestMarc', () => {
         callback(new Error('AWS fail'), null)
       })
       await expect(requestMarc(
-'https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041',
+'https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041',
         '6852a770-2961-4836-a833-0b21a9b68041', 'jdoe', '2020-08-20T11:34:40.887Z'
 )).rejects.toThrow('AWS fail')
     })
