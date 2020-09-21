@@ -135,7 +135,7 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
         {
-          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+          "@id": "http://sinopia.io/vocabulary/propertyType/literal"
         }
       ]
     },
