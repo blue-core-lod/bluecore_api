@@ -5,13 +5,13 @@
       "@type": [
         "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
       ],
-      "http://id!loc!gov/ontologies/bibframe/mainTitle": [
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
         {
           "@value": "foo",
           "@language": "eng"
         }
       ],
-      "http://sinopia!io/vocabulary/hasResourceTemplate": [
+      "http://sinopia.io/vocabulary/hasResourceTemplate": [
         {
           "@value": "profile:bf2:Title:AbbrTitle"
         }

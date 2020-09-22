@@ -2,6 +2,7 @@ import connect from 'mongo.js'
 import request from 'supertest'
 import app from 'app.js'
 const resource = require('../__fixtures__/resource_6852a770-2961-4836-a833-0b21a9b68041.json')
+const resource2 = require('../__fixtures__/resource_63834c19-4d01-4c91-9dcc-a69c6e26c886.json')
 const resBody = require('../__fixtures__/resp_6852a770-2961-4836-a833-0b21a9b68041.json')
 const allResBody = require('../__fixtures__/all_resp.json')
 
@@ -14,10 +15,13 @@ jest.mock('mongo.js')
 describe('GET /resource/', () => {
 
   it('returns the first 25 resources', async () => {
-    const mockEvery = jest.fn().mockImplementationOnce((callback) => {
+    /* eslint-disable callback-return */
+    const mockEvery = jest.fn().mockImplementation((callback) => {
       callback(resource)
+      callback(resource2)
       return Promise.resolve()
     })
+    /* eslint-enable callback-return */
     const mockFind = jest.fn().mockReturnValue({each: mockEvery})
     const mockCollection = (collectionName) => {
       return {

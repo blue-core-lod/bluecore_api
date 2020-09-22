@@ -102,6 +102,7 @@ resourcesRouter.get('/:resourceId([^/]+/?[^/]+?)', (req, res) => {
     .catch(handleError(res, req.params.resourceId))
 })
 
+/* eslint-disable prefer-destructuring */
 resourcesRouter.get('/', (req, res) => {
   const data = []
   const limit = Number(req.query.limit) || 25
@@ -117,7 +118,6 @@ resourcesRouter.get('/', (req, res) => {
     } else {
       nextPage = true
     }
-    console.log(data)
   })
     .then(() => {
       const links = {
@@ -125,11 +125,10 @@ resourcesRouter.get('/', (req, res) => {
       }
       if(start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), group)
       if(nextPage) links.next = pageUrlFor(req, limit, start + limit, group)
-      console.log(data)
-      console.log(links)
       res.send({ data, links })
     })
 })
+/* eslint-enable prefer-destructuring */
 
 const handleError = (res, id) => {
   return (err) => {
