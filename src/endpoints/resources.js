@@ -111,19 +111,22 @@ resourcesRouter.get('/', (req, res) => {
   if(group) query.group = group
   // Ask for one more so that can see if there is a next page.
   let nextPage = false
-  req.db.collection('resources').find(query, {skip: start-1, limit: limit+1}).each((resource) => {
-    if(data.length < limit){
+  req.db.collection('resources').find(query, {skip: start - 1, limit: limit + 1}).each((resource) => {
+    if(data.length < limit) {
       data.push(forReturn(resource))
     } else {
       nextPage = true
     }
+    console.log(data)
   })
     .then(() => {
       const links = {
         first: pageUrlFor(req, 0, limit, group)
       }
-      if(start != 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), group)
+      if(start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), group)
       if(nextPage) links.next = pageUrlFor(req, limit, start + limit, group)
+      console.log(data)
+      console.log(links)
       res.send({ data, links })
     })
 })
