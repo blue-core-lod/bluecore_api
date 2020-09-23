@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
+      "@id": "http://api.development.sinopia.io/repository/63834c19-4d01-4c91-9dcc-a69c6e26c886",
       "@type": [
         "http://id.loc.gov/ontologies/bibframe/Work"
       ],
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
+      "@id": "http://api.development.sinopia.io/repository/63834c19-4d01-4c91-9dcc-a69c6e26c886",
       "@type": [
         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
       ],
@@ -70,5 +70,5 @@
   "timestamp": "2019-11-08T17:40:23.363Z",
   "templateId": "Yale:RT:BF2:AdminMetadata",
   "id": "63834c19-4d01-4c91-9dcc-a69c6e26c886",
-  "uri": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886"
+  "uri": "http://api.development.sinopia.io/repository/63834c19-4d01-4c91-9dcc-a69c6e26c886"
 }

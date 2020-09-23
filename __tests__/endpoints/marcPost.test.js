@@ -38,7 +38,7 @@ describe('POST /marc/:resourceId', () => {
       expect(res.statusCode).toEqual(202)
       expect(res.header['content-location']).toEqual('https://api.development.sinopia.io/marc/6852a770-2961-4836-a833-0b21a9b68041/job/jdoe/2020-08-20T11:34:40.887Z')
       expect(aws.requestMarc).toHaveBeenCalledWith(
-'https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041',
+'https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041',
         '6852a770-2961-4836-a833-0b21a9b68041', 'jdoe', '2020-08-20T11:34:40.887Z'
 )
     })
