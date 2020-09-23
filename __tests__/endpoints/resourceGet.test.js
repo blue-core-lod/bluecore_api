@@ -36,6 +36,7 @@ describe('GET /resource/', () => {
       .set('Accept', 'application/json')
     expect(res.statusCode).toEqual(200)
     expect(res.body).toEqual(allResBody)
+    expect(mockFind).toHaveBeenCalledWith({}, {"limit": 26, "skip": 0})
   })
 })
 
