@@ -152,8 +152,8 @@ const resourceUriFor = (req) => {
 }
 
 const baseUrlFor = (req) => {
-  if(apiBaseUrl) return `${apiBaseUrl}/repository`
-  return `${req.protocol}://${req.hostname}:${req.port}/repository`
+  if(apiBaseUrl) return `${apiBaseUrl}/resource`
+  return `${req.protocol}://${req.hostname}:${req.port}/resource`
 }
 
 const pageUrlFor = (req, limit, start, group) => {

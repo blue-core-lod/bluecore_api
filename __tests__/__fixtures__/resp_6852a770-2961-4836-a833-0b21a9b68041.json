@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "@id": "https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041",
+      "@id": "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
       "@type": [
         "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
       ],
@@ -30,5 +30,5 @@
   "templateId": "profile:bf2:Title:AbbrTitle",
   "timestamp": "2020-08-20T11:34:40.887Z",
   "id": "6852a770-2961-4836-a833-0b21a9b68041",
-  "uri": "https://api.development.sinopia.io/repository/6852a770-2961-4836-a833-0b21a9b68041"
+  "uri": "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041"
 }
