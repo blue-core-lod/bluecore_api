@@ -30,41 +30,52 @@ paths:
       responses:
         '200':
           description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                type: string
         '404':
           description: Not found
-          <<< TODO: CONTENT ??? >>>
       parameters:
         - name: resourceId
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
     put:
       summary: <<< TODO: INSERT SOMETHING HERE >>>
       responses:
         '200':
           description: OK - returns resource
-          <<< TODO: CONTENT ??? >>>
+          content:
+            application/json:
+              schema:
+                type: string
         '404':
           description: Not found
-          <<< TODO: CONTENT ??? >>>
       parameters:
         - name: resourceId
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /resource/{resourceId}/versions:
     get:
       summary: Return the resources
       responses:
-        content: <<< TODO ??? >>>
-      parameters:
+        content:
+          application/json:
+            schema:
+              type: string
+  parameters:
         - name: resourceId
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /resource/{resourceId}/version/{timestamp}:
     get:
       summary: Return the resources
@@ -74,12 +85,14 @@ paths:
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
         - name: timestamp
           in: path
           description: Timestamp (version) of the resource to retrieve
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /marc/{resourceId}/job/{username}/{timestamp}:
     get:
       summary: <<< TODO: INSERT SOMETHING HERE >>>
@@ -89,17 +102,20 @@ paths:
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
         - name: username
           in: path
           description: Username of the resource creator
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
         - name: timestamp
           in: path
           description: Timestamp (version) of the resource to retrieve
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /marc/{resourceId}/version/{username}/{timestamp}:
     get:
       summary: <<< TODO: INSERT SOMETHING HERE >>>
@@ -109,17 +125,20 @@ paths:
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
         - name: username
           in: path
           description: Username of the resource creator
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
         - name: timestamp
           in: path
           description: Timestamp (version) of the resource to retrieve
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /marc/{resourceId}:
     post:
       summary: <<< TODO: INSERT SOMETHING HERE >>>
@@ -129,7 +148,8 @@ paths:
           in: path
           description: ID of the resource
           required: true
-          <<< TODO: SCHEMA ??? >>>
+          schema:
+            type: string
   /groups:
     get:
       summary: <<< TODO: INSERT SOMETHING HERE >>>
