@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  description: API for persisting sinopia resources to Mongo / AWS DocumentDB
+  version: 1.0.0
+  title: Sinopia API
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: 'https://api.sinopia.io'
+    description: Production service
+    variables:
+      env:
+        default: prod
+  - url: 'https://api.{env}.sinopia.io'
+    description: Staging service
+    variables:
+      env:
+        default: stage
+paths:
+  /:
+    get:
+      summary: A healthcheck endpoint
+      responses:
+        '200':
+          description: The status of the service
+  /resource/{resourceId}:
+    get:
+      summary: Return a JSON representation of the given resource
+      responses:
+        '200':
+          description: OK - returns resource
+        '404':
+          description: Not found
+          <<< TODO: CONTENT ??? >>>
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+    put:
+      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      responses:
+        '200':
+          description: OK - returns resource
+          <<< TODO: CONTENT ??? >>>
+        '404':
+          description: Not found
+          <<< TODO: CONTENT ??? >>>
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /resource/{resourceId}/versions:
+    get:
+      summary: Return the resources
+      responses:
+        content: <<< TODO ??? >>>
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /resource/{resourceId}/version/{timestamp}:
+    get:
+      summary: Return the resources
+      responses:
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /marc/{resourceId}/job/{username}/{timestamp}:
+    get:
+      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      responses:
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+        - name: username
+          in: path
+          description: Username of the resource creator
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /marc/{resourceId}/version/{username}/{timestamp}:
+    get:
+      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      responses:
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+        - name: username
+          in: path
+          description: Username of the resource creator
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /marc/{resourceId}:
+    post:
+      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      responses:
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          <<< TODO: SCHEMA ??? >>>
+  /groups:
+    get:
+      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      responses:
+    
