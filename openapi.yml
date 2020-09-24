@@ -43,8 +43,8 @@ paths:
           required: true
           schema:
             type: string
-    put:
-      summary: <<< TODO: INSERT SOMETHING HERE >>>
+    post:
+      summary: Endpoint to insert or update resources - returns the resource as JSON
       responses:
         '200':
           description: OK - returns resource
@@ -61,6 +61,34 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+    put:
+      summary: Endpoint to insert or update resources - returns the resource as JSON
+      responses:
+        '200':
+          description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                type: string
+        '404':
+          description: Not found
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
   /resource/{resourceId}/versions:
     get:
       summary: Return the resources
@@ -95,7 +123,7 @@ paths:
             type: string
   /marc/{resourceId}/job/{username}/{timestamp}:
     get:
-      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      summary: Return the marc record for the given resource version
       responses:
       parameters:
         - name: resourceId
@@ -118,7 +146,7 @@ paths:
             type: string
   /marc/{resourceId}/version/{username}/{timestamp}:
     get:
-      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      summary: Return the marc record for the given resource version
       responses:
       parameters:
         - name: resourceId
