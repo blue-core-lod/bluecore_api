@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  description: API for persisting sinopia resources to Mongo / AWS DocumentDB
+  version: 1.0.0
+  title: Sinopia API
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+servers:
+  - url: 'https://api.sinopia.io'
+    description: Production service
+    variables:
+      env:
+        default: prod
+  - url: 'https://api.{env}.sinopia.io'
+    description: Staging service
+    variables:
+      env:
+        default: stage
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /:
+    get:
+      summary: A healthcheck endpoint
+      responses:
+        '200':
+          description: The status of the service
+  /resource:
+    get:
+      summary: Returns a paged JSON result of all resources
+      responses:
+        '200':
+          description: OK - returns a page of resources
+          contnet:
+            application/json:
+              schema:
+                type: string
+      parameters:
+        - name: limit
+          description: The number of resources to return in each page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+        - name: start
+          description: The number of resources to offset in the result page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: group
+          description: Group name filter
+          in: query
+          required: false
+          schema:
+            type: string    
+  /resource/{resourceId}:
+    get:
+      summary: Return a representation of the given resource
+      responses:
+        '200':
+          description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                type: string
+            application/ld+json:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+            text/n3:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+            text/turtle:
+              schema:
+                type: string
+        '404':
+          description: Not found
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+    post:
+      summary: Endpoint to insert resources - returns the resource as JSON
+      responses:
+        '201':
+          description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                type: string
+        '409':
+          description: Conflict - resource already exists
+          content:
+            application/json:
+              schema:
+                type: string
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+    put:
+      summary: Endpoint to update resources - returns the resource as JSON
+      responses:
+        '200':
+          description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                type: string
+        '404':
+          description: Not found
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+  /resource/{resourceId}/versions:
+    get:
+      summary: Returns a metadata document of the resource versions
+      responses:
+        content:
+          application/json:
+            schema:
+              type: string
+  parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+  /resource/{resourceId}/version/{timestamp}:
+    get:
+      summary: Return the resources
+      responses:
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          schema:
+            type: string
+  /marc/{resourceId}/job/{username}/{timestamp}:
+    get:
+      summary: Returns the status of the MARC conversion job
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plan:
+              schema:
+                type: string
+        '303':
+          description: Redirect to MARC version url
+          content:
+            text/plan:
+              schema:
+                type: string
+        '500':
+          description: Server error indicating the coversion failed
+          content:
+            text/plan:
+              schema:
+                type: string
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+        - name: username
+          in: path
+          description: Username of the user that requested the MARC conversion job
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          schema:
+            type: string
+        - name: Accept
+          in: header
+          schema:
+            type: string
+  /marc/{resourceId}/version/{username}/{timestamp}:
+    get:
+      summary: Return the marc record for the given resource version
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plan:
+              schema:
+                type: string
+            application/marc:
+              schema:
+                type: string
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+        - name: username
+          in: path
+          description: Username of the resource creator
+          required: true
+          schema:
+            type: string
+        - name: timestamp
+          in: path
+          description: Timestamp (version) of the resource to retrieve
+          required: true
+          schema:
+            type: string
+  /marc/{resourceId}:
+    post:
+      summary: Request conversion of a resource to MARC
+      responses:
+        '202':
+          description: Accepted
+          headers:
+            Content-Location:
+              description: The URL for checking the status of the MARC conversion job.
+              schema:
+                type: string
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+  /groups:
+    get:
+      summary: List groups
+      responses:
+        content:
+          application/json:
+            schema:
+              type: string
