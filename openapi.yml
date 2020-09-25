@@ -34,6 +34,21 @@ paths:
             application/json:
               schema:
                 type: string
+            application/ld+json:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+            text/n3:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+            text/turtle:
+              schema:
+                type: string
         '404':
           description: Not found
       parameters:
@@ -46,14 +61,18 @@ paths:
     post:
       summary: Endpoint to insert or update resources - returns the resource as JSON
       responses:
-        '200':
+        '201':
           description: OK - returns resource
           content:
             application/json:
               schema:
                 type: string
-        '404':
-          description: Not found
+        '409':
+          description: Conflict - resource already exists
+          content:
+            application/json:
+              schema:
+                type: string
       parameters:
         - name: resourceId
           in: path
@@ -91,7 +110,7 @@ paths:
               type: object
   /resource/{resourceId}/versions:
     get:
-      summary: Return the resources
+      summary: Returns a metadata document of the resource versions
       responses:
         content:
           application/json:
@@ -123,8 +142,20 @@ paths:
             type: string
   /marc/{resourceId}/job/{username}/{timestamp}:
     get:
-      summary: Return the marc record for the given resource version
+      summary: Returns the status of the MARC conversion job
       responses:
+        '200':
+          description: OK
+          content:
+            text/plan:
+              schema:
+                type: string
+        '303':
+          description: Redirect to MARC version url
+          content:
+            text/plan:
+              schema:
+                type: string
       parameters:
         - name: resourceId
           in: path
@@ -134,7 +165,7 @@ paths:
             type: string
         - name: username
           in: path
-          description: Username of the resource creator
+          description: Username of the user that requested the MARC conversion job
           required: true
           schema:
             type: string
@@ -144,10 +175,23 @@ paths:
           required: true
           schema:
             type: string
+        - name: Accept
+          in: header
+          schema:
+            type: string
   /marc/{resourceId}/version/{username}/{timestamp}:
     get:
       summary: Return the marc record for the given resource version
       responses:
+        '200':
+          description: OK
+          content:
+            text/plan:
+              schema:
+                type: string
+            application/marc:
+              schema:
+                type: string
       parameters:
         - name: resourceId
           in: path
@@ -169,8 +213,15 @@ paths:
             type: string
   /marc/{resourceId}:
     post:
-      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      summary: Request conversion of a resource to MARC
       responses:
+        '202':
+          description: Accepted
+          headers:
+            Content-Location:
+              description: The URL for checking the status of the MARC conversion job.
+              schema:
+                type: string
       parameters:
         - name: resourceId
           in: path
@@ -180,6 +231,9 @@ paths:
             type: string
   /groups:
     get:
-      summary: <<< TODO: INSERT SOMETHING HERE >>>
+      summary: List groups
       responses:
-    
+        content:
+          application/json:
+            schema:
+              type: string
