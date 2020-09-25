@@ -17,6 +17,14 @@ servers:
     variables:
       env:
         default: stage
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
 paths:
   /:
     get:
