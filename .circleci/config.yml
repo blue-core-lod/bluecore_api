@@ -45,6 +45,18 @@ jobs:
             # ./cc-test-reporter before-build
             npm run ci
             # ./cc-test-reporter after-build --exit-code $?
+      - run:
+          name: Validate API specification
+          command: |
+            sudo npm install -g openapi-enforcer-cli
+            result=$(openapi-enforcer validate openapi.yml)
+            [[ $result =~ "Document is valid" ]] && {
+            echo "Validation good"
+            exit 0
+            } || {
+            echo $result
+            exit 1
+            }
   register_latest_image:
     <<: *defaults
     steps:

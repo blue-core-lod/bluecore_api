@@ -37,6 +37,7 @@
     "eslint": "^7.9.0",
     "jest": "^26.4.2",
     "nodemon": "^2.0.4",
+    "openapi-enforcer-cli": "^0.3.0",
     "supertest": "^4.0.2"
   },
   "jest": {

@@ -17,12 +17,6 @@ servers:
     variables:
       env:
         default: stage
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
 security:
   - bearerAuth: []
 paths:
@@ -34,14 +28,14 @@ paths:
           description: The status of the service
   /resource:
     get:
-      summary: Returns a paged JSON result of all resources
+      summary: Returns a paged JSON result of all or filtered resources
       responses:
         '200':
           description: OK - returns a page of resources
-          contnet:
+          content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/Resource'
       parameters:
         - name: limit
           description: The number of resources to return in each page
@@ -58,11 +52,34 @@ paths:
             type: integer
             default: 1
         - name: group
-          description: Group name filter
+          description: Group name filter. For values, see /groups endpoint.
+          example: stanford
           in: query
           required: false
           schema:
-            type: string    
+            type: string
+        - name: updatedBefore
+          description: Resource last updated before filter
+          example: "2019-11-08T17:40:23.363Z"
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: updatedAfter
+          description: Resource last updated after filter
+          example: "2019-11-08T17:40:23.363Z"
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: type
+          description: Class filter
+          example: http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle
+          in: query
+          required: false
+          schema:
+            type: string
   /resource/{resourceId}:
     get:
       summary: Return a representation of the given resource
@@ -72,7 +89,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/Resource'
             application/ld+json:
               schema:
                 type: string
@@ -102,6 +119,11 @@ paths:
       responses:
         '201':
           description: OK - returns resource
+          headers:
+            location:
+              description: URL of the newly created resource.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -151,21 +173,29 @@ paths:
     get:
       summary: Returns a metadata document of the resource versions
       responses:
-        content:
-          application/json:
-            schema:
-              type: string
-  parameters:
-        - name: resourceId
-          in: path
-          description: ID of the resource
-          required: true
-          schema:
-            type: string
+        '200':
+          description: OK - returns metadata document
+          content:
+            application/json:
+              schema:
+                type: string
+      parameters:
+            - name: resourceId
+              in: path
+              description: ID of the resource
+              required: true
+              schema:
+                type: string
   /resource/{resourceId}/version/{timestamp}:
     get:
-      summary: Return the resources
+      summary: Return specified version of the resource.
       responses:
+        '200':
+          description: OK - returns resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
       parameters:
         - name: resourceId
           in: path
@@ -176,9 +206,11 @@ paths:
         - name: timestamp
           in: path
           description: Timestamp (version) of the resource to retrieve
+          example: "2020-08-20T11:34:40.887Z"
           required: true
           schema:
             type: string
+            format: date-time
   /marc/{resourceId}/job/{username}/{timestamp}:
     get:
       summary: Returns the status of the MARC conversion job
@@ -192,11 +224,11 @@ paths:
         '303':
           description: Redirect to MARC version url
           content:
-            text/plan:
+            text/plain:
               schema:
                 type: string
         '500':
-          description: Server error indicating the coversion failed
+          description: Server error indicating the conversion failed
           content:
             text/plan:
               schema:
@@ -220,7 +252,7 @@ paths:
           required: true
           schema:
             type: string
-        - name: Accept
+        - name: accept
           in: header
           schema:
             type: string
@@ -263,7 +295,7 @@ paths:
         '202':
           description: Accepted
           headers:
-            Content-Location:
+            content-location:
               description: The URL for checking the status of the MARC conversion job.
               schema:
                 type: string
@@ -278,7 +310,108 @@ paths:
     get:
       summary: List groups
       responses:
-        content:
-          application/json:
-            schema:
+        '200':
+          description: 'OK - returns list of groups'
+          content:
+            application/json:
+              schema:
+                type: string
+components:
+  schemas:
+    Resource:
+      description: Response for a single resource record.
+      type: object
+      properties:
+        data:
+          description: The resource as JSON-LD.
+          type: string
+        user:
+          description: Username for the user who last updated the record.
+          type: string
+        bfAdminMetadataRefs:
+          description: References to Bibframe AdminMetadata contained within this record.
+          type: array
+          items:
+            type: string
+        bfItemRefs:
+          description: References to Bibframe Items contained within this record.
+          type: array
+          items:
+            type: string
+        bfInstanceRefs:
+          description: References to Bibframe Instances contained within this record.
+          type: array
+          items:
+            type: string
+        bfWorks:
+          description: References to Bibframe Instances contained within this record.
+          type: array
+          items:
+            type: string
+        group:
+          description: The group to which the record belongs.
+          type: string
+        types:
+          description: The classes for the record.
+          example:
+            - http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle
+          type: array
+          items:
+            type: string
+        id:
+          description: The identifier for the resource, which is the final section of the URI.
+          example: 6852a770-2961-4836-a833-0b21a9b68041
+          type: string
+        uri:
+          description: The URI for the resource.
+          example: https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041
+          type: string
+        timestamp:
+          description: The date and time the resource was last updated. This also identifies the resource version.
+          example: "2020-08-20T11:34:40.887Z"
+          type: string
+          format: date-time
+      required:
+        - data
+        - user
+        - bfAdminMetadataRefs
+        - bfItemRefs
+        - bfInstanceRefs
+        - bfWorks
+        - group
+        - types
+        - id
+        - uri
+        - timestamp
+    ResourcePage:
+      description: Response containing a page of resource records.
+      type: object
+      properties:
+        data:
+          description: The resources.
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        links:
+          description: Links to other pages.
+          type: object
+          properties:
+            first:
+              description: Link to first page.
               type: string
+            prev:
+              description: Link for previous page.
+              type: string
+            next:
+              description: Link to next page.
+              type: string
+          required:
+            - first
+      required:
+        - data
+        - links
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
