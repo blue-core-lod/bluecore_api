@@ -1,0 +1,74 @@
+{
+  "data": [
+    {
+      "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
+      "@type": [
+        "http://id.loc.gov/ontologies/bibframe/Work"
+      ],
+      "http://www.w3.org/2002/07/owl#sameAs": [
+        {
+          "@id": "repository/washington/37ec8045-aa1a-46c2-9068-db7579b0c784"
+        }
+      ]
+    },
+    {
+      "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
+      "@type": [
+        "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+        {
+          "@id": "http://id.loc.gov/vocabulary/menclvl/3"
+        }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionAuthentication": [
+        {
+          "@id": "https://id.loc.gov/vocabulary/marcauthen/pcc"
+        }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+        {
+          "@id": "https://id.loc.gov/vocabulary/descriptionConventions/rda"
+        }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
+        {
+          "@id": "https://id.loc.gov/vocabulary/languages/eng"
+        }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+        {
+          "@id": "https://id.loc.gov/vocabulary/organizations/cty"
+        }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+        {
+          "@id": "https://id.loc.gov/vocabulary/organizations/cty"
+        }
+      ],
+      "http://sinopia.io/vocabulary/hasResourceTemplate": [
+        {
+          "@value": "Yale:RT:BF2:AdminMetadata"
+        }
+      ],
+      "http://xmlns.com/foaf/0.1/primaryTopic": [
+        {
+          "@id": "_:b0"
+        }
+      ]
+    }
+  ],
+  "bfAdminMetadataRefs": [],
+  "bfInstanceRefs": [],
+  "bfItemRefs": [],
+  "bfWorkRefs": [],
+  "group": "yale",
+  "types": [
+    "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+  ],
+  "user": "tat2",
+  "timestamp": "2019-11-08T17:40:23.363Z",
+  "templateId": "Yale:RT:BF2:AdminMetadata",
+  "id": "63834c19-4d01-4c91-9dcc-a69c6e26c886",
+  "uri": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886"
+}

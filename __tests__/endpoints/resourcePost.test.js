@@ -53,12 +53,12 @@ describe('POST /resource/:resourceId', () => {
     expect(res.header.location).toEqual('https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041')
     const saveResource = {...resource}
     delete saveResource._id
-    saveResource.timestamp = new Date()
+    saveResource.timestamp = new Date().toISOString()
     expect(mockResourcesInsert).toHaveBeenCalledWith(saveResource)
     expect(mockResourceVersionsInsert).toHaveBeenCalledWith(saveResource)
 
     const expectedResourceMetadata = {...resourceMetadata}
-    expectedResourceMetadata.versions[0].timestamp = new Date()
+    expectedResourceMetadata.versions[0].timestamp = new Date().toISOString()
     expect(mockResourceMetadataInsert).toHaveBeenCalledWith(expectedResourceMetadata)
   })
   it('requires auth', async () => {
