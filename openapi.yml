@@ -7,28 +7,39 @@ info:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 servers:
-  - url: 'https://api.sinopia.io'
+  - url: 'https://{env}.sinopia.io'
     description: Production service
     variables:
       env:
-        default: prod
-  - url: 'https://api.{env}.sinopia.io'
+        default: api
+  - url: 'https://{env}.sinopia.io'
     description: Staging service
     variables:
       env:
-        default: stage
-security:
-  - bearerAuth: []
+        default: api.stage
+tags:
+  - name: resources
+    description: Resources and resource versions
+  - name: marc
+    description: MARC conversions
+  - name: groups
+    description: Groups
+  - name: monitoring
+    description: Healthcheck and monitoring
 paths:
   /:
     get:
       summary: A healthcheck endpoint
+      tags:
+        - monitoring
       responses:
         '200':
           description: The status of the service
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
+      tags:
+        - resources
       responses:
         '200':
           description: OK - returns a page of resources
@@ -83,6 +94,8 @@ paths:
   /resource/{resourceId}:
     get:
       summary: Return a representation of the given resource
+      tags:
+        - resources
       responses:
         '200':
           description: OK - returns resource
@@ -116,6 +129,8 @@ paths:
             type: string
     post:
       summary: Endpoint to insert resources - returns the resource as JSON
+      tags:
+        - resources
       responses:
         '201':
           description: OK - returns resource
@@ -148,6 +163,8 @@ paths:
               type: object
     put:
       summary: Endpoint to update resources - returns the resource as JSON
+      tags:
+        - resources
       responses:
         '200':
           description: OK - returns resource
@@ -172,6 +189,8 @@ paths:
   /resource/{resourceId}/versions:
     get:
       summary: Returns a metadata document of the resource versions
+      tags:
+        - resources
       responses:
         '200':
           description: OK - returns metadata document
@@ -189,6 +208,8 @@ paths:
   /resource/{resourceId}/version/{timestamp}:
     get:
       summary: Return specified version of the resource.
+      tags:
+        - resources
       responses:
         '200':
           description: OK - returns resource
@@ -214,6 +235,8 @@ paths:
   /marc/{resourceId}/job/{username}/{timestamp}:
     get:
       summary: Returns the status of the MARC conversion job
+      tags:
+        - marc
       responses:
         '200':
           description: OK
@@ -259,6 +282,8 @@ paths:
   /marc/{resourceId}/version/{username}/{timestamp}:
     get:
       summary: Return the marc record for the given resource version
+      tags:
+        - marc
       responses:
         '200':
           description: OK
@@ -291,6 +316,8 @@ paths:
   /marc/{resourceId}:
     post:
       summary: Request conversion of a resource to MARC
+      tags:
+        - marc
       responses:
         '202':
           description: Accepted
@@ -309,6 +336,8 @@ paths:
   /groups:
     get:
       summary: List groups
+      tags:
+        - groups
       responses:
         '200':
           description: 'OK - returns list of groups'
