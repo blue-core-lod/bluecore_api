@@ -51,12 +51,12 @@ describe('PUT /resource/:resourceId', () => {
     expect(res.body).toEqual(resBody)
     const saveResource = {...resource}
     delete saveResource._id
-    saveResource.timestamp = new Date().toISOString()
+    saveResource.timestamp = new Date()
     expect(mockResourcesUpdate).toHaveBeenCalledWith({id: '6852a770-2961-4836-a833-0b21a9b68041'}, saveResource, {replaceOne: true})
     expect(mockResourceVersionsInsert).toHaveBeenCalledWith(saveResource)
 
     const versionEntry = {
-      "timestamp": new Date().toISOString(),
+      "timestamp": new Date(),
       "user": "havram",
       "group": "stanford",
       "templateId": "profile:bf2:Title:AbbrTitle"

@@ -11,6 +11,9 @@ export const handleError = (req, res) => {
       // S3
       errors.push({title: 'Not found', details: err.toString(), code: '404'})
       statusCode = 404
+    } else if (err.code === 'BadRequest') {
+      errors.push({title: 'Bad Request', details: err.toString(), code: '400'})
+      statusCode = 400
     } else {
       errors.push({title: 'Server error', details: err.toString(), code: '500'})
     }

@@ -12,7 +12,7 @@ resourcesRouter.post('/:resourceId', (req, res) => {
 
   const resource = req.body
   const resourceUri = resourceUriFor(req)
-  const timestamp = new Date().toISOString()
+  const timestamp = new Date()
 
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
@@ -38,7 +38,7 @@ resourcesRouter.put('/:resourceId', (req, res) => {
   console.log(`Received put to ${req.params.resourceId}`)
 
   const resource = req.body
-  const timestamp = new Date().toISOString()
+  const timestamp = new Date()
   const resourceUri = resourceUriFor(req)
   const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
 
@@ -55,11 +55,11 @@ resourcesRouter.put('/:resourceId', (req, res) => {
             .then(() => {
               res.send(forReturn(resource))
             })
-            .catch(handleError(res, req.params.resourceId))
+            .catch(handleError(req, res))
         })
-        .catch(handleError(res, req.params.resourceId))
+        .catch(handleError(req, res))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 resourcesRouter.get('/:resourceId/versions', (req, res) => {
@@ -68,7 +68,7 @@ resourcesRouter.get('/:resourceId/versions', (req, res) => {
       if(!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
@@ -77,7 +77,7 @@ resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
       if(!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 resourcesRouter.get('/:resourceId', (req, res) => {
@@ -97,7 +97,7 @@ resourcesRouter.get('/:resourceId', (req, res) => {
         default: () => res.sendStatus(406)
       })
     })
-    .catch(handleError(res, req.params.resourceId))
+    .catch(handleError(req, res))
 })
 
 /* eslint-disable prefer-destructuring */
@@ -105,9 +105,14 @@ resourcesRouter.get('/', (req, res) => {
   const data = []
   const limit = Number(req.query.limit) || 25
   const start = Number(req.query.start) || 1
-  const query = {}
-  const group = req.query.group
-  if(group) query.group = group
+  let query
+  try {
+    query = queryFor(req.query)
+  } catch(error) {
+    handleError(req, res)(error)
+    return
+  }
+
   // Ask for one more so that can see if there is a next page.
   let nextPage = false
   req.db.collection('resources').find(query, {skip: start - 1, limit: limit + 1}).each((resource) => {
@@ -119,12 +124,13 @@ resourcesRouter.get('/', (req, res) => {
   })
     .then(() => {
       const links = {
-        first: pageUrlFor(req, 0, limit, group)
+        first: pageUrlFor(req, 0, limit, req.query)
       }
-      if(start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), group)
-      if(nextPage) links.next = pageUrlFor(req, limit, start + limit, group)
+      if(start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), req.query)
+      if(nextPage) links.next = pageUrlFor(req, limit, start + limit, req.query)
       res.send({ data, links })
     })
+    .catch(handleError(req, res))
 })
 /* eslint-enable prefer-destructuring */
 
@@ -137,12 +143,39 @@ const baseUrlFor = (req) => {
   return `${req.protocol}://${req.hostname}:${req.port}/resource`
 }
 
-const pageUrlFor = (req, limit, start, group) => {
+const pageUrlFor = (req, limit, start, qs) => {
   const params = { limit, start }
-  if(group) params.group = group
+  Object.keys(qs).forEach((key) => {
+    if([
+'group',
+'updatedAfter',
+'updatedBefore',
+'type'
+].includes(key)) params[key] = qs[key]
+  })
   const queryString = Object.entries(params).map((param) => param.join('=')).join('&')
   return `${baseUrlFor(req)}?${queryString}`
 
+}
+
+const queryFor = (qs) => {
+  const query = {}
+  if(qs.group) query.group = qs.group
+  if(qs.type) query.types = qs.type
+  if(qs.updatedAfter || qs.updatedBefore) query.timestamp = {}
+  if(qs.updatedAfter) query.timestamp.$gte = parseDate(qs.updatedAfter)
+  if(qs.updatedBefore) query.timestamp.$lte = parseDate(qs.updatedBefore)
+  return query
+}
+
+const parseDate = (dateString) => {
+  const date = new Date(dateString)
+  if(isNaN(date)) {
+    const error = new Error(`Invalid date-time: ${dateString}`)
+    error.code = 'BadRequest'
+    throw error
+  }
+  return date
 }
 
 const forReturn = (item) => {
