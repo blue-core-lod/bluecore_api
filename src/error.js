@@ -5,7 +5,7 @@ export const handleError = (req, res) => {
     // Mongo error for dupe key
     if(err.code === 11000) {
       // Conflict
-      errors.push({title: 'Resource id is not unique', details: err.toString(), code: '409'})
+      errors.push({title: 'Id is not unique', details: err.toString(), code: '409'})
       statusCode = 409
     } else if (err.code === 'NoSuchKey') {
       // S3

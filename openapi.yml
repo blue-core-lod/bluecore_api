@@ -25,6 +25,8 @@ tags:
     description: Groups
   - name: monitoring
     description: Healthcheck and monitoring
+  - name: users
+    description: Users
 paths:
   /:
     get:
@@ -350,8 +352,133 @@ paths:
             application/json:
               schema:
                 type: string
+  /user/{userId}:
+    get:
+      summary: Return data for a user
+      tags:
+        - users
+      responses:
+        '200':
+          description: 'OK - returns user data'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: string
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+    post:
+      summary: Create a new user
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: OK - returns user
+          headers:
+            location:
+              description: URL of the newly created user.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          description: Conflict - user already exists
+          content:
+            application/json:
+              schema:
+                type: string
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+  /user/{userId}/history/{historyType}/{historyItemId}:
+    put:
+      summary: Add a new item to history
+      tags:
+        - users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK - returns user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: string
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+        - name: historyType
+          in: path
+          description: History type
+          required: true
+          schema:
+            type: string
+            enum:
+              - template
+              - resource
+              - history
+        - name: historyItemId
+          in: path
+          description: ID of the history item
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payload:
+                  description: Payload for the history. The client application determines the contents and structure of the payload.
+                  type: string
+              required:
+                - payload
 components:
   schemas:
+    History:
+      description: History for a particular history type.
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            description: ID for the history item.
+            type: string
+          payload:
+            description: Payload for the history. The client application determines the contents and structure of the payload.
+            type: string
+        required:
+          - id
+          - payload
     Resource:
       description: Response for a single resource record.
       type: object
@@ -444,6 +571,36 @@ components:
       required:
         - data
         - links
+    User:
+      description: Response containing user data.
+      type: object
+      properties:
+        data:
+          description: The user data.
+          type: object
+          properties:
+            history:
+              description: History for the user.
+              type: object
+              properties:
+                templates:
+                  $ref: "#/components/schemas/History"
+                resources:
+                  $ref: "#/components/schemas/History"
+                search:
+                  $ref: "#/components/schemas/History"
+              required:
+                - templates
+                - resources
+                - search
+          required:
+            - history
+        id:
+          description: The user's ID.
+          type: string
+      required:
+        - data
+        - id
   securitySchemes:
     bearerAuth:
       type: http

@@ -8,6 +8,7 @@ import jwtConfig from './jwt.js'
 import resourcesRouter from './endpoints/resources.js'
 import groupsRouter from './endpoints/groups.js'
 import marcRouter from './endpoints/marc.js'
+import usersRouter from './endpoints/users.js'
 
 const app = express()
 
@@ -63,5 +64,6 @@ app.get('/', (req, res) => {
 app.use('/resource', resourcesRouter)
 app.use('/marc', marcRouter)
 app.use('/groups', groupsRouter)
+app.use('/user', usersRouter)
 
 export default app
