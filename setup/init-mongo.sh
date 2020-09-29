@@ -36,6 +36,7 @@ mongo --host mongo:27017 <<EOF
   db.resources.createIndex({bfWorkRefs: 1})
   db.resourceVersions.createIndex({id: 1, timestamp: 1}, {unique: true})
   db.resourceMetadata.createIndex({id: 1}, {unique: true})
+  db.users.createIndex({id: 1}, {unique: true})
 EOF
 
 echo "Importing resource template docs"

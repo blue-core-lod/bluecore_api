@@ -78,7 +78,7 @@ describe('POST /resource/:resourceId', () => {
     expect(res.statusCode).toEqual(409)
     expect(res.body).toEqual([
       {
-        title: 'Resource id is not unique',
+        title: 'Id is not unique',
         details: 'Error: Ooops',
         code: '409'
       }
