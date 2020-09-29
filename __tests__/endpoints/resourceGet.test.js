@@ -98,6 +98,54 @@ describe('GET /resource/', () => {
     // Note that limit is always the query limit+1 and skip = start-1
     expect(mockFind).toHaveBeenCalledWith({}, {"limit": 2, "skip": 1})
   })
+
+  it('constructs a query from querystring', async () => {
+    /* eslint-disable callback-return */
+    const mockEvery = jest.fn().mockImplementation((callback) => {
+      callback(resource)
+      callback(resource2)
+      return Promise.resolve()
+    })
+    /* eslint-enable callback-return */
+    const mockFind = jest.fn().mockReturnValue({each: mockEvery})
+    const mockCollection = (collectionName) => {
+      return {
+        resources: {find: mockFind}
+      }[collectionName]
+    }
+    const mockDb = {collection: mockCollection}
+    connect.mockReturnValue(mockDb)
+
+    const res = await request(app)
+      .get('/resource/?group=stanford&type=http://id.loc.gov/ontologies/bibframe/AdminMetadata&updatedAfter=2019-11-08T17:40:23.363Z&updatedBefore=2020-11-08T17:40:23.363Z')
+      .set('Accept', 'application/json')
+    expect(res.statusCode).toEqual(200)
+    const bodyString = JSON.stringify(res.body)
+    const firstLink = 'https://api.development.sinopia.io/resource?limit=0&start=25&group=stanford&type=http://id.loc.gov/ontologies/bibframe/AdminMetadata&updatedAfter=2019-11-08T17:40:23.363Z&updatedBefore=2020-11-08T17:40:23.363Z'
+    expect(bodyString).toMatch(firstLink)
+    expect(mockFind).toHaveBeenCalledWith({
+      group: 'stanford',
+      types: 'http://id.loc.gov/ontologies/bibframe/AdminMetadata',
+      timestamp: { $gte: new Date('2019-11-08T17:40:23.363Z'), $lte: new Date('2020-11-08T17:40:23.363Z')},
+    }, {
+      limit: 26,
+      skip: 0,
+    })
+  })
+
+  it('returns 400 for invalid date', async () => {
+    const res = await request(app)
+      .get('/resource/?updatedBefore=yesterday')
+      .set('Accept', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'Error: Invalid date-time: yesterday',
+        code: '400'
+      }
+    ])
+  })
 })
 
 // GET a single resource
