@@ -17,6 +17,8 @@ servers:
     variables:
       env:
         default: api.stage
+security:
+  bearerAuth: []
 tags:
   - name: resources
     description: Resources and resource versions
