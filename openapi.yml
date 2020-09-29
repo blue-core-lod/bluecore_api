@@ -1,24 +1,21 @@
 openapi: 3.0.3
 info:
-  description: API for persisting sinopia resources to Mongo / AWS DocumentDB
+  description: API for managing Sinopia resources atop Mongo / AWS DocumentDB platform
   version: 1.0.0
   title: Sinopia API
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 servers:
-  - url: 'https://{env}.sinopia.io'
-    description: Production service
+  - url: 'https://{environment}.sinopia.io'
     variables:
-      env:
+      environment:
         default: api
-  - url: 'https://{env}.sinopia.io'
-    description: Staging service
-    variables:
-      env:
-        default: api.stage
-security:
-  - bearerAuth: []
+        description: Deployment environments
+        enum:
+          - api
+          - api.stage
+          - api.development
 tags:
   - name: resources
     description: Resources and resource versions
@@ -131,6 +128,8 @@ paths:
             type: string
     post:
       summary: Endpoint to insert resources - returns the resource as JSON
+      security:
+        - bearerAuth: []
       tags:
         - resources
       responses:
@@ -165,6 +164,8 @@ paths:
               type: object
     put:
       summary: Endpoint to update resources - returns the resource as JSON
+      security:
+        - bearerAuth: []
       tags:
         - resources
       responses:
@@ -318,6 +319,8 @@ paths:
   /marc/{resourceId}:
     post:
       summary: Request conversion of a resource to MARC
+      security:
+        - bearerAuth: []
       tags:
         - marc
       responses:
