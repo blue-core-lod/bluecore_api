@@ -11,7 +11,8 @@
     "start": "node src/server.js",
     "eslint": "eslint --color -c .eslintrc.yml --ext js .",
     "eslint-fix": "eslint --color -c .eslintrc.yml --ext js --fix .",
-    "test": "jest --colors --runInBand",
+    "test": "jest --colors --coverage --silent --runInBand",
+    "test-verbose": "jest --colors --runInBand",
     "ci": "npm run eslint && npm run test"
   },
   "type": "module",
