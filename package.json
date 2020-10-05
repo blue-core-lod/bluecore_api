@@ -18,7 +18,7 @@
   "type": "module",
   "dependencies": {
     "@rdfjs/parser-jsonld": "^1.2.1",
-    "aws-sdk": "^2.761.0",
+    "aws-sdk": "^2.766.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-jwt": "^6.0.0",
@@ -35,9 +35,9 @@
     "@babel/core": "^7.11.6",
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.5",
-    "babel-jest": "^26.3.0",
+    "babel-jest": "^26.5.0",
     "eslint": "^7.10.0",
-    "jest": "^26.4.2",
+    "jest": "^26.5.0",
     "nodemon": "^2.0.4",
     "openapi-enforcer-cli": "^0.3.0",
     "supertest": "^4.0.2"
