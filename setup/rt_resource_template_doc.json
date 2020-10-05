@@ -3,7 +3,7 @@
   "uri": "http://localhost:3000/resource/sinopia:template:resource",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-26T18:21:06.337Z",
+  "timestamp": "2020-10-05T17:43:12.855Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
@@ -239,7 +239,7 @@
       ],
       "http://sinopia!io/vocabulary/hasResourceId": [
         {
-          "@id": "sinopia:template:resource"
+          "@value": "sinopia:template:resource"
         }
       ],
       "http://sinopia!io/vocabulary/hasClass": [

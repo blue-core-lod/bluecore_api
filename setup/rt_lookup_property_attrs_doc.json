@@ -3,7 +3,7 @@
   "uri": "http://localhost:3000/resource/sinopia:template:property:lookup",
   "user": "justinlittman",
   "group": "ld4p",
-  "timestamp": "2020-08-26T18:21:03.872Z",
+  "timestamp": "2020-10-05T17:43:10.351Z",
   "templateId": "sinopia:template:resource",
   "data": [
     {
@@ -36,12 +36,28 @@
       ],
       "http://sinopia!io/vocabulary/hasPropertyType": [
         {
-          "@id": "http://sinopia.io/vocabulary/propertyType/null"
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasLookupAttributes": [
+        {
+          "@id": "_:b4"
         }
       ]
     },
     {
       "@id": "_:b4",
+      "@type": [
+        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasAuthority": [
+        {
+          "@id": "file:/authorityConfig.json"
+        }
+      ]
+    },
+    {
+      "@id": "_:b5",
       "@type": [
         "http://sinopia.io/vocabulary/PropertyTemplate"
       ],
@@ -72,12 +88,12 @@
       ],
       "http://sinopia!io/vocabulary/hasResourceAttributes": [
         {
-          "@id": "_:b5"
+          "@id": "_:b6"
         }
       ]
     },
     {
-      "@id": "_:b5",
+      "@id": "_:b6",
       "@type": [
         "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
       ],
@@ -99,7 +115,7 @@
       ],
       "http://sinopia!io/vocabulary/hasResourceId": [
         {
-          "@id": "sinopia:template:property:lookup"
+          "@value": "sinopia:template:property:lookup"
         }
       ],
       "http://sinopia!io/vocabulary/hasClass": [
@@ -124,7 +140,7 @@
               "@id": "_:b3"
             },
             {
-              "@id": "_:b4"
+              "@id": "_:b5"
             }
           ]
         }
