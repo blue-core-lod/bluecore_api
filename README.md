@@ -46,3 +46,13 @@ To automatically fix problems (where possible):
 
 ### Monitoring Mongo
 Mongo Express is available for monitoring local Mongo at http://localhost:8082.
+
+### Copying resources from one environment to another
+```
+bin/copy https://api.development.sinopia.io http://localhost:3000
+```
+
+Copies can also be limited by providing a querystring supported by the `/resource` endpoint.
+```
+bin/copy https://api.development.sinopia.io http://localhost:3000 group=stanford
+```
