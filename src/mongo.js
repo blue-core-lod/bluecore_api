@@ -13,7 +13,6 @@ let db
 const connect = () => {
   if(!db) db = isAws ? awsConnect() : mongoConnect()
   return db
-
 }
 
 const awsConnect = () => {
