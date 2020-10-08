@@ -1,4 +1,4 @@
-import { Writer } from 'n3';
+import Writer from 'n3/lib/N3Writer.js'
 import rdf from 'rdf-ext'
 import { Readable } from 'stream'
 import ParserJsonld from '@rdfjs/parser-jsonld'
