@@ -1,4 +1,4 @@
-import N3 from 'n3';
+import { Writer } from 'n3';
 import rdf from 'rdf-ext'
 import { Readable } from 'stream'
 import ParserJsonld from '@rdfjs/parser-jsonld'
@@ -33,7 +33,7 @@ export const n3FromJsonld = (jsonld, asTurtle) => {
   return datasetFromJsonld(jsonld)
     .then((dataset) => {
       const opts = asTurtle ? {format: 'Turtle'} : {format: 'N-Triples'}
-      const writer = new N3.Writer(opts)
+      const writer = new Writer(opts)
       writer.addQuads(dataset.toArray())
       return new Promise((resolve, reject) => {
         writer.end((error, results) => {
