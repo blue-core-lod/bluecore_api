@@ -18,7 +18,7 @@ class ResourcesCopier {
       /* eslint-disable no-await-in-loop */
       /* eslint-disable no-continue */
       console.log(`Fetching ${nextUrl}`)
-      const page = await this.fetchPage(nextUrl)
+      const page = await ResourcesCopier.fetchPage(nextUrl)
       for(const resource of page.data) {
         // Don't copy base templates
         if(resource.uri.includes('resource/sinopia:template')) continue;
