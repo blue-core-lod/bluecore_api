@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-npx babel-node copyResources.js $@
+npx babel-node src/cli/copyResources.js $@

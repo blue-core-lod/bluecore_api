@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+npx babel-node src/cli/authenticate.js $@

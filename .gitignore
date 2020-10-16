@@ -1,3 +1,4 @@
 # NPM deps
 node_modules
 coverage
+.cognitoToken
