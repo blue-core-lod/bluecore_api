@@ -56,3 +56,25 @@ Copies can also be limited by providing a querystring supported by the `/resourc
 ```
 bin/copy https://api.development.sinopia.io http://localhost:3000 group=stanford
 ```
+
+### Get a JWT
+
+You can use the `bin/authenticate` command-line tool to authenticate to an AWS Cognito instance. This command will create a new file called `.cognitoToken` which contains a [JSON Web Token](https://jwt.io/), which you can use to authorize HTTP requests to the Sinopia API.
+
+To authenticate:
+
+```shell
+$ AWS_PROFILE=name_of_aws_profile_used_in_~/.aws/config_file COGNITO_USER_POOL_ID=us-west-2_ABC123XYZ COGNITO_CLIENT_ID=abc123xyz456etc AWS_COGNITO_DOMAIN=https://sinopia-{ENV}.auth.us-west-2.amazoncognito.com bin/authenticate
+```
+
+**NOTE**: If you provide none of the above environment variables, `bin/authenticate` will default to the Sinopia development instance of Cognito and its sole user pool.
+
+The JWT stored in `.cognitoToken` will be valid for approximately an hour.
+
+#### Use JWT in HTTP Request
+
+To use the JWT as stored in `.cognitoToken` to make authorized requests to Sinopia API, you can pass it along in the HTTP request as follows:
+
+```shell
+$ curl -i -H "Authorization: Bearer $(cat .cognitoToken)" http://localhost:3000/resource
+```
