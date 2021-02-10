@@ -22,7 +22,7 @@
   "type": "module",
   "dependencies": {
     "@rdfjs/parser-jsonld": "^1.2.1",
-    "aws-sdk": "^2.834.0",
+    "aws-sdk": "^2.839.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-jwt": "^6.0.0",
@@ -37,10 +37,10 @@
     "superagent": "^6.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/node": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "amazon-cognito-identity-js": "^4.5.8",
+    "@babel/core": "^7.12.13",
+    "@babel/node": "^7.12.13",
+    "@babel/preset-env": "^7.12.13",
+    "amazon-cognito-identity-js": "^4.5.10",
     "babel-jest": "^26.6.3",
     "eslint": "^7.19.0",
     "jest": "^26.6.3",
