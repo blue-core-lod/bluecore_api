@@ -17,6 +17,7 @@
   },
   "bin": {
     "copy": "bin/copy",
+    "copySingle": "bin/copySingle",
     "authenticate": "bin/authenticate"
   },
   "type": "module",
