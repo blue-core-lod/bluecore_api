@@ -13,7 +13,7 @@ class ResourcesCopier {
   }
 
   async copy () {
-    let nextUrl = this.queryString ? `${this.sourceApiUrl}/resource?${this.querystring}` : `${this.sourceApiUrl}/resource`
+    let nextUrl = this.querystring ? `${this.sourceApiUrl}/resource?${this.querystring}` : `${this.sourceApiUrl}/resource`
     while(nextUrl) {
       /* eslint-disable no-await-in-loop */
       /* eslint-disable no-continue */
@@ -59,7 +59,7 @@ class ResourcesCopier {
 
 const copyResources = async () => {
   try {
-    await new ResourcesCopier(process.argv[2], process.argv[3]).copy()
+    await new ResourcesCopier(process.argv[2], process.argv[3], process.argv[4]).copy()
     console.log('Done')
   } catch(err) {
     console.error(err)

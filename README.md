@@ -57,6 +57,11 @@ Copies can also be limited by providing a querystring supported by the `/resourc
 bin/copy https://api.development.sinopia.io http://localhost:3000 group=stanford
 ```
 
+Or a single resource can be copied:
+```
+bin/copySingle https://api.development.sinopia.io/resource/a20ab8a5-397d-48db-a0a2-6a7bfe04d8f6 http://localhost:3000
+```
+
 ### Get a JWT
 
 You can use the `bin/authenticate` command-line tool to authenticate to an AWS Cognito instance. This command will create a new file called `.cognitoToken` which contains a [JSON Web Token](https://jwt.io/), which you can use to authorize HTTP requests to the Sinopia API.
