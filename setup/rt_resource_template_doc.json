@@ -228,6 +228,53 @@
       ]
     },
     {
+      "@id": "_:b16",
+      "@type": [
+        "http://sinopia.io/vocabulary/PropertyTemplate"
+      ],
+      "http://www!w3!org/2000/01/rdf-schema#label": [
+        {
+          "@value": "Resource attributes"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasRemark": [
+        {
+          "@value": "Whether resource is suppressible (must have only one property which is a lookup or URI)."
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyUri": [
+        {
+          "@id": "http://sinopia.io/vocabulary/hasResourceAttribute"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyAttribute": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyAttribute/repeatable"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasPropertyType": [
+        {
+          "@id": "http://sinopia.io/vocabulary/propertyType/uri"
+        }
+      ],
+      "http://sinopia!io/vocabulary/hasLookupAttributes": [
+        {
+          "@id": "_:b17"
+        }
+      ]
+    },
+    {
+      "@id": "_:b17",
+      "@type": [
+        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
+      ],
+      "http://sinopia!io/vocabulary/hasAuthority": [
+        {
+          "@id": "file:/resourceAttribute.json"
+        }
+      ]
+    },
+    {
       "@id": "http://localhost:3000/resource/sinopia:template:resource",
       "http://sinopia!io/vocabulary/hasResourceTemplate": [
         {
@@ -277,6 +324,9 @@
             },
             {
               "@id": "_:b13"
+            },
+            {
+              "@id": "_:b16"
             },
             {
               "@id": "_:b14"
