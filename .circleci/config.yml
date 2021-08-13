@@ -76,7 +76,7 @@ jobs:
             docker push ld4p/sinopia_dev_setup:latest
             docker build -t ld4p/sinopia_dev_setup:cypress -f Dockerfile-setup-cypress .
             docker push ld4p/sinopia_dev_setup:cypress
-  register_tag_image:
+  register_stage_image:
     <<: *defaults
     steps:
       - checkout
@@ -88,10 +88,26 @@ jobs:
       - run:
           name: Build & Register Images
           command: |
-            docker build -t ld4p/sinopia_api:$CIRCLE_TAG .
+            docker build -t ld4p/sinopia_api:release-stage .
             echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-            docker push ld4p/sinopia_api:$CIRCLE_TAG
-  update_ecs:
+            docker push ld4p/sinopia_api:release-stage
+  register_stage_and_prod_image:
+    <<: *defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - restore_cache: # gives us back matching node_modules
+          key: dependencies-prod-{{ checksum "package-lock.json" }}
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build & Register Images
+          command: |
+            docker build -t ld4p/sinopia_api:release-stage -t ld4p/sinopia_api:release-prod .
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push ld4p/sinopia_api:release-stage
+            docker push ld4p/sinopia_api:release-prod
+  update_ecs_dev:
     working_directory: ~/sinopia_api
     docker: # NOT the default
       - image: circleci/python:3.7-stretch-node-browsers
@@ -113,6 +129,60 @@ jobs:
             task_arn=$(aws ecs list-task-definitions --family-prefix sinopia-api --region us-west-2 --sort DESC --max-items 1 | jq --raw-output --exit-status '.taskDefinitionArns[]')
             cluster_arn=$(aws ecs list-clusters --region us-west-2 | jq --raw-output --exit-status '.clusterArns[] | select(contains(":cluster/sinopia-dev"))')
             # echo -n "task_arn=$task_arn\ncluster_arn=$cluster_arn\n"
+            aws ecs update-service --service sinopia-api --region us-west-2 --cluster $cluster_arn --task-definition $task_arn --force-new-deployment
+  update_ecs_stage:
+    working_directory: ~/sinopia_api
+    docker: # NOT the default
+      - image: circleci/python:3.7-stretch-node-browsers
+    steps:
+      - run: sudo pip install awscli
+      - run:
+          name: Update AWS ECS
+          command: |
+            mkdir ~/.aws
+            echo -e "[circle]\naws_access_key_id=$CIRCLE_ACCESS_KEY_ID\naws_secret_access_key=$CIRCLE_SECRET_KEY\n" > ~/.aws/credentials
+            unset AWS_SESSION_TOKEN
+            aws configure set region us-west-2
+            aws configure set output json
+            temp_creds=$(aws sts assume-role --role-session-name DevelopersRole --role-arn $STAGE_ROLE_ARN --profile circle | jq .Credentials)
+            export AWS_ACCESS_KEY_ID=$(echo "$temp_creds" | jq .AccessKeyId | xargs)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$temp_creds" | jq .SecretAccessKey | xargs)
+            export AWS_SESSION_TOKEN=$(echo "$temp_creds" | jq .SessionToken | xargs)
+            aws configure list # Show confirmation of config
+            task_arn=$(aws ecs list-task-definitions --family-prefix sinopia-api --region us-west-2 --sort DESC --max-items 1 | jq --raw-output --exit-status '.taskDefinitionArns[]')
+            cluster_arn=$(aws ecs list-clusters --region us-west-2 | jq --raw-output --exit-status '.clusterArns[] | select(contains(":cluster/sinopia-staging"))')
+            aws ecs update-service --service sinopia-api --region us-west-2 --cluster $cluster_arn --task-definition $task_arn --force-new-deployment
+  update_ecs_stage_and_prod:
+    working_directory: ~/sinopia_api
+    docker: # NOT the default
+      - image: circleci/python:3.7-stretch-node-browsers
+    steps:
+      - run: sudo pip install awscli
+      - run:
+          name: Update AWS ECS
+          command: |
+            mkdir ~/.aws
+            echo -e "[circle]\naws_access_key_id=$CIRCLE_ACCESS_KEY_ID\naws_secret_access_key=$CIRCLE_SECRET_KEY\n" > ~/.aws/credentials
+            unset AWS_SESSION_TOKEN
+            aws configure set region us-west-2
+            aws configure set output json
+            # Stage
+            temp_creds=$(aws sts assume-role --role-session-name DevelopersRole --role-arn $STAGE_ROLE_ARN --profile circle | jq .Credentials)
+            export AWS_ACCESS_KEY_ID=$(echo "$temp_creds" | jq .AccessKeyId | xargs)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$temp_creds" | jq .SecretAccessKey | xargs)
+            export AWS_SESSION_TOKEN=$(echo "$temp_creds" | jq .SessionToken | xargs)
+            aws configure list # Show confirmation of config
+            task_arn=$(aws ecs list-task-definitions --family-prefix sinopia-api --region us-west-2 --sort DESC --max-items 1 | jq --raw-output --exit-status '.taskDefinitionArns[]')
+            cluster_arn=$(aws ecs list-clusters --region us-west-2 | jq --raw-output --exit-status '.clusterArns[] | select(contains(":cluster/sinopia-staging"))')
+            aws ecs update-service --service sinopia-api --region us-west-2 --cluster $cluster_arn --task-definition $task_arn --force-new-deployment
+            # Prod
+            temp_creds=$(aws sts assume-role --role-session-name DevelopersRole --role-arn $PROD_ROLE_ARN --profile circle | jq .Credentials)
+            export AWS_ACCESS_KEY_ID=$(echo "$temp_creds" | jq .AccessKeyId | xargs)
+            export AWS_SECRET_ACCESS_KEY=$(echo "$temp_creds" | jq .SecretAccessKey | xargs)
+            export AWS_SESSION_TOKEN=$(echo "$temp_creds" | jq .SessionToken | xargs)
+            aws configure list # Show confirmation of config
+            task_arn=$(aws ecs list-task-definitions --family-prefix sinopia-api --region us-west-2 --sort DESC --max-items 1 | jq --raw-output --exit-status '.taskDefinitionArns[]')
+            cluster_arn=$(aws ecs list-clusters --region us-west-2 | jq --raw-output --exit-status '.clusterArns[] | select(contains(":cluster/sinopia-production"))')
             aws ecs update-service --service sinopia-api --region us-west-2 --cluster $cluster_arn --task-definition $task_arn --force-new-deployment
 workflows:
   version: 2
@@ -147,7 +217,7 @@ workflows:
               ignore:
                 - /v.*/
           context: ld4p
-      - register_tag_image:
+      - register_stage_image:
           requires:
             - build
           filters:
@@ -156,9 +226,49 @@ workflows:
                 - /.*/
             tags:
               only:
-                - /v.*/
+                - /v.[0-9\.]+-beta/
           context: ld4p
-      - update_ecs:
+      - register_stage_and_prod_image:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /v.[0-9\.]+/
+          context: ld4p
+      - update_ecs_dev:
           requires:
             - register_latest_image
+          filters:
+            branches:
+              only:
+                - main
+            tags:
+              ignore:
+                - /v.*/
+          context: ld4p
+      - update_ecs_stage:
+          requires:
+            - register_stage_image
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /v.[0-9\.]+-beta/
+          context: ld4p
+      - update_ecs_stage_and_prod:
+          requires:
+            - register_stage_and_prod_image
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /v.[0-9\.]+/
           context: ld4p
