@@ -22,10 +22,10 @@
   "type": "module",
   "dependencies": {
     "@rdfjs/parser-jsonld": "^1.2.1",
-    "aws-sdk": "^2.963.0",
+    "aws-sdk": "^2.968.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "express-jwt": "^6.0.0",
+    "express-jwt": "^6.1.0",
     "helmet": "^4.6.0",
     "honeybadger": "^1.4.0",
     "jwks-rsa": "^1.12.3",
