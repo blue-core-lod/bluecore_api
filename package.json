@@ -22,7 +22,7 @@
   "type": "module",
   "dependencies": {
     "@rdfjs/parser-jsonld": "^1.2.1",
-    "aws-sdk": "^2.973.0",
+    "aws-sdk": "^2.978.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-jwt": "^6.1.0",
@@ -47,7 +47,7 @@
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.12",
     "openapi-enforcer-cli": "^0.3.7",
-    "prompt": "^1.0.0",
+    "prompt": "^1.2.0",
     "supertest": "^4.0.2"
   },
   "jest": {
