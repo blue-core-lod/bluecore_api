@@ -1,15 +1,15 @@
-FROM circleci/node:14.11.0
+FROM cimg/node:16.8
 
 # ARG HONEYBADGER_API_KEY
 
 WORKDIR /home/circleci
 
-COPY package.json .
-COPY package-lock.json .
+COPY --chown=circleci:circleci package.json .
+COPY --chown=circleci:circleci package-lock.json .
 
 RUN npm install
 
-COPY . .
+COPY --chown=circleci:circleci . .
 
 ENV NODE_ENV production
 
