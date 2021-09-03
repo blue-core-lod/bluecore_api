@@ -1,6 +1,8 @@
 [![CircleCI](https://circleci.com/gh/LD4P/sinopia_api.svg?style=svg)](https://circleci.com/gh/LD4P/sinopia_api)
 [![Docker image](https://images.microbadger.com/badges/image/ld4p/sinopia_api.svg)](https://microbadger.com/images/ld4p/sinopia_api "Get your own image badge on microbadger.com")
 [![OpenAPI Validator](http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/LD4P/sinopia_api/main/openapi.yml)](http://validator.swagger.io/validator/debug?url=https://raw.githubusercontent.com/LD4P/sinopia_api/main/openapi.yml)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/8cfcf854f776a8c16e4a/test_coverage)](https://codeclimate.com/github/LD4P/sinopia_api/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/8cfcf854f776a8c16e4a/maintainability)](https://codeclimate.com/github/LD4P/sinopia_api/maintainability)
 
 # Sinopia API
 
