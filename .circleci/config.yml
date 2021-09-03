@@ -57,6 +57,24 @@ jobs:
             echo $result
             exit 1
             }
+  test:
+    executor: default
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+            chmod +x ./cc-test-reporter
+            ./cc-test-reporter before-build
+      - run:
+          name: Run tests
+          command: npm run test
+      - run:
+          name: Send coverage report to Code Climate
+          command: |
+            ./cc-test-reporter after-build --coverage-input-type lcov --exit-code $?
   deploy-ecs:
     parameters:
       role-arn:
@@ -86,8 +104,7 @@ jobs:
 workflows:
   build:
     jobs:
-      - node/test:
-          name: test
+      - test:
           filters:
             <<: *branch_only_filter
       - node/run:
