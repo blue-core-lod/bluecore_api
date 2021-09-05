@@ -3,6 +3,7 @@
 [![OpenAPI Validator](http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/LD4P/sinopia_api/main/openapi.yml)](http://validator.swagger.io/validator/debug?url=https://raw.githubusercontent.com/LD4P/sinopia_api/main/openapi.yml)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/8cfcf854f776a8c16e4a/test_coverage)](https://codeclimate.com/github/LD4P/sinopia_api/test_coverage)
 [![Maintainability](https://api.codeclimate.com/v1/badges/8cfcf854f776a8c16e4a/maintainability)](https://codeclimate.com/github/LD4P/sinopia_api/maintainability)
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/ld4p/sinopia_api?sort=semver)](https://hub.docker.com/repository/docker/ld4p/sinopia_api/tags?page=1&ordering=last_updated)
 
 # Sinopia API
 
