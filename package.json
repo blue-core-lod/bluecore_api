@@ -44,7 +44,7 @@
     "babel-jest": "^26.6.3",
     "eslint": "^7.32.0",
     "jest": "^26.6.3",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.2",
     "nodemon": "^2.0.12",
     "openapi-enforcer-cli": "^0.3.7",
     "prompt": "^1.2.0",
@@ -64,6 +64,8 @@
     ],
     "clearMocks": true,
     "collectCoverage": true,
-    "coverageReporters": ["lcov"]
+    "coverageReporters": [
+      "lcov"
+    ]
   }
 }
