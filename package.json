@@ -62,6 +62,8 @@
     "setupFiles": [
       "<rootDir>/jest.envVars.js"
     ],
-    "clearMocks": true
+    "clearMocks": true,
+    "collectCoverage": true,
+    "coverageReporters": ["lcov"]
   }
 }
