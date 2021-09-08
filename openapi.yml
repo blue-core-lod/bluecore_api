@@ -191,6 +191,24 @@ paths:
           application/json:
             schema:
               type: object
+    delete:
+      summary: Endpoint to delete resources
+      security:
+        - bearerAuth: []
+      tags:
+        - resources
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
   /resource/{resourceId}/versions:
     get:
       summary: Returns a metadata document of the resource versions

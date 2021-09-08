@@ -62,6 +62,30 @@ resourcesRouter.put('/:resourceId', (req, res) => {
     .catch(handleError(req, res))
 })
 
+resourcesRouter.delete('/:resourceId', (req, res) => {
+  console.log(`Received delete to ${req.params.resourceId}`)
+
+  // Remove primary copy.
+  req.db.collection('resources').remove({id: req.params.resourceId})
+    .then((result) => {
+      if(result.deletedCount !== 1) return res.sendStatus(404)
+
+      // Remove version copies.
+      req.db.collection('resourceVersions').remove({id: req.params.resourceId})
+        .then(() => {
+          // Remove resource metadata.
+          req.db.collection('resourceMetadata').remove({id: req.params.resourceId})
+            .then(() => {
+              res.sendStatus(204)
+            })
+            .catch(handleError(req, res))
+        })
+        .catch(handleError(req, res))
+    })
+    .catch(handleError(req, res))
+})
+
+
 resourcesRouter.get('/:resourceId/versions', (req, res) => {
   req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
