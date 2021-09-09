@@ -1,13 +1,13 @@
 import express from 'express'
 import { ttlFromJsonld, n3FromJsonld } from '../rdf.js'
 import _ from 'lodash'
-import { handleError } from '../error.js'
+import createError from 'http-errors'
 
 const resourcesRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
 
-resourcesRouter.post('/:resourceId', (req, res) => {
+resourcesRouter.post('/:resourceId', (req, res, next) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
   const resource = req.body
@@ -27,14 +27,14 @@ resourcesRouter.post('/:resourceId', (req, res) => {
           const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
           req.db.collection('resourceMetadata').insert(resourceMetadata)
             .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
-            .catch(handleError(req, res))
+            .catch(next)
         })
-        .catch(handleError(req, res))
+        .catch(next)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-resourcesRouter.put('/:resourceId', (req, res) => {
+resourcesRouter.put('/:resourceId', (req, res, next) => {
   console.log(`Received put to ${req.params.resourceId}`)
 
   const resource = req.body
@@ -45,7 +45,7 @@ resourcesRouter.put('/:resourceId', (req, res) => {
   // Replace primary copy.
   req.db.collection('resources').update({id: req.params.resourceId}, saveResource, {replaceOne: true})
     .then((result) => {
-      if(result.nModified !== 1) return res.sendStatus(404)
+      if(result.nModified !== 1) throw new createError.NotFound()
 
       // And a version copy.
       req.db.collection('resourceVersions').insert(saveResource)
@@ -55,20 +55,20 @@ resourcesRouter.put('/:resourceId', (req, res) => {
             .then(() => {
               res.send(forReturn(resource))
             })
-            .catch(handleError(req, res))
+            .catch(next)
         })
-        .catch(handleError(req, res))
+        .catch(next)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-resourcesRouter.delete('/:resourceId', (req, res) => {
+resourcesRouter.delete('/:resourceId', (req, res, next) => {
   console.log(`Received delete to ${req.params.resourceId}`)
 
   // Remove primary copy.
   req.db.collection('resources').remove({id: req.params.resourceId})
     .then((result) => {
-      if(result.deletedCount !== 1) return res.sendStatus(404)
+      if(result.deletedCount !== 1) throw new createError.NotFound()
 
       // Remove version copies.
       req.db.collection('resourceVersions').remove({id: req.params.resourceId})
@@ -78,33 +78,33 @@ resourcesRouter.delete('/:resourceId', (req, res) => {
             .then(() => {
               res.sendStatus(204)
             })
-            .catch(handleError(req, res))
+            .catch(next)
         })
-        .catch(handleError(req, res))
+        .catch(next)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
 
-resourcesRouter.get('/:resourceId/versions', (req, res) => {
+resourcesRouter.get('/:resourceId/versions', (req, res, next) => {
   req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
     .then((resourceMetadata) => {
       if(!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-resourcesRouter.get('/:resourceId/version/:timestamp', (req, res) => {
+resourcesRouter.get('/:resourceId/version/:timestamp', (req, res, next) => {
   req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-resourcesRouter.get('/:resourceId', (req, res) => {
+resourcesRouter.get('/:resourceId', (req, res, next) => {
   req.db.collection('resources').findOne({id: req.params.resourceId})
     .then((resource) => {
       if(!resource) return res.sendStatus(404)
@@ -121,21 +121,15 @@ resourcesRouter.get('/:resourceId', (req, res) => {
         default: () => res.sendStatus(406)
       })
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
 /* eslint-disable prefer-destructuring */
-resourcesRouter.get('/', (req, res) => {
+resourcesRouter.get('/', (req, res, next) => {
   const data = []
   const limit = Number(req.query.limit) || 25
   const start = Number(req.query.start) || 1
-  let query
-  try {
-    query = queryFor(req.query)
-  } catch(error) {
-    handleError(req, res)(error)
-    return
-  }
+  const query = queryFor(req.query)
 
   // Ask for one more so that can see if there is a next page.
   let nextPage = false
@@ -154,7 +148,7 @@ resourcesRouter.get('/', (req, res) => {
       if(nextPage) links.next = pageUrlFor(req, limit, start + limit, req.query)
       res.send({ data, links })
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 /* eslint-enable prefer-destructuring */
 
@@ -195,9 +189,7 @@ const queryFor = (qs) => {
 const parseDate = (dateString) => {
   const date = new Date(dateString)
   if(isNaN(date)) {
-    const error = new Error(`Invalid date-time: ${dateString}`)
-    error.code = 'BadRequest'
-    throw error
+    throw createError(400, 'Bad Request', {details: `Invalid date-time: ${dateString}`})
   }
   return date
 }

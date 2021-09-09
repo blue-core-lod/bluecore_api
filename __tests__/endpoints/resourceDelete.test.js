@@ -1,6 +1,7 @@
 import connect from 'mongo.js'
 import request from 'supertest'
 import app from 'app.js'
+import createError from 'http-errors'
 
 jest.mock('mongo.js')
 jest.mock('jwt.js', () => {
@@ -41,17 +42,14 @@ describe('DELETE /resource/:resourceId', () => {
   })
 
   it('returns 404 when resource does not exist', async () => {
-    const err = new Error('Resource Not Found')
-    err.code = 'NoSuchKey'
-    mockResourceDelete.mockRejectedValue(err)
+    mockResourceDelete.mockRejectedValue(new createError.NotFound())
     const res = await request(app)
       .delete('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
     expect(res.statusCode).toEqual(404)
     expect(res.body).toEqual([
       {
-        title: 'Not found',
-        details: 'Error: Resource Not Found',
+        title: 'Not Found',
         code: '404'
       }
     ])

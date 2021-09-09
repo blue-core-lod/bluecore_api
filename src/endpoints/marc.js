@@ -1,13 +1,13 @@
 import express from 'express'
 import { requestMarc, hasMarc, getMarc } from '../aws.js'
-import { handleError, handleNotFound } from '../error.js'
+import createError from 'http-errors'
 
 const marcRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
 
 // See https://jsonapi.org/recommendations/#asynchronous-processing
-marcRouter.post('/:resourceId', (req, res) => {
+marcRouter.post('/:resourceId', (req, res, next) => {
   console.log(`Received post to ${req.params.resourceId} to generate MARC`)
 
   // Make sure the record exists.
@@ -24,7 +24,7 @@ marcRouter.post('/:resourceId', (req, res) => {
   }
   findOnePromise
     .then((resource) => {
-      if(!resource) return handleNotFound(req.params.resourceId, res)
+      if(!resource) throw new createError.NotFound()
       const username = req.user['cognito:username']
       // Using the timestamp of the resource. This allows tying the MARC back to the specific resource version.
       const timestamp = resource.timestamp.toISOString()
@@ -34,12 +34,12 @@ marcRouter.post('/:resourceId', (req, res) => {
             .set('Content-Location', marcJobUrlFor(req, username, timestamp))
             .sendStatus(202)
         })
-        .catch(handleError(req, res))
+        .catch(next)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-marcRouter.get('/:resourceId/job/:username/:timestamp', (req, res) => {
+marcRouter.get('/:resourceId/job/:username/:timestamp', (req, res, next) => {
   return hasMarc(req.params.resourceId, req.params.username, req.params.timestamp)
     .then((marcExists) => {
       if (!marcExists) {
@@ -47,20 +47,20 @@ marcRouter.get('/:resourceId/job/:username/:timestamp', (req, res) => {
       }
       return res.location(marcVersionUrlFor(req)).sendStatus(303)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-marcRouter.get('/:resourceId/version/:username/:timestamp', (req, res) => {
+marcRouter.get('/:resourceId/version/:username/:timestamp', (req, res, next) => {
   res.format({
     'text/plain': () => {
       getMarc(req.params.resourceId, req.params.username, req.params.timestamp, true)
         .then((body) => res.type('text/plain').send(body))
-        .catch(handleError(req, res))
+        .catch(next)
     },
     'application/marc': () => {
       getMarc(req.params.resourceId, req.params.username, req.params.timestamp, false)
         .then((body) => res.type('application/marc').send(body))
-        .catch(handleError(req, res))
+        .catch(next)
     }
   })
 })

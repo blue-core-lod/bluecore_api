@@ -1,27 +1,31 @@
-export const handleError = (req, res) => {
-  return (err) => {
-    const errors = []
-    let statusCode = 500
-    // Mongo error for dupe key
-    if(err.code === 11000) {
-      // Conflict
-      errors.push({title: 'Id is not unique', details: err.toString(), code: '409'})
-      statusCode = 409
-    } else if (err.code === 'NoSuchKey') {
-      // S3
-      errors.push({title: 'Not found', details: err.toString(), code: '404'})
-      statusCode = 404
-    } else if (err.code === 'BadRequest') {
-      errors.push({title: 'Bad Request', details: err.toString(), code: '400'})
-      statusCode = 400
-    } else {
-      errors.push({title: 'Server error', details: err.toString(), code: '500'})
-    }
-    console.error(`Error for ${req.originalUrl}`, err)
-    res.status(statusCode).send(errors)
+import createError from 'http-errors'
+
+export const errorHandler = (err, req, res, next) => {
+  console.error(`Error for ${req.originalUrl}`, err)
+
+  if (res.headersSent) {
+    // Delegate to default error handler
+    return next(err)
+  } else if (createError.isHttpError(err)) {
+    res.status(err.status).send([{title: err.message, details: err.details, code: err.status.toString()}])
+  } else if (err.status) {
+    res.status(err.status).send([{title: err.message, details: err.toString(), code: err.status.toString()}])
+  } else {
+    res.status(500).send([{title: 'Server error', details: err.toString(), code: '500'}])
   }
 }
 
-export const handleNotFound = (entity, res) => {
-  res.status(404).send([{title: 'Not found', details: `${entity} not found`, code: '404'}])
+export const mongoErrorAdapter = (err, req, res, next) => {
+  // Mongo error for dupe key
+  if(err.code === 11000) {
+    return next(new createError.Conflict('Id is not unique'))
+  }
+  return next(err)
+}
+
+export const s3ErrorAdapter = (err, req, res, next) => {
+  if (err.code === 'NoSuchKey') {
+    return next(new createError.NotFound('Not found'))
+  }
+  return next(err)
 }

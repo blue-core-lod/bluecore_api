@@ -28,6 +28,7 @@
     "express-jwt": "^6.1.0",
     "helmet": "^4.6.0",
     "honeybadger": "^1.4.1",
+    "http-errors": "^1.8.0",
     "jwks-rsa": "^1.12.3",
     "lodash": "^4.17.21",
     "monk": "^7.3.4",
