@@ -141,7 +141,7 @@ describe('GET /resource/', () => {
     expect(res.body).toEqual([
       {
         title: 'Bad Request',
-        details: 'Error: Invalid date-time: yesterday',
+        details: 'Invalid date-time: yesterday',
         code: '400'
       }
     ])

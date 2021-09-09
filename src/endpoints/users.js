@@ -1,5 +1,4 @@
 import express from 'express'
-import { handleError } from '../error.js'
 import _ from 'lodash'
 
 const usersRouter = express.Router()
@@ -11,26 +10,26 @@ const historySize = {
   search: Number(process.env.SEARCH_HISTORY_SIZE) || 10,
 }
 
-usersRouter.post('/:userId', (req, res) => {
+usersRouter.post('/:userId', (req, res, next) => {
   console.log(`Received post to ${req.params.userId}`)
 
   const userUri = userUriFor(req)
   const userData = {id: req.params.userId, data: {history: {resource: [], template: [], search: []}}}
   req.db.collection('users').insert(userData)
     .then(() => res.location(userUri).status(201).send(forReturn(userData)))
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-usersRouter.get('/:userId', (req, res) => {
+usersRouter.get('/:userId', (req, res, next) => {
   req.db.collection('users').findOne({id: req.params.userId})
     .then((userData) => {
       if(!userData) return res.sendStatus(404)
       return res.send(forReturn(userData))
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
-usersRouter.put('/:userId/history/:historyType(resource|template|search)/:historyItemId', (req, res) => {
+usersRouter.put('/:userId/history/:historyType(resource|template|search)/:historyItemId', (req, res, next) => {
   const {historyType} = req.params
   console.log(`Received post to ${req.params.userId}/history/${historyType}/${req.params.historyItemId}`)
 
@@ -53,9 +52,9 @@ usersRouter.put('/:userId/history/:historyType(resource|template|search)/:histor
         .then(() => {
           return res.send(forReturn(userData))
         })
-        .catch(handleError(req, res))
+        .catch(next)
     })
-    .catch(handleError(req, res))
+    .catch(next)
 })
 
 const forReturn = (item) => {
@@ -72,6 +71,5 @@ const baseUrlFor = (req) => {
   if(apiBaseUrl) return `${apiBaseUrl}/user`
   return `${req.protocol}://${req.hostname}:${req.port}/user`
 }
-
 
 export default usersRouter

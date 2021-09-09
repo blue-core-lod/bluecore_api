@@ -59,7 +59,6 @@ describe('POST /user/:userId', () => {
     expect(res.body).toEqual([
       {
         title: 'Id is not unique',
-        details: 'Error: Ooops',
         code: '409'
       }
     ])

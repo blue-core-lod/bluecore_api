@@ -9,6 +9,7 @@ import resourcesRouter from './endpoints/resources.js'
 import groupsRouter from './endpoints/groups.js'
 import marcRouter from './endpoints/marc.js'
 import usersRouter from './endpoints/users.js'
+import { errorHandler, mongoErrorAdapter, s3ErrorAdapter } from './error.js'
 
 const app = express()
 
@@ -65,5 +66,10 @@ app.use('/resource', resourcesRouter)
 app.use('/marc', marcRouter)
 app.use('/groups', groupsRouter)
 app.use('/user', usersRouter)
+
+// Error handlers
+app.use(mongoErrorAdapter)
+app.use(s3ErrorAdapter)
+app.use(errorHandler)
 
 export default app
