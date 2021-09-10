@@ -48,7 +48,7 @@
     "nodemon": "^2.0.12",
     "openapi-enforcer-cli": "^0.3.7",
     "prompt": "^1.2.0",
-    "supertest": "^4.0.2"
+    "supertest": "^6.1.6"
   },
   "jest": {
     "testEnvironment": "node",
