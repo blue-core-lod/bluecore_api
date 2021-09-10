@@ -3,36 +3,46 @@ import cors from 'cors'
 import helmet from 'helmet'
 import Honeybadger from '@honeybadger-io/js'
 import jwt from 'express-jwt'
+import * as OpenApiValidator from 'express-openapi-validator'
 import connect from './mongo.js'
 import jwtConfig from './jwt.js'
 import resourcesRouter from './endpoints/resources.js'
 import groupsRouter from './endpoints/groups.js'
 import marcRouter from './endpoints/marc.js'
 import usersRouter from './endpoints/users.js'
-import { errorHandler, mongoErrorAdapter, s3ErrorAdapter } from './error.js'
+import { errorHandler, mongoErrorAdapter, s3ErrorAdapter, openApiValidatorErrorHandler, jwtErrorAdapter } from './error.js'
 
-const app = express()
+const isProduction = process.env.NODE_ENV === 'production'
 
-// Use HB before all other app middleware.
 Honeybadger.configure({
   apiKey: process.env.HONEYBADGER_API_KEY,
   environment: process.env.HONEYBADGER_ENV
 })
 
-app.use(function (req, res, next) {
-  if(process.env.NODE_ENV === 'development') console.log(`${req.method} ${req.url}`)
-  next()
-})
+const app = express()
 
-// Increase the allowed payload size.
-app.use(express.json({limit: '1mb'}))
-
-// CORS should probably be tightened down.
+// Handle CORS before openapi validation.
 app.use(cors({exposedHeaders: [
   'Location',
   'Content-Location'
 ]}))
 app.options('*', cors())
+
+// Increase the allowed payload size.
+// Required before OpenApiValidator.
+app.use(express.json({limit: '1mb'}))
+
+app.use(OpenApiValidator.middleware({
+    apiSpec: './openapi.yml',
+    validateApiSpec: !isProduction,
+    validateResponses: !isProduction
+  }),)
+
+app.use(function (req, res, next) {
+  if(!isProduction) console.log(`${req.method} ${req.url}`)
+  next()
+})
+
 app.use(helmet())
 
 // JWT
@@ -43,7 +53,6 @@ app.use(jwt(jwtConfig()).unless({
   method: ['GET'],
   custom: () => noAuth,
 }))
-
 
 // Add the db to req
 // See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
@@ -70,9 +79,14 @@ app.use('/groups', groupsRouter)
 app.use('/user', usersRouter)
 
 // Error handlers
-// Use HB before all other error handlers.
+app.use((err, req, res, next) => {
+  console.error(`Error for ${req.originalUrl}`, err)
+  next(err)
+})
+app.use(jwtErrorAdapter)
 app.use(mongoErrorAdapter)
 app.use(s3ErrorAdapter)
+app.use(openApiValidatorErrorHandler)
 app.use(errorHandler)
 
 export default app

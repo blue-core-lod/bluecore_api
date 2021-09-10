@@ -47,7 +47,7 @@ marcRouter.get('/:resourceId/job/:username/:timestamp', (req, res, next) => {
       }
       return res.location(marcVersionUrlFor(req)).sendStatus(303)
     })
-    .catch(next)
+    .catch((err) => next(new createError.InternalServerError(err.message)))
 })
 
 marcRouter.get('/:resourceId/version/:username/:timestamp', (req, res, next) => {

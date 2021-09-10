@@ -26,6 +26,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-jwt": "^6.1.0",
+    "express-openapi-validator": "^4.13.0",
     "helmet": "^4.6.0",
     "@honeybadger-io/js": "^3.2.4",
     "http-errors": "^1.8.0",
