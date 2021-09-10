@@ -27,7 +27,7 @@
     "express": "^4.17.1",
     "express-jwt": "^6.1.0",
     "helmet": "^4.6.0",
-    "honeybadger": "^1.4.1",
+    "@honeybadger-io/js": "^3.2.4",
     "http-errors": "^1.8.0",
     "jwks-rsa": "^2.0.4",
     "lodash": "^4.17.21",

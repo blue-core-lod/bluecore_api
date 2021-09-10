@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
-import HoneybadgerNotifier from './honeybadger.js'
+import Honeybadger from '@honeybadger-io/js'
 import jwt from 'express-jwt'
 import connect from './mongo.js'
 import jwtConfig from './jwt.js'
@@ -13,9 +13,11 @@ import { errorHandler, mongoErrorAdapter, s3ErrorAdapter } from './error.js'
 
 const app = express()
 
-// Use *before* all other app middleware.
-// See https://github.com/honeybadger-io/crywolf-node
-app.use(HoneybadgerNotifier.requestHandler)
+// Use HB before all other app middleware.
+Honeybadger.configure({
+  apiKey: process.env.HONEYBADGER_API_KEY
+})
+app.use(Honeybadger.requestHandler)
 
 app.use(function (req, res, next) {
   if(process.env.NODE_ENV === 'development') console.log(`${req.method} ${req.url}`)
@@ -68,6 +70,8 @@ app.use('/groups', groupsRouter)
 app.use('/user', usersRouter)
 
 // Error handlers
+// Use HB before all other error handlers.
+app.use(Honeybadger.errorHandler)
 app.use(mongoErrorAdapter)
 app.use(s3ErrorAdapter)
 app.use(errorHandler)
