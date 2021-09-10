@@ -124,14 +124,14 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
           description: ID of the resource
           required: true
           schema:
-            $ref: '#/components/schemas/Resource'
+            type: string
     post:
       summary: Endpoint to insert resources - returns the resource as JSON
       security:
