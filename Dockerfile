@@ -1,8 +1,5 @@
 FROM cimg/node:16.8
 
-ENV HONEYBADGER_API_KEY
-ENV HONEYBADGER_ENV
-
 WORKDIR /home/circleci
 
 COPY --chown=circleci:circleci package.json .
