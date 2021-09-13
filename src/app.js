@@ -15,9 +15,9 @@ const app = express()
 
 // Use HB before all other app middleware.
 Honeybadger.configure({
-  apiKey: process.env.HONEYBADGER_API_KEY
+  apiKey: process.env.HONEYBADGER_API_KEY,
+  environment: process.env.HONEYBADGER_ENV
 })
-app.use(Honeybadger.requestHandler)
 
 app.use(function (req, res, next) {
   if(process.env.NODE_ENV === 'development') console.log(`${req.method} ${req.url}`)
@@ -71,7 +71,6 @@ app.use('/user', usersRouter)
 
 // Error handlers
 // Use HB before all other error handlers.
-app.use(Honeybadger.errorHandler)
 app.use(mongoErrorAdapter)
 app.use(s3ErrorAdapter)
 app.use(errorHandler)
