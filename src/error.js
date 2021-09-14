@@ -1,4 +1,5 @@
 import createError from 'http-errors'
+import Honeybadger from '@honeybadger-io/js'
 
 export const errorHandler = (err, req, res, next) => {
   console.error(`Error for ${req.originalUrl}`, err)
@@ -11,6 +12,7 @@ export const errorHandler = (err, req, res, next) => {
   } else if (err.status) {
     res.status(err.status).send([{title: err.message, details: err.toString(), code: err.status.toString()}])
   } else {
+    Honeybadger.notify(err);
     res.status(500).send([{title: 'Server error', details: err.toString(), code: '500'}])
   }
 }
