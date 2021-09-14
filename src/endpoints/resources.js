@@ -221,6 +221,7 @@ const versionEntry = (resource) => ({
   timestamp: resource.timestamp,
   user: resource.user,
   group: resource.group,
+  edit_groups: resource.edit_groups, // eslint-disable-line camelcase
   templateId: resource.templateId
 })
 

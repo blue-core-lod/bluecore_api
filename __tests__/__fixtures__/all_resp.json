@@ -4,9 +4,7 @@
       "data": [
         {
           "@id": "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
-          "@type": [
-            "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
-          ],
+          "@type": ["http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"],
           "http://id.loc.gov/ontologies/bibframe/mainTitle": [
             {
               "@language": "eng",
@@ -26,9 +24,8 @@
       "bfItemRefs": [],
       "bfWorkRefs": [],
       "group": "stanford",
-      "types": [
-        "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
-      ],
+      "edit_groups": ["stanford"],
+      "types": ["http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"],
       "templateId": "profile:bf2:Title:AbbrTitle",
       "id": "6852a770-2961-4836-a833-0b21a9b68041",
       "uri": "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
@@ -38,9 +35,7 @@
       "data": [
         {
           "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
-          "@type": [
-            "http://id.loc.gov/ontologies/bibframe/Work"
-          ],
+          "@type": ["http://id.loc.gov/ontologies/bibframe/Work"],
           "http://www.w3.org/2002/07/owl#sameAs": [
             {
               "@id": "repository/washington/37ec8045-aa1a-46c2-9068-db7579b0c784"
@@ -49,9 +44,7 @@
         },
         {
           "@id": "http://api.development.sinopia.io/resource/63834c19-4d01-4c91-9dcc-a69c6e26c886",
-          "@type": [
-            "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-          ],
+          "@type": ["http://id.loc.gov/ontologies/bibframe/AdminMetadata"],
           "http://id.loc.gov/ontologies/bflc/encodingLevel": [
             {
               "@id": "http://id.loc.gov/vocabulary/menclvl/3"
@@ -99,9 +92,8 @@
       "bfItemRefs": [],
       "bfWorkRefs": [],
       "group": "yale",
-      "types": [
-        "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-      ],
+      "edit_groups": ["yale"],
+      "types": ["http://id.loc.gov/ontologies/bibframe/AdminMetadata"],
       "user": "tat2",
       "timestamp": "2019-11-08T17:40:23.363Z",
       "templateId": "Yale:RT:BF2:AdminMetadata",

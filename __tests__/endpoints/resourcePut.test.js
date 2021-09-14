@@ -61,6 +61,7 @@ describe('PUT /resource/:resourceId', () => {
       "timestamp": new Date(),
       "user": "havram",
       "group": "stanford",
+      "edit_groups": ["stanford"],
       "templateId": "profile:bf2:Title:AbbrTitle"
     }
     expect(mockResourceMetadataUpdate).toHaveBeenCalledWith({id: '6852a770-2961-4836-a833-0b21a9b68041'}, { $push: { versions: versionEntry}})
