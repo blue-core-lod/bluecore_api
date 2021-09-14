@@ -36,6 +36,10 @@ paths:
       responses:
         '200':
           description: The status of the service
+          content:
+            application/json:
+              schema:
+                type: object
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
@@ -47,7 +51,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Resource'
+                  links:
+                    type: object
+                    properties:
+                      first:
+                        description: URL of first page of results
+                        type: string
+                      prev:
+                        description: URL of previous page of results
+                        type: string
+                      next:
+                        description: URL of next page of results
+                        type: string
+                    required:
+                      - first
+                required:
+                  - data
+                  - links
       parameters:
         - name: limit
           description: The number of resources to return in each page
@@ -149,7 +175,13 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/Resource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '409':
           description: Conflict - resource already exists
           content:
@@ -181,6 +213,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Resource'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '404':
           description: Not found
           content:
@@ -198,7 +236,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/Resource'
     delete:
       summary: Endpoint to delete resources
       security:
@@ -208,6 +246,12 @@ paths:
       responses:
         '204':
           description: Deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '404':
           description: Not found
           content:
@@ -290,7 +334,7 @@ paths:
           content:
             text/plain:
               schema:
-                type: string
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -363,6 +407,18 @@ paths:
               description: The URL for checking the status of the MARC conversion job.
               schema:
                 type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                    $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -381,7 +437,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                type: object
   /user/{userId}:
     get:
       summary: Return data for a user
@@ -425,6 +481,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '409':
           description: Conflict - user already exists
           content:
@@ -452,6 +514,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '404':
           description: User not found
           content:
@@ -474,7 +542,7 @@ paths:
             enum:
               - template
               - resource
-              - history
+              - search
         - name: historyItemId
           in: path
           description: ID of the history item
@@ -519,19 +587,20 @@ components:
             type: string
           details: 
             type: string
-          code:
+          status:
             type: string
         required:
           - title
-          - details
-          - code
+          - status
     Resource:
       description: Response for a single resource record.
       type: object
       properties:
         data:
           description: The resource as JSON-LD.
-          type: string
+          type: array
+          items:
+            type: object
         user:
           description: Username for the user who last updated the record.
           type: string
@@ -550,7 +619,7 @@ components:
           type: array
           items:
             type: string
-        bfWorks:
+        bfWorkRefs:
           description: References to Bibframe Instances contained within this record.
           type: array
           items:
@@ -584,12 +653,9 @@ components:
         - bfAdminMetadataRefs
         - bfItemRefs
         - bfInstanceRefs
-        - bfWorks
+        - bfWorkRefs
         - group
         - types
-        - id
-        - uri
-        - timestamp
     ResourcePage:
       description: Response containing a page of resource records.
       type: object
@@ -629,15 +695,15 @@ components:
               description: History for the user.
               type: object
               properties:
-                templates:
+                template:
                   $ref: "#/components/schemas/History"
-                resources:
+                resource:
                   $ref: "#/components/schemas/History"
                 search:
                   $ref: "#/components/schemas/History"
               required:
-                - templates
-                - resources
+                - template
+                - resource
                 - search
           required:
             - history

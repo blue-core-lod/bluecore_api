@@ -117,11 +117,11 @@ describe('GET /resource/', () => {
     connect.mockReturnValue(mockDb)
 
     const res = await request(app)
-      .get('/resource/?group=stanford&type=http://id.loc.gov/ontologies/bibframe/AdminMetadata&updatedAfter=2019-11-08T17:40:23.363Z&updatedBefore=2020-11-08T17:40:23.363Z')
+      .get('/resource/?group=stanford&type=http%3A%2F%2Fid.loc.gov%2Fontologies%2Fbibframe%2FAdminMetadata&updatedAfter=2019-11-08T17%3A40%3A23.363Z&updatedBefore=2020-11-08T17%3A40%3A23.363Z')
       .set('Accept', 'application/json')
     expect(res.statusCode).toEqual(200)
     const bodyString = JSON.stringify(res.body)
-    const firstLink = 'https://api.development.sinopia.io/resource?limit=0&start=25&group=stanford&type=http://id.loc.gov/ontologies/bibframe/AdminMetadata&updatedAfter=2019-11-08T17:40:23.363Z&updatedBefore=2020-11-08T17:40:23.363Z'
+    const firstLink = 'https://api.development.sinopia.io/resource?limit=0&start=25&group=stanford&type=http%3A%2F%2Fid.loc.gov%2Fontologies%2Fbibframe%2FAdminMetadata&updatedAfter=2019-11-08T17%3A40%3A23.363Z&updatedBefore=2020-11-08T17%3A40%3A23.363Z'
     expect(bodyString).toMatch(firstLink)
     expect(mockFind).toHaveBeenCalledWith({
       group: 'stanford',
@@ -141,8 +141,8 @@ describe('GET /resource/', () => {
     expect(res.body).toEqual([
       {
         title: 'Bad Request',
-        details: 'Invalid date-time: yesterday',
-        code: '400'
+        details: 'should match format "date-time" at .query.updatedBefore',
+        status: '400'
       }
     ])
   })

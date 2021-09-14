@@ -21,7 +21,7 @@ describe('500 Server error', () => {
       .send()
     expect(Honeybadger.notify).toHaveBeenCalledTimes(1)
     expect(res.statusCode).toEqual(500)
-    expect(res.body).toEqual([{"details": "Error: Ooops", "code": "500", "title": "Server error"}])
+    expect(res.body).toEqual([{"details": "Ooops", "status": "500", "title": "Server error"}])
   })
 })
 
@@ -37,6 +37,6 @@ describe('404 Server error', () => {
       .send()
     expect(Honeybadger.notify).toHaveBeenCalledTimes(0)
     expect(res.statusCode).toEqual(404)
-    expect(res.body).toEqual([{"details": "Error: Not Found", "code": "404", "title": "Not Found"}])
+    expect(res.body).toEqual([{"details": "Not Found", "status": "404", "title": "Not Found"}])
   })
 })

@@ -50,7 +50,7 @@ describe('DELETE /resource/:resourceId', () => {
     expect(res.body).toEqual([
       {
         title: 'Not Found',
-        code: '404'
+        status: '404'
       }
     ])
   })

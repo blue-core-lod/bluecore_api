@@ -171,9 +171,14 @@ const pageUrlFor = (req, limit, start, qs) => {
 'type'
 ].includes(key)) params[key] = qs[key]
   })
-  const queryString = Object.entries(params).map((param) => param.join('=')).join('&')
+  const queryString = Object.entries(params).map(([
+key,
+value
+]) => [
+key,
+encodeURIComponent(value)
+].join('=')).join('&')
   return `${baseUrlFor(req)}?${queryString}`
-
 }
 
 const queryFor = (qs) => {

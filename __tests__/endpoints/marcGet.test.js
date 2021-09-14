@@ -34,7 +34,7 @@ describe('GET /:resourceId/job/:username/:timestamp', () => {
       const res = await request(app)
         .get('/marc/6852a770-2961-4836-a833-0b21a9b68041/job/jdoe/2020-08-20T11:34:40.887Z')
       expect(res.statusCode).toEqual(500)
-      expect(res.body).toEqual([{code: "500", details: "Error: Conversion failed", title: "Server error"}])
+      expect(res.body).toEqual([{status: "500", details: "Conversion failed", title: "Server error"}])
     })
   })
 })
