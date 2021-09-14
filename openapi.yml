@@ -91,7 +91,7 @@ paths:
             default: 1
         - name: group
           description: Group name filter. For values, see /groups endpoint.
-          example: stanford
+          example: "stanford"
           in: query
           required: false
           schema:
@@ -113,7 +113,7 @@ paths:
             type: string
         - name: type
           description: Class filter
-          example: http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle
+          example: "http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"
           in: query
           required: false
           schema:
@@ -187,7 +187,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -224,7 +224,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -257,7 +257,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -278,12 +278,12 @@ paths:
               schema:
                 type: object
       parameters:
-            - name: resourceId
-              in: path
-              description: ID of the resource
-              required: true
-              schema:
-                type: string
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
   /resource/{resourceId}/version/{timestamp}:
     get:
       summary: Return specified version of the resource.
@@ -418,7 +418,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: resourceId
           in: path
@@ -455,7 +455,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: userId
           in: path
@@ -492,7 +492,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: userId
           in: path
@@ -525,7 +525,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: userId
           in: path
@@ -585,7 +585,7 @@ components:
         properties:
           title:
             type: string
-          details: 
+          details:
             type: string
           status:
             type: string
@@ -601,9 +601,6 @@ components:
           type: array
           items:
             type: object
-        user:
-          description: Username for the user who last updated the record.
-          type: string
         bfAdminMetadataRefs:
           description: References to Bibframe AdminMetadata contained within this record.
           type: array
@@ -624,9 +621,23 @@ components:
           type: array
           items:
             type: string
+        edit_groups:
+          description: Groups whose members can edit this record.
+          type: array
+          items:
+            type: string
         group:
           description: The group to which the record belongs.
           type: string
+        id:
+          description: The identifier for the resource, which is the final section of the URI.
+          example: "6852a770-2961-4836-a833-0b21a9b68041"
+          type: string
+        timestamp:
+          description: The date and time the resource was last updated. This also identifies the resource version.
+          example: "2020-08-20T11:34:40.887Z"
+          type: string
+          format: date-time
         types:
           description: The classes for the record.
           example:
@@ -634,28 +645,22 @@ components:
           type: array
           items:
             type: string
-        id:
-          description: The identifier for the resource, which is the final section of the URI.
-          example: 6852a770-2961-4836-a833-0b21a9b68041
-          type: string
         uri:
           description: The URI for the resource.
-          example: https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041
+          example: "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041"
           type: string
-        timestamp:
-          description: The date and time the resource was last updated. This also identifies the resource version.
-          example: "2020-08-20T11:34:40.887Z"
+        user:
+          description: Username for the user who last updated the record.
           type: string
-          format: date-time
       required:
         - data
-        - user
         - bfAdminMetadataRefs
         - bfItemRefs
         - bfInstanceRefs
         - bfWorkRefs
         - group
         - types
+        - user
     ResourcePage:
       description: Response containing a page of resource records.
       type: object
@@ -696,11 +701,11 @@ components:
               type: object
               properties:
                 template:
-                  $ref: "#/components/schemas/History"
+                  $ref: '#/components/schemas/History'
                 resource:
-                  $ref: "#/components/schemas/History"
+                  $ref: '#/components/schemas/History'
                 search:
-                  $ref: "#/components/schemas/History"
+                  $ref: '#/components/schemas/History'
               required:
                 - template
                 - resource
