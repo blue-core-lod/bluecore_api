@@ -1,0 +1,13 @@
+node_modules
+coverage
+.circleci/config.yml
+setup/**
+package-lock.json
+package.json
+docker-compose.yml
+babel.config.json
+.eslintrc.yml
+.github/**
+.prettierrc.json
+README.md
+__tests__/__fixtures__/*.json

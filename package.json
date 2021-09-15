@@ -10,6 +10,10 @@
     "start": "node src/server.js",
     "eslint": "eslint --color -c .eslintrc.yml --ext js .",
     "eslint-fix": "eslint --color -c .eslintrc.yml --ext js --fix .",
+    "pretty": "prettier --check .",
+    "pretty-fix": "prettier --write .",
+    "fix": "npm run pretty-fix && npm run eslint",
+    "lint": "npm run pretty && npm run eslint",
     "test": "jest --colors --coverage --silent --runInBand",
     "test-verbose": "jest --colors --runInBand",
     "ci": "npm run eslint && npm run test"
@@ -44,10 +48,12 @@
     "amazon-cognito-identity-js": "^5.1.0",
     "babel-jest": "^27.1.1",
     "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
     "jest": "^27.1.1",
     "node-fetch": "^3.0.0",
     "nodemon": "^2.0.12",
     "openapi-enforcer-cli": "^0.3.7",
+    "prettier": "2.4.0",
     "prompt": "^1.2.0",
     "supertest": "^6.1.6"
   },
