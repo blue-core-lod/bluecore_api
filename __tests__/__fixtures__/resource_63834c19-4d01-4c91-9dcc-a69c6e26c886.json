@@ -59,7 +59,7 @@
   "bfItemRefs": [],
   "bfWorkRefs": [],
   "group": "yale",
-  "edit_groups": ["yale"],
+  "editGroups": ["yale"],
   "types": ["http://id.loc.gov/ontologies/bibframe/AdminMetadata"],
   "user": "tat2",
   "timestamp": "2019-11-08T17:40:23.363Z",

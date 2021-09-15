@@ -621,7 +621,7 @@ components:
           type: array
           items:
             type: string
-        edit_groups:
+        editGroups:
           description: Groups whose members can edit this record.
           type: array
           items:
