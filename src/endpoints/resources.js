@@ -1,5 +1,5 @@
 import express from 'express'
-import { ttlFromJsonld, n3FromJsonld } from '../rdf.js'
+import { datasetFromJsonld, n3FromJsonld, ttlFromJsonld } from '../rdf.js'
 import _ from 'lodash'
 import createError from 'http-errors'
 
@@ -10,71 +10,87 @@ const apiBaseUrl = process.env.API_BASE_URL
 resourcesRouter.post('/:resourceId', (req, res, next) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
-  const resource = req.body
-  const resourceUri = resourceUriFor(req)
-  const timestamp = new Date()
-
-  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
-
-  // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
-  // Add primary copy.
-  req.db.collection('resources').insert(saveResource)
+  datasetFromJsonld(req.body.data)
     .then(() => {
-      // And a version copy.
-      req.db.collection('resourceVersions').insert(saveResource)
+      const resource = req.body
+      const resourceUri = resourceUriFor(req)
+      const timestamp = new Date()
+
+      const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+
+      // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
+      // Add primary copy.
+      req.db.collection('resources').insert(saveResource)
         .then(() => {
-          // Stub out resource metadata.
-          const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
-          req.db.collection('resourceMetadata').insert(resourceMetadata)
-            .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
-            .catch(next)
-        })
-        .catch(next)
-    })
-    .catch(next)
-})
-
-resourcesRouter.put('/:resourceId', (req, res, next) => {
-  console.log(`Received put to ${req.params.resourceId}`)
-
-  const resource = req.body
-  const timestamp = new Date()
-  const resourceUri = resourceUriFor(req)
-  const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
-
-  // Replace primary copy.
-  req.db.collection('resources').update({id: req.params.resourceId}, saveResource, {replaceOne: true})
-    .then((result) => {
-      if(result.nModified !== 1) throw new createError.NotFound()
-
-      // And a version copy.
-      req.db.collection('resourceVersions').insert(saveResource)
-        .then(() => {
-          // Apppend to resource metadata.
-          req.db.collection('resourceMetadata').update({id: req.params.resourceId}, { $push: { versions: versionEntry(saveResource)}})
+          // And a version copy.
+          req.db.collection('resourceVersions').insert(saveResource)
             .then(() => {
-              res.send(forReturn(resource))
+              // Stub out resource metadata.
+              const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
+              req.db.collection('resourceMetadata').insert(resourceMetadata)
+                .then(() => res.location(resourceUri).status(201).send(forReturn(resource))                )
+                .catch(next)
             })
             .catch(next)
         })
         .catch(next)
     })
-    .catch(next)
+    .catch((err) => {
+      next(new createError.BadRequest(`Unparseable jsonld: ${err.message}`))
+    })
+})
+
+resourcesRouter.put('/:resourceId', (req, res, next) => {
+  console.log(`Received put to ${req.params.resourceId}`)
+
+  datasetFromJsonld(req.body.data)
+    .then(() => {
+      const resource = req.body
+      const timestamp = new Date()
+      const resourceUri = resourceUriFor(req)
+      const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+
+      // Replace primary copy.
+      req.db.collection('resources').update({ id: req.params.resourceId }, saveResource, { replaceOne: true })
+        .then((result) => {
+          if (result.nModified !== 1) throw new createError.NotFound()
+
+          // And a version copy.
+          req.db.collection('resourceVersions').insert(saveResource)
+            .then(() => {
+              // Apppend to resource metadata.
+              req.db.collection('resourceMetadata')
+                .update(
+                  { id: req.params.resourceId },
+                  { $push: { versions: versionEntry(saveResource) } }
+                )
+                .then(() => {
+                  res.send(forReturn(resource))
+                })
+                .catch(next)
+            })
+            .catch(next)
+        })
+        .catch(next)
+    })
+    .catch((err) => {
+      next(new createError.BadRequest(`Unparseable jsonld: ${err.message}`))
+    })
 })
 
 resourcesRouter.delete('/:resourceId', (req, res, next) => {
   console.log(`Received delete to ${req.params.resourceId}`)
 
   // Remove primary copy.
-  req.db.collection('resources').remove({id: req.params.resourceId})
+  req.db.collection('resources').remove({ id: req.params.resourceId })
     .then((result) => {
-      if(result.deletedCount !== 1) throw new createError.NotFound()
+      if (result.deletedCount !== 1) throw new createError.NotFound()
 
       // Remove version copies.
-      req.db.collection('resourceVersions').remove({id: req.params.resourceId})
+      req.db.collection('resourceVersions').remove({ id: req.params.resourceId })
         .then(() => {
           // Remove resource metadata.
-          req.db.collection('resourceMetadata').remove({id: req.params.resourceId})
+          req.db.collection('resourceMetadata').remove({ id: req.params.resourceId })
             .then(() => {
               res.sendStatus(204)
             })
@@ -85,29 +101,28 @@ resourcesRouter.delete('/:resourceId', (req, res, next) => {
     .catch(next)
 })
 
-
 resourcesRouter.get('/:resourceId/versions', (req, res, next) => {
-  req.db.collection('resourceMetadata').findOne({id: req.params.resourceId})
+  req.db.collection('resourceMetadata').findOne({ id: req.params.resourceId })
     .then((resourceMetadata) => {
-      if(!resourceMetadata) return res.sendStatus(404)
+      if (!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
     })
     .catch(next)
 })
 
 resourcesRouter.get('/:resourceId/version/:timestamp', (req, res, next) => {
-  req.db.collection('resourceVersions').findOne({id: req.params.resourceId, timestamp: req.params.timestamp})
+  req.db.collection('resourceVersions').findOne({ id: req.params.resourceId, timestamp: req.params.timestamp })
     .then((resource) => {
-      if(!resource) return res.sendStatus(404)
+      if (!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
     })
     .catch(next)
 })
 
 resourcesRouter.get('/:resourceId', (req, res, next) => {
-  req.db.collection('resources').findOne({id: req.params.resourceId})
+  req.db.collection('resources').findOne({ id: req.params.resourceId })
     .then((resource) => {
-      if(!resource) return res.sendStatus(404)
+      if (!resource) return res.sendStatus(404)
       const returnResource = forReturn(resource)
       res.format({
         'text/plain': () => res.send(JSON.stringify(returnResource, null, 2)),
@@ -133,19 +148,20 @@ resourcesRouter.get('/', (req, res, next) => {
 
   // Ask for one more so that can see if there is a next page.
   let nextPage = false
-  req.db.collection('resources').find(query, {skip: start - 1, limit: limit + 1}).each((resource) => {
-    if(data.length < limit) {
-      data.push(forReturn(resource))
-    } else {
-      nextPage = true
-    }
-  })
+  req.db.collection('resources').find(query, { skip: start - 1, limit: limit + 1 })
+    .each((resource) => {
+      if (data.length < limit) {
+        data.push(forReturn(resource))
+      } else {
+        nextPage = true
+      }
+    })
     .then(() => {
       const links = {
         first: pageUrlFor(req, 0, limit, req.query)
       }
-      if(start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), req.query)
-      if(nextPage) links.next = pageUrlFor(req, limit, start + limit, req.query)
+      if (start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), req.query)
+      if (nextPage) links.next = pageUrlFor(req, limit, start + limit, req.query)
       res.send({ data, links })
     })
     .catch(next)
@@ -157,44 +173,36 @@ const resourceUriFor = (req) => {
 }
 
 const baseUrlFor = (req) => {
-  if(apiBaseUrl) return `${apiBaseUrl}/resource`
+  if (apiBaseUrl) return `${apiBaseUrl}/resource`
   return `${req.protocol}://${req.hostname}:${req.port}/resource`
 }
 
 const pageUrlFor = (req, limit, start, qs) => {
   const params = { limit, start }
   Object.keys(qs).forEach((key) => {
-    if([
-'group',
-'updatedAfter',
-'updatedBefore',
-'type'
-].includes(key)) params[key] = qs[key]
+    if (['group', 'updatedAfter', 'updatedBefore', 'type'].includes(key))
+      params[key] = qs[key]
   })
-  const queryString = Object.entries(params).map(([
-key,
-value
-]) => [
-key,
-encodeURIComponent(value)
-].join('=')).join('&')
+  const queryString = Object.entries(params)
+    .map(([key, value]) => [key, encodeURIComponent(value)].join('='))
+    .join('&')
   return `${baseUrlFor(req)}?${queryString}`
 }
 
 const queryFor = (qs) => {
   const query = {}
-  if(qs.group) query.group = qs.group
-  if(qs.type) query.types = qs.type
-  if(qs.updatedAfter || qs.updatedBefore) query.timestamp = {}
-  if(qs.updatedAfter) query.timestamp.$gte = parseDate(qs.updatedAfter)
-  if(qs.updatedBefore) query.timestamp.$lte = parseDate(qs.updatedBefore)
+  if (qs.group) query.group = qs.group
+  if (qs.type) query.types = qs.type
+  if (qs.updatedAfter || qs.updatedBefore) query.timestamp = {}
+  if (qs.updatedAfter) query.timestamp.$gte = parseDate(qs.updatedAfter)
+  if (qs.updatedBefore) query.timestamp.$lte = parseDate(qs.updatedBefore)
   return query
 }
 
 const parseDate = (dateString) => {
   const date = new Date(dateString)
-  if(isNaN(date)) {
-    throw createError(400, 'Bad Request', {details: `Invalid date-time: ${dateString}`})
+  if (isNaN(date)) {
+    throw createError(400, 'Bad Request', { details: `Invalid date-time: ${dateString}` })
   }
   return date
 }
@@ -212,7 +220,7 @@ const resourceForSave = (resource, id, uri, timestamp) => {
 
   newResource.id = id
   // If resource has a uri, keep it. This is to support migrations.
-  if(!newResource.uri) newResource.uri = uri
+  if (!newResource.uri) newResource.uri = uri
   newResource.timestamp = timestamp
   return newResource
 }
@@ -230,7 +238,7 @@ const replaceInKeys = (obj, from, to) => {
     if (!_.isPlainObject(cloneObj)) return
     const newObj = {}
     _.keys(cloneObj).forEach((key) => {
-      const newKey = key.replace(new RegExp(`\\${from}`, "g"), to)
+      const newKey = key.replace(new RegExp(`\\${from}`, 'g'), to)
       newObj[newKey] = replaceInKeys(cloneObj[key], from, to)
     })
     return newObj

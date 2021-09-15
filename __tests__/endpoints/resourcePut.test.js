@@ -72,6 +72,23 @@ describe('PUT /resource/:resourceId', () => {
       .send(reqBody)
     expect(res.statusCode).toEqual(401)
   })
+  it('returns 400 error if resource is unparseable', async () => {
+    const reqBodyUnparseable = String(reqBody).replace('"@value"', '"@value')
+    const res = await request(app)
+      .post('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .send(reqBodyUnparseable)
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'Unexpected token o in JSON at position 1',
+        status: '400',
+      }
+    ])
+  })
   it('returns 404 when resource does not exist', async () => {
     mockResourcesUpdate.mockRejectedValue(new createError.NotFound())
     const res = await request(app)
