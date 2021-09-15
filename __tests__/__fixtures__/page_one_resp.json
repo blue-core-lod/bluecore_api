@@ -24,7 +24,7 @@
       "bfItemRefs": [],
       "bfWorkRefs": [],
       "group": "stanford",
-      "edit_groups": ["stanford"],
+      "editGroups": ["stanford"],
       "types": ["http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"],
       "templateId": "profile:bf2:Title:AbbrTitle",
       "id": "6852a770-2961-4836-a833-0b21a9b68041",

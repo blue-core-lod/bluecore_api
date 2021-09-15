@@ -5,7 +5,7 @@
       "timestamp": "2020-08-20T11:34:40.887Z",
       "user": "havram",
       "group": "stanford",
-      "edit_groups": ["stanford"],
+      "editGroups": ["stanford"],
       "templateId": "profile:bf2:Title:AbbrTitle"
     }
   ]
