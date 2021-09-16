@@ -67,13 +67,17 @@ bin/copySingle https://api.development.sinopia.io/resource/a20ab8a5-397d-48db-a0
 
 ### Get a JWT
 
-You can use the `bin/authenticate` command-line tool to authenticate to an AWS Cognito instance. This command will create a new file called `.cognitoToken` which contains a [JSON Web Token](https://jwt.io/), which you can use to authorize HTTP requests to the Sinopia API.
+A JWT is used to make calls to sinopia_api in the context of a specific Cognito user (i.e. a user logged into Sinopia Editor). You can use the `bin/authenticate` command-line tool to authenticate to an AWS Cognito instance. This command will create a new file called `.cognitoToken` which contains a [JSON Web Token](https://jwt.io/), which you can use to authorize HTTP requests to the Sinopia API.
 
 To authenticate:
 
 ```shell
-$ AWS_PROFILE=name_of_aws_profile_used_in_~/.aws/config_file COGNITO_USER_POOL_ID=us-west-2_ABC123XYZ COGNITO_CLIENT_ID=abc123xyz456etc AWS_COGNITO_DOMAIN=https://sinopia-{ENV}.auth.us-west-2.amazoncognito.com bin/authenticate
+$ AWS_PROFILE=name_of_aws_profile_used_in_~/.aws/config COGNITO_USER_POOL_ID=us-west-2_ABC123XYZ COGNITO_CLIENT_ID=abc123xyz456etc AWS_COGNITO_DOMAIN=https://sinopia-{ENV}.auth.us-west-2.amazoncognito.com bin/authenticate
 ```
+
+The cognito user pool and client ID are available in the AWS Cognito Console for the specific environment (dev, stage or prod). The Client ID is under "App Client Settings" and the User Pool ID is under "General Settings". Possible {ENV} values in the cognito domain URL are "development", "staging" and "production".
+
+You will need to enter your Cognito/Sinopia Editor username (usually SUNETID@stanford.edu) and password (note: it may not appear that there is a prompt after you execute the bin command).
 
 **NOTE**: If you provide none of the above environment variables, `bin/authenticate` will default to the Sinopia development instance of Cognito and its sole user pool.
 
