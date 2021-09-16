@@ -176,6 +176,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Resource'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized
           content:
@@ -213,6 +219,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Resource'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
         '401':
           description: Unauthorized
           content:
