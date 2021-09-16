@@ -437,7 +437,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/Groups'
   /user/{userId}:
     get:
       summary: Return data for a user
@@ -455,7 +455,7 @@ paths:
           content:
             application/json:
               schema:
-                    $ref: '#/components/schemas/Errors'
+                $ref: '#/components/schemas/Errors'
       parameters:
         - name: userId
           in: path
@@ -585,7 +585,7 @@ components:
         properties:
           title:
             type: string
-          details: 
+          details:
             type: string
           status:
             type: string
@@ -713,6 +713,23 @@ components:
       required:
         - data
         - id
+    Groups:
+      description: Response containing list of groups
+      type: object
+      properties:
+        data:
+          description: The list of groups
+          type: array
+          items:
+            description: A single group
+            type: object
+            properties:
+              id:
+                description: The unique ID of the group
+                type: string
+              label:
+                description: The name of the group shown to the user
+                type: string
   securitySchemes:
     bearerAuth:
       type: http
