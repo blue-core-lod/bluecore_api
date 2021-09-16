@@ -72,19 +72,82 @@ describe('PUT /resource/:resourceId', () => {
       .send(reqBody)
     expect(res.statusCode).toEqual(401)
   })
-  it('returns 400 error if resource is unparseable', async () => {
-    const reqBodyUnparseable = String(reqBody).replace('"@value"', '"@value')
+  it('returns 400 error if jsonld data array is null', async () => {
+    const emptyReqBody = {...reqBody, data: null}
     const res = await request(app)
-      .post('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
       .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
-      .send(reqBodyUnparseable)
+      .send(emptyReqBody)
       .set('Content-Type', 'application/json')
-      .set('Accept', 'application/json')
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
         title: 'Bad Request',
-        details: 'Unexpected token o in JSON at position 1',
+        details: 'should be array at .body.data',
+        status: '400',
+      }
+    ])
+  })
+  it('returns 400 error if jsonld data is not an array', async () => {
+    const emptyReqBody = {...reqBody, data: 'foo'}
+    const res = await request(app)
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .send(emptyReqBody)
+      .set('Content-Type', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'should be array at .body.data',
+        status: '400',
+      }
+    ])
+  })
+  it('returns 400 error if jsonld data array is empty', async () => {
+    const emptyReqBody = {...reqBody, data: []}
+    const res = await request(app)
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .send(emptyReqBody)
+      .set('Content-Type', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'Data array must not be empty.',
+        status: '400',
+      }
+    ])
+  })
+  it('returns 400 error if jsonld object in data array is empty', async () => {
+    const emptyObjectReqBody = {...reqBody, data: [{}]}
+    const res = await request(app)
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .send(emptyObjectReqBody)
+      .set('Content-Type', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'Data array must not have empty objects.',
+        status: '400',
+      }
+    ])
+  })
+  it('returns 400 error if resource is unparseable jsonld', async () => {
+    const reqBodyUnparseable = {...reqBody, data: [{'@context': 'object'}]}
+    const res = await request(app)
+      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .send(reqBodyUnparseable)
+      .set('Content-Type', 'application/json')
+    expect(res.statusCode).toEqual(400)
+    expect(res.body).toEqual([
+      {
+        title: 'Bad Request',
+        details: 'Unparseable jsonld: Invalid context IRI: object',
         status: '400',
       }
     ])

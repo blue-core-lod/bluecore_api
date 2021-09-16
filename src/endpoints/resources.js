@@ -10,6 +10,12 @@ const apiBaseUrl = process.env.API_BASE_URL
 resourcesRouter.post('/:resourceId', (req, res, next) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
+  if (req.body.data == null) next(new createError.BadRequest())
+  if (req.body.data.length == 0) next(new createError.BadRequest('Data array must not be empty.'))
+  req.body.data.forEach((obj) => {
+    if (Object.keys(obj).length == 0) next(new createError.BadRequest('Data array must not have empty objects.'))
+  })
+
   datasetFromJsonld(req.body.data)
     .then(() => {
       const resource = req.body
@@ -42,6 +48,12 @@ resourcesRouter.post('/:resourceId', (req, res, next) => {
 
 resourcesRouter.put('/:resourceId', (req, res, next) => {
   console.log(`Received put to ${req.params.resourceId}`)
+
+  if (req.body.data == null) next(new createError.BadRequest())
+  if (req.body.data.length == 0) next(new createError.BadRequest('Data array must not be empty.'))
+  req.body.data.forEach((obj) => {
+    if (Object.keys(obj).length == 0) next(new createError.BadRequest('Data array must not have empty objects.'))
+  })
 
   datasetFromJsonld(req.body.data)
     .then(() => {
