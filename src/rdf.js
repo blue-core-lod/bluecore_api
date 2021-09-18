@@ -1,16 +1,17 @@
 import Writer from 'n3/lib/N3Writer.js'
 import rdf from 'rdf-ext'
 import { Readable } from 'stream'
-import ParserJsonld from '@rdfjs/parser-jsonld'
+import { JsonLdParser } from 'jsonld-streaming-parser'
+
 
 export const datasetFromJsonld = (jsonld) => {
-  const parserJsonld = new ParserJsonld()
+  const parserJsonld = new JsonLdParser()
 
   const input = new Readable({
     read: () => {
       input.push(JSON.stringify(jsonld))
       input.push(null)
-    }
+    },
   })
 
   const output = parserJsonld.import(input)
@@ -22,11 +23,9 @@ export const datasetFromJsonld = (jsonld) => {
 
   return new Promise((resolve, reject) => {
     output.on('end', resolve)
-    output.on('error', reject)
+    output.on('error', (err) => reject(err))
   })
-    .then(() => {
-      return dataset
-    })
+    .then(() => dataset)
 }
 
 export const n3FromJsonld = (jsonld, asTurtle) => {
