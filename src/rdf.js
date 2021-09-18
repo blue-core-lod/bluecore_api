@@ -2,6 +2,7 @@ import Writer from "n3/lib/N3Writer.js"
 import rdf from "rdf-ext"
 import { Readable } from "stream"
 import { JsonLdParser } from "jsonld-streaming-parser"
+import createError from "http-errors"
 
 export const datasetFromJsonld = (jsonld) => {
   const parserJsonld = new JsonLdParser()
@@ -42,4 +43,27 @@ export const n3FromJsonld = (jsonld, asTurtle) => {
 
 export const ttlFromJsonld = (jsonld) => {
   return n3FromJsonld(jsonld, true)
+}
+
+export const checkJsonld = async (req, resp, next) => {
+  const dataFromReqBody = req.body.data
+
+  if (dataFromReqBody === null) return next(new createError.BadRequest())
+  if (dataFromReqBody.length === 0)
+    return next(new createError.BadRequest("Data array must not be empty."))
+  dataFromReqBody.forEach((obj) => {
+    if (Object.keys(obj).length === 0)
+      return next(
+        new createError.BadRequest("Data array must not have empty objects.")
+      )
+  })
+
+  try {
+    await datasetFromJsonld(dataFromReqBody)
+  } catch (err) {
+    return next(
+      new createError.BadRequest(`Unparseable jsonld: ${err.message}`)
+    )
+  }
+  next()
 }

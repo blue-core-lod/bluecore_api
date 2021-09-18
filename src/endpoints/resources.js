@@ -1,5 +1,5 @@
 import express from "express"
-import { datasetFromJsonld, n3FromJsonld, ttlFromJsonld } from "../rdf.js"
+import { n3FromJsonld, ttlFromJsonld, checkJsonld } from "../rdf.js"
 import _ from "lodash"
 import createError from "http-errors"
 
@@ -7,111 +7,98 @@ const resourcesRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
 
-resourcesRouter.post("/:resourceId", (req, res, next) => {
-  console.log(`Received post to ${req.params.resourceId}`)
+resourcesRouter.post("/:resourceId", [
+  checkJsonld,
+  (req, res, next) => {
+    console.log(`Received post to ${req.params.resourceId}`)
 
-  validateNonEmpty(req.body.data, next)
+    const resource = req.body
+    const resourceUri = resourceUriFor(req)
+    const timestamp = new Date()
 
-  datasetFromJsonld(req.body.data)
-    .then(() => {
-      const resource = req.body
-      const resourceUri = resourceUriFor(req)
-      const timestamp = new Date()
+    const saveResource = resourceForSave(
+      resource,
+      req.params.resourceId,
+      resourceUri,
+      timestamp
+    )
 
-      const saveResource = resourceForSave(
-        resource,
-        req.params.resourceId,
-        resourceUri,
-        timestamp
-      )
+    // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
+    // Add primary copy.
+    req.db
+      .collection("resources")
+      .insert(saveResource)
+      .then(() => {
+        // And a version copy.
+        req.db
+          .collection("resourceVersions")
+          .insert(saveResource)
+          .then(() => {
+            // Stub out resource metadata.
+            const resourceMetadata = {
+              id: req.params.resourceId,
+              versions: [versionEntry(saveResource)],
+            }
+            req.db
+              .collection("resourceMetadata")
+              .insert(resourceMetadata)
+              .then(() =>
+                res.location(resourceUri).status(201).send(forReturn(resource))
+              )
+              .catch(next)
+          })
+          .catch(next)
+      })
+      .catch(next)
+  },
+])
 
-      // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
-      // Add primary copy.
-      req.db
-        .collection("resources")
-        .insert(saveResource)
-        .then(() => {
-          // And a version copy.
-          req.db
-            .collection("resourceVersions")
-            .insert(saveResource)
-            .then(() => {
-              // Stub out resource metadata.
-              const resourceMetadata = {
-                id: req.params.resourceId,
-                versions: [versionEntry(saveResource)],
-              }
-              req.db
-                .collection("resourceMetadata")
-                .insert(resourceMetadata)
-                .then(() =>
-                  res
-                    .location(resourceUri)
-                    .status(201)
-                    .send(forReturn(resource))
-                )
-                .catch(next)
-            })
-            .catch(next)
-        })
-        .catch(next)
-    })
-    .catch((err) => {
-      next(new createError.BadRequest(`Unparseable jsonld: ${err.message}`))
-    })
-})
+resourcesRouter.put("/:resourceId", [
+  checkJsonld,
+  (req, res, next) => {
+    console.log(`Received put to ${req.params.resourceId}`)
 
-resourcesRouter.put("/:resourceId", (req, res, next) => {
-  console.log(`Received put to ${req.params.resourceId}`)
+    const resource = req.body
+    const timestamp = new Date()
+    const resourceUri = resourceUriFor(req)
+    const saveResource = resourceForSave(
+      resource,
+      req.params.resourceId,
+      resourceUri,
+      timestamp
+    )
 
-  validateNonEmpty(req.body.data, next)
+    // Replace primary copy.
+    req.db
+      .collection("resources")
+      .update({ id: req.params.resourceId }, saveResource, {
+        replaceOne: true,
+      })
+      .then((result) => {
+        if (result.nModified !== 1) throw new createError.NotFound()
 
-  datasetFromJsonld(req.body.data)
-    .then(() => {
-      const resource = req.body
-      const timestamp = new Date()
-      const resourceUri = resourceUriFor(req)
-      const saveResource = resourceForSave(
-        resource,
-        req.params.resourceId,
-        resourceUri,
-        timestamp
-      )
-
-      // Replace primary copy.
-      req.db
-        .collection("resources")
-        .update({ id: req.params.resourceId }, saveResource, {
-          replaceOne: true,
-        })
-        .then((result) => {
-          if (result.nModified !== 1) throw new createError.NotFound()
-
-          // And a version copy.
-          req.db
-            .collection("resourceVersions")
-            .insert(saveResource)
-            .then(() => {
-              // Apppend to resource metadata.
-              req.db
-                .collection("resourceMetadata")
-                .update(
-                  { id: req.params.resourceId },
-                  { $push: { versions: versionEntry(saveResource) } }
-                )
-                .then(() => {
-                  res.send(forReturn(resource))
-                })
-                .catch(next)
-            })
-            .catch(next)
-        })
-        .catch(next)
-    })
-    .catch((err) => {
-      next(new createError.BadRequest(`Unparseable jsonld: ${err.message}`))
-    })
-})
+        // And a version copy.
+        req.db
+          .collection("resourceVersions")
+          .insert(saveResource)
+          .then(() => {
+            // Apppend to resource metadata.
+            req.db
+              .collection("resourceMetadata")
+              .update(
+                { id: req.params.resourceId },
+                { $push: { versions: versionEntry(saveResource) } }
+              )
+              .then(() => {
+                res.send(forReturn(resource))
+              })
+              .catch(next)
+          })
+          .catch(next)
+      })
+      .catch(next)
+  },
+])
 
 resourcesRouter.delete("/:resourceId", (req, res, next) => {
   console.log(`Received delete to ${req.params.resourceId}`)
@@ -223,19 +210,6 @@ resourcesRouter.get("/", (req, res, next) => {
     })
     .catch(next)
 })
-/* eslint-enable prefer-destructuring */
-
-const validateNonEmpty = (dataFromReqBody, next) => {
-  if (dataFromReqBody === null) return next(new createError.BadRequest())
-  if (dataFromReqBody.length === 0)
-    return next(new createError.BadRequest("Data array must not be empty."))
-  dataFromReqBody.forEach((obj) => {
-    if (Object.keys(obj).length === 0)
-      return next(
-        new createError.BadRequest("Data array must not have empty objects.")
-      )
-  })
-}
 
 const resourceUriFor = (req) => {
   return `${baseUrlFor(req)}/${req.params.resourceId}`
