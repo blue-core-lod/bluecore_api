@@ -1,40 +1,40 @@
-import connect from 'mongo.js'
-import request from 'supertest'
-import app from 'app.js'
+import connect from "mongo.js"
+import request from "supertest"
+import app from "app.js"
 
 const user = {
-  _id: 'abc123',
-  id: 'nchomsky',
+  _id: "abc123",
+  id: "nchomsky",
   data: {
     history: {
       template: [],
       resource: [],
-      search: []
-    }
-  }
+      search: [],
+    },
+  },
 }
 
-jest.mock('mongo.js')
+jest.mock("mongo.js")
 
 // GET a single user
-describe('GET /user/:userId', () => {
-  it('returns the user', async () => {
+describe("GET /user/:userId", () => {
+  it("returns the user", async () => {
     const mockFindOne = jest.fn().mockResolvedValue(user)
     const mockCollection = (collectionName) => {
       return {
-        users: {findOne: mockFindOne}
+        users: { findOne: mockFindOne },
       }[collectionName]
     }
-    const mockDb = {collection: mockCollection}
+    const mockDb = { collection: mockCollection }
     connect.mockReturnValue(mockDb)
 
     const res = await request(app)
-      .get('/user/nchomsky')
-      .set('Accept', 'application/json')
+      .get("/user/nchomsky")
+      .set("Accept", "application/json")
     expect(res.statusCode).toEqual(200)
-    const resBody = {...user}
+    const resBody = { ...user }
     delete resBody._id
     expect(res.body).toEqual(resBody)
-    expect(mockFindOne).toHaveBeenCalledWith({id: 'nchomsky'})
+    expect(mockFindOne).toHaveBeenCalledWith({ id: "nchomsky" })
   })
 })

@@ -1,23 +1,23 @@
-import prompt from 'prompt'
-import AuthenticateClient from './authenticateClient.js'
+import prompt from "prompt"
+import AuthenticateClient from "./authenticateClient.js"
 
 const promptConfig = {
   properties: {
     username: {
       required: true,
-      message: 'AWS Cognito username'
+      message: "AWS Cognito username",
     },
     password: {
       required: true,
-      message: 'AWS Cognito password',
+      message: "AWS Cognito password",
       hidden: true,
-      replace: '*',
-    }
-  }
+      replace: "*",
+    },
+  },
 }
 
 // Remove noisy 'prompt: ' prefix from username and password prompts
-prompt.message = ''
+prompt.message = ""
 // Do not use colored output -- can cause text not to render on a dark background
 prompt.colors = false
 
@@ -25,5 +25,8 @@ prompt.colors = false
 prompt.start()
 prompt.get(promptConfig, (err, prompted) => {
   if (err) throw err
-  new AuthenticateClient(prompted.username, prompted.password).cognitoTokenToFile()
+  new AuthenticateClient(
+    prompted.username,
+    prompted.password
+  ).cognitoTokenToFile()
 })
