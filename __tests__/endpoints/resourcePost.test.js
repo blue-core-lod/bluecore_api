@@ -43,7 +43,7 @@ describe("POST /resource/:resourceId", () => {
     }[collectionName]
   }
   const mockDb = { collection: mockCollection }
-  connect.mockReturnValue(mockDb)
+  connect.mockImplementation(mockConnect(mockDb))
 
   it("persists new resource", async () => {
     const res = await request(app)

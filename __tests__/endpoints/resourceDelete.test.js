@@ -25,7 +25,7 @@ describe("DELETE /resource/:resourceId", () => {
     }[collectionName]
   }
   const mockDb = { collection: mockCollection }
-  connect.mockReturnValue(mockDb)
+  connect.mockImplementation(mockConnect(mockDb))
 
   it("removes existing resource", async () => {
     const res = await request(app)

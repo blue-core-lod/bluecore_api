@@ -67,7 +67,7 @@
       "src"
     ],
     "setupFiles": [
-      "<rootDir>/jest.envVars.js"
+      "<rootDir>/jest.helpers.js"
     ],
     "clearMocks": true,
     "collectCoverage": true,

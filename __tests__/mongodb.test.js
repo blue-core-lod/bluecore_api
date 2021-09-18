@@ -12,10 +12,15 @@ describe("connect to mongodb", () => {
   it("returns a mongo client", () => {
     process.env.MONGODB_IS_AWS = "false"
     const connect = require("mongo.js").default // eslint-disable-line global-require
-    connect()
+    monk.mockReturnValue("fakeConnection")
+    const mockReq = {}
+    const mockNext = jest.fn()
+    connect(mockReq, null, mockNext)
     expect(monk).toHaveBeenCalledWith(
       "mongodb://sinopia:sekret@localhost:27017/sinopia_repository",
       { useUnifiedTopology: true }
     )
+    expect(mockNext).toHaveBeenCalled()
+    expect(mockReq.db).toBe("fakeConnection")
   })
 })

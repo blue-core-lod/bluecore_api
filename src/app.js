@@ -4,7 +4,6 @@ import helmet from "helmet"
 import Honeybadger from "@honeybadger-io/js"
 import jwt from "express-jwt"
 import * as OpenApiValidator from "express-openapi-validator"
-import connect from "./mongo.js"
 import jwtConfig from "./jwt.js"
 import resourcesRouter from "./endpoints/resources.js"
 import groupsRouter from "./endpoints/groups.js"
@@ -60,13 +59,6 @@ app.use(
     custom: () => noAuth,
   })
 )
-
-// Add the db to req
-// See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
-app.use(function (req, res, next) {
-  req.db = connect()
-  next()
-})
 
 const port = process.env.PORT || 3000
 app.use(function (req, res, next) {
