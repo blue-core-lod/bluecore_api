@@ -1,18 +1,19 @@
 /* eslint-disable camelcase */
-import AWS from 'aws-sdk'
+import AWS from "aws-sdk"
 
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-west-2',
+  region: process.env.AWS_REGION || "us-west-2",
   apiVersions: {
-    lambda: '2015-03-31',
-    s3: '2006-03-01'
-  }
+    lambda: "2015-03-31",
+    s3: "2006-03-01",
+  },
 })
 
-const bucketName = process.env.AWS_BUCKET || 'sinopia-marc-development'
-const lambdaName = process.env.AWS_RDF2MARC_LAMBDA || 'sinopia-rdf2marc-development'
+const bucketName = process.env.AWS_BUCKET || "sinopia-marc-development"
+const lambdaName =
+  process.env.AWS_RDF2MARC_LAMBDA || "sinopia-rdf2marc-development"
 
 export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
   // These are tied to the user so that can list all of the MARC records requested by a user.
@@ -21,20 +22,20 @@ export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
   const marcTxtPath = `${marcKey}/record.txt`
   const errorPath = `${marcKey}/error.txt`
   // Invoke lambda.
-    const params = {
-      FunctionName: lambdaName,
-      InvokeArgs: JSON.stringify({
+  const params = {
+    FunctionName: lambdaName,
+    InvokeArgs: JSON.stringify({
       instance_uri: resourceUri,
       marc_path: marcPath,
       marc_txt_path: marcTxtPath,
       error_path: errorPath,
-      bucket: bucketName
-    })
+      bucket: bucketName,
+    }),
   }
   const lambda = new AWS.Lambda()
   return new Promise((resolve, reject) => {
     lambda.invokeAsync(params, (err) => {
-      if(err) reject(err)
+      if (err) reject(err)
       else resolve()
     })
   })
@@ -43,17 +44,21 @@ export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
 export const hasMarc = (resourceId, username, timestamp) => {
   const params = {
     Bucket: bucketName,
-    Prefix: `marc/${username}/${resourceId}/${timestamp}`
+    Prefix: `marc/${username}/${resourceId}/${timestamp}`,
   }
   const s3 = new AWS.S3()
   return new Promise((resolve, reject) => {
     s3.listObjectsV2(params, (err, data) => {
-      if(err) reject(err)
-      else if (data.Contents.find((content) => content.Key.endsWith('error.txt'))) {
+      if (err) reject(err)
+      else if (
+        data.Contents.find((content) => content.Key.endsWith("error.txt"))
+      ) {
         return getError(resourceId, username, timestamp)
           .then((errorTxt) => reject(new Error(errorTxt)))
           .catch((err) => reject(err))
-      } else if (data.Contents.find((content) => content.Key.endsWith('record.mar'))) {
+      } else if (
+        data.Contents.find((content) => content.Key.endsWith("record.mar"))
+      ) {
         resolve(true)
       } else resolve(false)
     })
@@ -61,15 +66,15 @@ export const hasMarc = (resourceId, username, timestamp) => {
 }
 
 export const getMarc = (resourceId, username, timestamp, asText) => {
-  const fileExt = asText ? '.txt' : '.mar'
+  const fileExt = asText ? ".txt" : ".mar"
   const params = {
     Bucket: bucketName,
-    Key: `marc/${username}/${resourceId}/${timestamp}/record${fileExt}`
+    Key: `marc/${username}/${resourceId}/${timestamp}/record${fileExt}`,
   }
   const s3 = new AWS.S3()
   return new Promise((resolve, reject) => {
     s3.getObject(params, (err, data) => {
-      if(err) reject(err)
+      if (err) reject(err)
       else resolve(data.Body)
     })
   })
@@ -78,13 +83,13 @@ export const getMarc = (resourceId, username, timestamp, asText) => {
 const getError = (resourceId, username, timestamp) => {
   const params = {
     Bucket: bucketName,
-    Key: `marc/${username}/${resourceId}/${timestamp}/error.txt`
+    Key: `marc/${username}/${resourceId}/${timestamp}/error.txt`,
   }
   const s3 = new AWS.S3()
   return new Promise((resolve, reject) => {
     s3.getObject(params, (err, data) => {
-      if(err) reject(err)
-      else resolve(data.Body.toString('utf-8'))
+      if (err) reject(err)
+      else resolve(data.Body.toString("utf-8"))
     })
   })
 }

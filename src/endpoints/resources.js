@@ -1,13 +1,13 @@
-import express from 'express'
-import { datasetFromJsonld, n3FromJsonld, ttlFromJsonld } from '../rdf.js'
-import _ from 'lodash'
-import createError from 'http-errors'
+import express from "express"
+import { datasetFromJsonld, n3FromJsonld, ttlFromJsonld } from "../rdf.js"
+import _ from "lodash"
+import createError from "http-errors"
 
 const resourcesRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
 
-resourcesRouter.post('/:resourceId', (req, res, next) => {
+resourcesRouter.post("/:resourceId", (req, res, next) => {
   console.log(`Received post to ${req.params.resourceId}`)
 
   validateNonEmpty(req.body.data, next)
@@ -18,19 +18,38 @@ resourcesRouter.post('/:resourceId', (req, res, next) => {
       const resourceUri = resourceUriFor(req)
       const timestamp = new Date()
 
-      const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+      const saveResource = resourceForSave(
+        resource,
+        req.params.resourceId,
+        resourceUri,
+        timestamp
+      )
 
       // See https://www.mongodb.com/blog/post/building-with-patterns-the-document-versioning-pattern
       // Add primary copy.
-      req.db.collection('resources').insert(saveResource)
+      req.db
+        .collection("resources")
+        .insert(saveResource)
         .then(() => {
           // And a version copy.
-          req.db.collection('resourceVersions').insert(saveResource)
+          req.db
+            .collection("resourceVersions")
+            .insert(saveResource)
             .then(() => {
               // Stub out resource metadata.
-              const resourceMetadata = {id: req.params.resourceId, versions: [versionEntry(saveResource)]}
-              req.db.collection('resourceMetadata').insert(resourceMetadata)
-                .then(() => res.location(resourceUri).status(201).send(forReturn(resource)))
+              const resourceMetadata = {
+                id: req.params.resourceId,
+                versions: [versionEntry(saveResource)],
+              }
+              req.db
+                .collection("resourceMetadata")
+                .insert(resourceMetadata)
+                .then(() =>
+                  res
+                    .location(resourceUri)
+                    .status(201)
+                    .send(forReturn(resource))
+                )
                 .catch(next)
             })
             .catch(next)
@@ -42,7 +61,7 @@ resourcesRouter.post('/:resourceId', (req, res, next) => {
     })
 })
 
-resourcesRouter.put('/:resourceId', (req, res, next) => {
+resourcesRouter.put("/:resourceId", (req, res, next) => {
   console.log(`Received put to ${req.params.resourceId}`)
 
   validateNonEmpty(req.body.data, next)
@@ -52,18 +71,30 @@ resourcesRouter.put('/:resourceId', (req, res, next) => {
       const resource = req.body
       const timestamp = new Date()
       const resourceUri = resourceUriFor(req)
-      const saveResource = resourceForSave(resource, req.params.resourceId, resourceUri, timestamp)
+      const saveResource = resourceForSave(
+        resource,
+        req.params.resourceId,
+        resourceUri,
+        timestamp
+      )
 
       // Replace primary copy.
-      req.db.collection('resources').update({ id: req.params.resourceId }, saveResource, { replaceOne: true })
+      req.db
+        .collection("resources")
+        .update({ id: req.params.resourceId }, saveResource, {
+          replaceOne: true,
+        })
         .then((result) => {
           if (result.nModified !== 1) throw new createError.NotFound()
 
           // And a version copy.
-          req.db.collection('resourceVersions').insert(saveResource)
+          req.db
+            .collection("resourceVersions")
+            .insert(saveResource)
             .then(() => {
               // Apppend to resource metadata.
-              req.db.collection('resourceMetadata')
+              req.db
+                .collection("resourceMetadata")
                 .update(
                   { id: req.params.resourceId },
                   { $push: { versions: versionEntry(saveResource) } }
@@ -82,19 +113,25 @@ resourcesRouter.put('/:resourceId', (req, res, next) => {
     })
 })
 
-resourcesRouter.delete('/:resourceId', (req, res, next) => {
+resourcesRouter.delete("/:resourceId", (req, res, next) => {
   console.log(`Received delete to ${req.params.resourceId}`)
 
   // Remove primary copy.
-  req.db.collection('resources').remove({ id: req.params.resourceId })
+  req.db
+    .collection("resources")
+    .remove({ id: req.params.resourceId })
     .then((result) => {
       if (result.deletedCount !== 1) throw new createError.NotFound()
 
       // Remove version copies.
-      req.db.collection('resourceVersions').remove({ id: req.params.resourceId })
+      req.db
+        .collection("resourceVersions")
+        .remove({ id: req.params.resourceId })
         .then(() => {
           // Remove resource metadata.
-          req.db.collection('resourceMetadata').remove({ id: req.params.resourceId })
+          req.db
+            .collection("resourceMetadata")
+            .remove({ id: req.params.resourceId })
             .then(() => {
               res.sendStatus(204)
             })
@@ -105,8 +142,10 @@ resourcesRouter.delete('/:resourceId', (req, res, next) => {
     .catch(next)
 })
 
-resourcesRouter.get('/:resourceId/versions', (req, res, next) => {
-  req.db.collection('resourceMetadata').findOne({ id: req.params.resourceId })
+resourcesRouter.get("/:resourceId/versions", (req, res, next) => {
+  req.db
+    .collection("resourceMetadata")
+    .findOne({ id: req.params.resourceId })
     .then((resourceMetadata) => {
       if (!resourceMetadata) return res.sendStatus(404)
       return res.send(forReturn(resourceMetadata))
@@ -114,8 +153,10 @@ resourcesRouter.get('/:resourceId/versions', (req, res, next) => {
     .catch(next)
 })
 
-resourcesRouter.get('/:resourceId/version/:timestamp', (req, res, next) => {
-  req.db.collection('resourceVersions').findOne({ id: req.params.resourceId, timestamp: req.params.timestamp })
+resourcesRouter.get("/:resourceId/version/:timestamp", (req, res, next) => {
+  req.db
+    .collection("resourceVersions")
+    .findOne({ id: req.params.resourceId, timestamp: req.params.timestamp })
     .then((resource) => {
       if (!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))
@@ -123,28 +164,31 @@ resourcesRouter.get('/:resourceId/version/:timestamp', (req, res, next) => {
     .catch(next)
 })
 
-resourcesRouter.get('/:resourceId', (req, res, next) => {
-  req.db.collection('resources').findOne({ id: req.params.resourceId })
+resourcesRouter.get("/:resourceId", (req, res, next) => {
+  req.db
+    .collection("resources")
+    .findOne({ id: req.params.resourceId })
     .then((resource) => {
       if (!resource) return res.sendStatus(404)
       const returnResource = forReturn(resource)
       res.format({
-        'text/plain': () => res.send(JSON.stringify(returnResource, null, 2)),
-        'text/html': () => res.send(`<pre>${JSON.stringify(returnResource, null, 2)}</pre>`),
-        'application/json': () => res.send(returnResource),
-        'application/ld+json': () => res.send(returnResource.data),
-        'text/n3': () => n3FromJsonld(returnResource.data)
-          .then((n3) => res.send(n3)),
-        'text/turtle': () => ttlFromJsonld(returnResource.data)
-          .then((ttl) => res.send(ttl)),
-        default: () => res.sendStatus(406)
+        "text/plain": () => res.send(JSON.stringify(returnResource, null, 2)),
+        "text/html": () =>
+          res.send(`<pre>${JSON.stringify(returnResource, null, 2)}</pre>`),
+        "application/json": () => res.send(returnResource),
+        "application/ld+json": () => res.send(returnResource.data),
+        "text/n3": () =>
+          n3FromJsonld(returnResource.data).then((n3) => res.send(n3)),
+        "text/turtle": () =>
+          ttlFromJsonld(returnResource.data).then((ttl) => res.send(ttl)),
+        default: () => res.sendStatus(406),
       })
     })
     .catch(next)
 })
 
 /* eslint-disable prefer-destructuring */
-resourcesRouter.get('/', (req, res, next) => {
+resourcesRouter.get("/", (req, res, next) => {
   const data = []
   const limit = Number(req.query.limit) || 25
   const start = Number(req.query.start) || 1
@@ -152,7 +196,9 @@ resourcesRouter.get('/', (req, res, next) => {
 
   // Ask for one more so that can see if there is a next page.
   let nextPage = false
-  req.db.collection('resources').find(query, { skip: start - 1, limit: limit + 1 })
+  req.db
+    .collection("resources")
+    .find(query, { skip: start - 1, limit: limit + 1 })
     .each((resource) => {
       if (data.length < limit) {
         data.push(forReturn(resource))
@@ -162,10 +208,17 @@ resourcesRouter.get('/', (req, res, next) => {
     })
     .then(() => {
       const links = {
-        first: pageUrlFor(req, 0, limit, req.query)
+        first: pageUrlFor(req, 0, limit, req.query),
       }
-      if (start !== 1) links.prev = pageUrlFor(req, limit, Math.max(start - limit, 0), req.query)
-      if (nextPage) links.next = pageUrlFor(req, limit, start + limit, req.query)
+      if (start !== 1)
+        links.prev = pageUrlFor(
+          req,
+          limit,
+          Math.max(start - limit, 0),
+          req.query
+        )
+      if (nextPage)
+        links.next = pageUrlFor(req, limit, start + limit, req.query)
       res.send({ data, links })
     })
     .catch(next)
@@ -174,9 +227,13 @@ resourcesRouter.get('/', (req, res, next) => {
 
 const validateNonEmpty = (dataFromReqBody, next) => {
   if (dataFromReqBody === null) return next(new createError.BadRequest())
-  if (dataFromReqBody.length === 0) return next(new createError.BadRequest('Data array must not be empty.'))
+  if (dataFromReqBody.length === 0)
+    return next(new createError.BadRequest("Data array must not be empty."))
   dataFromReqBody.forEach((obj) => {
-    if (Object.keys(obj).length === 0) return next(new createError.BadRequest('Data array must not have empty objects.'))
+    if (Object.keys(obj).length === 0)
+      return next(
+        new createError.BadRequest("Data array must not have empty objects.")
+      )
   })
 }
 
@@ -192,13 +249,13 @@ const baseUrlFor = (req) => {
 const pageUrlFor = (req, limit, start, qs) => {
   const params = { limit, start }
   Object.keys(qs).forEach((key) => {
-    if (['group', 'updatedAfter', 'updatedBefore', 'type'].includes(key)) {
+    if (["group", "updatedAfter", "updatedBefore", "type"].includes(key)) {
       params[key] = qs[key]
     }
   })
   const queryString = Object.entries(params)
-    .map(([key, value]) => [key, encodeURIComponent(value)].join('='))
-    .join('&')
+    .map(([key, value]) => [key, encodeURIComponent(value)].join("="))
+    .join("&")
   return `${baseUrlFor(req)}?${queryString}`
 }
 
@@ -215,21 +272,23 @@ const queryFor = (qs) => {
 const parseDate = (dateString) => {
   const date = new Date(dateString)
   if (isNaN(date)) {
-    throw createError(400, 'Bad Request', { details: `Invalid date-time: ${dateString}` })
+    throw createError(400, "Bad Request", {
+      details: `Invalid date-time: ${dateString}`,
+    })
   }
   return date
 }
 
 const forReturn = (item) => {
   // Map ! back to . in key names
-  const newItem = replaceInKeys(item, '!', '.')
+  const newItem = replaceInKeys(item, "!", ".")
   delete newItem._id
   return newItem
 }
 
 const resourceForSave = (resource, id, uri, timestamp) => {
   // Map . to ! in key names because Mongo doesn't like . in key names. Sigh.
-  const newResource = replaceInKeys(resource, '.', '!')
+  const newResource = replaceInKeys(resource, ".", "!")
 
   newResource.id = id
   // If resource has a uri, keep it. This is to support migrations.
@@ -243,7 +302,7 @@ const versionEntry = (resource) => ({
   user: resource.user,
   group: resource.group,
   editGroups: resource.editGroups,
-  templateId: resource.templateId
+  templateId: resource.templateId,
 })
 
 const replaceInKeys = (obj, from, to) => {
@@ -251,7 +310,7 @@ const replaceInKeys = (obj, from, to) => {
     if (!_.isPlainObject(cloneObj)) return
     const newObj = {}
     _.keys(cloneObj).forEach((key) => {
-      const newKey = key.replace(new RegExp(`\\${from}`, 'g'), to)
+      const newKey = key.replace(new RegExp(`\\${from}`, "g"), to)
       newObj[newKey] = replaceInKeys(cloneObj[key], from, to)
     })
     return newObj

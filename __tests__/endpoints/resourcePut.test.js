@@ -1,169 +1,199 @@
-import connect from 'mongo.js'
-import request from 'supertest'
-import app from 'app.js'
-import FakeTimers from '@sinonjs/fake-timers'
-import createError from 'http-errors'
+import connect from "mongo.js"
+import request from "supertest"
+import app from "app.js"
+import FakeTimers from "@sinonjs/fake-timers"
+import createError from "http-errors"
 
-const resource = require('../__fixtures__/resource_6852a770-2961-4836-a833-0b21a9b68041.json')
-const resBody = require('../__fixtures__/resp_6852a770-2961-4836-a833-0b21a9b68041.json')
-const reqBody = require('../__fixtures__/req_6852a770-2961-4836-a833-0b21a9b68041.json')
+const resource = require("../__fixtures__/resource_6852a770-2961-4836-a833-0b21a9b68041.json")
+const resBody = require("../__fixtures__/resp_6852a770-2961-4836-a833-0b21a9b68041.json")
+const reqBody = require("../__fixtures__/req_6852a770-2961-4836-a833-0b21a9b68041.json")
 
 // To avoid race conditions with mocking connect, testing of resources is split into
 // Multiple files.
 
-jest.mock('mongo.js')
-jest.mock('jwt.js', () => {
+jest.mock("mongo.js")
+jest.mock("jwt.js", () => {
   return {
     __esModule: true,
-    default: jest.fn().mockReturnValue({ secret: 'shhhhhhared-secret', algorithms: ['HS256'] })
+    default: jest
+      .fn()
+      .mockReturnValue({ secret: "shhhhhhared-secret", algorithms: ["HS256"] }),
   }
 })
 // This won't be required after Jest 27
-jest.useFakeTimers('modern')
+jest.useFakeTimers("modern")
 
 let clock
 beforeAll(() => {
-  clock = FakeTimers.install({now: new Date('2020-08-20T11:34:40.887Z')})
+  clock = FakeTimers.install({ now: new Date("2020-08-20T11:34:40.887Z") })
 })
 
 afterAll(() => {
   clock.uninstall()
 })
 
-describe('PUT /resource/:resourceId', () => {
-  const mockResourcesUpdate = jest.fn().mockResolvedValue({nModified: 1})
+describe("PUT /resource/:resourceId", () => {
+  const mockResourcesUpdate = jest.fn().mockResolvedValue({ nModified: 1 })
   const mockResourceVersionsInsert = jest.fn().mockResolvedValue()
   const mockResourceMetadataUpdate = jest.fn().mockResolvedValue()
   const mockCollection = (collectionName) => {
     return {
-      resources: {update: mockResourcesUpdate},
-      resourceVersions: {insert: mockResourceVersionsInsert},
-      resourceMetadata: {update: mockResourceMetadataUpdate}
+      resources: { update: mockResourcesUpdate },
+      resourceVersions: { insert: mockResourceVersionsInsert },
+      resourceMetadata: { update: mockResourceMetadataUpdate },
     }[collectionName]
   }
-  const mockDb = {collection: mockCollection}
+  const mockDb = { collection: mockCollection }
   connect.mockReturnValue(mockDb)
 
-  it('updates existing resource', async () => {
+  it("updates existing resource", async () => {
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(reqBody)
     expect(res.statusCode).toEqual(200)
     expect(res.body).toEqual(resBody)
-    const saveResource = {...resource}
+    const saveResource = { ...resource }
     delete saveResource._id
     saveResource.timestamp = new Date()
-    expect(mockResourcesUpdate).toHaveBeenCalledWith({id: '6852a770-2961-4836-a833-0b21a9b68041'}, saveResource, {replaceOne: true})
+    expect(mockResourcesUpdate).toHaveBeenCalledWith(
+      { id: "6852a770-2961-4836-a833-0b21a9b68041" },
+      saveResource,
+      { replaceOne: true }
+    )
     expect(mockResourceVersionsInsert).toHaveBeenCalledWith(saveResource)
 
     const versionEntry = {
-      "timestamp": new Date(),
-      "user": "havram",
-      "group": "stanford",
-      "editGroups": ["stanford"],
-      "templateId": "profile:bf2:Title:AbbrTitle"
+      timestamp: new Date(),
+      user: "havram",
+      group: "stanford",
+      editGroups: ["stanford"],
+      templateId: "profile:bf2:Title:AbbrTitle",
     }
-    expect(mockResourceMetadataUpdate).toHaveBeenCalledWith({id: '6852a770-2961-4836-a833-0b21a9b68041'}, { $push: { versions: versionEntry}})
+    expect(mockResourceMetadataUpdate).toHaveBeenCalledWith(
+      { id: "6852a770-2961-4836-a833-0b21a9b68041" },
+      { $push: { versions: versionEntry } }
+    )
   })
-  it('requires auth', async () => {
+  it("requires auth", async () => {
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
       .send(reqBody)
     expect(res.statusCode).toEqual(401)
   })
-  it('returns 400 error if jsonld data array is null', async () => {
-    const emptyReqBody = {...reqBody, data: null}
+  it("returns 400 error if jsonld data array is null", async () => {
+    const emptyReqBody = { ...reqBody, data: null }
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(emptyReqBody)
-      .set('Content-Type', 'application/json')
+      .set("Content-Type", "application/json")
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
-        title: 'Bad Request',
-        details: 'should be array at .body.data',
-        status: '400',
-      }
+        title: "Bad Request",
+        details: "should be array at .body.data",
+        status: "400",
+      },
     ])
   })
-  it('returns 400 error if jsonld data is not an array', async () => {
-    const emptyReqBody = {...reqBody, data: 'foo'}
+  it("returns 400 error if jsonld data is not an array", async () => {
+    const emptyReqBody = { ...reqBody, data: "foo" }
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(emptyReqBody)
-      .set('Content-Type', 'application/json')
+      .set("Content-Type", "application/json")
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
-        title: 'Bad Request',
-        details: 'should be array at .body.data',
-        status: '400',
-      }
+        title: "Bad Request",
+        details: "should be array at .body.data",
+        status: "400",
+      },
     ])
   })
-  it('returns 400 error if jsonld data array is empty', async () => {
-    const emptyReqBody = {...reqBody, data: []}
+  it("returns 400 error if jsonld data array is empty", async () => {
+    const emptyReqBody = { ...reqBody, data: [] }
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(emptyReqBody)
-      .set('Content-Type', 'application/json')
+      .set("Content-Type", "application/json")
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
-        title: 'Bad Request',
-        details: 'Data array must not be empty.',
-        status: '400',
-      }
+        title: "Bad Request",
+        details: "Data array must not be empty.",
+        status: "400",
+      },
     ])
   })
-  it('returns 400 error if jsonld object in data array is empty', async () => {
-    const emptyObjectReqBody = {...reqBody, data: [{}]}
+  it("returns 400 error if jsonld object in data array is empty", async () => {
+    const emptyObjectReqBody = { ...reqBody, data: [{}] }
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(emptyObjectReqBody)
-      .set('Content-Type', 'application/json')
+      .set("Content-Type", "application/json")
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
-        title: 'Bad Request',
-        details: 'Data array must not have empty objects.',
-        status: '400',
-      }
+        title: "Bad Request",
+        details: "Data array must not have empty objects.",
+        status: "400",
+      },
     ])
   })
-  it('returns 400 error if resource is unparseable jsonld', async () => {
-    const reqBodyUnparseable = {...reqBody, data: [{'@context': 'object'}]}
+  it("returns 400 error if resource is unparseable jsonld", async () => {
+    const reqBodyUnparseable = { ...reqBody, data: [{ "@context": "object" }] }
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(reqBodyUnparseable)
-      .set('Content-Type', 'application/json')
+      .set("Content-Type", "application/json")
     expect(res.statusCode).toEqual(400)
     expect(res.body).toEqual([
       {
-        title: 'Bad Request',
-        details: 'Unparseable jsonld: Invalid context IRI: object',
-        status: '400',
-      }
+        title: "Bad Request",
+        details: "Unparseable jsonld: Invalid context IRI: object",
+        status: "400",
+      },
     ])
   })
-  it('returns 404 when resource does not exist', async () => {
+  it("returns 404 when resource does not exist", async () => {
     mockResourcesUpdate.mockRejectedValue(new createError.NotFound())
     const res = await request(app)
-      .put('/resource/6852a770-2961-4836-a833-0b21a9b68041')
-      .set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg')
+      .put("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+      .set(
+        "Authorization",
+        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.fLGW-NqeXUex3gZpZW0e61zP5dmhmjNPCdBikj_7Djg"
+      )
       .send(reqBody)
     expect(res.statusCode).toEqual(404)
     expect(res.body).toEqual([
       {
-        title: 'Not Found',
-        status: '404'
-      }
+        title: "Not Found",
+        status: "404",
+      },
     ])
   })
 })

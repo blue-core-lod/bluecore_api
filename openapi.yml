@@ -5,9 +5,9 @@ info:
   title: Sinopia API
   license:
     name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 servers:
-  - url: 'https://{environment}.sinopia.io'
+  - url: "https://{environment}.sinopia.io"
     variables:
       environment:
         default: api
@@ -34,7 +34,7 @@ paths:
       tags:
         - monitoring
       responses:
-        '200':
+        "200":
           description: The status of the service
           content:
             application/json:
@@ -46,7 +46,7 @@ paths:
       tags:
         - resources
       responses:
-        '200':
+        "200":
           description: OK - returns a page of resources
           content:
             application/json:
@@ -56,7 +56,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Resource'
+                      $ref: "#/components/schemas/Resource"
                   links:
                     type: object
                     properties:
@@ -124,12 +124,12 @@ paths:
       tags:
         - resources
       responses:
-        '200':
+        "200":
           description: OK - returns resource
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+                $ref: "#/components/schemas/Resource"
             application/ld+json:
               schema:
                 type: string
@@ -145,12 +145,12 @@ paths:
             text/turtle:
               schema:
                 type: string
-        '404':
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -165,7 +165,7 @@ paths:
       tags:
         - resources
       responses:
-        '201':
+        "201":
           description: OK - returns resource
           headers:
             location:
@@ -175,25 +175,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
-        '400':
+                $ref: "#/components/schemas/Resource"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '401':
+                $ref: "#/components/schemas/Errors"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '409':
+                $ref: "#/components/schemas/Errors"
+        "409":
           description: Conflict - resource already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -205,7 +205,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Resource'
+              $ref: "#/components/schemas/Resource"
     put:
       summary: Endpoint to update resources - returns the resource as JSON
       security:
@@ -213,30 +213,30 @@ paths:
       tags:
         - resources
       responses:
-        '200':
+        "200":
           description: OK - returns resource
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
-        '400':
+                $ref: "#/components/schemas/Resource"
+        "400":
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '401':
+                $ref: "#/components/schemas/Errors"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
+                $ref: "#/components/schemas/Errors"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -248,7 +248,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Resource'
+              $ref: "#/components/schemas/Resource"
     delete:
       summary: Endpoint to delete resources
       security:
@@ -256,20 +256,20 @@ paths:
       tags:
         - resources
       responses:
-        '204':
+        "204":
           description: Deleted
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
+                $ref: "#/components/schemas/Errors"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -283,7 +283,7 @@ paths:
       tags:
         - resources
       responses:
-        '200':
+        "200":
           description: OK - returns metadata document
           content:
             application/json:
@@ -302,12 +302,12 @@ paths:
       tags:
         - resources
       responses:
-        '200':
+        "200":
           description: OK - returns resource
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+                $ref: "#/components/schemas/Resource"
       parameters:
         - name: resourceId
           in: path
@@ -329,24 +329,24 @@ paths:
       tags:
         - marc
       responses:
-        '200':
+        "200":
           description: OK
           content:
             text/plain:
               schema:
                 type: string
-        '303':
+        "303":
           description: Redirect to MARC version url
           content:
             text/plain:
               schema:
                 type: string
-        '500':
+        "500":
           description: Server error indicating the conversion failed
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -376,7 +376,7 @@ paths:
       tags:
         - marc
       responses:
-        '200':
+        "200":
           description: OK
           content:
             text/plain:
@@ -412,25 +412,25 @@ paths:
       tags:
         - marc
       responses:
-        '202':
+        "202":
           description: Accepted
           headers:
             content-location:
               description: The URL for checking the status of the MARC conversion job.
               schema:
                 type: string
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
+                $ref: "#/components/schemas/Errors"
+        "404":
           description: Resource not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: resourceId
           in: path
@@ -444,30 +444,30 @@ paths:
       tags:
         - groups
       responses:
-        '200':
-          description: 'OK - returns list of groups'
+        "200":
+          description: "OK - returns list of groups"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Groups'
+                $ref: "#/components/schemas/Groups"
   /user/{userId}:
     get:
       summary: Return data for a user
       tags:
         - users
       responses:
-        '200':
-          description: 'OK - returns user data'
+        "200":
+          description: "OK - returns user data"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '404':
+                $ref: "#/components/schemas/User"
+        "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: userId
           in: path
@@ -482,7 +482,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '201':
+        "201":
           description: OK - returns user
           headers:
             location:
@@ -492,19 +492,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '401':
+                $ref: "#/components/schemas/User"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '409':
+                $ref: "#/components/schemas/Errors"
+        "409":
           description: Conflict - user already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: userId
           in: path
@@ -520,24 +520,24 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: OK - returns user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
-        '401':
+                $ref: "#/components/schemas/User"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
-        '404':
+                $ref: "#/components/schemas/Errors"
+        "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Errors'
+                $ref: "#/components/schemas/Errors"
       parameters:
         - name: userId
           in: path
@@ -681,7 +681,7 @@ components:
           description: The resources.
           type: array
           items:
-            $ref: '#/components/schemas/Resource'
+            $ref: "#/components/schemas/Resource"
         links:
           description: Links to other pages.
           type: object
@@ -713,11 +713,11 @@ components:
               type: object
               properties:
                 template:
-                  $ref: '#/components/schemas/History'
+                  $ref: "#/components/schemas/History"
                 resource:
-                  $ref: '#/components/schemas/History'
+                  $ref: "#/components/schemas/History"
                 search:
-                  $ref: '#/components/schemas/History'
+                  $ref: "#/components/schemas/History"
               required:
                 - template
                 - resource
