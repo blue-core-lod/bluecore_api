@@ -26,7 +26,7 @@ describe("GET /user/:userId", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get("/user/nchomsky")

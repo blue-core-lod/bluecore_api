@@ -29,7 +29,7 @@ describe("GET /resource/", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get("/resource/")
@@ -54,7 +54,7 @@ describe("GET /resource/", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get("/resource?limit=1&start=1")
@@ -87,7 +87,7 @@ describe("GET /resource/", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get("/resource?limit=1&start=2")
@@ -116,7 +116,7 @@ describe("GET /resource/", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get(
@@ -169,7 +169,7 @@ describe("GET /resource/:resourceId", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .get("/resource/6852a770-2961-4836-a833-0b21a9b68041")

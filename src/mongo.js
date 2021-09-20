@@ -10,9 +10,12 @@ const isAws = process.env.MONGODB_IS_AWS === "true"
 
 let db
 
-const connect = () => {
+// Add the db to req
+// See https://closebrace.com/tutorials/2017-03-02/the-dead-simple-step-by-step-guide-for-front-end-developers-to-getting-up-and-running-with-nodejs-express-and-mongodb
+const connect = (req, res, next) => {
   if (!db) db = isAws ? awsConnect() : mongoConnect()
-  return db
+  req.db = db
+  next()
 }
 
 const awsConnect = () => {

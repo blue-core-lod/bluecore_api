@@ -1,5 +1,6 @@
 import express from "express"
 import _ from "lodash"
+import connect from "../mongo.js"
 
 const usersRouter = express.Router()
 
@@ -9,6 +10,9 @@ const historySize = {
   template: Number(process.env.TEMPLATE_HISTORY_SIZE) || 10,
   search: Number(process.env.SEARCH_HISTORY_SIZE) || 10,
 }
+
+// Add the db to req
+usersRouter.use(connect)
 
 usersRouter.post("/:userId", (req, res, next) => {
   console.log(`Received post to ${req.params.userId}`)

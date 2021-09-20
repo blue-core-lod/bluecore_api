@@ -34,7 +34,7 @@ describe("PUT /user/:userId/history/:historyType/:historyItemId", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .put("/user/nchomsky/history/search/ghi789")
@@ -88,7 +88,7 @@ describe("PUT /user/:userId/history/:historyType/:historyItemId", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .put("/user/nchomsky/history/search/ghi789")
@@ -145,7 +145,7 @@ describe("PUT /user/:userId/history/:historyType/:historyItemId", () => {
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
-    connect.mockReturnValue(mockDb)
+    connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
       .put("/user/nchomsky/history/search/ghi789")

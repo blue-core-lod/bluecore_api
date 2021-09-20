@@ -44,7 +44,7 @@ describe("PUT /resource/:resourceId", () => {
     }[collectionName]
   }
   const mockDb = { collection: mockCollection }
-  connect.mockReturnValue(mockDb)
+  connect.mockImplementation(mockConnect(mockDb))
 
   it("updates existing resource", async () => {
     const res = await request(app)

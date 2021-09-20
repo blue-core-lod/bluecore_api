@@ -20,7 +20,7 @@ describe("POST /user/:userId", () => {
     }[collectionName]
   }
   const mockDb = { collection: mockCollection }
-  connect.mockReturnValue(mockDb)
+  connect.mockImplementation(mockConnect(mockDb))
 
   it("creates a new user", async () => {
     const res = await request(app)

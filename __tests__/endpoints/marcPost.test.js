@@ -29,7 +29,7 @@ describe("POST /marc/:resourceId", () => {
         }[collectionName]
       }
       const mockDb = { collection: mockCollection }
-      connect.mockReturnValue(mockDb)
+      connect.mockImplementation(mockConnect(mockDb))
 
       aws.requestMarc.mockResolvedValue()
 
@@ -61,7 +61,7 @@ describe("POST /marc/:resourceId", () => {
         }[collectionName]
       }
       const mockDb = { collection: mockCollection }
-      connect.mockReturnValue(mockDb)
+      connect.mockImplementation(mockConnect(mockDb))
 
       const res = await request(app)
         .post("/marc/6852a770-2961-4836-a833-0b21a9b68041")

@@ -1,11 +1,15 @@
 import express from "express"
 import { n3FromJsonld, ttlFromJsonld, checkJsonld } from "../rdf.js"
+import connect from "../mongo.js"
 import _ from "lodash"
 import createError from "http-errors"
 
 const resourcesRouter = express.Router()
 
 const apiBaseUrl = process.env.API_BASE_URL
+
+// Add the db to req
+resourcesRouter.use(connect)
 
 resourcesRouter.post("/:resourceId", [
   checkJsonld,
