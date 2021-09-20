@@ -8,12 +8,14 @@ AWS.config.update({
   apiVersions: {
     lambda: "2015-03-31",
     s3: "2006-03-01",
+    cognitoidentityserviceprovider: "2016-04-18",
   },
 })
 
 const bucketName = process.env.AWS_BUCKET || "sinopia-marc-development"
 const lambdaName =
   process.env.AWS_RDF2MARC_LAMBDA || "sinopia-rdf2marc-development"
+const userPoolId = process.env.COGNITO_USER_POOL_ID || "us-west-2_CGd9Wq136"
 
 export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
   // These are tied to the user so that can list all of the MARC records requested by a user.
@@ -90,6 +92,22 @@ const getError = (resourceId, username, timestamp) => {
     s3.getObject(params, (err, data) => {
       if (err) reject(err)
       else resolve(data.Body.toString("utf-8"))
+    })
+  })
+}
+
+export const listGroups = () => {
+  const cognito = new AWS.CognitoIdentityServiceProvider()
+  return new Promise((resolve, reject) => {
+    cognito.listGroups({ UserPoolId: userPoolId }, (err, data) => {
+      if (err) reject(err)
+      else
+        resolve(
+          data.Groups.map((group) => ({
+            id: group.GroupName,
+            label: group.Description || group.GroupName,
+          }))
+        )
     })
   })
 }

@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
-import { requestMarc, hasMarc, getMarc } from "aws.js"
+import { requestMarc, hasMarc, getMarc, listGroups } from "aws.js"
 
 const mockInvokeAsync = jest.fn()
 const mockListObjects = jest.fn()
 const mockGetObject = jest.fn()
+const mockListGroups = jest.fn()
 jest.mock("aws-sdk", () => {
   return {
     config: { update: jest.fn() },
@@ -13,6 +14,9 @@ jest.mock("aws-sdk", () => {
     S3: jest.fn(() => ({
       listObjectsV2: mockListObjects,
       getObject: mockGetObject,
+    })),
+    CognitoIdentityServiceProvider: jest.fn(() => ({
+      listGroups: mockListGroups,
     })),
   }
 })
@@ -191,6 +195,35 @@ describe("getMarc", () => {
           "2020-08-20T11:34:40.887Z"
         )
       ).rejects.toThrow("Get failed")
+    })
+  })
+})
+
+describe("listGroups", () => {
+  describe("getting successful", () => {
+    it("resolves record", async () => {
+      mockListGroups.mockImplementation((params, callback) => {
+        expect(params).toEqual({ UserPoolId: "us-west-2_CGd9Wq136" })
+        callback(null, {
+          Groups: [
+            { GroupName: "stanford", Description: "Stanford University" },
+            { GroupName: "cornell", Description: "Cornell University" },
+          ],
+        })
+      })
+      expect(await listGroups()).toEqual([
+        { id: "stanford", label: "Stanford University" },
+        { id: "cornell", label: "Cornell University" },
+      ])
+    })
+  })
+
+  describe("error", () => {
+    it("rejects", async () => {
+      mockListGroups.mockImplementation((params, callback) => {
+        callback(new Error("Get failed"), null)
+      })
+      await expect(listGroups()).rejects.toThrow("Get failed")
     })
   })
 })
