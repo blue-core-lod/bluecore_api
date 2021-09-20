@@ -3,6 +3,7 @@ import { n3FromJsonld, ttlFromJsonld, checkJsonld } from "../rdf.js"
 import connect from "../mongo.js"
 import _ from "lodash"
 import createError from "http-errors"
+import { canDelete, canCreate, canEdit } from "../permissions.js"
 
 const resourcesRouter = express.Router()
 
@@ -13,6 +14,7 @@ resourcesRouter.use(connect)
 
 resourcesRouter.post("/:resourceId", [
   checkJsonld,
+  canCreate,
   (req, res, next) => {
     console.log(`Received post to ${req.params.resourceId}`)
 
@@ -59,6 +61,7 @@ resourcesRouter.post("/:resourceId", [
 
 resourcesRouter.put("/:resourceId", [
   checkJsonld,
+  canEdit,
   (req, res, next) => {
     console.log(`Received put to ${req.params.resourceId}`)
 
@@ -104,34 +107,37 @@ resourcesRouter.put("/:resourceId", [
   },
 ])
 
-resourcesRouter.delete("/:resourceId", (req, res, next) => {
-  console.log(`Received delete to ${req.params.resourceId}`)
+resourcesRouter.delete("/:resourceId", [
+  canDelete,
+  (req, res, next) => {
+    console.log(`Received delete to ${req.params.resourceId}`)
 
-  // Remove primary copy.
-  req.db
-    .collection("resources")
-    .remove({ id: req.params.resourceId })
-    .then((result) => {
-      if (result.deletedCount !== 1) throw new createError.NotFound()
+    // Remove primary copy.
+    req.db
+      .collection("resources")
+      .remove({ id: req.params.resourceId })
+      .then((result) => {
+        if (result.deletedCount !== 1) throw new createError.NotFound()
 
-      // Remove version copies.
-      req.db
-        .collection("resourceVersions")
-        .remove({ id: req.params.resourceId })
-        .then(() => {
-          // Remove resource metadata.
-          req.db
-            .collection("resourceMetadata")
-            .remove({ id: req.params.resourceId })
-            .then(() => {
-              res.sendStatus(204)
-            })
-            .catch(next)
-        })
-        .catch(next)
-    })
-    .catch(next)
-})
+        // Remove version copies.
+        req.db
+          .collection("resourceVersions")
+          .remove({ id: req.params.resourceId })
+          .then(() => {
+            // Remove resource metadata.
+            req.db
+              .collection("resourceMetadata")
+              .remove({ id: req.params.resourceId })
+              .then(() => {
+                res.sendStatus(204)
+              })
+              .catch(next)
+          })
+          .catch(next)
+      })
+      .catch(next)
+  },
+])
 
 resourcesRouter.get("/:resourceId/versions", (req, res, next) => {
   req.db

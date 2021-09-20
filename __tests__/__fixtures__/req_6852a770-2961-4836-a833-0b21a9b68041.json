@@ -22,7 +22,7 @@
   "bfItemRefs": [],
   "bfWorkRefs": [],
   "group": "stanford",
-  "editGroups": ["stanford"],
+  "editGroups": ["yale"],
   "types": ["http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"],
   "templateId": "profile:bf2:Title:AbbrTitle",
   "timestamp": "2020-08-20T11:34:40.887Z",
