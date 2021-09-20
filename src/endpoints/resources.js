@@ -245,11 +245,9 @@ const queryFor = (qs) => {
 
 const parseDate = (dateString) => {
   const date = new Date(dateString)
-  if (isNaN(date)) {
-    throw createError(400, "Bad Request", {
-      details: `Invalid date-time: ${dateString}`,
-    })
-  }
+  if (isNaN(date))
+    throw new createError.BadRequest(`Invalid date-time: ${dateString}`)
+
   return date
 }
 
