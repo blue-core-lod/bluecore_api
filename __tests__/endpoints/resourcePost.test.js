@@ -32,18 +32,24 @@ afterAll(() => {
 })
 
 describe("POST /resource/:resourceId", () => {
-  const mockResourcesInsert = jest.fn().mockResolvedValue()
-  const mockResourceVersionsInsert = jest.fn().mockResolvedValue()
-  const mockResourceMetadataInsert = jest.fn().mockResolvedValue()
-  const mockCollection = (collectionName) => {
-    return {
-      resources: { insert: mockResourcesInsert },
-      resourceVersions: { insert: mockResourceVersionsInsert },
-      resourceMetadata: { insert: mockResourceMetadataInsert },
-    }[collectionName]
-  }
-  const mockDb = { collection: mockCollection }
-  connect.mockImplementation(mockConnect(mockDb))
+  let mockResourcesInsert
+  let mockResourceVersionsInsert
+  let mockResourceMetadataInsert
+
+  beforeEach(() => {
+    mockResourcesInsert = jest.fn().mockResolvedValue()
+    mockResourceVersionsInsert = jest.fn().mockResolvedValue()
+    mockResourceMetadataInsert = jest.fn().mockResolvedValue()
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { insert: mockResourcesInsert },
+        resourceVersions: { insert: mockResourceVersionsInsert },
+        resourceMetadata: { insert: mockResourceMetadataInsert },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+  })
 
   it("persists new resource", async () => {
     // Bearer eyJhbGciOiJIU... encodes stanford as the user's group.
@@ -132,5 +138,27 @@ describe("POST /resource/:resourceId", () => {
         status: "409",
       },
     ])
+  })
+
+  describe("permissions when NO_AUTH", () => {
+    const ORIG_ENV = process.env
+
+    beforeAll(() => {
+      process.env = { ...ORIG_ENV, NO_AUTH: "true" }
+    })
+
+    afterAll(() => {
+      process.env = ORIG_ENV
+    })
+    it("ignores permissions when NO_AUTH", async () => {
+      const res = await request(app)
+        .post("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+        .set(
+          "Authorization",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDlmMDAzYi0xOWQxLTQ4YjUtYWVjYi1iNGY0N2ZiYjdkYzgiLCJhdWQiOiIydTZzN3Bxa2MxZ3JxMXFzNDY0ZnNpODJhdCIsImNvZ25pdG86Z3JvdXBzIjpbInN0YW5mb3JkIl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJldmVudF9pZCI6ImU0YWM2ODA4LWViYTUtNDM2MC04ZTU1LTY0ZWUwYjdhZjllYiIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNjMxOTEwMzgwLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9DR2Q5V3ExMzYiLCJjb2duaXRvOnVzZXJuYW1lIjoiamxpdHRtYW4iLCJleHAiOjI2MzIwMDcxNDgsImlhdCI6MTYzMjAwMzU0OCwiZW1haWwiOiJqdXN0aW5saXR0bWFuQHN0YW5mb3JkLmVkdSJ9.L-nq_acWpTf-aZsaN0tNL_kXTrasxoTSxUAgMUVlgaU"
+        )
+        .send({ ...reqBody, group: "cornell" })
+      expect(res.statusCode).toEqual(201)
+    })
   })
 })
