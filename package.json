@@ -12,7 +12,7 @@
     "eslint-fix": "eslint --color -c .eslintrc.yml --ext js --fix .",
     "pretty": "prettier --check .",
     "pretty-fix": "prettier --write .",
-    "fix": "npm run pretty-fix && npm run eslint",
+    "fix": "npm run pretty-fix && npm run eslint-fix",
     "lint": "npm run pretty && npm run eslint",
     "test": "jest --colors --coverage --silent --runInBand",
     "test-verbose": "jest --colors --runInBand",
