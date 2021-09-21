@@ -3,6 +3,7 @@ import _ from "lodash"
 
 export const canCreate = (req, resp, next) => {
   // The user must be a member of the owning group (as provided in the resource being POSTed)
+  if (isNoAuth()) return next()
   const userGroups = getGroups(req)
   const resourceGroup = req.body.group
   if (!userGroups.includes(resourceGroup))
@@ -13,6 +14,7 @@ export const canCreate = (req, resp, next) => {
 }
 
 export const canEdit = (req, resp, next) => {
+  if (isNoAuth()) return next()
   // If group or editGroups has changed (as determined by comparing against the last resource version), the user must be a member of the owning group.
   // Otherwise, the user must be a member of the owning group or one of the editing groups
   const userGroups = getGroups(req)
@@ -65,6 +67,7 @@ export const canEdit = (req, resp, next) => {
 }
 
 export const canDelete = (req, resp, next) => {
+  if (isNoAuth()) return next()
   // The user must be a member of the owning group
   const userGroups = getGroups(req)
   req.db
@@ -84,3 +87,5 @@ export const canDelete = (req, resp, next) => {
 }
 
 const getGroups = (req) => req.user["cognito:groups"] || []
+
+const isNoAuth = () => process.env.NO_AUTH === "true"

@@ -13,20 +13,27 @@ jest.mock("jwt.js", () => {
 })
 
 describe("DELETE /resource/:resourceId", () => {
-  const mockResourceDelete = jest.fn().mockResolvedValue({ deletedCount: 1 })
-  const mockResourceVersionsDelete = jest.fn().mockResolvedValue()
-  const mockResourceMetadataDelete = jest.fn().mockResolvedValue()
-  const mockFindOne = jest.fn().mockResolvedValue({ group: "stanford" })
+  let mockResourceDelete
+  let mockResourceVersionsDelete
+  let mockResourceMetadataDelete
+  let mockFindOne
 
-  const mockCollection = (collectionName) => {
-    return {
-      resources: { remove: mockResourceDelete, findOne: mockFindOne },
-      resourceVersions: { remove: mockResourceVersionsDelete },
-      resourceMetadata: { remove: mockResourceMetadataDelete },
-    }[collectionName]
-  }
-  const mockDb = { collection: mockCollection }
-  connect.mockImplementation(mockConnect(mockDb))
+  beforeEach(() => {
+    mockResourceDelete = jest.fn().mockResolvedValue({ deletedCount: 1 })
+    mockResourceVersionsDelete = jest.fn().mockResolvedValue()
+    mockResourceMetadataDelete = jest.fn().mockResolvedValue()
+    mockFindOne = jest.fn().mockResolvedValue({ group: "stanford" })
+
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { remove: mockResourceDelete, findOne: mockFindOne },
+        resourceVersions: { remove: mockResourceVersionsDelete },
+        resourceMetadata: { remove: mockResourceMetadataDelete },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+  })
 
   it("removes existing resource", async () => {
     const res = await request(app)
@@ -91,5 +98,27 @@ describe("DELETE /resource/:resourceId", () => {
         status: "404",
       },
     ])
+  })
+
+  describe("permissions when NO_AUTH", () => {
+    const ORIG_ENV = process.env
+
+    beforeAll(() => {
+      process.env = { ...ORIG_ENV, NO_AUTH: "true" }
+    })
+
+    afterAll(() => {
+      process.env = ORIG_ENV
+    })
+    it("ignores permissions when NO_AUTH", async () => {
+      mockFindOne.mockResolvedValue({ group: "cornell" })
+      const res = await request(app)
+        .delete("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+        .set(
+          "Authorization",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDlmMDAzYi0xOWQxLTQ4YjUtYWVjYi1iNGY0N2ZiYjdkYzgiLCJhdWQiOiIydTZzN3Bxa2MxZ3JxMXFzNDY0ZnNpODJhdCIsImNvZ25pdG86Z3JvdXBzIjpbInN0YW5mb3JkIl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJldmVudF9pZCI6ImU0YWM2ODA4LWViYTUtNDM2MC04ZTU1LTY0ZWUwYjdhZjllYiIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNjMxOTEwMzgwLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9DR2Q5V3ExMzYiLCJjb2duaXRvOnVzZXJuYW1lIjoiamxpdHRtYW4iLCJleHAiOjI2MzIwMDcxNDgsImlhdCI6MTYzMjAwMzU0OCwiZW1haWwiOiJqdXN0aW5saXR0bWFuQHN0YW5mb3JkLmVkdSJ9.L-nq_acWpTf-aZsaN0tNL_kXTrasxoTSxUAgMUVlgaU"
+        )
+      expect(res.statusCode).toEqual(204)
+    })
   })
 })
