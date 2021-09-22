@@ -130,7 +130,7 @@ workflows:
             <<: *branch_only_filter
       - node/run:
           name: lint
-          npm-run: eslint
+          npm-run: lint
           filters:
             <<: *branch_only_filter
       - validate:
