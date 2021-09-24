@@ -8,6 +8,7 @@ import jwtConfig from "./jwt.js"
 import resourcesRouter from "./endpoints/resources.js"
 import groupsRouter from "./endpoints/groups.js"
 import marcRouter from "./endpoints/marc.js"
+import transferRouter from "./endpoints/transfer.js"
 import usersRouter from "./endpoints/users.js"
 import {
   errorHandler,
@@ -75,6 +76,7 @@ app.get("/", (req, res) => {
 app.use("/resource", resourcesRouter)
 app.use("/marc", marcRouter)
 app.use("/groups", groupsRouter)
+app.use("/transfer", transferRouter)
 app.use("/user", usersRouter)
 
 // Error handlers

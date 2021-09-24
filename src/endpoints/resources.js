@@ -221,7 +221,7 @@ resourcesRouter.get("/", (req, res, next) => {
     .catch(next)
 })
 
-const resourceUriFor = (req) => {
+export const resourceUriFor = (req) => {
   return `${baseUrlFor(req)}/${req.params.resourceId}`
 }
 

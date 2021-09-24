@@ -86,6 +86,21 @@ export const canDelete = (req, resp, next) => {
     .catch(next)
 }
 
+export const canTransfer = (req, resp, next) => {
+  if (isNoAuth()) return next()
+
+  // The user must be a member of the target group
+  const userGroups = getGroups(req)
+  if (!userGroups.includes(req.params.targetGroup))
+    return next(
+      new createError.Unauthorized(
+        "User must a member of the group to which the resource is being transferred"
+      )
+    )
+
+  next()
+}
+
 const getGroups = (req) => req.user["cognito:groups"] || []
 
 const isNoAuth = () => process.env.NO_AUTH === "true"

@@ -450,6 +450,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Groups"
+  /transfer/{resourceId}/{targetGroup}/{targetSystem}:
+    post:
+      summary: publish a Sinopia resource to the target group's target system (e.g. stanford's ILS)
+      responses:
+        "204":
+          description: "OK - a message was queued for the transfer request"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errors"
+      parameters:
+        - name: resourceId
+          in: path
+          description: ID of the resource
+          required: true
+          schema:
+            type: string
+        - name: targetGroup
+          in: path
+          description: name of the group to which the resource should go
+          required: true
+          schema:
+            type: string
+        - name: targetSystem
+          in: path
+          description: system to which the resource should go
+          example: "ils"
+          required: true
+          schema:
+            type: string
   /user/{userId}:
     get:
       summary: Return data for a user
