@@ -203,7 +203,10 @@ describe("listGroups", () => {
   describe("getting successful", () => {
     it("resolves record", async () => {
       mockListGroups.mockImplementation((params, callback) => {
-        expect(params).toEqual({ UserPoolId: "us-west-2_CGd9Wq136" })
+        expect(params).toEqual({
+          UserPoolId: "us-west-2_CGd9Wq136",
+          Limit: 250,
+        })
         callback(null, {
           Groups: [
             { GroupName: "stanford", Description: "Stanford University" },
