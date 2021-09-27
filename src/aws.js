@@ -99,7 +99,7 @@ const getError = (resourceId, username, timestamp) => {
 export const listGroups = () => {
   const cognito = new AWS.CognitoIdentityServiceProvider()
   return new Promise((resolve, reject) => {
-    cognito.listGroups({ UserPoolId: userPoolId, Limit: 250 }, (err, data) => {
+    cognito.listGroups({ UserPoolId: userPoolId, Limit: 60 }, (err, data) => {
       if (err) reject(err)
       else
         resolve(

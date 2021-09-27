@@ -205,7 +205,7 @@ describe("listGroups", () => {
       mockListGroups.mockImplementation((params, callback) => {
         expect(params).toEqual({
           UserPoolId: "us-west-2_CGd9Wq136",
-          Limit: 250,
+          Limit: 60,
         })
         callback(null, {
           Groups: [
