@@ -5,6 +5,9 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/LD4P/sinopia_api",
   "repository": "github:LD4P/sinopia_api",
+  "engines": {
+    "node": ">= 16.8.0"
+  },
   "scripts": {
     "dev-start": "nodemon src/server.js",
     "start": "node src/server.js",
