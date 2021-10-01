@@ -35,7 +35,7 @@ export default class AuthenticateClient {
   }
 
   async cognitoTokenToFile() {
-    await this.accessTokenPromise()
+    await this.idTokenPromise()
       .then((jwt) => {
         try {
           fs.writeFileSync(this.cognitoTokenFile, jwt)
@@ -45,7 +45,7 @@ export default class AuthenticateClient {
       })
       .catch((err) => {
         console.error(
-          `ERROR: problem getting cognito accessToken: ${util.inspect(err)}`
+          `ERROR: problem getting cognito idToken: ${util.inspect(err)}`
         )
       })
   }
@@ -109,16 +109,16 @@ export default class AuthenticateClient {
     return subAttribute.Value
   }
 
-  accessTokenPromise() {
+  idTokenPromise() {
     return new Promise((resolve, reject) => {
       this.cognitoUser().authenticateUser(this.authenticationDetails(), {
         onSuccess: (result) => {
-          const jwt = result.getAccessToken().getJwtToken()
+          const jwt = result.getIdToken().getJwtToken()
           if (jwt) resolve(jwt)
           else
             reject(
               new Error(
-                `ERROR: retrieved null cognito access token for ${this.username}`
+                `ERROR: retrieved null cognito id token for ${this.username}`
               )
             )
         },
