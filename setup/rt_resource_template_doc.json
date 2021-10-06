@@ -8,9 +8,7 @@
   "data": [
     {
       "@id": "_:b11",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Remark"
@@ -34,9 +32,7 @@
     },
     {
       "@id": "_:b13",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Date"
@@ -60,9 +56,7 @@
     },
     {
       "@id": "_:b14",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Property templates"
@@ -99,9 +93,7 @@
     },
     {
       "@id": "_:b15",
-      "@type": [
-        "http://sinopia.io/vocabulary/ResourcePropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/ResourcePropertyTemplate"],
       "http://sinopia!io/vocabulary/hasResourceTemplateId": [
         {
           "@id": "sinopia:template:property"
@@ -110,17 +102,15 @@
     },
     {
       "@id": "_:b3",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
-          "@value": "Template Id"
+          "@value": "Template ID"
         }
       ],
       "http://sinopia!io/vocabulary/hasRemark": [
         {
-          "@value": "The resource's Template Id, e.g., ld4p:RT:bf2:Title:AbbrTitle."
+          "@value": "The resource's Template ID, e.g., ld4p:RT:bf2:Title:AbbrTitle."
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyUri": [
@@ -141,9 +131,7 @@
     },
     {
       "@id": "_:b5",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Class"
@@ -172,9 +160,7 @@
     },
     {
       "@id": "_:b7",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Template Label"
@@ -203,9 +189,7 @@
     },
     {
       "@id": "_:b9",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Author"
@@ -229,9 +213,7 @@
     },
     {
       "@id": "_:b16",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
           "@value": "Resource attributes"
@@ -265,9 +247,7 @@
     },
     {
       "@id": "_:b17",
-      "@type": [
-        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/LookupPropertyTemplate"],
       "http://sinopia!io/vocabulary/hasAuthority": [
         {
           "@id": "file:/resourceAttribute.json"
@@ -281,9 +261,7 @@
           "@value": "sinopia:template:resource"
         }
       ],
-      "@type": [
-        "http://sinopia.io/vocabulary/ResourceTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/ResourceTemplate"],
       "http://sinopia!io/vocabulary/hasResourceId": [
         {
           "@value": "sinopia:template:resource"

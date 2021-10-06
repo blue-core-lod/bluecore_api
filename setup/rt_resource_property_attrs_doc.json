@@ -8,17 +8,15 @@
   "data": [
     {
       "@id": "_:b2",
-      "@type": [
-        "http://sinopia.io/vocabulary/PropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/PropertyTemplate"],
       "http://www!w3!org/2000/01/rdf-schema#label": [
         {
-          "@value": "Resource template ids"
+          "@value": "Resource Template IDs"
         }
       ],
       "http://sinopia!io/vocabulary/hasRemark": [
         {
-          "@value": "Resource template ids, e.g., ld4p:RT:bf2:Title:AbbrTitle."
+          "@value": "Resource Template IDs, e.g., ld4p:RT:bf2:Title:AbbrTitle."
         }
       ],
       "http://sinopia!io/vocabulary/hasPropertyUri": [
@@ -47,9 +45,7 @@
     },
     {
       "@id": "_:b3",
-      "@type": [
-        "http://sinopia.io/vocabulary/LookupPropertyTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/LookupPropertyTemplate"],
       "http://sinopia!io/vocabulary/hasAuthority": [
         {
           "@id": "urn:ld4p:sinopia:resourceTemplate"
@@ -63,9 +59,7 @@
           "@value": "sinopia:template:resource"
         }
       ],
-      "@type": [
-        "http://sinopia.io/vocabulary/ResourceTemplate"
-      ],
+      "@type": ["http://sinopia.io/vocabulary/ResourceTemplate"],
       "http://sinopia!io/vocabulary/hasResourceId": [
         {
           "@value": "sinopia:template:property:resource"
