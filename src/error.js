@@ -35,7 +35,11 @@ export const jwtErrorAdapter = (err, req, res, next) => {
 export const mongoErrorAdapter = (err, req, res, next) => {
   // Mongo error for dupe key
   if (err.code === 11000) {
-    return next(new createError.Conflict("Id is not unique"))
+    return next(
+      new createError.Conflict(
+        "ID is already in use. Please choose a unique ID."
+      )
+    )
   }
   return next(err)
 }

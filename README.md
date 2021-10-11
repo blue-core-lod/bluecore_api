@@ -63,6 +63,21 @@ To run just prettier:
 To automatically fix just prettier problems (where possible):
 `npm run pretty-fix`
 
+### Unit, feature, and integration tests
+
+Tests are written with jest.
+
+To run all of the tests:
+`npm test`
+
+To run a single test file (and see console messages):
+`npx jest __tests__/endpoints/resourcePost.test.js`
+
+To run a single test (and see console messages):
+`npx jest __tests__/endpoints/resourcePost.test.js -t "returns 409 if resource is not unique"`
+
+Or temporarily change the test description from `it("does something")` to `it.only("does something")` and run the single test file with `npx`.
+
 ### Monitoring Mongo
 Mongo Express is available for monitoring local Mongo at http://localhost:8082.
 
