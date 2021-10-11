@@ -134,7 +134,7 @@ describe("POST /resource/:resourceId", () => {
     expect(res.body).toEqual([
       {
         title: "Conflict",
-        details: "Id is not unique",
+        details: "ID is already in use. Please choose a unique ID.",
         status: "409",
       },
     ])
