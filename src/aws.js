@@ -9,6 +9,7 @@ AWS.config.update({
     lambda: "2015-03-31",
     s3: "2006-03-01",
     cognitoidentityserviceprovider: "2016-04-18",
+    sqs: "2012-11-05",
   },
 })
 
@@ -110,4 +111,47 @@ export const listGroups = () => {
         )
     })
   })
+}
+
+export const buildAndSendSqsMessage = (queueName, messageBody) => {
+  const sqs = new AWS.SQS()
+  return getSqsQueueUrl(sqs, queueName).then((queueUrl) => {
+    const messageParams = buildSqsMessageParams(queueUrl, messageBody)
+    return sendSqsMessage(sqs, messageParams)
+  })
+}
+
+const sendSqsMessage = (sqs, messageParams) => {
+  return new Promise((resolve, reject) => {
+    sqs.sendMessage(messageParams, (err, data) => {
+      if (err) reject(err)
+      else resolve(data)
+    })
+  })
+}
+
+const getSqsQueueUrl = (sqs, queueName) => {
+  return new Promise((resolve, reject) => {
+    const queueUrlReqParams = { QueueName: queueName }
+
+    sqs.getQueueUrl(queueUrlReqParams, (err, data) => {
+      if (err) reject(err)
+      else resolve(data.QueueUrl)
+    })
+  })
+}
+
+const buildSqsMessageParams = (queueUrl, messageBody) => {
+  const messageParams = {
+    QueueUrl: queueUrl,
+    MessageBody: messageBody,
+    MessageAttributes: {
+      timestamp: {
+        DataType: "String",
+        StringValue: new Date().toISOString(),
+      },
+    },
+  }
+
+  return messageParams
 }

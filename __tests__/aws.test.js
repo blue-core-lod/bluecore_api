@@ -1,10 +1,18 @@
 /* eslint-disable camelcase */
-import { requestMarc, hasMarc, getMarc, listGroups } from "aws.js"
+import {
+  requestMarc,
+  hasMarc,
+  getMarc,
+  listGroups,
+  buildAndSendSqsMessage,
+} from "aws.js"
 
 const mockInvokeAsync = jest.fn()
 const mockListObjects = jest.fn()
 const mockGetObject = jest.fn()
 const mockListGroups = jest.fn()
+const mockGetQueueUrl = jest.fn()
+const mockSendMessage = jest.fn()
 jest.mock("aws-sdk", () => {
   return {
     config: { update: jest.fn() },
@@ -17,6 +25,10 @@ jest.mock("aws-sdk", () => {
     })),
     CognitoIdentityServiceProvider: jest.fn(() => ({
       listGroups: mockListGroups,
+    })),
+    SQS: jest.fn(() => ({
+      getQueueUrl: mockGetQueueUrl,
+      sendMessage: mockSendMessage,
     })),
   }
 })
@@ -227,6 +239,69 @@ describe("listGroups", () => {
         callback(new Error("Get failed"), null)
       })
       await expect(listGroups()).rejects.toThrow("Get failed")
+    })
+  })
+})
+
+describe("buildAndSendSqsMessage", () => {
+  describe("obtains queue URL successfully", () => {
+    it("sends the SQS message to the queue URL returned for the given queue name, with the specified message body", async () => {
+      const queueName = "stanford-ils"
+      const queueUrl =
+        "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils"
+      const messageBody = JSON.stringify({ fieldName: "field value" })
+
+      mockGetQueueUrl.mockImplementation((queueUrlReqParams, callback) => {
+        expect(queueUrlReqParams.QueueName).toEqual(queueName)
+        callback(null, { QueueUrl: queueUrl })
+      })
+      mockSendMessage.mockImplementation((messageParams, callback) => {
+        expect(messageParams.QueueUrl).toEqual(queueUrl)
+        expect(messageParams.MessageBody).toEqual(messageBody)
+        callback(null, "success!")
+      })
+
+      expect(await buildAndSendSqsMessage(queueName, messageBody)).toEqual(
+        "success!"
+      )
+    })
+
+    it("encounters an error trying to send the SQS message", async () => {
+      const errmsg = "you don't have permission to write to this queue :P"
+
+      mockGetQueueUrl.mockImplementation((_queueUrlReqParams, callback) => {
+        callback(null, {
+          QueueUrl:
+            "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
+        })
+      })
+      mockSendMessage.mockImplementation((_messageParams, callback) => {
+        callback(new Error(errmsg))
+      })
+
+      await expect(
+        buildAndSendSqsMessage(
+          "stanford-ils",
+          JSON.stringify({ fieldName: "field value" })
+        )
+      ).rejects.toThrow(errmsg)
+    })
+  })
+
+  describe("error getting queue URL", () => {
+    it("allows the error to bubble up", async () => {
+      const errmsg = "you don't have permission to get the queue URL :P"
+
+      mockGetQueueUrl.mockImplementation((params, callback) => {
+        callback(new Error(errmsg))
+      })
+
+      await expect(
+        buildAndSendSqsMessage(
+          "stanford-ils",
+          JSON.stringify({ fieldName: "field value" })
+        )
+      ).rejects.toThrow(errmsg)
     })
   })
 })
