@@ -121,4 +121,17 @@ describe("DELETE /resource/:resourceId", () => {
       expect(res.statusCode).toEqual(204)
     })
   })
+
+  describe("permissions when admin", () => {
+    it("ignores permissions when admin", async () => {
+      mockFindOne.mockResolvedValue({ group: "cornell" })
+      const res = await request(app)
+        .delete("/resource/6852a770-2961-4836-a833-0b21a9b68041")
+        .set(
+          "Authorization",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDlmMDAzYi0xOWQxLTQ4YjUtYWVjYi1iNGY0N2ZiYjdkYzgiLCJhdWQiOiIydTZzN3Bxa2MxZ3JxMXFzNDY0ZnNpODJhdCIsImNvZ25pdG86Z3JvdXBzIjpbImFkbWluIl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJldmVudF9pZCI6ImU0YWM2ODA4LWViYTUtNDM2MC04ZTU1LTY0ZWUwYjdhZjllYiIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNjMxOTEwMzgwLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9DR2Q5V3ExMzYiLCJjb2duaXRvOnVzZXJuYW1lIjoiamxpdHRtYW4iLCJleHAiOjI2MzIwMDcxNDgsImlhdCI6MTYzMjAwMzU0OCwiZW1haWwiOiJqdXN0aW5saXR0bWFuQHN0YW5mb3JkLmVkdSJ9.6d5NChvKpK-lImFg3ZBSvlgqlI883vLDT9j_bI2AGtg"
+        )
+      expect(res.statusCode).toEqual(204)
+    })
+  })
 })

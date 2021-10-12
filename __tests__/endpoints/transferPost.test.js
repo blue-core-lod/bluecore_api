@@ -52,6 +52,33 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem", () => {
     })
   })
 
+  describe("user is in admin group", () => {
+    it("returns a 204 after queueing an SQS message with the expected params", async () => {
+      aws.buildAndSendSqsMessage.mockResolvedValue()
+      const res = await request(app)
+        .post("/transfer/foo/stanford/ils")
+        .set(
+          "Authorization",
+          `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NDlmMDAzYi0xOWQxLTQ4YjUtYWVjYi1iNGY0N2ZiYjdkYzgiLCJhdWQiOiIydTZzN3Bxa2MxZ3JxMXFzNDY0ZnNpODJhdCIsImNvZ25pdG86Z3JvdXBzIjpbImFkbWluIiwicGNjIl0sImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJldmVudF9pZCI6ImU0YWM2ODA4LWViYTUtNDM2MC04ZTU1LTY0ZWUwYjdhZjllYiIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNjMxOTEwMzgwLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9DR2Q5V3ExMzYiLCJjb2duaXRvOnVzZXJuYW1lIjoiamxpdHRtYW4iLCJleHAiOjI2MzIwMDcxNDgsImlhdCI6MTYzMjAwMzU0OCwiZW1haWwiOiJqdXN0aW5saXR0bWFuQHN0YW5mb3JkLmVkdSJ9.vWC4N1F3BizLILxwq3Cd8savrrrrKj3mEslX75_jHnY`
+        )
+        .send("")
+
+      const msgBodyJson = {
+        resource: { uri: "https://api.development.sinopia.io/resource/foo" },
+        user: {
+          email: "justinlittman@stanford.edu",
+        },
+        group: "stanford",
+        target: "ils",
+      }
+      expect(res.statusCode).toEqual(204)
+      expect(aws.buildAndSendSqsMessage).toHaveBeenCalledWith(
+        "stanford-ils",
+        expect.stringMatching(JSON.stringify(msgBodyJson))
+      )
+    })
+  })
+
   describe("user is not in the target group", () => {
     // eslint-disable-next-line multiline-comment-style
     /*
