@@ -703,6 +703,7 @@ components:
         - bfInstanceRefs
         - bfWorkRefs
         - group
+        - editGroups
         - types
         - user
     ResourcePage:
