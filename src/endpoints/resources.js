@@ -153,7 +153,10 @@ resourcesRouter.get("/:resourceId/versions", (req, res, next) => {
 resourcesRouter.get("/:resourceId/version/:timestamp", (req, res, next) => {
   req.db
     .collection("resourceVersions")
-    .findOne({ id: req.params.resourceId, timestamp: req.params.timestamp })
+    .findOne({
+      id: req.params.resourceId,
+      timestamp: parseDate(req.params.timestamp),
+    })
     .then((resource) => {
       if (!resource) return res.sendStatus(404)
       return res.send(forReturn(resource))

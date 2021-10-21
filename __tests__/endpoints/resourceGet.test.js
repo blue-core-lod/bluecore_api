@@ -181,3 +181,29 @@ describe("GET /resource/:resourceId", () => {
     })
   })
 })
+
+// GET a single resource version
+describe("GET /resource/:resourceId/version/:timestamp", () => {
+  it("returns the resource", async () => {
+    const mockFindOne = jest.fn().mockResolvedValue(resource)
+    const mockCollection = (collectionName) => {
+      return {
+        resourceVersions: { findOne: mockFindOne },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get(
+        "/resource/6852a770-2961-4836-a833-0b21a9b68041/version/2021-10-20T16:42:14.701Z"
+      )
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toEqual(resBody)
+    expect(mockFindOne).toHaveBeenCalledWith({
+      id: "6852a770-2961-4836-a833-0b21a9b68041",
+      timestamp: new Date("2021-10-20T16:42:14.701Z"),
+    })
+  })
+})
