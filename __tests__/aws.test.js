@@ -213,7 +213,7 @@ describe("getMarc", () => {
 
 describe("listGroups", () => {
   describe("getting successful", () => {
-    it("resolves record", async () => {
+    it("resolves record without pagination", async () => {
       mockListGroups.mockImplementation((params, callback) => {
         expect(params).toEqual({
           UserPoolId: "us-west-2_CGd9Wq136",
@@ -229,6 +229,42 @@ describe("listGroups", () => {
       expect(await listGroups()).toEqual([
         { id: "stanford", label: "Stanford University" },
         { id: "cornell", label: "Cornell University" },
+      ])
+    })
+
+    it("resolves record with pagination", async () => {
+      mockListGroups
+        .mockImplementationOnce((params, callback) => {
+          expect(params).toEqual({
+            UserPoolId: "us-west-2_CGd9Wq136",
+            Limit: 60,
+          })
+          callback(null, {
+            Groups: [
+              { GroupName: "stanford", Description: "Stanford University" },
+              { GroupName: "cornell", Description: "Cornell University" },
+            ],
+            NextToken: "token1",
+          })
+        })
+        .mockImplementationOnce((params, callback) => {
+          expect(params).toEqual({
+            UserPoolId: "us-west-2_CGd9Wq136",
+            Limit: 60,
+            NextToken: "token1",
+          })
+          callback(null, {
+            Groups: [
+              { GroupName: "yale", Description: "Yale University" },
+              { GroupName: "duke", Description: "Duke University" },
+            ],
+          })
+        })
+      expect(await listGroups()).toEqual([
+        { id: "stanford", label: "Stanford University" },
+        { id: "cornell", label: "Cornell University" },
+        { id: "yale", label: "Yale University" },
+        { id: "duke", label: "Duke University" },
       ])
     })
   })

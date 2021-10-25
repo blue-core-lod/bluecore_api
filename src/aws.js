@@ -99,17 +99,32 @@ const getError = (resourceId, username, timestamp) => {
 
 export const listGroups = () => {
   const cognito = new AWS.CognitoIdentityServiceProvider()
+  let groups = []
+
+  const listAllGroups = (resolve, reject, token = null) => {
+    cognito.listGroups(
+      { UserPoolId: userPoolId, Limit: 60, ...(token && { NextToken: token }) },
+      (err, data) => {
+        if (err) reject(err)
+
+        groups = [...groups, ...data.Groups]
+
+        if (data.NextToken) {
+          listAllGroups(resolve, reject, data.NextToken)
+        } else {
+          resolve(
+            groups.map((group) => ({
+              id: group.GroupName,
+              label: group.Description || group.GroupName,
+            }))
+          )
+        }
+      }
+    )
+  }
+
   return new Promise((resolve, reject) => {
-    cognito.listGroups({ UserPoolId: userPoolId, Limit: 60 }, (err, data) => {
-      if (err) reject(err)
-      else
-        resolve(
-          data.Groups.map((group) => ({
-            id: group.GroupName,
-            label: group.Description || group.GroupName,
-          }))
-        )
-    })
+    listAllGroups(resolve, reject)
   })
 }
 
