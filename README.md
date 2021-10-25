@@ -13,11 +13,11 @@ API for managing Sinopia resources atop the Mongo / AWS DocumentDB platform.
 
 ### Prerequisites
 
-* [node.js](https://nodejs.org/en/download/) JavaScript runtime (>=14 is recommended)
+* [node.js](https://nodejs.org/en/download/) JavaScript runtime (latest v16 version is recommended)
 * [npm](https://www.npmjs.com/) JavaScript package manager
 * [Docker](https://www.docker.com/)
 
-You can use the ["n"](https://www.npmjs.com/package/n) node package management to manage multiple version of node.
+You can use the ["n"](https://www.npmjs.com/package/n) node package management to manage multiple versions of node.
 
 ### Installation instructions
 
