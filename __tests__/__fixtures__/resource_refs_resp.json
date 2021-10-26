@@ -1,0 +1,43 @@
+{
+  "id": "6852a770-2961-4836-a833-0b21a9b68041",
+  "bfAdminMetadataRefs": [
+    "http://localhost:3000/resource/d336dee4-65e3-457f-9215-740531104681"
+  ],
+  "bfItemRefs": [
+    "http://localhost:3000/resource/e436dee4-65e3-457f-9215-740531104682"
+  ],
+  "bfInstanceRefs": [
+    "http://localhost:3000/resource/f536dee4-65e3-457f-9215-740531104683"
+  ],
+  "bfWorkRefs": [
+    "http://localhost:3000/resource/g636dee4-65e3-457f-9215-740531104684"
+  ],
+  "bfAdminMetadataInferredRefs": [
+    "http://localhost:3000/resource/032b24cb-0b5f-4df6-88d2-cb9efdf3f374"
+  ],
+  "bfItemInferredRefs": [
+    "http://localhost:3000/resource/252b24cb-0b5f-4df6-88d2-cb9efdf3f376"
+  ],
+  "bfInstanceInferredRefs": [
+    "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+  ],
+  "bfWorkInferredRefs": [
+    "http://localhost:3000/resource/142b24cb-0b5f-4df6-88d2-cb9efdf3f375"
+  ],
+  "bfAdminMetadataAllRefs": [
+    "http://localhost:3000/resource/d336dee4-65e3-457f-9215-740531104681",
+    "http://localhost:3000/resource/032b24cb-0b5f-4df6-88d2-cb9efdf3f374"
+  ],
+  "bfItemAllRefs": [
+    "http://localhost:3000/resource/e436dee4-65e3-457f-9215-740531104682",
+    "http://localhost:3000/resource/252b24cb-0b5f-4df6-88d2-cb9efdf3f376"
+  ],
+  "bfInstanceAllRefs": [
+    "http://localhost:3000/resource/f536dee4-65e3-457f-9215-740531104683",
+    "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+  ],
+  "bfWorkAllRefs": [
+    "http://localhost:3000/resource/g636dee4-65e3-457f-9215-740531104684",
+    "http://localhost:3000/resource/142b24cb-0b5f-4df6-88d2-cb9efdf3f375"
+  ]
+}

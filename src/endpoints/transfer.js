@@ -1,7 +1,7 @@
 import express from "express"
 import { buildAndSendSqsMessage } from "../aws.js"
 import { canTransfer } from "../permissions.js"
-import { resourceUriFor } from "./resources.js"
+import { resourceUriFor } from "./resourcesHelpers.js"
 
 const transferRouter = express.Router()
 

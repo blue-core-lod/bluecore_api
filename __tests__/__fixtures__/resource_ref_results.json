@@ -1,0 +1,46 @@
+[
+  {
+    "id": "922b24cb-0b5f-4df6-88d2-cb9efdf3f373",
+    "uri": "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373",
+    "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
+    "bfAdminMetadataRefs": [],
+    "bfItemRefs": [],
+    "bfInstanceRefs": [
+      "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+    ],
+    "bfWorkRefs": []
+  },
+  {
+    "id": "032b24cb-0b5f-4df6-88d2-cb9efdf3f374",
+    "uri": "http://localhost:3000/resource/032b24cb-0b5f-4df6-88d2-cb9efdf3f374",
+    "types": ["http://id.loc.gov/ontologies/bibframe/AdminMetadata"],
+    "bfAdminMetadataRefs": [
+      "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+    ],
+    "bfItemRefs": [],
+    "bfInstanceRefs": [],
+    "bfWorkRefs": []
+  },
+  {
+    "id": "142b24cb-0b5f-4df6-88d2-cb9efdf3f375",
+    "uri": "http://localhost:3000/resource/142b24cb-0b5f-4df6-88d2-cb9efdf3f375",
+    "types": ["http://id.loc.gov/ontologies/bibframe/Work"],
+    "bfAdminMetadataRefs": [],
+    "bfItemRefs": [],
+    "bfInstanceRefs": [],
+    "bfWorkRefs": [
+      "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+    ]
+  },
+  {
+    "id": "252b24cb-0b5f-4df6-88d2-cb9efdf3f376",
+    "uri": "http://localhost:3000/resource/252b24cb-0b5f-4df6-88d2-cb9efdf3f376",
+    "types": ["http://id.loc.gov/ontologies/bibframe/Item"],
+    "bfAdminMetadataRefs": [],
+    "bfItemRefs": [
+      "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
+    ],
+    "bfInstanceRefs": [],
+    "bfWorkRefs": []
+  }
+]

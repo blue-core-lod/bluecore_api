@@ -1,13 +1,20 @@
 import express from "express"
 import { n3FromJsonld, ttlFromJsonld, checkJsonld } from "../rdf.js"
 import connect from "../mongo.js"
-import _ from "lodash"
 import createError from "http-errors"
 import { canDelete, canCreate, canEdit } from "../permissions.js"
+import {
+  resourceUriFor,
+  pageUrlFor,
+  queryFor,
+  parseDate,
+  forReturn,
+  resourceForSave,
+  versionEntry,
+  mergeRefs,
+} from "./resourcesHelpers.js"
 
 const resourcesRouter = express.Router()
-
-const apiBaseUrl = process.env.API_BASE_URL
 
 // Add the db to req
 resourcesRouter.use(connect)
@@ -49,7 +56,10 @@ resourcesRouter.post("/:resourceId", [
               .collection("resourceMetadata")
               .insert(resourceMetadata)
               .then(() =>
-                res.location(resourceUri).status(201).send(forReturn(resource))
+                res
+                  .location(resourceUri)
+                  .status(201)
+                  .send(forReturn(resource, req.db))
               )
               .catch(next)
           })
@@ -97,7 +107,7 @@ resourcesRouter.put("/:resourceId", [
                 { $push: { versions: versionEntry(saveResource) } }
               )
               .then(() => {
-                res.send(forReturn(resource))
+                res.send(forReturn(resource, req.db))
               })
               .catch(next)
           })
@@ -138,6 +148,42 @@ resourcesRouter.delete("/:resourceId", [
       .catch(next)
   },
 ])
+
+resourcesRouter.get("/:resourceId/references", (req, res, next) => {
+  const projection = {
+    id: 1,
+    bfAdminMetadataRefs: 1,
+    bfItemRefs: 1,
+    bfInstanceRefs: 1,
+    bfWorkRefs: 1,
+    uri: 1,
+    types: 1,
+  }
+  return req.db
+    .collection("resources")
+    .findOne({ id: req.params.resourceId }, { projection })
+    .then((resource) => {
+      if (!resource) return res.sendStatus(404)
+      const query = {
+        $or: [
+          { bfAdminMetadataRefs: resource.uri },
+          { bfItemRefs: resource.uri },
+          { bfInstanceRefs: resource.uri },
+          { bfWorkRefs: resource.uri },
+        ],
+      }
+      delete resource.uri
+      delete resource.types
+      delete resource._id
+      return req.db
+        .collection("resources")
+        .find(query, { projection })
+        .then((resourceRefs) => {
+          return res.send(mergeRefs(resource, resourceRefs))
+        })
+    })
+    .catch(next)
+})
 
 resourcesRouter.get("/:resourceId/versions", (req, res, next) => {
   req.db
@@ -223,83 +269,5 @@ resourcesRouter.get("/", (req, res, next) => {
     })
     .catch(next)
 })
-
-export const resourceUriFor = (req) => {
-  return `${baseUrlFor(req)}/${req.params.resourceId}`
-}
-
-const baseUrlFor = (req) => {
-  if (apiBaseUrl) return `${apiBaseUrl}/resource`
-  return `${req.protocol}://${req.hostname}:${req.port}/resource`
-}
-
-const pageUrlFor = (req, limit, start, qs) => {
-  const params = { limit, start }
-  Object.keys(qs).forEach((key) => {
-    if (["group", "updatedAfter", "updatedBefore", "type"].includes(key)) {
-      params[key] = qs[key]
-    }
-  })
-  const queryString = Object.entries(params)
-    .map(([key, value]) => [key, encodeURIComponent(value)].join("="))
-    .join("&")
-  return `${baseUrlFor(req)}?${queryString}`
-}
-
-const queryFor = (qs) => {
-  const query = {}
-  if (qs.group) query.group = qs.group
-  if (qs.type) query.types = qs.type
-  if (qs.updatedAfter || qs.updatedBefore) query.timestamp = {}
-  if (qs.updatedAfter) query.timestamp.$gte = parseDate(qs.updatedAfter)
-  if (qs.updatedBefore) query.timestamp.$lte = parseDate(qs.updatedBefore)
-  return query
-}
-
-const parseDate = (dateString) => {
-  const date = new Date(dateString)
-  if (isNaN(date))
-    throw new createError.BadRequest(`Invalid date-time: ${dateString}`)
-
-  return date
-}
-
-const forReturn = (item) => {
-  // Map ! back to . in key names
-  const newItem = replaceInKeys(item, "!", ".")
-  delete newItem._id
-  return newItem
-}
-
-const resourceForSave = (resource, id, uri, timestamp) => {
-  // Map . to ! in key names because Mongo doesn't like . in key names. Sigh.
-  const newResource = replaceInKeys(resource, ".", "!")
-
-  newResource.id = id
-  // If resource has a uri, keep it. This is to support migrations.
-  if (!newResource.uri) newResource.uri = uri
-  newResource.timestamp = timestamp
-  return newResource
-}
-
-const versionEntry = (resource) => ({
-  timestamp: resource.timestamp,
-  user: resource.user,
-  group: resource.group,
-  editGroups: resource.editGroups,
-  templateId: resource.templateId,
-})
-
-const replaceInKeys = (obj, from, to) => {
-  return _.cloneDeepWith(obj, function (cloneObj) {
-    if (!_.isPlainObject(cloneObj)) return
-    const newObj = {}
-    _.keys(cloneObj).forEach((key) => {
-      const newKey = key.replace(new RegExp(`\\${from}`, "g"), to)
-      newObj[newKey] = replaceInKeys(cloneObj[key], from, to)
-    })
-    return newObj
-  })
-}
 
 export default resourcesRouter

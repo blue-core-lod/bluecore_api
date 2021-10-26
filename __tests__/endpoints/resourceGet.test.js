@@ -6,6 +6,8 @@ const resource2 = require("../__fixtures__/resource_63834c19-4d01-4c91-9dcc-a69c
 const resBody = require("../__fixtures__/resp_6852a770-2961-4836-a833-0b21a9b68041.json")
 const allResBody = require("../__fixtures__/all_resp.json")
 const pageOneResBody = require("../__fixtures__/page_one_resp.json")
+const resourceRefResults = require("../__fixtures__/resource_ref_results.json")
+const resourceRefsResp = require("../__fixtures__/resource_refs_resp.json")
 
 // To avoid race conditions with mocking connect, testing of resources is split into
 // Multiple files.
@@ -205,5 +207,60 @@ describe("GET /resource/:resourceId/version/:timestamp", () => {
       id: "6852a770-2961-4836-a833-0b21a9b68041",
       timestamp: new Date("2021-10-20T16:42:14.701Z"),
     })
+  })
+})
+
+// GET the references for a resource
+describe("GET /resource/:resourceId/references", () => {
+  it("returns the references", async () => {
+    const resourceResult = {
+      id: "6852a770-2961-4836-a833-0b21a9b68041",
+      uri: "http://localhost:3000/resource/6852a770-2961-4836-a833-0b21a9b68041",
+      types: ["http://id.loc.gov/ontologies/bibframe/Instance"],
+      bfAdminMetadataRefs: [
+        "http://localhost:3000/resource/d336dee4-65e3-457f-9215-740531104681",
+      ],
+      bfItemRefs: [
+        "http://localhost:3000/resource/e436dee4-65e3-457f-9215-740531104682",
+      ],
+      bfInstanceRefs: [
+        "http://localhost:3000/resource/f536dee4-65e3-457f-9215-740531104683",
+      ],
+      bfWorkRefs: [
+        "http://localhost:3000/resource/g636dee4-65e3-457f-9215-740531104684",
+      ],
+    }
+    // Note that the references don't make BF sense, but are testing for completeness.
+    const mockFindOne = jest.fn().mockResolvedValue(resourceResult)
+    const mockFind = jest.fn().mockResolvedValue(resourceRefResults)
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { findOne: mockFindOne, find: mockFind },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/references")
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.body).toEqual(resourceRefsResp)
+  })
+
+  it("returns 404 when not found", async () => {
+    const mockFindOne = jest.fn().mockResolvedValue(null)
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { findOne: mockFindOne },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/references")
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(404)
   })
 })
