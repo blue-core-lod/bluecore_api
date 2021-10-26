@@ -8,6 +8,12 @@ describe("GET /groups", () => {
   const groups = [
     { id: "stanford", label: "Stanford University" },
     { id: "cornell", label: "Cornell University" },
+    { id: "admin", label: "Admin group for middleware user" },
+  ]
+
+  const filteredGroups = [
+    { id: "stanford", label: "Stanford University" },
+    { id: "cornell", label: "Cornell University" },
   ]
 
   aws.listGroups.mockResolvedValue(groups)
@@ -18,6 +24,6 @@ describe("GET /groups", () => {
       .set("Accept", "application/json")
     expect(res.statusCode).toEqual(200)
     expect(res.type).toEqual("application/json")
-    expect(res.body.data).toEqual(expect.arrayContaining(groups))
+    expect(res.body.data).toEqual(filteredGroups)
   })
 })
