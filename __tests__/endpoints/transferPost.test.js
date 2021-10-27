@@ -94,7 +94,7 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem", () => {
       expect(res.body).toEqual([
         {
           title: "Unauthorized",
-          details: "User must a member of the group to which the resource is being transferred",
+          details: "User must be a member of the group to which the resource is being transferred",
           status: "401",
         },
       ])

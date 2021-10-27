@@ -8,7 +8,9 @@ export const canCreate = (req, resp, next) => {
   const resourceGroup = req.body.group
   if (!userGroups.includes(resourceGroup))
     return next(
-      new createError.Unauthorized("User must a member of the resource's group")
+      new createError.Unauthorized(
+        "User must be a member of the resource's group"
+      )
     )
   next()
 }
@@ -38,7 +40,7 @@ export const canEdit = (req, resp, next) => {
       )
         return next(
           new createError.Unauthorized(
-            "User must a member of the resource's group"
+            "User must be a member of the resource's group"
           )
         )
       // If group changed, must be member of new group.
@@ -47,7 +49,7 @@ export const canEdit = (req, resp, next) => {
         !userGroups.includes(resourceGroup)
       )
         return next(
-          new createError.Unauthorized("User must a member of the new group")
+          new createError.Unauthorized("User must be a member of the new group")
         )
       // Must be owner or member of edit group to edit.
       if (
@@ -58,7 +60,7 @@ export const canEdit = (req, resp, next) => {
       )
         return next(
           new createError.Unauthorized(
-            "User must a member of the resource's group or editGroups"
+            "User must be a member of the resource's group or editGroups"
           )
         )
       next()
@@ -78,7 +80,7 @@ export const canDelete = (req, resp, next) => {
       if (!userGroups.includes(result.group))
         return next(
           new createError.Unauthorized(
-            "User must a member of the resource's group"
+            "User must be a member of the resource's group"
           )
         )
       next()
@@ -94,7 +96,7 @@ export const canTransfer = (req, resp, next) => {
   if (!userGroups.includes(req.params.targetGroup))
     return next(
       new createError.Unauthorized(
-        "User must a member of the group to which the resource is being transferred"
+        "User must be a member of the group to which the resource is being transferred"
       )
     )
 
