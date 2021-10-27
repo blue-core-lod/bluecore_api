@@ -77,7 +77,7 @@ describe("DELETE /resource/:resourceId", () => {
     expect(res.body).toEqual([
       {
         title: "Unauthorized",
-        details: "User must a member of the resource's group",
+        details: "User must be a member of the resource's group",
         status: "401",
       },
     ])

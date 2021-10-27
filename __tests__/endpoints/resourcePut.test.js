@@ -138,7 +138,7 @@ describe("PUT /resource/:resourceId", () => {
     expect(res.body).toEqual([
       {
         title: "Unauthorized",
-        details: "User must a member of the resource's group or editGroups",
+        details: "User must be a member of the resource's group or editGroups",
         status: "401",
       },
     ])
@@ -156,7 +156,7 @@ describe("PUT /resource/:resourceId", () => {
     expect(res.body).toEqual([
       {
         title: "Unauthorized",
-        details: "User must a member of the new group",
+        details: "User must be a member of the new group",
         status: "401",
       },
     ])
@@ -175,7 +175,7 @@ describe("PUT /resource/:resourceId", () => {
     expect(res.body).toEqual([
       {
         title: "Unauthorized",
-        details: "User must a member of the resource's group",
+        details: "User must be a member of the resource's group",
         status: "401",
       },
     ])
