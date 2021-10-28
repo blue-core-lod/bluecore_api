@@ -149,7 +149,7 @@ resourcesRouter.delete("/:resourceId", [
   },
 ])
 
-resourcesRouter.get("/:resourceId/references", (req, res, next) => {
+resourcesRouter.get("/:resourceId/relationships", (req, res, next) => {
   const projection = {
     id: 1,
     bfAdminMetadataRefs: 1,

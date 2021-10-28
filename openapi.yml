@@ -296,9 +296,9 @@ paths:
           required: true
           schema:
             type: string
-  /resource/{resourceId}/references:
+  /resource/{resourceId}/relationships:
     get:
-      summary: Returns information about references between this resource and other resources
+      summary: Returns information about relationships between this resource and other resources
       tags:
         - resources
       responses:
@@ -307,7 +307,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/References"
+                $ref: "#/components/schemas/Relationships"
       parameters:
         - name: resourceId
           in: path
@@ -656,67 +656,67 @@ components:
         required:
           - title
           - status
-    References:
-      description: Response describing the references between this resource and other resources.
+    Relationships:
+      description: Response describing the relationships between this resource and other resources.
       type: object
       properties:
         bfAdminMetadataRefs:
-          description: References to Bibframe AdminMetadata contained within this record.
+          description: Relationships to Bibframe AdminMetadata contained within this record.
           type: array
           items:
             type: string
         bfItemRefs:
-          description: References to Bibframe Items contained within this record.
+          description: Relationships to Bibframe Items contained within this record.
           type: array
           items:
             type: string
         bfInstanceRefs:
-          description: References to Bibframe Instances contained within this record.
+          description: Relationships to Bibframe Instances contained within this record.
           type: array
           items:
             type: string
         bfWorkRefs:
-          description: References to Bibframe Instances contained within this record.
+          description: Relationships to Bibframe Instances contained within this record.
           type: array
           items:
             type: string
         bfAdminMetadataInferredRefs:
-          description: References to Bibframe AdminMetadata inferred from other resources.
+          description: Relationships to Bibframe AdminMetadata inferred from other resources.
           type: array
           items:
             type: string
         bfItemInferredRefs:
-          description: References to Bibframe Items inferred from other resources.
+          description: Relationships to Bibframe Items inferred from other resources.
           type: array
           items:
             type: string
         bfInstanceInferredRefs:
-          description: References to Bibframe Instances inferred from other resources.
+          description: Relationships to Bibframe Instances inferred from other resources.
           type: array
           items:
             type: string
         bfWorkInferredRefs:
-          description: References to Bibframe Instances inferred from other resources.
+          description: Relationships to Bibframe Instances inferred from other resources.
           type: array
           items:
             type: string
         bfAdminMetadataAllRefs:
-          description: References to Bibframe AdminMetadata contained within this record and inferred from other resources.
+          description: Relationships to Bibframe AdminMetadata contained within this record and inferred from other resources.
           type: array
           items:
             type: string
         bfItemAllRefs:
-          description: References to Bibframe Items contained within this record and inferred from other resources.
+          description: Relationships to Bibframe Items contained within this record and inferred from other resources.
           type: array
           items:
             type: string
         bfInstanceAllRefs:
-          description: References to Bibframe Instances contained within this record and inferred from other resources.
+          description: Relationships to Bibframe Instances contained within this record and inferred from other resources.
           type: array
           items:
             type: string
         bfWorkAllRefs:
-          description: References to Bibframe Instances contained within this record and inferred from other resources.
+          description: Relationships to Bibframe Instances contained within this record and inferred from other resources.
           type: array
           items:
             type: string
@@ -748,22 +748,22 @@ components:
           items:
             type: object
         bfAdminMetadataRefs:
-          description: References to Bibframe AdminMetadata contained within this record.
+          description: Relationships to Bibframe AdminMetadata contained within this record.
           type: array
           items:
             type: string
         bfItemRefs:
-          description: References to Bibframe Items contained within this record.
+          description: Relationships to Bibframe Items contained within this record.
           type: array
           items:
             type: string
         bfInstanceRefs:
-          description: References to Bibframe Instances contained within this record.
+          description: Relationships to Bibframe Instances contained within this record.
           type: array
           items:
             type: string
         bfWorkRefs:
-          description: References to Bibframe Instances contained within this record.
+          description: Relationships to Bibframe Instances contained within this record.
           type: array
           items:
             type: string
