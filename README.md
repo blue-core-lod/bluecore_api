@@ -121,34 +121,3 @@ To use the JWT as stored in `.cognitoToken` to make authorized requests to Sinop
 ```shell
 $ curl -i -H "Authorization: Bearer $(cat .cognitoToken)" http://localhost:3000/resource
 ```
-
-### Deploy base templates
-_All credentials referenced below are available from `shared_configs`.
-
-#### SCP templates to bastion
-```shell
-scp -i ~/.ssh/sinopia-aws-bastion.pem setup/*.json ec2-user@<BASTION HOST>:
-```
-
-#### Connect to bastion
-```shell
-ssh -i ~/.ssh/sinopia-aws-bastion.pem ec2-user@<BASTION HOST>
-export PASSWORD=<DOCUMENTDB PASSWORD>
-export HOST=<DOCUMENTDB HOST>
-```
-
-#### Replace URIs
-```shell
-sed -i 's/http:\/\/localhost:3000/<API URL, e.g., https:\/\/api.development.sinopia.io>/g' *.json
-```
-
-#### Update
-```shell
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_literal_property_attrs_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_lookup_property_attrs_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_property_template_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_resource_property_attrs_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_resource_template_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_uri_property_attrs_doc.json --db=sinopia_repository --collection=resources
-mongoimport --mode upsert --upsertFields id --ssl --host $HOST:27017 --sslCAFile rds-combined-ca-bundle.pem --username sinopia --password $PASSWORD --file=rt_uri_doc.json --db=sinopia_repository --collection=resources
-```
