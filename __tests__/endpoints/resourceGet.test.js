@@ -210,9 +210,9 @@ describe("GET /resource/:resourceId/version/:timestamp", () => {
   })
 })
 
-// GET the references for a resource
-describe("GET /resource/:resourceId/references", () => {
-  it("returns the references", async () => {
+// GET the relationships for a resource
+describe("GET /resource/:resourceId/relationships", () => {
+  it("returns the relationships", async () => {
     const resourceResult = {
       id: "6852a770-2961-4836-a833-0b21a9b68041",
       uri: "http://localhost:3000/resource/6852a770-2961-4836-a833-0b21a9b68041",
@@ -230,7 +230,7 @@ describe("GET /resource/:resourceId/references", () => {
         "http://localhost:3000/resource/g636dee4-65e3-457f-9215-740531104684",
       ],
     }
-    // Note that the references don't make BF sense, but are testing for completeness.
+    // Note that the relationships don't make BF sense, but are testing for completeness.
     const mockFindOne = jest.fn().mockResolvedValue(resourceResult)
     const mockFind = jest.fn().mockResolvedValue(resourceRefResults)
     const mockCollection = (collectionName) => {
@@ -242,7 +242,7 @@ describe("GET /resource/:resourceId/references", () => {
     connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
-      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/references")
+      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/relationships")
       .set("Accept", "application/json")
     expect(res.statusCode).toEqual(200)
     expect(res.body).toEqual(resourceRefsResp)
@@ -259,7 +259,7 @@ describe("GET /resource/:resourceId/references", () => {
     connect.mockImplementation(mockConnect(mockDb))
 
     const res = await request(app)
-      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/references")
+      .get("/resource/6852a770-2961-4836-a833-0b21a9b68041/relationships")
       .set("Accept", "application/json")
     expect(res.statusCode).toEqual(404)
   })
