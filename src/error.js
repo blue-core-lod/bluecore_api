@@ -14,7 +14,13 @@ export const errorHandler = (err, req, res, next) => {
       .send([{ title, details, status: err.status.toString() }])
   } else {
     const status = err.status || 500
-    if (status === 500) Honeybadger.notify(err)
+    if (status === 500)
+      Honeybadger.notify(err, {
+        context: {
+          method: req.method,
+          url: req.url,
+        },
+      })
     res.status(status).send([
       {
         title: statuses[status],
