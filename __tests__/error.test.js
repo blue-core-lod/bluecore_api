@@ -12,12 +12,21 @@ jest.mock("mongo.js")
 jest.mock("@honeybadger-io/js")
 
 describe("500 Server error", () => {
+  const error = new Error("Ooops")
+  const url = "/user/nchomsky"
+
   it("returns server error and notifies HB", async () => {
     connect.mockImplementation(() => {
-      throw new Error("Ooops")
+      throw error
     })
-    const res = await request(app).get("/user/nchomsky").send()
+    const res = await request(app).get(url).send()
     expect(Honeybadger.notify).toHaveBeenCalledTimes(1)
+    expect(Honeybadger.notify).toHaveBeenCalledWith(error, {
+      context: {
+        method: "GET",
+        url,
+      },
+    })
     expect(res.statusCode).toEqual(500)
     expect(res.body).toEqual([
       { details: "Ooops", status: "500", title: "Server error" },
