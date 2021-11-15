@@ -82,15 +82,15 @@ Or temporarily change the test description from `it("does something")` to `it.on
 
 #### Localhost
 
-Note, adjust the docker container name as needed (if for example you are using the sinopia_editor instance of mongo:
+Note, adjust the docker container name as needed (if for example you are using the sinopia_editor instance of mongo):
 
-`docker exec -it sinopia_api_mongo_1 mongo mongo`
+`docker exec -it sinopia_api_mongo_1 mongo`
 
 #### Dev/Stage/Prod
 
-You will first need to ssh to the AWS Bastion and then get to mongo from there.
+You will first need to ssh to the AWS bastion host and then get to mongo from there.
 
-1. Get the dev/stage .pem or prod .pem file (ask other devs) and place at `~/.ssh/sinopia-aws-bastion.pem` on your laptop.
+1. Get the dev/stage/prod .pem file (ask other devs) and place at `~/.ssh/sinopia-aws-bastion.pem` on your laptop.
 2. Use shared_configs https://github.com/sul-dlss/shared_configs/tree/sinopia-dev to get the values for the bastion host, the mongo host and the mongo password for the environment you are connecting to.  Note: the mongo info is labeled as "AWS DocumentDB".
 3. `ssh -i ~/.ssh/sinopia-aws-bastion.pem ec2-user@<BASTION HOST>`
 4. `mongo --host <MONGO HOST> --password <MONGO PASSWORD> --username sinopia --ssl --sslCAFile rds-combined-ca-bundle.pem`
