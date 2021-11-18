@@ -65,20 +65,20 @@ export const mergeRefs = (resource, refResources) => {
     addRefsToResource(resource, refResource)
   )
   resource.bfAdminMetadataAllRefs = _.uniq([
-    ...resource.bfAdminMetadataRefs,
-    ...resource.bfAdminMetadataInferredRefs,
+    ...(resource.bfAdminMetadataRefs ?? []),
+    ...(resource.bfAdminMetadataInferredRefs ?? []),
   ])
   resource.bfItemAllRefs = _.uniq([
-    ...resource.bfItemRefs,
-    ...resource.bfItemInferredRefs,
+    ...(resource.bfItemRefs ?? []),
+    ...(resource.bfItemInferredRefs ?? []),
   ])
   resource.bfInstanceAllRefs = _.uniq([
-    ...resource.bfInstanceRefs,
-    ...resource.bfInstanceInferredRefs,
+    ...(resource.bfInstanceRefs ?? []),
+    ...(resource.bfInstanceInferredRefs ?? []),
   ])
   resource.bfWorkAllRefs = _.uniq([
-    ...resource.bfWorkRefs,
-    ...resource.bfWorkInferredRefs,
+    ...(resource.bfWorkRefs ?? []),
+    ...(resource.bfWorkInferredRefs ?? []),
   ])
   return resource
 }
