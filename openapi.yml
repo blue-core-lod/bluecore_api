@@ -27,6 +27,8 @@ tags:
     description: Healthcheck and monitoring
   - name: users
     description: Users
+  - name: metrics
+    description: Metrics for reporting
 paths:
   /:
     get:
@@ -40,6 +42,21 @@ paths:
             application/json:
               schema:
                 type: object
+  /metrics/userCount:
+    get:
+      summary: Get the total number of registered users
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of registered users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
