@@ -57,6 +57,32 @@ paths:
                 properties:
                   count:
                     type: integer
+  /metrics/resourceCount/{resourceType}:
+    get:
+      summary: Get the total number of resources
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of resources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+      parameters:
+        - name: resourceType
+          in: path
+          description: The type of resource to count; "template" counts only resource template, "resource" counts only resources, "all" counts both
+          required: true
+          schema:
+            type: string
+            enum:
+              - template
+              - resource
+              - all
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
