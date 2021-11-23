@@ -17,3 +17,9 @@ export const isBfAdminMetadata = (resource) => {
     "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
   )
 }
+
+export const isSinopiaAdminMetadata = (resource) => {
+  return resource.types.includes(
+    "https://sinopia.io/vocabulary/LocalAdminMetadata"
+  )
+}

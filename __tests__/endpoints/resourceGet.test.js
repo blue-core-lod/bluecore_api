@@ -229,6 +229,9 @@ describe("GET /resource/:resourceId/relationships", () => {
       bfWorkRefs: [
         "http://localhost:3000/resource/g636dee4-65e3-457f-9215-740531104684",
       ],
+      sinopiaLocalAdminMetadataForRefs: [
+        "http://localhost:3000/resource/h736dee4-65e3-457f-9215-740531104685",
+      ],
     }
     // Note that the relationships don't make BF sense, but are testing for completeness.
     const mockFindOne = jest.fn().mockResolvedValue(resourceResult)

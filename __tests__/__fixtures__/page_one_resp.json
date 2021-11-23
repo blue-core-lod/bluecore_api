@@ -23,6 +23,7 @@
       "bfInstanceRefs": [],
       "bfItemRefs": [],
       "bfWorkRefs": [],
+      "sinopiaLocalAdminMetadataForRefs": [],
       "group": "stanford",
       "editGroups": ["yale"],
       "types": ["http://id.loc.gov/ontologies/bibframe/AbbreviatedTitle"],

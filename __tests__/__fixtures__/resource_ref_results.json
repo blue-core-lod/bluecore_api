@@ -3,12 +3,13 @@
     "id": "922b24cb-0b5f-4df6-88d2-cb9efdf3f373",
     "uri": "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373",
     "types": ["http://id.loc.gov/ontologies/bibframe/Instance"],
-    "bfAdminMetadataRefs": [],
+    "bfAdminMetadataRefs": [],    
     "bfItemRefs": [],
     "bfInstanceRefs": [
       "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
     ],
-    "bfWorkRefs": []
+    "bfWorkRefs": [],
+    "sinopiaLocalAdminMetadataForRefs": []
   },
   {
     "id": "032b24cb-0b5f-4df6-88d2-cb9efdf3f374",
@@ -19,7 +20,8 @@
     ],
     "bfItemRefs": [],
     "bfInstanceRefs": [],
-    "bfWorkRefs": []
+    "bfWorkRefs": [],
+    "sinopiaLocalAdminMetadataForRefs": []
   },
   {
     "id": "142b24cb-0b5f-4df6-88d2-cb9efdf3f375",
@@ -30,7 +32,8 @@
     "bfInstanceRefs": [],
     "bfWorkRefs": [
       "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
-    ]
+    ],
+    "sinopiaLocalAdminMetadataForRefs": []
   },
   {
     "id": "252b24cb-0b5f-4df6-88d2-cb9efdf3f376",
@@ -41,6 +44,17 @@
       "http://localhost:3000/resource/922b24cb-0b5f-4df6-88d2-cb9efdf3f373"
     ],
     "bfInstanceRefs": [],
-    "bfWorkRefs": []
+    "bfWorkRefs": [],
+    "sinopiaLocalAdminMetadataForRefs": []
+  },
+  {
+    "id": "362b24cb-0b5f-4df6-88d2-cb9efdf3f377",
+    "uri": "http://localhost:3000/resource/362b24cb-0b5f-4df6-88d2-cb9efdf3f377",
+    "types": ["https://sinopia.io/vocabulary/LocalAdminMetadata"],
+    "bfAdminMetadataRefs": [],
+    "bfItemRefs": [],
+    "bfInstanceRefs": [],
+    "bfWorkRefs": [],
+    "sinopiaLocalAdminMetadataForRefs": ["http://localhost:3000/resource/032b24cb-0b5f-4df6-88d2-cb9efdf3f374"]
   }
 ]
