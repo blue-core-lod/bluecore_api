@@ -40,6 +40,13 @@ If you are working on the MARC endpoints, supply the AWS credentials:
 
 ## Developers
 
+### Frameworks
+
+Sinopia API uses Monk as the Mongo framework and Express as the HTTP framework:
+
+- https://automattic.github.io/monk/
+- https://expressjs.com/
+
 ### Linter for JavaScript
 
 There are two linters/formatters used in this project: eslint and prettier.
@@ -82,9 +89,15 @@ Or temporarily change the test description from `it("does something")` to `it.on
 
 #### Localhost
 
-Note, adjust the docker container name as needed (if for example you are using the sinopia_editor instance of mongo):
+`docker exec -it sinopia_api-mongo-1 mongo`
 
-`docker exec -it sinopia_api_mongo_1 mongo`
+Note that it may be easier and more productive to use the mongo docker container from sinopia_editor (since it may have more data to work with).  In this case, spin up the mongo containers from sinopia_editor and the connect to that mongo instance (and leave it running with the local sinopia_api dev instance for testing in your browser):
+
+```
+# cd into the sinopia_editor folder
+docker compose up -d mongo
+docker exec -it sinopia_editor-mongo-1 mongo
+```
 
 #### Dev/Stage/Prod
 

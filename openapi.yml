@@ -27,6 +27,8 @@ tags:
     description: Healthcheck and monitoring
   - name: users
     description: Users
+  - name: metrics
+    description: Metrics for reporting
 paths:
   /:
     get:
@@ -40,6 +42,39 @@ paths:
             application/json:
               schema:
                 type: object
+  /metrics/userCount:
+    get:
+      summary: Get the total number of registered users
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of registered users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+  /metrics/resourceCount/{resourceType}:
+    get:
+      summary: Get the total number of resources
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of resources
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+      parameters:
+        - $ref: "#/components/parameters/resourceType"
+
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
@@ -625,6 +660,18 @@ paths:
               required:
                 - payload
 components:
+  parameters:
+    resourceType:
+      in: path
+      name: resourceType
+      required: true
+      description: The available resource types to request for metrics
+      schema:
+        type: string
+        enum:
+          - template
+          - resource
+          - all
   schemas:
     History:
       description: History for a particular history type.
