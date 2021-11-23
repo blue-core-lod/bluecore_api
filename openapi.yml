@@ -74,7 +74,40 @@ paths:
                     type: integer
       parameters:
         - $ref: "#/components/parameters/resourceType"
-
+  /metrics/createdCount/{resourceType}:
+    get:
+      summary: Get the total number of resources created in a specified time period, optionally filtered by group
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of resources created during a specified time period
+          content:
+            application/json:
+              schema:
+                type: object
+      parameters:
+        - $ref: "#/components/parameters/resourceType"
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          required: true
+          description: The start date requested for the count (in ISO format, e.g. 2017-07-21)
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          required: true
+          description: The end date requested for the count (in ISO format, e.g. 2017-07-21)
+        - name: group
+          in: query
+          schema:
+            type: string
+          required: false
+          description: The group to filter by (e.g. stanford)
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources

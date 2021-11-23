@@ -6,6 +6,9 @@ jest.mock("mongo.js")
 
 const mockResponse = jest.fn().mockResolvedValue(1)
 const response = { count: 1 }
+const allResourceQuery = {
+  types: { $regex: ".*" },
+}
 const templateOnlyQuery = {
   types: "http://sinopia.io/vocabulary/ResourceTemplate",
 }
@@ -50,7 +53,7 @@ describe("GET /metrics/resourceCount", () => {
     expect(res.statusCode).toEqual(200)
     expect(res.type).toEqual("application/json")
     expect(res.body).toEqual(response)
-    expect(mockResponse).toHaveBeenCalledWith(null)
+    expect(mockResponse).toHaveBeenCalledWith(allResourceQuery)
   })
 
   it("returns the just the resource templates resource count when user asks for 'template'", async () => {
@@ -87,5 +90,28 @@ describe("GET /metrics/resourceCount", () => {
     expect(res.type).toEqual("application/json")
     expect(res.body).toEqual(response)
     expect(mockResponse).toHaveBeenCalledWith(resourceOnlyQuery)
+  })
+})
+
+describe("GET /metrics/createdCount", () => {
+  it("adds correct filters for date and resource type", async () => {
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { aggregate: jest.fn().mockResolvedValue([response]) },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get("/metrics/createdCount/all?startDate=2021-10-01&endDate=2021-11-01")
+      .set("Accept", "application/json")
+    console.log(res)
+    expect(res.statusCode).toEqual(200)
+    expect(res.type).toEqual("application/json")
+    expect(res.body).toEqual(response)
+    expect(mockResponse).toHaveBeenCalledWith(
+      expect.objectContaining({ $match: allResourceQuery })
+    )
   })
 })
