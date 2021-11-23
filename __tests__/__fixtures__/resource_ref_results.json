@@ -50,7 +50,7 @@
   {
     "id": "362b24cb-0b5f-4df6-88d2-cb9efdf3f377",
     "uri": "http://localhost:3000/resource/362b24cb-0b5f-4df6-88d2-cb9efdf3f377",
-    "types": ["https://sinopia.io/vocabulary/LocalAdminMetadata"],
+    "types": ["http://sinopia.io/vocabulary/LocalAdminMetadata"],
     "bfAdminMetadataRefs": [],
     "bfItemRefs": [],
     "bfInstanceRefs": [],
