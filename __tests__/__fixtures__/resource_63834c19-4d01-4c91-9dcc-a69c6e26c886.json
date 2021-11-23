@@ -58,6 +58,7 @@
   "bfInstanceRefs": [],
   "bfItemRefs": [],
   "bfWorkRefs": [],
+  "sinopiaLocalAdminMetadataForRefs": [],
   "group": "yale",
   "editGroups": ["yale"],
   "types": ["http://id.loc.gov/ontologies/bibframe/AdminMetadata"],

@@ -5,6 +5,7 @@ import {
   isBfInstance,
   isBfItem,
   isBfAdminMetadata,
+  isSinopiaAdminMetadata,
 } from "../bibframe.js"
 
 const apiBaseUrl = process.env.API_BASE_URL
@@ -61,6 +62,7 @@ export const mergeRefs = (resource, refResources) => {
   resource.bfItemInferredRefs = []
   resource.bfInstanceInferredRefs = []
   resource.bfWorkInferredRefs = []
+  resource.sinopiaHasLocalAdminMetadataInferredRefs = []
   refResources.forEach((refResource) =>
     addRefsToResource(resource, refResource)
   )
@@ -90,6 +92,8 @@ const addRefsToResource = (resource, refResource) => {
   if (isBfItem(refResource)) resource.bfItemInferredRefs.push(refResource.uri)
   if (isBfAdminMetadata(refResource))
     resource.bfAdminMetadataInferredRefs.push(refResource.uri)
+  if (isSinopiaAdminMetadata(refResource))
+    resource.sinopiaHasLocalAdminMetadataInferredRefs.push(refResource.uri)
 }
 
 export const resourceForSave = (resource, id, uri, timestamp) => {

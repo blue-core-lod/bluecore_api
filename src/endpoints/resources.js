@@ -156,6 +156,7 @@ resourcesRouter.get("/:resourceId/relationships", (req, res, next) => {
     bfItemRefs: 1,
     bfInstanceRefs: 1,
     bfWorkRefs: 1,
+    sinopiaLocalAdminMetadataForRefs: 1,
     uri: 1,
     types: 1,
   }
@@ -170,6 +171,7 @@ resourcesRouter.get("/:resourceId/relationships", (req, res, next) => {
           { bfItemRefs: resource.uri },
           { bfInstanceRefs: resource.uri },
           { bfWorkRefs: resource.uri },
+          { sinopiaLocalAdminMetadataForRefs: resource.uri },
         ],
       }
       delete resource.uri

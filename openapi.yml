@@ -680,6 +680,11 @@ components:
           type: array
           items:
             type: string
+        sinopiaLocalAdminMetadataForRefs:
+          description: Relationships to other resources for which this record is local admin metadata.
+          type: array
+          items:
+            type: string
         bfAdminMetadataInferredRefs:
           description: Relationships to Bibframe AdminMetadata inferred from other resources.
           type: array
@@ -697,6 +702,11 @@ components:
             type: string
         bfWorkInferredRefs:
           description: Relationships to Bibframe Instances inferred from other resources.
+          type: array
+          items:
+            type: string
+        sinopiaHasLocalAdminMetadataInferredRefs:
+          description: Relationships to Sinopia Local AdminMetadata inferred from other resources.
           type: array
           items:
             type: string
@@ -730,10 +740,12 @@ components:
         - bfItemRefs
         - bfInstanceRefs
         - bfWorkRefs
+        - sinopiaLocalAdminMetadataForRefs
         - bfAdminMetadataInferredRefs
         - bfItemInferredRefs
         - bfInstanceInferredRefs
         - bfWorkInferredRefs
+        - sinopiaHasLocalAdminMetadataInferredRefs
         - bfAdminMetadataAllRefs
         - bfItemAllRefs
         - bfInstanceAllRefs
@@ -764,6 +776,11 @@ components:
             type: string
         bfWorkRefs:
           description: Relationships to Bibframe Instances contained within this record.
+          type: array
+          items:
+            type: string
+        sinopiaLocalAdminMetadataForRefs:
+          description: Relationships to other resources for which this record is local admin metadata.
           type: array
           items:
             type: string
@@ -804,6 +821,7 @@ components:
         - bfItemRefs
         - bfInstanceRefs
         - bfWorkRefs
+        - sinopiaLocalAdminMetadataForRefs
         - group
         - editGroups
         - types
