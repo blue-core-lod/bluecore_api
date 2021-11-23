@@ -4,8 +4,10 @@ import app from "app.js"
 
 jest.mock("mongo.js")
 
-const mockResponse = jest.fn().mockResolvedValue(1)
 const response = { count: 1 }
+const mockAggregateResponse = jest.fn().mockResolvedValue([response])
+const mockResponse = jest.fn().mockResolvedValue(1)
+
 const allResourceQuery = {
   types: { $regex: ".*" },
 }
@@ -94,8 +96,6 @@ describe("GET /metrics/resourceCount", () => {
 })
 
 describe("GET /metrics/createdCount", () => {
-  const mockAggregateResponse = jest.fn().mockResolvedValue([{count: 1}])
-
   it("adds correct filters for date and resource type", async () => {
     const mockCollection = (collectionName) => {
       return {
@@ -111,6 +111,71 @@ describe("GET /metrics/createdCount", () => {
     expect(res.statusCode).toEqual(200)
     expect(res.type).toEqual("application/json")
     expect(res.body).toEqual(response)
-    expect(mockAggregateResponse.mock.calls[0][0][0]).toEqual({ $match: allResourceQuery })
+    // The resource type filter
+    expect(mockAggregateResponse.mock.calls[0][0][0]).toEqual({
+      $match: allResourceQuery,
+    })
+    // The date filter
+    expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
+      $match: {
+        "resourceMetadata.versions.0.timestamp": {
+          $gt: new Date("2021-10-01"),
+          $lt: new Date("2021-11-01"),
+        },
+      },
+    })
+  })
+
+  it("adds group filter when requested", async () => {
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { aggregate: mockAggregateResponse },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get(
+        "/metrics/createdCount/resource?startDate=2021-01-01&endDate=2021-12-31&group=stanford"
+      )
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.type).toEqual("application/json")
+    expect(res.body).toEqual(response)
+    // The resource type filter with group added
+    const groupFilter = resourceOnlyQuery
+    groupFilter.group = "stanford"
+    expect(mockAggregateResponse.mock.calls[0][0][0]).toEqual({
+      $match: groupFilter,
+    })
+    // The date filter
+    expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
+      $match: {
+        "resourceMetadata.versions.0.timestamp": {
+          $gt: new Date("2021-01-01"),
+          $lt: new Date("2021-12-31"),
+        },
+      },
+    })
+  })
+
+  it("responds correctly with no mongo results (empty array)", async () => {
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { aggregate: jest.fn().mockResolvedValue([]) },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get(
+        "/metrics/createdCount/resource?startDate=2021-01-01&endDate=2021-12-31&group=stanford"
+      )
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.type).toEqual("application/json")
+    expect(res.body).toEqual({ count: 0 })
   })
 })
