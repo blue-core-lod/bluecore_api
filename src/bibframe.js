@@ -20,6 +20,6 @@ export const isBfAdminMetadata = (resource) => {
 
 export const isSinopiaAdminMetadata = (resource) => {
   return resource.types.includes(
-    "https://sinopia.io/vocabulary/LocalAdminMetadata"
+    "http://sinopia.io/vocabulary/LocalAdminMetadata"
   )
 }
