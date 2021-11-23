@@ -94,10 +94,12 @@ describe("GET /metrics/resourceCount", () => {
 })
 
 describe("GET /metrics/createdCount", () => {
+  const mockAggregateResponse = jest.fn().mockResolvedValue([{count: 1}])
+
   it("adds correct filters for date and resource type", async () => {
     const mockCollection = (collectionName) => {
       return {
-        resources: { aggregate: jest.fn().mockResolvedValue([response]) },
+        resources: { aggregate: mockAggregateResponse },
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
@@ -106,12 +108,9 @@ describe("GET /metrics/createdCount", () => {
     const res = await request(app)
       .get("/metrics/createdCount/all?startDate=2021-10-01&endDate=2021-11-01")
       .set("Accept", "application/json")
-    console.log(res)
     expect(res.statusCode).toEqual(200)
     expect(res.type).toEqual("application/json")
     expect(res.body).toEqual(response)
-    expect(mockResponse).toHaveBeenCalledWith(
-      expect.objectContaining({ $match: allResourceQuery })
-    )
+    expect(mockAggregateResponse.mock.calls[0][0][0]).toEqual({ $match: allResourceQuery })
   })
 })
