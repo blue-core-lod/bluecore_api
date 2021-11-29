@@ -82,26 +82,9 @@ paths:
                 $ref: "#/components/schemas/MetricsCountResponse"
       parameters:
         - $ref: "#/components/parameters/resourceType"
-        - name: startDate
-          in: query
-          schema:
-            type: string
-            format: date
-          required: true
-          description: The start date requested for the count (in ISO format, e.g. 2017-07-21)
-        - name: endDate
-          in: query
-          schema:
-            type: string
-            format: date
-          required: true
-          description: The end date requested for the count (in ISO format, e.g. 2017-07-21)
-        - name: group
-          in: query
-          schema:
-            type: string
-          required: false
-          description: The group to filter by (e.g. stanford)
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+        - $ref: "#/components/parameters/group"
   /metrics/editedCount/{resourceType}:
     get:
       summary: Get the total number of resources edited in a specified time period, optionally filtered by group
@@ -116,26 +99,9 @@ paths:
                 $ref: "#/components/schemas/MetricsCountResponse"
       parameters:
         - $ref: "#/components/parameters/resourceType"
-        - name: startDate
-          in: query
-          schema:
-            type: string
-            format: date
-          required: true
-          description: The start date requested for the count (in ISO format, e.g. 2017-07-21)
-        - name: endDate
-          in: query
-          schema:
-            type: string
-            format: date
-          required: true
-          description: The end date requested for the count (in ISO format, e.g. 2017-07-21)
-        - name: group
-          in: query
-          schema:
-            type: string
-          required: false
-          description: The group to filter by (e.g. stanford)
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
+        - $ref: "#/components/parameters/group"
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
@@ -733,6 +699,29 @@ components:
           - template
           - resource
           - all
+    startDate:
+      in: query
+      name: startDate
+      required: true
+      description: The start date requested for the count (in ISO format, e.g. 2017-07-21)
+      schema:
+        type: string
+        format: date
+    endDate:
+      in: query
+      name: endDate
+      required: true
+      description: The end date requested for the count (in ISO format, e.g. 2017-07-21)
+      schema:
+        type: string
+        format: date
+    group:
+      in: query
+      name: group
+      required: false
+      description: The group to filter by (e.g. stanford)
+      schema:
+        type: string
   schemas:
     MetricsCountResponse:
       description: Response from metrics endpoints that provide counts.
