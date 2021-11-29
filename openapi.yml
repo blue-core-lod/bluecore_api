@@ -53,10 +53,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
+                $ref: "#/components/schemas/MetricsCountResponse"
   /metrics/resourceCount/{resourceType}:
     get:
       summary: Get the total number of resources
@@ -68,10 +65,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
+                $ref: "#/components/schemas/MetricsCountResponse"
       parameters:
         - $ref: "#/components/parameters/resourceType"
   /metrics/createdCount/{resourceType}:
@@ -85,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/MetricsCountResponse"
       parameters:
         - $ref: "#/components/parameters/resourceType"
         - name: startDate
@@ -706,6 +700,13 @@ components:
           - resource
           - all
   schemas:
+    MetricsCountResponse:
+      description: Response from metrics endpoints that provide counts.
+      type: object
+      properties:
+        count:
+          description: The number of items matching the metric query.
+          type: integer
     History:
       description: History for a particular history type.
       type: array
