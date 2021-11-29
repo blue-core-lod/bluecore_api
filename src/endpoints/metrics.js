@@ -79,6 +79,44 @@ metricsRouter.get("/createdCount/:resourceType", (req, res, next) => {
     .catch(next)
 })
 
+metricsRouter.get("/editedCount/:resourceType", (req, res, next) => {
+  const query = [
+    {
+      $match: getResourceQuery(req.params.resourceType),
+    },
+    {
+      $lookup: {
+        from: "resourceMetadata",
+        localField: "id",
+        foreignField: "id",
+        as: "resourceMetadata",
+      },
+    },
+    { $unwind: "$resourceMetadata" },
+    {
+      $match: {
+        "resourceMetadata.versions.timestamp": {
+          $gt: new Date(req.query.startDate),
+          $lt: new Date(req.query.endDate),
+        },
+      },
+    },
+    { $group: { _id: "$id" } },
+    { $count: "count" },
+  ]
+
+  // Add the group filter to the query if present in the request
+  if (req.query.group) {
+    query[0].$match.group = req.query.group
+  }
+
+  req.db
+    .collection("resources")
+    .aggregate(query)
+    .then((response) => res.send(forAggregateReturn(response)))
+    .catch(next)
+})
+
 /**
  * Returns the response to the client for count aggregate mongo queries
  * Aggregate count queries return an array, and we are returning the count from this, so return the first element.
