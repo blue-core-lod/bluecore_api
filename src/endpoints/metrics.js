@@ -22,8 +22,8 @@ const getResourceQuery = (resourceType) => {
       },
     }
   }
-  // This is reached by sending a value of "all" which is contrained by openapi
-  return null
+  // This is reached by sending "all" (we cannot get any other values since resourceType is an enum contrained by openapi)
+  return { types: { $regex: ".*" } }
 }
 
 metricsRouter.get("/userCount", (req, res, next) => {
@@ -41,5 +41,56 @@ metricsRouter.get("/resourceCount/:resourceType", (req, res, next) => {
     .then((response) => res.send({ count: response }))
     .catch(next)
 })
+
+metricsRouter.get("/createdCount/:resourceType", (req, res, next) => {
+  const query = [
+    {
+      $match: getResourceQuery(req.params.resourceType),
+    },
+    {
+      $lookup: {
+        from: "resourceMetadata",
+        localField: "id",
+        foreignField: "id",
+        as: "resourceMetadata",
+      },
+    },
+    { $unwind: "$resourceMetadata" },
+    {
+      $match: {
+        "resourceMetadata.versions.0.timestamp": {
+          $gt: new Date(req.query.startDate),
+          $lt: new Date(req.query.endDate),
+        },
+      },
+    },
+    { $count: "count" },
+  ]
+
+  // Add the group filter to the query if present in the request
+  if (req.query.group) {
+    query[0].$match.group = req.query.group
+  }
+
+  req.db
+    .collection("resources")
+    .aggregate(query)
+    .then((response) => res.send(forAggregateReturn(response)))
+    .catch(next)
+})
+
+/**
+ * Returns the response to the client for count aggregate mongo queries
+ * Aggregate count queries return an array, and we are returning the count from this, so return the first element.
+ * But if the query count is 0, the response is an empty array, so we want to return a 0 count instead in this case.
+ * @param {string} response  Response from the mongo query
+ * @returns {object} The object response to return to the user
+ */
+const forAggregateReturn = (response) => {
+  if (response.length === 0) {
+    return { count: 0 }
+  }
+  return response[0]
+}
 
 export default metricsRouter
