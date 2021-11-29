@@ -29,6 +29,7 @@ mongo --host mongo:27017 <<EOF
   db.resources.createIndex({id: 1}, {unique: true})
   db.resources.createIndex({types: 1})
   db.resources.createIndex({group: 1})
+  db.resources.createIndex({editGroups: 1})
   db.resources.createIndex({templateId: 1})
   db.resources.createIndex({bfAdminMetadataRefs: 1})
   db.resources.createIndex({bfItemRefs: 1})
