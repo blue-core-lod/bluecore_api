@@ -39,6 +39,36 @@ describe("GET /metrics/userCount", () => {
   })
 })
 
+describe("GET /metrics/resourceUserCount", () => {
+  it("adds correct filters for date and resource type", async () => {
+    const mockCollection = (collectionName) => {
+      return {
+        users: { distinct: mockAggregateResponse },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get(
+        "/metrics/resourceUserCount/all?startDate=2021-10-01&endDate=2021-11-01"
+      )
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.type).toEqual("application/json")
+    expect(res.body).toEqual(response)
+    // The resource filter
+    expect(mockAggregateResponse.mock.calls[0][1].types).toEqual(
+      allResourceQuery.types
+    )
+    // The date filter
+    expect(mockAggregateResponse.mock.calls[0][1].timestamp).toEqual({
+      $gt: new Date("2021-10-01"),
+      $lt: new Date("2021-11-01"),
+    })
+  })
+})
+
 describe("GET /metrics/resourceCount", () => {
   it("returns the total resource count when user asks for 'all'", async () => {
     const mockCollection = (collectionName) => {

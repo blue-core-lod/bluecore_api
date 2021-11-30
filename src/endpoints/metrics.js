@@ -26,11 +26,34 @@ const getResourceQuery = (resourceType) => {
   return { types: { $regex: ".*" } }
 }
 
+/**
+ * Returns the mongo query to use for the specified date range
+ * @param {string} startDate The start date
+ * @param {string} endDate The end date
+ * @returns {object} The query to send to mongo to filter by the specified dates
+ */
+const getDateQuery = (startDate, endDate) => {
+  return {
+    $gt: new Date(startDate),
+    $lt: new Date(endDate),
+  }
+}
+
 metricsRouter.get("/userCount", (req, res, next) => {
   req.db
     .collection("users")
     .count()
     .then((response) => res.send({ count: response }))
+    .catch(next)
+})
+
+metricsRouter.get("/resourceUserCount/:resourceType", (req, res, next) => {
+  const query = getResourceQuery(req.params.resourceType)
+  query.timestamp = getDateQuery(req.query.startDate, req.query.endDate)
+  req.db
+    .collection("users")
+    .distinct("id", query)
+    .then((response) => res.send(forAggregateReturn(response)))
     .catch(next)
 })
 
@@ -58,10 +81,10 @@ metricsRouter.get("/createdCount/:resourceType", (req, res, next) => {
     { $unwind: "$resourceMetadata" },
     {
       $match: {
-        "resourceMetadata.versions.0.timestamp": {
-          $gt: new Date(req.query.startDate),
-          $lt: new Date(req.query.endDate),
-        },
+        "resourceMetadata.versions.0.timestamp": getDateQuery(
+          req.query.startDate,
+          req.query.endDate
+        ),
       },
     },
     { $count: "count" },
@@ -71,7 +94,6 @@ metricsRouter.get("/createdCount/:resourceType", (req, res, next) => {
   if (req.query.group) {
     query[0].$match.group = req.query.group
   }
-
   req.db
     .collection("resources")
     .aggregate(query)
@@ -95,10 +117,10 @@ metricsRouter.get("/editedCount/:resourceType", (req, res, next) => {
     { $unwind: "$resourceMetadata" },
     {
       $match: {
-        "resourceMetadata.versions.timestamp": {
-          $gt: new Date(req.query.startDate),
-          $lt: new Date(req.query.endDate),
-        },
+        "resourceMetadata.versions.timestamp": getDateQuery(
+          req.query.startDate,
+          req.query.endDate
+        ),
       },
     },
     { $group: { _id: "$id" } },
