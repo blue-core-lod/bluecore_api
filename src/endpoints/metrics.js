@@ -117,6 +117,14 @@ metricsRouter.get("/editedCount/:resourceType", (req, res, next) => {
     .catch(next)
 })
 
+metricsRouter.get("/templateUsageCount", (req, res, next) => {
+  req.db
+    .collection("resources")
+    .count({ templateId: req.query.templateId })
+    .then((response) => res.send({ count: response }))
+    .catch(next)
+})
+
 /**
  * Returns the response to the client for count aggregate mongo queries
  * Aggregate count queries return an array, and we are returning the count from this, so return the first element.
