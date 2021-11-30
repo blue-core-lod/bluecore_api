@@ -6,6 +6,12 @@ const metricsRouter = express.Router()
 // Add the db to req
 metricsRouter.use(connect)
 
+// NOTE:
+// When filtering for created resources by time, we want to only look at the very first timestamp in the versions element in
+//  `resourceMetadata`. This is what `0` does in `resourceMetadata.versions.0.timestamp`
+//  (only filter on the first timestamp in that array).
+//  When filtering for edited resources, we want to look at all timestamps in that array.
+
 /**
  * Returns the mongo query to use for the specified resource type
  * @param {string} resourceType  The resource type ("template", "resource" or "all")
@@ -51,9 +57,9 @@ metricsRouter.get("/resourceUserCount/:resourceType", (req, res, next) => {
   const query = getResourceQuery(req.params.resourceType)
   query.timestamp = getDateQuery(req.query.startDate, req.query.endDate)
   req.db
-    .collection("users")
-    .distinct("id", query)
-    .then((response) => res.send(forAggregateReturn(response)))
+    .collection("resources")
+    .distinct("user", query)
+    .then((response) => res.send({ count: response.length }))
     .catch(next)
 })
 

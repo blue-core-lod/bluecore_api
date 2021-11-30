@@ -43,7 +43,7 @@ describe("GET /metrics/resourceUserCount", () => {
   it("adds correct filters for date and resource type", async () => {
     const mockCollection = (collectionName) => {
       return {
-        users: { distinct: mockAggregateResponse },
+        resources: { distinct: mockAggregateResponse },
       }[collectionName]
     }
     const mockDb = { collection: mockCollection }
