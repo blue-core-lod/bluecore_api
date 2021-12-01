@@ -294,3 +294,22 @@ describe("GET /metrics/editedCount", () => {
     expect(res.body).toEqual({ count: 0 })
   })
 })
+
+describe("GET /metrics/templateUsageCount", () => {
+  it("returns the total resources created from a given template id", async () => {
+    const mockCollection = (collectionName) => {
+      return {
+        resources: { count: mockResponse },
+      }[collectionName]
+    }
+    const mockDb = { collection: mockCollection }
+    connect.mockImplementation(mockConnect(mockDb))
+
+    const res = await request(app)
+      .get("/metrics/templateUsageCount?templateId=some%3Aid%3Ahere")
+      .set("Accept", "application/json")
+    expect(res.statusCode).toEqual(200)
+    expect(res.type).toEqual("application/json")
+    expect(res.body).toEqual(response)
+  })
+})

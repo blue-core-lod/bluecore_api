@@ -118,6 +118,25 @@ paths:
         - $ref: "#/components/parameters/startDate"
         - $ref: "#/components/parameters/endDate"
         - $ref: "#/components/parameters/group"
+  /metrics/templateUsageCount:
+    get:
+      summary: Get the total number of resources created with the specified template Id
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of resources created with the given template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsCountResponse"
+      parameters:
+        - name: templateId
+          in: query
+          schema:
+            type: string
+          required: true
+          description: The ID of the template to count resources for
   /resource:
     get:
       summary: Returns a paged JSON result of all or filtered resources
