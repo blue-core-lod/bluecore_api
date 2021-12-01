@@ -40,8 +40,8 @@ const getResourceQuery = (resourceType) => {
  */
 const getDateQuery = (startDate, endDate) => {
   return {
-    $gt: new Date(startDate),
-    $lt: new Date(endDate),
+    $gte: new Date(startDate),
+    $lte: new Date(endDate),
   }
 }
 
