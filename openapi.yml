@@ -54,6 +54,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MetricsCountResponse"
+  /metrics/resourceUserCount/{resourceType}:
+    get:
+      summary: Get the total number of unique users that have saved at least one new resource/template within a given time period
+      tags:
+        - metrics
+      responses:
+        "200":
+          description: The number of unique users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsCountResponse"
+      parameters:
+        - $ref: "#/components/parameters/resourceType"
+        - $ref: "#/components/parameters/startDate"
+        - $ref: "#/components/parameters/endDate"
   /metrics/resourceCount/{resourceType}:
     get:
       summary: Get the total number of resources
