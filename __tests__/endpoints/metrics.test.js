@@ -63,8 +63,8 @@ describe("GET /metrics/resourceUserCount", () => {
     )
     // The date filter
     expect(mockAggregateResponse.mock.calls[0][1].timestamp).toEqual({
-      $gt: new Date("2021-10-01"),
-      $lt: new Date("2021-11-01"),
+      $gte: new Date("2021-10-01"),
+      $lte: new Date("2021-11-01"),
     })
   })
 })
@@ -149,8 +149,8 @@ describe("GET /metrics/createdCount", () => {
     expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
       $match: {
         "resourceMetadata.versions.0.timestamp": {
-          $gt: new Date("2021-10-01"),
-          $lt: new Date("2021-11-01"),
+          $gte: new Date("2021-10-01"),
+          $lte: new Date("2021-11-01"),
         },
       },
     })
@@ -183,8 +183,8 @@ describe("GET /metrics/createdCount", () => {
     expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
       $match: {
         "resourceMetadata.versions.0.timestamp": {
-          $gt: new Date("2021-01-01"),
-          $lt: new Date("2021-12-31"),
+          $gte: new Date("2021-01-01"),
+          $lte: new Date("2021-12-31"),
         },
       },
     })
@@ -234,8 +234,8 @@ describe("GET /metrics/editedCount", () => {
     expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
       $match: {
         "resourceMetadata.versions.timestamp": {
-          $gt: new Date("2021-10-01"),
-          $lt: new Date("2021-11-01"),
+          $gte: new Date("2021-10-01"),
+          $lte: new Date("2021-11-01"),
         },
       },
     })
@@ -268,8 +268,8 @@ describe("GET /metrics/editedCount", () => {
     expect(mockAggregateResponse.mock.calls[0][0][3]).toEqual({
       $match: {
         "resourceMetadata.versions.timestamp": {
-          $gt: new Date("2021-01-01"),
-          $lt: new Date("2021-12-31"),
+          $gte: new Date("2021-01-01"),
+          $lte: new Date("2021-12-31"),
         },
       },
     })
