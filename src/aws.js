@@ -1,24 +1,42 @@
 /* eslint-disable camelcase */
-import AWS from "aws-sdk"
+import {
+  CognitoIdentityProviderClient,
+  paginateListGroups,
+} from "@aws-sdk/client-cognito-identity-provider"
+import {
+  SQSClient,
+  GetQueueUrlCommand,
+  SendMessageCommand,
+} from "@aws-sdk/client-sqs"
+import {
+  S3Client,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3"
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda"
+import getStream from "get-stream"
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const config = {
   region: process.env.AWS_REGION || "us-west-2",
-  apiVersions: {
-    lambda: "2015-03-31",
-    s3: "2006-03-01",
-    cognitoidentityserviceprovider: "2016-04-18",
-    sqs: "2012-11-05",
-  },
-})
+}
+
+const cognitoIdentityProviderClient = new CognitoIdentityProviderClient(config)
+
+const sqsClient = new SQSClient(config)
+const s3Client = new S3Client(config)
+const lambdaClient = new LambdaClient(config)
 
 const bucketName = process.env.AWS_BUCKET || "sinopia-marc-development"
 const lambdaName =
   process.env.AWS_RDF2MARC_LAMBDA || "sinopia-rdf2marc-development"
 const userPoolId = process.env.COGNITO_USER_POOL_ID || "us-west-2_CGd9Wq136"
 
-export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
+export const requestMarc = async (
+  resourceUri,
+  resourceId,
+  username,
+  timestamp
+) => {
   // These are tied to the user so that can list all of the MARC records requested by a user.
   const marcKey = `${username}/${resourceId}/${timestamp}`
   const marcPath = `${marcKey}/record.mar`
@@ -27,138 +45,81 @@ export const requestMarc = (resourceUri, resourceId, username, timestamp) => {
   // Invoke lambda.
   const params = {
     FunctionName: lambdaName,
-    InvokeArgs: JSON.stringify({
+    Payload: JSON.stringify({
       instance_uri: resourceUri,
       marc_path: marcPath,
       marc_txt_path: marcTxtPath,
       error_path: errorPath,
       bucket: bucketName,
     }),
+    InvocationType: "Event",
   }
-  const lambda = new AWS.Lambda()
-  return new Promise((resolve, reject) => {
-    lambda.invokeAsync(params, (err) => {
-      if (err) reject(err)
-      else resolve()
-    })
-  })
+  await lambdaClient.send(new InvokeCommand(params))
 }
 
-export const hasMarc = (resourceId, username, timestamp) => {
+export const hasMarc = async (resourceId, username, timestamp) => {
   const params = {
     Bucket: bucketName,
     Prefix: `marc/${username}/${resourceId}/${timestamp}`,
   }
-  const s3 = new AWS.S3()
-  return new Promise((resolve, reject) => {
-    s3.listObjectsV2(params, (err, data) => {
-      if (err) reject(err)
-      else if (
-        data.Contents.find((content) => content.Key.endsWith("error.txt"))
-      ) {
-        return getError(resourceId, username, timestamp)
-          .then((errorTxt) => reject(new Error(errorTxt)))
-          .catch((err) => reject(err))
-      } else if (
-        data.Contents.find((content) => content.Key.endsWith("record.mar"))
-      ) {
-        resolve(true)
-      } else resolve(false)
-    })
-  })
+  const listResp = await s3Client.send(new ListObjectsV2Command(params))
+  if (listResp.Contents.find((content) => content.Key.endsWith("error.txt"))) {
+    const errorTxt = await getError(resourceId, username, timestamp)
+    throw new Error(errorTxt)
+  } else if (
+    listResp.Contents.find((content) => content.Key.endsWith("record.mar"))
+  ) {
+    return true
+  }
+  return false
 }
 
-export const getMarc = (resourceId, username, timestamp, asText) => {
+export const getMarc = async (resourceId, username, timestamp, asText) => {
   const fileExt = asText ? ".txt" : ".mar"
   const params = {
     Bucket: bucketName,
     Key: `marc/${username}/${resourceId}/${timestamp}/record${fileExt}`,
   }
-  const s3 = new AWS.S3()
-  return new Promise((resolve, reject) => {
-    s3.getObject(params, (err, data) => {
-      if (err) reject(err)
-      else resolve(data.Body)
-    })
-  })
+  const getResp = await s3Client.send(new GetObjectCommand(params))
+  return getStream(getResp.Body)
 }
 
-const getError = (resourceId, username, timestamp) => {
+const getError = async (resourceId, username, timestamp) => {
   const params = {
     Bucket: bucketName,
     Key: `marc/${username}/${resourceId}/${timestamp}/error.txt`,
   }
-  const s3 = new AWS.S3()
-  return new Promise((resolve, reject) => {
-    s3.getObject(params, (err, data) => {
-      if (err) reject(err)
-      else resolve(data.Body.toString("utf-8"))
-    })
-  })
+  const getResp = await s3Client.send(new GetObjectCommand(params))
+  return getStream(getResp.Body)
 }
 
-export const listGroups = () => {
-  const cognito = new AWS.CognitoIdentityServiceProvider()
+export const listGroups = async () => {
   let groups = []
 
-  const listAllGroups = (resolve, reject, token = null) => {
-    cognito.listGroups(
-      { UserPoolId: userPoolId, Limit: 60, ...(token && { NextToken: token }) },
-      (err, data) => {
-        if (err) reject(err)
-
-        groups = [...groups, ...data.Groups]
-
-        if (data.NextToken) {
-          listAllGroups(resolve, reject, data.NextToken)
-        } else {
-          resolve(
-            groups.map((group) => ({
-              id: group.GroupName,
-              label: group.Description || group.GroupName,
-            }))
-          )
-        }
-      }
-    )
+  for await (const page of paginateListGroups(
+    { client: cognitoIdentityProviderClient },
+    { UserPoolId: userPoolId, Limit: 60 }
+  )) {
+    groups = [...groups, ...page.Groups]
   }
 
-  return new Promise((resolve, reject) => {
-    listAllGroups(resolve, reject)
-  })
+  return groups.map((group) => ({
+    id: group.GroupName,
+    label: group.Description || group.GroupName,
+  }))
 }
 
-export const buildAndSendSqsMessage = (queueName, messageBody) => {
-  const sqs = new AWS.SQS()
-  return getSqsQueueUrl(sqs, queueName).then((queueUrl) => {
-    const messageParams = buildSqsMessageParams(queueUrl, messageBody)
-    return sendSqsMessage(sqs, messageParams)
-  })
+export const buildAndSendSqsMessage = async (queueName, messageBody) => {
+  const messageParams = await buildSqsMessageParams(queueName, messageBody)
+  await sqsClient.send(new SendMessageCommand(messageParams))
 }
 
-const sendSqsMessage = (sqs, messageParams) => {
-  return new Promise((resolve, reject) => {
-    sqs.sendMessage(messageParams, (err, data) => {
-      if (err) reject(err)
-      else resolve(data)
-    })
-  })
-}
-
-const getSqsQueueUrl = (sqs, queueName) => {
-  return new Promise((resolve, reject) => {
-    const queueUrlReqParams = { QueueName: queueName }
-
-    sqs.getQueueUrl(queueUrlReqParams, (err, data) => {
-      if (err) reject(err)
-      else resolve(data.QueueUrl)
-    })
-  })
-}
-
-const buildSqsMessageParams = (queueUrl, messageBody) => {
-  const messageParams = {
-    QueueUrl: queueUrl,
+const buildSqsMessageParams = async (queueName, messageBody) => {
+  const queueUrlresp = await sqsClient.send(
+    new GetQueueUrlCommand({ QueueName: queueName })
+  )
+  return {
+    QueueUrl: queueUrlresp.QueueUrl,
     MessageBody: messageBody,
     MessageAttributes: {
       timestamp: {
@@ -167,6 +128,4 @@ const buildSqsMessageParams = (queueUrl, messageBody) => {
       },
     },
   }
-
-  return messageParams
 }
