@@ -1,75 +1,123 @@
 /* eslint-disable camelcase */
 import {
+  GetQueueUrlCommand,
+  SendMessageCommand,
+  mockSend as mockSqsSend,
+} from "@aws-sdk/client-sqs"
+import {
+  mockCognitoIdentityProviderClient,
+  paginateListGroups,
+  mockPaginateListGroups,
+} from "@aws-sdk/client-cognito-identity-provider"
+import {
+  InvokeCommand,
+  mockSend as mockLambdaSend,
+} from "@aws-sdk/client-lambda"
+import {
+  mockSend as mockS3Send,
+  ListObjectsV2Command,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3"
+
+import {
   requestMarc,
   hasMarc,
   getMarc,
   listGroups,
   buildAndSendSqsMessage,
 } from "aws.js"
+import { Readable } from "stream"
 
-const mockInvokeAsync = jest.fn()
-const mockListObjects = jest.fn()
-const mockGetObject = jest.fn()
-const mockListGroups = jest.fn()
-const mockGetQueueUrl = jest.fn()
-const mockSendMessage = jest.fn()
-jest.mock("aws-sdk", () => {
+jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
+  const mockCognitoIdentityProviderClient = jest.fn()
+  const mockPaginateListGroups = jest.fn()
   return {
-    config: { update: jest.fn() },
-    Lambda: jest.fn(() => ({
-      invokeAsync: mockInvokeAsync,
-    })),
-    S3: jest.fn(() => ({
-      listObjectsV2: mockListObjects,
-      getObject: mockGetObject,
-    })),
-    CognitoIdentityServiceProvider: jest.fn(() => ({
-      listGroups: mockListGroups,
-    })),
-    SQS: jest.fn(() => ({
-      getQueueUrl: mockGetQueueUrl,
-      sendMessage: mockSendMessage,
-    })),
+    __esModule: true,
+    mockCognitoIdentityProviderClient,
+    mockPaginateListGroups,
+    CognitoIdentityProviderClient: jest
+      .fn()
+      .mockImplementation(() => mockCognitoIdentityProviderClient),
+    paginateListGroups: mockPaginateListGroups,
+  }
+})
+
+jest.mock("@aws-sdk/client-sqs", () => {
+  const mockSend = jest.fn()
+  return {
+    __esModule: true,
+    mockSend,
+    GetQueueUrlCommand: jest.fn(),
+    SendMessageCommand: jest.fn(),
+    SQSClient: jest.fn().mockImplementation(() => {
+      return {
+        send: mockSend,
+      }
+    }),
+  }
+})
+
+jest.mock("@aws-sdk/client-s3", () => {
+  const mockSend = jest.fn()
+  return {
+    __esModule: true,
+    mockSend,
+    ListObjectsV2Command: jest.fn(),
+    GetObjectCommand: jest.fn(),
+    S3Client: jest.fn().mockImplementation(() => {
+      return {
+        send: mockSend,
+      }
+    }),
+  }
+})
+
+jest.mock("@aws-sdk/client-lambda", () => {
+  const mockSend = jest.fn()
+  return {
+    __esModule: true,
+    mockSend,
+    LambdaClient: jest.fn().mockImplementation(() => {
+      return {
+        send: mockSend,
+      }
+    }),
+    InvokeCommand: jest.fn(),
   }
 })
 
 describe("requestMarc", () => {
   describe("successful", () => {
     it("invokes lambda and resolves", async () => {
-      mockInvokeAsync.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          FunctionName: "sinopia-rdf2marc-development",
-          InvokeArgs: JSON.stringify({
-            instance_uri:
-              "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
-            marc_path:
-              "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
-            marc_txt_path:
-              "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.txt",
-            error_path:
-              "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
-            bucket: "sinopia-marc-development",
-          }),
-        })
-        callback(null, true)
+      await requestMarc(
+        "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
+        "6852a770-2961-4836-a833-0b21a9b68041",
+        "jdoe",
+        "2020-08-20T11:34:40.887Z"
+      )
+      expect(InvokeCommand).toHaveBeenCalledWith({
+        FunctionName: "sinopia-rdf2marc-development",
+        Payload: JSON.stringify({
+          instance_uri:
+            "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
+          marc_path:
+            "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
+          marc_txt_path:
+            "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.txt",
+          error_path:
+            "jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
+          bucket: "sinopia-marc-development",
+        }),
+        InvocationType: "Event",
       })
-
-      expect(
-        await requestMarc(
-          "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
-          "6852a770-2961-4836-a833-0b21a9b68041",
-          "jdoe",
-          "2020-08-20T11:34:40.887Z"
-        )
-      ).toEqual()
+      expect(mockLambdaSend).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("failure", () => {
     it("invokes lambda and rejects", async () => {
-      mockInvokeAsync.mockImplementation((params, callback) => {
-        callback(new Error("AWS fail"), null)
-      })
+      mockLambdaSend.mockRejectedValue(new Error("AWS fail"))
+
       await expect(
         requestMarc(
           "https://api.development.sinopia.io/resource/6852a770-2961-4836-a833-0b21a9b68041",
@@ -85,19 +133,12 @@ describe("requestMarc", () => {
 describe("hasMarc", () => {
   describe("finds MARC record", () => {
     it("resolves true", async () => {
-      mockListObjects.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          Bucket: "sinopia-marc-development",
-          Prefix:
-            "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z",
-        })
-        callback(null, {
-          Contents: [
-            {
-              Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
-            },
-          ],
-        })
+      mockS3Send.mockResolvedValue({
+        Contents: [
+          {
+            Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
+          },
+        ],
       })
       expect(
         await hasMarc(
@@ -106,29 +147,28 @@ describe("hasMarc", () => {
           "2020-08-20T11:34:40.887Z"
         )
       ).toBe(true)
+      expect(ListObjectsV2Command).toHaveBeenCalledWith({
+        Bucket: "sinopia-marc-development",
+        Prefix:
+          "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z",
+      })
+      expect(mockS3Send).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("finds error file", () => {
     it("retrieves error file and rejects", async () => {
-      mockListObjects.mockImplementation((params, callback) => {
-        callback(null, {
+      mockS3Send
+        .mockResolvedValue({
+          Body: Readable.from("Bad record"),
+        })
+        .mockResolvedValueOnce({
           Contents: [
             {
               Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
             },
           ],
         })
-      })
-      mockGetObject.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          Bucket: "sinopia-marc-development",
-          Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
-        })
-        callback(null, {
-          Body: { toString: jest.fn().mockReturnValue("Bad record") },
-        })
-      })
       await expect(
         hasMarc(
           "6852a770-2961-4836-a833-0b21a9b68041",
@@ -136,13 +176,18 @@ describe("hasMarc", () => {
           "2020-08-20T11:34:40.887Z"
         )
       ).rejects.toThrow("Bad record")
+      expect(GetObjectCommand).toHaveBeenCalledWith({
+        Bucket: "sinopia-marc-development",
+        Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/error.txt",
+      })
+      expect(mockS3Send).toHaveBeenCalledTimes(2)
     })
   })
 
   describe("finds no files", () => {
     it("resolves false", async () => {
-      mockListObjects.mockImplementation((params, callback) => {
-        callback(null, { Contents: [] })
+      mockS3Send.mockResolvedValue({
+        Contents: [],
       })
       expect(
         await hasMarc(
@@ -151,6 +196,7 @@ describe("hasMarc", () => {
           "2020-08-20T11:34:40.887Z"
         )
       ).toBe(false)
+      expect(mockS3Send).toHaveBeenCalledTimes(1)
     })
   })
 })
@@ -158,12 +204,8 @@ describe("hasMarc", () => {
 describe("getMarc", () => {
   describe("getting MARC record", () => {
     it("resolves record", async () => {
-      mockGetObject.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          Bucket: "sinopia-marc-development",
-          Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
-        })
-        callback(null, { Body: "The record" })
+      mockS3Send.mockResolvedValue({
+        Body: Readable.from("The record"),
       })
       expect(
         await getMarc(
@@ -172,17 +214,18 @@ describe("getMarc", () => {
           "2020-08-20T11:34:40.887Z"
         )
       ).toBe("The record")
+      expect(GetObjectCommand).toHaveBeenCalledWith({
+        Bucket: "sinopia-marc-development",
+        Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.mar",
+      })
+      expect(mockS3Send).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("getting MARC text", () => {
     it("resolves text", async () => {
-      mockGetObject.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          Bucket: "sinopia-marc-development",
-          Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.txt",
-        })
-        callback(null, { Body: "The record" })
+      mockS3Send.mockResolvedValue({
+        Body: Readable.from("The record"),
       })
       expect(
         await getMarc(
@@ -192,14 +235,17 @@ describe("getMarc", () => {
           true
         )
       ).toBe("The record")
+      expect(GetObjectCommand).toHaveBeenCalledWith({
+        Bucket: "sinopia-marc-development",
+        Key: "marc/jdoe/6852a770-2961-4836-a833-0b21a9b68041/2020-08-20T11:34:40.887Z/record.txt",
+      })
+      expect(mockS3Send).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("error", () => {
     it("rejects", async () => {
-      mockGetObject.mockImplementation((params, callback) => {
-        callback(new Error("Get failed"), null)
-      })
+      mockS3Send.mockRejectedValue(new Error("Get failed"))
       await expect(
         getMarc(
           "6852a770-2961-4836-a833-0b21a9b68041",
@@ -213,131 +259,79 @@ describe("getMarc", () => {
 
 describe("listGroups", () => {
   describe("getting successful", () => {
-    it("resolves record without pagination", async () => {
-      mockListGroups.mockImplementation((params, callback) => {
-        expect(params).toEqual({
-          UserPoolId: "us-west-2_CGd9Wq136",
-          Limit: 60,
-        })
-        callback(null, {
-          Groups: [
-            { GroupName: "stanford", Description: "Stanford University" },
-            { GroupName: "cornell", Description: "Cornell University" },
-          ],
-        })
-      })
-      expect(await listGroups()).toEqual([
-        { id: "stanford", label: "Stanford University" },
-        { id: "cornell", label: "Cornell University" },
-      ])
-    })
-
     it("resolves record with pagination", async () => {
-      mockListGroups
-        .mockImplementationOnce((params, callback) => {
-          expect(params).toEqual({
-            UserPoolId: "us-west-2_CGd9Wq136",
-            Limit: 60,
-          })
-          callback(null, {
+      mockPaginateListGroups.mockImplementation(() => {
+        return [
+          {
             Groups: [
               { GroupName: "stanford", Description: "Stanford University" },
               { GroupName: "cornell", Description: "Cornell University" },
             ],
-            NextToken: "token1",
-          })
-        })
-        .mockImplementationOnce((params, callback) => {
-          expect(params).toEqual({
-            UserPoolId: "us-west-2_CGd9Wq136",
-            Limit: 60,
-            NextToken: "token1",
-          })
-          callback(null, {
+          },
+          {
             Groups: [
               { GroupName: "yale", Description: "Yale University" },
               { GroupName: "duke", Description: "Duke University" },
             ],
-          })
-        })
+          },
+        ]
+      })
+
       expect(await listGroups()).toEqual([
         { id: "stanford", label: "Stanford University" },
         { id: "cornell", label: "Cornell University" },
         { id: "yale", label: "Yale University" },
         { id: "duke", label: "Duke University" },
       ])
+      expect(paginateListGroups).toHaveBeenCalledWith(
+        { client: mockCognitoIdentityProviderClient },
+        { UserPoolId: "us-west-2_CGd9Wq136", Limit: 60 }
+      )
     })
   })
 
   describe("error", () => {
     it("rejects", async () => {
-      mockListGroups.mockImplementation((params, callback) => {
-        callback(new Error("Get failed"), null)
+      mockPaginateListGroups.mockImplementation(() => {
+        throw new Error("Get failed")
       })
+
       await expect(listGroups()).rejects.toThrow("Get failed")
     })
   })
 })
 
 describe("buildAndSendSqsMessage", () => {
-  describe("obtains queue URL successfully", () => {
-    it("sends the SQS message to the queue URL returned for the given queue name, with the specified message body", async () => {
-      const queueName = "stanford-ils"
-      const queueUrl =
-        "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils"
-      const messageBody = JSON.stringify({ fieldName: "field value" })
+  it("sends the SQS message to the queue URL returned for the given queue name, with the specified message body", async () => {
+    const queueName = "stanford-ils"
+    const messageBody = JSON.stringify({ fieldName: "field value" })
 
-      mockGetQueueUrl.mockImplementation((queueUrlReqParams, callback) => {
-        expect(queueUrlReqParams.QueueName).toEqual(queueName)
-        callback(null, { QueueUrl: queueUrl })
-      })
-      mockSendMessage.mockImplementation((messageParams, callback) => {
-        expect(messageParams.QueueUrl).toEqual(queueUrl)
-        expect(messageParams.MessageBody).toEqual(messageBody)
-        callback(null, "success!")
-      })
-
-      expect(await buildAndSendSqsMessage(queueName, messageBody)).toEqual(
-        "success!"
-      )
+    mockSqsSend.mockResolvedValue({
+      QueueUrl: "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
     })
 
-    it("encounters an error trying to send the SQS message", async () => {
-      const errmsg = "you don't have permission to write to this queue :P"
+    await buildAndSendSqsMessage(queueName, messageBody)
 
-      mockGetQueueUrl.mockImplementation((_queueUrlReqParams, callback) => {
-        callback(null, {
-          QueueUrl:
-            "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
-        })
+    expect(GetQueueUrlCommand).toHaveBeenCalledWith({ QueueName: queueName })
+    expect(SendMessageCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        QueueUrl: "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
+        MessageBody: messageBody,
       })
-      mockSendMessage.mockImplementation((_messageParams, callback) => {
-        callback(new Error(errmsg))
-      })
-
-      await expect(
-        buildAndSendSqsMessage(
-          "stanford-ils",
-          JSON.stringify({ fieldName: "field value" })
-        )
-      ).rejects.toThrow(errmsg)
-    })
+    )
+    expect(mockSqsSend).toHaveBeenCalledTimes(2)
   })
 
-  describe("error getting queue URL", () => {
-    it("allows the error to bubble up", async () => {
-      const errmsg = "you don't have permission to get the queue URL :P"
+  it("encounters an error", async () => {
+    const errmsg = "you don't have permission to write to this queue :P"
 
-      mockGetQueueUrl.mockImplementation((params, callback) => {
-        callback(new Error(errmsg))
-      })
+    mockSqsSend.mockRejectedValue(new Error(errmsg))
 
-      await expect(
-        buildAndSendSqsMessage(
-          "stanford-ils",
-          JSON.stringify({ fieldName: "field value" })
-        )
-      ).rejects.toThrow(errmsg)
-    })
+    await expect(
+      buildAndSendSqsMessage(
+        "stanford-ils",
+        JSON.stringify({ fieldName: "field value" })
+      )
+    ).rejects.toThrow(errmsg)
   })
 })
