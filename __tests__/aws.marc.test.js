@@ -1,15 +1,5 @@
 /* eslint-disable camelcase */
 import {
-  GetQueueUrlCommand,
-  SendMessageCommand,
-  mockSend as mockSqsSend,
-} from "@aws-sdk/client-sqs"
-import {
-  mockCognitoIdentityProviderClient,
-  paginateListGroups,
-  mockPaginateListGroups,
-} from "@aws-sdk/client-cognito-identity-provider"
-import {
   InvokeCommand,
   mockSend as mockLambdaSend,
 } from "@aws-sdk/client-lambda"
@@ -18,44 +8,8 @@ import {
   ListObjectsV2Command,
   GetObjectCommand,
 } from "@aws-sdk/client-s3"
-
-import {
-  requestMarc,
-  hasMarc,
-  getMarc,
-  listGroups,
-  buildAndSendSqsMessage,
-} from "aws.js"
+import { requestMarc, hasMarc, getMarc } from "aws.js"
 import { Readable } from "stream"
-
-jest.mock("@aws-sdk/client-cognito-identity-provider", () => {
-  const mockCognitoIdentityProviderClient = jest.fn()
-  const mockPaginateListGroups = jest.fn()
-  return {
-    __esModule: true,
-    mockCognitoIdentityProviderClient,
-    mockPaginateListGroups,
-    CognitoIdentityProviderClient: jest
-      .fn()
-      .mockImplementation(() => mockCognitoIdentityProviderClient),
-    paginateListGroups: mockPaginateListGroups,
-  }
-})
-
-jest.mock("@aws-sdk/client-sqs", () => {
-  const mockSend = jest.fn()
-  return {
-    __esModule: true,
-    mockSend,
-    GetQueueUrlCommand: jest.fn(),
-    SendMessageCommand: jest.fn(),
-    SQSClient: jest.fn().mockImplementation(() => {
-      return {
-        send: mockSend,
-      }
-    }),
-  }
-})
 
 jest.mock("@aws-sdk/client-s3", () => {
   const mockSend = jest.fn()
@@ -254,84 +208,5 @@ describe("getMarc", () => {
         )
       ).rejects.toThrow("Get failed")
     })
-  })
-})
-
-describe("listGroups", () => {
-  describe("getting successful", () => {
-    it("resolves record with pagination", async () => {
-      mockPaginateListGroups.mockImplementation(() => {
-        return [
-          {
-            Groups: [
-              { GroupName: "stanford", Description: "Stanford University" },
-              { GroupName: "cornell", Description: "Cornell University" },
-            ],
-          },
-          {
-            Groups: [
-              { GroupName: "yale", Description: "Yale University" },
-              { GroupName: "duke", Description: "Duke University" },
-            ],
-          },
-        ]
-      })
-
-      expect(await listGroups()).toEqual([
-        { id: "stanford", label: "Stanford University" },
-        { id: "cornell", label: "Cornell University" },
-        { id: "yale", label: "Yale University" },
-        { id: "duke", label: "Duke University" },
-      ])
-      expect(paginateListGroups).toHaveBeenCalledWith(
-        { client: mockCognitoIdentityProviderClient },
-        { UserPoolId: "us-west-2_CGd9Wq136", Limit: 60 }
-      )
-    })
-  })
-
-  describe("error", () => {
-    it("rejects", async () => {
-      mockPaginateListGroups.mockImplementation(() => {
-        throw new Error("Get failed")
-      })
-
-      await expect(listGroups()).rejects.toThrow("Get failed")
-    })
-  })
-})
-
-describe("buildAndSendSqsMessage", () => {
-  it("sends the SQS message to the queue URL returned for the given queue name, with the specified message body", async () => {
-    const queueName = "stanford-ils"
-    const messageBody = JSON.stringify({ fieldName: "field value" })
-
-    mockSqsSend.mockResolvedValue({
-      QueueUrl: "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
-    })
-
-    await buildAndSendSqsMessage(queueName, messageBody)
-
-    expect(GetQueueUrlCommand).toHaveBeenCalledWith({ QueueName: queueName })
-    expect(SendMessageCommand).toHaveBeenCalledWith(
-      expect.objectContaining({
-        QueueUrl: "https://sqs.us-west-2.amazonaws.com/0987654321/stanford-ils",
-        MessageBody: messageBody,
-      })
-    )
-    expect(mockSqsSend).toHaveBeenCalledTimes(2)
-  })
-
-  it("encounters an error", async () => {
-    const errmsg = "you don't have permission to write to this queue :P"
-
-    mockSqsSend.mockRejectedValue(new Error(errmsg))
-
-    await expect(
-      buildAndSendSqsMessage(
-        "stanford-ils",
-        JSON.stringify({ fieldName: "field value" })
-      )
-    ).rejects.toThrow(errmsg)
   })
 })

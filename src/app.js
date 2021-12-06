@@ -11,6 +11,7 @@ import marcRouter from "./endpoints/marc.js"
 import metricsRouter from "./endpoints/metrics.js"
 import transferRouter from "./endpoints/transfer.js"
 import usersRouter from "./endpoints/users.js"
+import helperRouter from "./endpoints/helpers.js"
 import {
   errorHandler,
   mongoErrorAdapter,
@@ -35,6 +36,7 @@ app.options("*", cors())
 // Increase the allowed payload size.
 // Required before OpenApiValidator.
 app.use(express.json({ limit: "1mb" }))
+app.use(express.text())
 
 app.use(
   OpenApiValidator.middleware({
@@ -80,6 +82,7 @@ app.use("/groups", groupsRouter)
 app.use("/transfer", transferRouter)
 app.use("/user", usersRouter)
 app.use("/metrics", metricsRouter)
+app.use("/helpers", helperRouter)
 
 // Error handlers
 app.use((err, req, res, next) => {

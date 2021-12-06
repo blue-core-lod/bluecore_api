@@ -14,17 +14,22 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3"
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda"
+import {
+  ComprehendClient,
+  DetectDominantLanguageCommand,
+} from "@aws-sdk/client-comprehend"
 import getStream from "get-stream"
+import _ from "lodash"
 
 const config = {
   region: process.env.AWS_REGION || "us-west-2",
 }
 
 const cognitoIdentityProviderClient = new CognitoIdentityProviderClient(config)
-
 const sqsClient = new SQSClient(config)
 const s3Client = new S3Client(config)
 const lambdaClient = new LambdaClient(config)
+const comprehendClient = new ComprehendClient(config)
 
 const bucketName = process.env.AWS_BUCKET || "sinopia-marc-development"
 const lambdaName =
@@ -128,4 +133,17 @@ const buildSqsMessageParams = async (queueName, messageBody) => {
       },
     },
   }
+}
+
+export const detectLanguage = async (text) => {
+  const detectResp = await comprehendClient.send(
+    new DetectDominantLanguageCommand({ Text: text })
+  )
+  const languages = detectResp.Languages.map((languageResp) => {
+    return {
+      language: languageResp.LanguageCode,
+      score: languageResp.Score,
+    }
+  })
+  return _.sortBy(languages, ["score"]).reverse()
 }

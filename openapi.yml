@@ -29,6 +29,8 @@ tags:
     description: Users
   - name: metrics
     description: Metrics for reporting
+  - name: helpers
+    description: Helpers
 paths:
   /:
     get:
@@ -721,6 +723,33 @@ paths:
                   type: string
               required:
                 - payload
+  /helpers/langDetection:
+    post:
+      summary: Detect language in the provided string
+      security:
+        - bearerAuth: []
+      tags:
+        - helper
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetectLanguageResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Errors"
+      requestBody:
+        description: The phrase for which to detect language
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
 components:
   parameters:
     resourceType:
@@ -758,6 +787,32 @@ components:
       schema:
         type: string
   schemas:
+    DetectLanguageResponse:
+      description: Response from detecting language for text.
+      type: object
+      properties:
+        query:
+          description: The text that was requested for detection.
+          type: string
+        data:
+          description: The detected languages.
+          type: array
+          items:
+            type: object
+            properties:
+              language:
+                description: The language code. See https://docs.aws.amazon.com/comprehend/latest/dg/how-languages.html
+                type: string
+              score:
+                description: Confidence level.
+                type: number
+                format: float
+            required:
+              - language
+              - score
+      required:
+        - query
+        - data
     MetricsCountResponse:
       description: Response from metrics endpoints that provide counts.
       type: object
