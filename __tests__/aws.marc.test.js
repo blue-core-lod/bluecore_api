@@ -140,9 +140,8 @@ describe("hasMarc", () => {
 
   describe("finds no files", () => {
     it("resolves false", async () => {
-      mockS3Send.mockResolvedValue({
-        Contents: [],
-      })
+      // Contents key is omitted.
+      mockS3Send.mockResolvedValue({})
       expect(
         await hasMarc(
           "6852a770-2961-4836-a833-0b21a9b68041",
