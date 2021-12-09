@@ -68,11 +68,11 @@ export const hasMarc = async (resourceId, username, timestamp) => {
     Prefix: `marc/${username}/${resourceId}/${timestamp}`,
   }
   const listResp = await s3Client.send(new ListObjectsV2Command(params))
-  if (listResp.Contents.find((content) => content.Key.endsWith("error.txt"))) {
+  if (listResp.Contents?.find((content) => content.Key.endsWith("error.txt"))) {
     const errorTxt = await getError(resourceId, username, timestamp)
     throw new Error(errorTxt)
   } else if (
-    listResp.Contents.find((content) => content.Key.endsWith("record.mar"))
+    listResp.Contents?.find((content) => content.Key.endsWith("record.mar"))
   ) {
     return true
   }
