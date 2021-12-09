@@ -39,9 +39,13 @@ const getResourceQuery = (resourceType) => {
  * @returns {object} The query to send to mongo to filter by the specified dates
  */
 const getDateQuery = (startDate, endDate) => {
+  // New Date("2021-12-09") produces 2021-12-09T00:00:00.000Z, meaning the start of the day.
+  // To get end date to include the end day, adding a day.
+  const origEndDate = new Date(endDate)
+  const newEndDate = new Date(origEndDate.getTime() + 24 * 60 * 60 * 1000)
   return {
     $gte: new Date(startDate),
-    $lte: new Date(endDate),
+    $lt: newEndDate,
   }
 }
 

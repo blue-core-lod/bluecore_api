@@ -64,7 +64,7 @@ describe("GET /metrics/resourceUserCount", () => {
     // The date filter
     expect(mockAggregateResponse.mock.calls[0][1].timestamp).toEqual({
       $gte: new Date("2021-10-01"),
-      $lte: new Date("2021-11-01"),
+      $lt: new Date("2021-11-02"),
     })
   })
 })
@@ -150,7 +150,7 @@ describe("GET /metrics/createdCount", () => {
       $match: {
         "resourceMetadata.versions.0.timestamp": {
           $gte: new Date("2021-10-01"),
-          $lte: new Date("2021-11-01"),
+          $lt: new Date("2021-11-02"),
         },
       },
     })
@@ -184,7 +184,7 @@ describe("GET /metrics/createdCount", () => {
       $match: {
         "resourceMetadata.versions.0.timestamp": {
           $gte: new Date("2021-01-01"),
-          $lte: new Date("2021-12-31"),
+          $lt: new Date("2022-01-01"),
         },
       },
     })
@@ -235,7 +235,7 @@ describe("GET /metrics/editedCount", () => {
       $match: {
         "resourceMetadata.versions.timestamp": {
           $gte: new Date("2021-10-01"),
-          $lte: new Date("2021-11-01"),
+          $lt: new Date("2021-11-02"),
         },
       },
     })
@@ -269,7 +269,7 @@ describe("GET /metrics/editedCount", () => {
       $match: {
         "resourceMetadata.versions.timestamp": {
           $gte: new Date("2021-01-01"),
-          $lte: new Date("2021-12-31"),
+          $lt: new Date("2022-01-01"),
         },
       },
     })
