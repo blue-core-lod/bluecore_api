@@ -61,7 +61,7 @@
     "nodemon": "^2.0.12",
     "openapi-enforcer-cli": "^0.0.4",
     "prettier": "2.4.0",
-    "prompt": "^1.2.0",
+    "prompt": "^0.1.7",
     "supertest": "^6.1.6"
   },
   "jest": {
