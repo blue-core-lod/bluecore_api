@@ -103,3 +103,30 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem", () => {
     */
   })
 })
+
+describe("POST /transfer/:resourceId/:targetGroup/:targetSystem/:targetResourceId", () => {
+  describe("user is in target group", () => {
+    it("returns a 204 after queueing an SQS message with the expected params", async () => {
+      aws.buildAndSendSqsMessage.mockResolvedValue()
+      const res = await request(app)
+        .post("/transfer/foo/stanford/ils/abc123")
+        .set("Authorization", `Bearer ${stanfordJwt}`)
+        .send("")
+
+      const msgBodyJson = {
+        resource: { uri: "https://api.development.sinopia.io/resource/foo" },
+        user: {
+          email: "justinlittman@stanford.edu",
+        },
+        group: "stanford",
+        target: "ils",
+        targetResourceId: "abc123",
+      }
+      expect(res.statusCode).toEqual(204)
+      expect(aws.buildAndSendSqsMessage).toHaveBeenCalledWith(
+        "stanford-ils",
+        expect.stringMatching(JSON.stringify(msgBodyJson))
+      )
+    })
+  })
+})
