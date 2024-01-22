@@ -46,7 +46,7 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem", () => {
       }
       expect(res.statusCode).toEqual(204)
       expect(aws.buildAndSendSqsMessage).toHaveBeenCalledWith(
-        "stanford-ils",
+        "all-institutions",
         expect.stringMatching(JSON.stringify(msgBodyJson))
       )
     })
@@ -73,7 +73,7 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem", () => {
       }
       expect(res.statusCode).toEqual(204)
       expect(aws.buildAndSendSqsMessage).toHaveBeenCalledWith(
-        "stanford-ils",
+        "all-institutions",
         expect.stringMatching(JSON.stringify(msgBodyJson))
       )
     })
@@ -124,7 +124,7 @@ describe("POST /transfer/:resourceId/:targetGroup/:targetSystem/:targetResourceI
       }
       expect(res.statusCode).toEqual(204)
       expect(aws.buildAndSendSqsMessage).toHaveBeenCalledWith(
-        "stanford-ils",
+        "all-institutions",
         expect.stringMatching(JSON.stringify(msgBodyJson))
       )
     })
