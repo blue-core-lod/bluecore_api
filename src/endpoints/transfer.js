@@ -29,7 +29,7 @@ transferRouter.post(
         targetResourceId,
       }
 
-      const queueName = `${targetGroup}-${targetSystem}`
+      const queueName = "all-institutions"
       buildAndSendSqsMessage(queueName, JSON.stringify(sqsMessageBody))
         .then(() => {
           res.sendStatus(204)
