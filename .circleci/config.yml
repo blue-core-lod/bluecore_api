@@ -4,12 +4,11 @@ orbs:
   docker: circleci/docker@2.0.3
   aws-cli: circleci/aws-cli@3.1.0
   gh: circleci/github-cli@2.2.0
-machine:
-  image: default
+
 executors:
   default:
     docker:
-      - image: 'cimg/node:16.8'
+      - image: 'cimg/node:20.11'
 references:
   publish_params: &publish_params
     docker-password: DOCKER_PASS
