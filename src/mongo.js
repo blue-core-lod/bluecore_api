@@ -20,7 +20,7 @@ const connect = (req, res, next) => {
 
 const awsConnect = () => {
   console.log(`connecting to DocDB at ${dbHost}`)
-  const ca = [fs.readFileSync("rds-combined-ca-bundle.pem")]
+  const ca = [fs.readFileSync("global-bundle.pem")]
 
   return monk(
     `mongodb://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`,
@@ -28,6 +28,7 @@ const awsConnect = () => {
       sslValidate: true,
       sslCA: ca,
       useNewUrlParser: true,
+      useUnifiedTopology: true,
     }
   )
 }

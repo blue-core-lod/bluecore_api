@@ -13,14 +13,19 @@ describe("connect to aws docdb", () => {
   it("returns an aws client", () => {
     process.env.MONGODB_IS_AWS = "true"
     const connect = require("mongo.js").default // eslint-disable-line global-require
-    const ca = [fs.readFileSync("rds-combined-ca-bundle.pem")]
+    const ca = [fs.readFileSync("global-bundle.pem")]
     monk.mockReturnValue("fakeConnection")
     const mockReq = {}
     const mockNext = jest.fn()
     connect(mockReq, null, mockNext)
     expect(monk).toHaveBeenCalledWith(
       "mongodb://sinopia:sekret@localhost:27017/sinopia_repository?ssl=true&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false",
-      { sslValidate: true, sslCA: ca, useNewUrlParser: true }
+      {
+        sslValidate: true,
+        sslCA: ca,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }
     )
     expect(mockNext).toHaveBeenCalled()
     expect(mockReq.db).toBe("fakeConnection")
