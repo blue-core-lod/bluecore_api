@@ -5,7 +5,7 @@ API for managing Blue Core resources and workflows using PostgresSQL and Airflow
 
 ## Project structure
 ```
-src/bluecore/
+src/bluecore_api/
 │
 ├── app/
 │   ├── __init__.py
@@ -31,7 +31,7 @@ src/bluecore/
 │       ├── users.py
 │       └── metrics.py
 │
-├── requirements.txt
+├── pyproject.yaml
 └── README.md
 ```
 
