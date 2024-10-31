@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Array
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -16,11 +16,11 @@ class AdminMetadata(Base):
     data = Column(JSONB)    
     embeddings = relationship(
         "AdminMetadatEmbedding",
-        back_stop="admin_metadata"
+        back_populates="admin_metadata"
     )
     versions = relationship(
         "AdminMetadataVersion",
-        back_stops="admin_metadata"
+        back_populates="admin_metadata"
     )
 
 
@@ -32,11 +32,11 @@ class  AdminMetadatEmbedding(Base):
 
     admin_metadata = relationship(
         "AdminMetadata",
-        back_stop="embeddings"
+        back_populates="embeddings"
     )
     version = relationship(
         "AdminMetadataVersion",
-        back_stop="embedding"
+        back_populates="embedding"
     )
 
 class AdminMetadataVersion(Base):
@@ -46,9 +46,9 @@ class AdminMetadataVersion(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     admin_metadata = relationship(
         "AdminMetadata",
-        back_stop="versions"
+        back_populates="versions"
     )
     embedding = relationship(
       "AdminMetadatEmbedding",
-      back_stop="version"
+      back_populates="version"
     )

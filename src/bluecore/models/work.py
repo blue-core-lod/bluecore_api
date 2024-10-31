@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Array
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -49,6 +49,6 @@ class WorkVersion(Base):
     admin_metadata = Column(Integer, ForeignKey('AdminMetadataVersion.id'))
     user = Column(String, ForeignKey('users.id'))
     data = Column(JSONB)
-    embeddings = relationship("WorkEmbedding", back_populates="embedding")
+    embeddings = relationship("WorkEmbedding", back_populates="embedding", order_by="WorkEmbedding.id", lazy="joined")
     
     work = relationship("Work", back_populates="versions")

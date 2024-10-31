@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Array
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -17,7 +17,6 @@ class Instance(Base):
     group = Column(String)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     data = Column(JSONB)
-    embedding = Column(Vector(VECTOR_SIZE))    
     work = relationship(
        "Work",
        back_populates="instances"
@@ -27,7 +26,7 @@ class Instance(Base):
     
 
 class InstanceEmbedding(Base):
-    __tablename__ = "work_embedding"
+    __tablename__ = "instance_embedding"
     id = Column(Integer, primary_key=True)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     embedding = Column(Vector(VECTOR_SIZE))
