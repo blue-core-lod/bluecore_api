@@ -4,8 +4,12 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.6.2.post1
     # via starlette
+click==8.1.7
+    # via uvicorn
 fastapi==0.115.4
     # via bluecore-api (pyproject.toml)
+h11==0.14.0
+    # via uvicorn
 idna==3.10
     # via anyio
 numpy==2.1.2
@@ -30,3 +34,5 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
+uvicorn==0.32.0
+    # via bluecore-api (pyproject.toml)

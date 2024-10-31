@@ -1,0 +1,26 @@
+services:
+  bluecore-store:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: bluecore_admin
+      POSTGRES_PASSWORD: bluecore_admin
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "bluecore_admin"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  bluecore-api:
+    build: .
+    depends_on:
+      bluecore-store:
+        condition: service_healthy
+    
+volumes:
+  postgres-db-volume:
+
