@@ -1,50 +1,64 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from datetime import datetime
+from typing import List, Optional
+
+from sqlalchemy import (
+    Integer,
+    String, 
+    DateTime, 
+    ForeignKey,
+)
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import(
+    mapped_column, 
+    Mapped,
+    relationship
+)
+
+
 from pgvector.sqlalchemy import Vector
 
 from bluecore.app.database import Base, VECTOR_SIZE
 
-import datetime
 
 class Instance(Base):
     __tablename__ = "instances"
 
-    id = Column(Integer, primary_key=True)
-    uri = Column(String, unique=True)
-    admin_metadata = Column(Integer, ForeignKey("AdminMetadata.id"))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    uri: Mapped[str] = mapped_column(String(2_000), unique=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    data: Mapped[bytes] = mapped_column(JSONB)
 
-    group = Column(String)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    data = Column(JSONB)
-    work = relationship(
-       "Work",
-       back_populates="instances"
+    versions: Mapped[List["InstanceVersion"]] = relationship(
+        back_populates="instance",
+        cascade="all, delete-orphan"
     )
-    embeddings = relationship("InstanceEmbedding", back_populates="instance") 
-    versions = relationship("InstanceVersion", back_populates="instance")
-    
-
-class InstanceEmbedding(Base):
-    __tablename__ = "instance_embedding"
-    id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    embedding = Column(Vector(VECTOR_SIZE))
-
-    instance = relationship("Instance", back_populates="embeddings")
-    version = relationship("InstanceVersion", back_populates="embeddings")
-
 
 
 class InstanceVersion(Base):
-    __tablename__ = "instance_version"
-  
-    id = Column(Integer, primary_key=True)
-    resource_id = Column(String, ForeignKey('resources.id'))
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    user = Column(String, ForeignKey('users.id'))
-    data = Column(JSONB)
-    embeddings = relationship("InstanceEmbedding", back_populates="version")
+    __tablename__ = "instance_versions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[str] = mapped_column(String(256))  # Should be future User identification from KeyCloak
+    data: Mapped[bytes] = mapped_column(JSONB)
+
+    embeddings: Mapped[List["InstanceEmbedding"]] = relationship(
+        back_populates="instance_version",
+        cascade="all, delete-orphan"
+    )
+
+    instance_id: Mapped[int] = mapped_column(ForeignKey("instances.id"))
+    instance: Mapped["Instance"] = relationship(back_populates="versions")
+
+
+class InstanceEmbedding(Base):
+    __tablename__ = "instance_embeddings"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    embedding: Mapped[float] = mapped_column(Vector(VECTOR_SIZE))
     
-    instance = relationship("Instances", back_populates="versions")
+    instance_version_id = mapped_column(ForeignKey("instance_versions.id"))
+    instance_version: Mapped["InstanceVersion"] = relationship(back_populates="embeddings")
+
+
+   
 

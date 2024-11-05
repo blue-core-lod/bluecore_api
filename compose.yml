@@ -1,6 +1,6 @@
 services:
   bluecore-store:
-    image: postgres:14
+    image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: bluecore_admin
       POSTGRES_PASSWORD: bluecore_admin
@@ -8,6 +8,7 @@ services:
       - 5432:5432
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+      - ./create-db.sql:/docker-entrypoint-initdb.d/create_database.sql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "bluecore_admin"]
       interval: 10s
