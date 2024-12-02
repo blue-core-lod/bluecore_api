@@ -58,7 +58,3 @@ class InstanceEmbedding(Base):
     
     instance_version_id = mapped_column(ForeignKey("instance_versions.id"))
     instance_version: Mapped["InstanceVersion"] = relationship(back_populates="embeddings")
-
-
-   
-

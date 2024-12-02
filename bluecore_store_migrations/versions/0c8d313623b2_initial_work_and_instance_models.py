@@ -57,14 +57,14 @@ def upgrade() -> None:
     )
     op.create_table('instance_embeddings',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=128), nullable=False),
+    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=768), nullable=False),
     sa.Column('instance_version_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['instance_version_id'], ['instance_versions.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('work_embeddings',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=128), nullable=False),
+    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(dim=768), nullable=False),
     sa.Column('work_version_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['work_version_id'], ['work_versions.id'], ),
     sa.PrimaryKeyConstraint('id')
