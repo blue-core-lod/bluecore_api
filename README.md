@@ -15,14 +15,8 @@ src/bluecore_api/
 │   │
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── resource.py
-│   │   ├── user.py
-│   │   └── metrics.py
-│   │
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── resource.py
-│   │   ├── user.py
+│   │   ├── instance.py
+│   │   ├── work.py
 │   │   └── metrics.py
 │   │
 │   └── routers/
@@ -58,8 +52,16 @@ This is in development mode and code changes will immediately be loaded without 
 
 
 
-## Developers
+## Blue Core Database
 
+### Alembic
+Creating a version
+- `uv run alembic revision --autogenerate -m "{short message describing change}"`
+
+Apply changes to the database
+- `uv run alembic upgrade head`
+
+## Developers
 
 ### Frameworks
 
@@ -77,6 +79,7 @@ Tests are written with pytest.
 
 To run all of the tests:
 `uv run pytest tests/`
+
 
 #### Dev/Stage/Prod
 
