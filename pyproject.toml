@@ -8,7 +8,8 @@ dependencies = [
   "fastapi",
   "sqlalchemy",
   "pgvector",
-  "ruff"
+  "ruff",
+  "alembic>=1.13.3"
 ]
 
 [build-system]
