@@ -8,7 +8,9 @@ dependencies = [
   "fastapi",
   "sqlalchemy",
   "pgvector",
-  "ruff"
+  "ruff",
+  "alembic>=1.13.3",
+  "pytest-mock-resources>=2.12.1",
 ]
 
 [build-system]
