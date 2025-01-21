@@ -46,9 +46,15 @@ dependencies = [
     { name = "alembic" },
     { name = "fastapi" },
     { name = "pgvector" },
-    { name = "pytest-mock-resources" },
+    { name = "rdflib" },
     { name = "ruff" },
     { name = "sqlalchemy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-mock-resources" },
 ]
 
 [package.metadata]
@@ -56,9 +62,15 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13.3" },
     { name = "fastapi" },
     { name = "pgvector" },
-    { name = "pytest-mock-resources", specifier = ">=2.12.1" },
+    { name = "rdflib", specifier = ">=7.1.3" },
     { name = "ruff" },
     { name = "sqlalchemy" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3.4" },
+    { name = "pytest-mock-resources", specifier = ">=2.12.1" },
 ]
 
 [[package]]
@@ -307,6 +319,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyparsing"
+version = "3.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/1a/3544f4f299a47911c2ab3710f534e52fea62a633c96806995da5d25be4b2/pyparsing-3.2.1.tar.gz", hash = "sha256:61980854fd66de3a90028d679a954d5f2623e83144b5afe5ee86f43d762e5f0a", size = 1067694 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/a7/c8a2d361bf89c0d9577c934ebb7421b25dc84bf3a8e3ac0a40aed9acc547/pyparsing-3.2.1-py3-none-any.whl", hash = "sha256:506ff4f4386c4cec0590ec19e6302d3aedb992fdc02c761e90416f158dacf8e1", size = 107716 },
+]
+
+[[package]]
 name = "pytest"
 version = "8.3.4"
 source = { registry = "https://pypi.org/simple" }
@@ -333,6 +354,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/bf/b1/2b030bc44b302b612fd00ee4ee374f0eb7356739b1e4932ead880b348dc5/pytest_mock_resources-2.12.1.tar.gz", hash = "sha256:f95c231e5dd957b5f48caf60141a43f57bbe7182d6e4d09a806a78e8d060f9b3", size = 42982 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/74/e0fa7cd27e0f4275f74e988116b5f3736ea803b96d7e09581422bc0a6dad/pytest_mock_resources-2.12.1-py3-none-any.whl", hash = "sha256:788d9b72d9155d3cd49c281da26527e23ca3511136b1594bbc7ee95ef19be236", size = 58793 },
+]
+
+[[package]]
+name = "rdflib"
+version = "7.1.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyparsing" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/96/12/f43307e7b1f871ed5424fc6eff1fb8c85637dbaed6a401748c2b72c97d7a/rdflib-7.1.3.tar.gz", hash = "sha256:f3dcb4c106a8cd9e060d92f43d593d09ebc3d07adc244f4c7315856a12e383ee", size = 4867170 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9c/3c/f508a9b346078ea0bd49c8261430204fcfb4150352d51fa2a54a4d9eacda/rdflib-7.1.3-py3-none-any.whl", hash = "sha256:5402310a9f0f3c07d453d73fd0ad6ba35616286fe95d3670db2b725f3f539673", size = 564909 },
 ]
 
 [[package]]
