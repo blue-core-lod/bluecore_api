@@ -5,7 +5,9 @@ from datetime import datetime, UTC
 import pytest
 from pytest_mock_resources import create_sqlite_fixture, Rows
 
+
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
 from bluecore.models import (
     Base,
