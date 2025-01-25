@@ -1,4 +1,5 @@
 # NPM deps
 *swp
+*.env
 .cognitoToken
 __pycache__*
