@@ -11,6 +11,8 @@ dependencies = [
   "ruff",
   "rdflib>=7.1.3",
   "alembic>=1.13.3",
+  "torch>=2.5.1",
+  "transformers>=4.48.1",
 ]
 
 [build-system]
