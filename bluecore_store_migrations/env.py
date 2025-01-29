@@ -11,19 +11,19 @@ from alembic import context
 current_dir = pathlib.Path(".")
 src = current_dir.parent / "src"
 
-sys.path = ['', str(src.absolute())] + sys.path[1:]
+sys.path = ['', str(src.absolute())] + sys.path[1:] 
 
-from bluecore.models import (
+from bluecore.models import (   # noqa: E402
     Base,
-    ResourceBase,
-    Instance,
-    Work,
-    BibframeClass,
-    ResourceBibframeClass,
-    Version,
-    TripleVectorIndex,
-    OtherResource,
-    BibframeOtherResources,
+    ResourceBase,  # noqa: F401
+    Instance,  # noqa: F401
+    Work,  # noqa: F401
+    BibframeClass,  # noqa: F401
+    ResourceBibframeClass,  # noqa: F401
+    Version,  # noqa: F401
+    TripleVectorIndex,  # noqa: F401
+    OtherResource,  # noqa: F401
+    BibframeOtherResources,  # noqa: F401
 ) 
 
 
