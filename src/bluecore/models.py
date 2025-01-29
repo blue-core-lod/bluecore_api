@@ -52,6 +52,7 @@ class Instance(ResourceBase):
     work: Mapped["Work"] = relationship(
         "Work", foreign_keys=work_id, backref="instances"
     )
+    generation: Mapped[str] = mapped_column(String, nullable=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "instances",
@@ -66,6 +67,7 @@ class Work(ResourceBase):
     id: Mapped[int] = mapped_column(
         Integer, ForeignKey("resource_base.id"), primary_key=True
     )
+    title: Mapped[str] = mapped_column(String, nullable=False)
 
     __mapper_args__ = {
         "polymorphic_identity": "works",
