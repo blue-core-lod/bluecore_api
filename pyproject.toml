@@ -5,7 +5,7 @@ description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi",
+  "fastapi[standard]",
   "sqlalchemy",
   "pgvector",
   "ruff",
