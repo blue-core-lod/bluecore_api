@@ -21,7 +21,6 @@ from bluecore.models import (   # noqa: E402
     BibframeClass,  # noqa: F401
     ResourceBibframeClass,  # noqa: F401
     Version,  # noqa: F401
-    TripleVectorIndex,  # noqa: F401
     OtherResource,  # noqa: F401
     BibframeOtherResources,  # noqa: F401
 ) 
@@ -89,8 +88,6 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection, target_metadata=target_metadata
         )
-        with context.begin_transaction():
-            context.execute("create extension if not exists vector;")
         with context.begin_transaction():
             context.run_migrations()
 
