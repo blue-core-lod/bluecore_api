@@ -1,6 +1,6 @@
 services:
   bluecore-store:
-    image: pgvector/pgvector:pg17
+    image: postgres:17.2
     environment:
       POSTGRES_USER: bluecore_admin
       POSTGRES_PASSWORD: bluecore_admin

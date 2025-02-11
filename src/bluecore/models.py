@@ -17,9 +17,6 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from pgvector.sqlalchemy import Vector
-
-VECTOR_SIZE = 768  # Colbert Model
 
 Base = declarative_base()
 
@@ -142,21 +139,6 @@ class Version(Base):
 
     def __repr__(self):
         return f"<Version at {self.created_at} for {self.resource.uri}>"
-
-
-class TripleVectorIndex(Base):
-    __tablename__ = "triple_vector_index"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    version_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("versions.id"), nullable=False
-    )
-    version: Mapped[Version] = relationship("Version", backref="vector_index")
-    vector: Mapped[Vector] = mapped_column(Vector(VECTOR_SIZE), nullable=False)
-    created_at = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
-    )
 
 
 class BibframeOtherResources(Base):
