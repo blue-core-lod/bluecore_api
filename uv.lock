@@ -57,7 +57,6 @@ name = "bluecore-api"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "alembic" },
     { name = "blue-core-data-models" },
     { name = "fastapi", extra = ["standard"] },
     { name = "pgvector" },
@@ -74,7 +73,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = ">=1.13.3" },
     { name = "blue-core-data-models", specifier = ">=0.1.0" },
     { name = "fastapi", extras = ["standard"] },
     { name = "pgvector" },
