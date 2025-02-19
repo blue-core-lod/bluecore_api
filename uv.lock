@@ -39,11 +39,26 @@ wheels = [
 ]
 
 [[package]]
+name = "blue-core-data-models"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "alembic" },
+    { name = "psycopg2-binary" },
+    { name = "rdflib" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4f/3d/718432c909ed3497446d0868f090c51ee0599c3187edac745e20fce7d3e4/blue_core_data_models-0.1.0.tar.gz", hash = "sha256:b640a77b941f75b48e503be213f2c244ec478fe0e5fd1307ad91b1454cd56005", size = 4575 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/2f/09013d1aee2797e1eb1db6a929bcd74b77101bea36f8134507fd3b82a1c7/blue_core_data_models-0.1.0-py3-none-any.whl", hash = "sha256:cb815ff03a426e4498e915eed54ba1b9d9cb85b28a13f74aaa1630a8a0f70a76", size = 5929 },
+]
+
+[[package]]
 name = "bluecore-api"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
+    { name = "blue-core-data-models" },
     { name = "fastapi", extra = ["standard"] },
     { name = "pgvector" },
     { name = "psycopg2-binary" },
@@ -60,6 +75,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.13.3" },
+    { name = "blue-core-data-models", specifier = ">=0.1.0" },
     { name = "fastapi", extras = ["standard"] },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
