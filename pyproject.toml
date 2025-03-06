@@ -10,7 +10,6 @@ dependencies = [
   "pgvector",
   "psycopg2-binary>=2.9.10",
   "rdflib>=7.1.3",
-  "blue-core-data-models>=0.1.0",
 ]
 
 [dependency-groups]
