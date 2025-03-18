@@ -19,7 +19,7 @@ class ResourceBaseSchema(BaseModel):
     updated_at: Optional[datetime]
 
     class Config:
-       from_attributes = True
+        from_attributes = True
 
 
 class InstanceCreateSchema(BaseModel):
@@ -51,5 +51,3 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = "works"
-
-

@@ -4,9 +4,11 @@ from fastapi.testclient import TestClient
 
 from bluecore.app.main import app
 
+
 @pytest.fixture(scope="module")
 def client():
     return TestClient(app)
+
 
 def test_index(client):
     response = client.get("/")
