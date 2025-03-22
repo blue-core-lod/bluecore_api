@@ -4,6 +4,11 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from fastapi_keycloak_middleware import (
+    CheckPermissions,
+    KeycloakConfiguration,
+    setup_keycloak_middleware,
+)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -23,7 +28,23 @@ from bluecore.schemas import (
     WorkUpdateSchema,
 )
 
+from bluecore_models.models import Instance, Work
+
+keycloak_config = KeycloakConfiguration(
+    url=os.getenv("KEYCLOAK_URL"),
+    realm=os.getenv("KEYCLOAK_REALM"),
+    client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
+    client_secret=os.getenv("KEYCLOAK_CLIENT_SECRET"),
+)
+
 app = FastAPI()
+
+# Add Keycloak middleware
+setup_keycloak_middleware(
+    app,
+    keycloak_configuration=keycloak_config,
+    exclude_patterns=["/docs", "/openapi.json"],
+)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
@@ -43,7 +64,12 @@ async def index():
     return {"message": "Blue Core API"}
 
 
-@app.post("/instances/", response_model=InstanceSchema, status_code=201)
+@app.post(
+    "/instances/",
+    response_model=InstanceSchema,
+    dependencies=[Depends(CheckPermissions(["create"]))],
+    status_code=201,
+)
 async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
 ):
@@ -65,7 +91,11 @@ async def read_instance(instance_id: int, db: Session = Depends(get_db)):
     return db_instance
 
 
-@app.put("/instances/{instance_id}", response_model=InstanceSchema)
+@app.put(
+    "/instances/{instance_id}",
+    response_model=InstanceSchema,
+    dependencies=[Depends(CheckPermissions(["update"]))],
+)
 async def update_instance(
     instance_id: int, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
 ):
@@ -86,7 +116,12 @@ async def update_instance(
     return db_instance
 
 
-@app.post("/works/", response_model=WorkSchema, status_code=201)
+@app.post(
+    "/works/",
+    response_model=WorkSchema,
+    dependencies=[Depends(CheckPermissions(["create"]))],
+    status_code=201,
+)
 async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     db_work = Work(data=work.data, uri=work.uri)
     db.add(db_work)
@@ -103,7 +138,11 @@ async def read_work(work_id: int, db: Session = Depends(get_db)):
     return db_work
 
 
-@app.put("/works/{work_id}", response_model=WorkSchema)
+@app.put(
+    "/works/{work_id}",
+    response_model=WorkSchema,
+    dependencies=[Depends(CheckPermissions(["update"]))],
+)
 async def update_work(
     work_id: int, work: WorkUpdateSchema, db: Session = Depends(get_db)
 ):
