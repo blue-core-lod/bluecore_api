@@ -6,7 +6,15 @@ from fastapi.testclient import TestClient
 from pytest_mock_resources import create_postgres_fixture
 
 from bluecore.app.main import app, get_db
-from bluecore.models import Base, Instance, ResourceBase, Work
+from bluecore_models.models import (
+    Base,
+    BibframeClass,
+    Instance,
+    ResourceBase,
+    ResourceBibframeClass,
+    Version,
+    Work,
+)
 
 db_session = create_postgres_fixture(session=True)
 
@@ -15,7 +23,14 @@ db_session = create_postgres_fixture(session=True)
 def client(db_session):
     Base.metadata.create_all(
         bind=db_session.get_bind(),
-        tables=[ResourceBase.__table__, Instance.__table__, Work.__table__],
+        tables=[
+            ResourceBase.__table__,
+            BibframeClass.__table__,
+            Instance.__table__,
+            ResourceBibframeClass.__table__,
+            Version.__table__,
+            Work.__table__,
+        ],
     )
 
     def override_get_db():
