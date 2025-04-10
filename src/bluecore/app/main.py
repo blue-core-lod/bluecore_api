@@ -16,7 +16,7 @@ from bluecore.schemas import (
     WorkUpdateSchema,
 )
 
-from bluecore.models import Instance, Work
+from bluecore_models.models import Instance, Work
 
 app = FastAPI()
 
