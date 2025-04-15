@@ -5,8 +5,10 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from fastapi_keycloak_middleware import (
+    AuthorizationMethod,
     CheckPermissions,
     KeycloakConfiguration,
+    get_user,
     setup_keycloak_middleware,
 )
 from sqlalchemy import create_engine
@@ -35,15 +37,24 @@ keycloak_config = KeycloakConfiguration(
     realm=os.getenv("KEYCLOAK_REALM"),
     client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
     client_secret=os.getenv("KEYCLOAK_CLIENT_SECRET"),
+    authorization_method=AuthorizationMethod.CLAIM,
+    authorization_claim="realm_access",
 )
 
 app = FastAPI()
+
+
+async def scope_mapper(claim_auth: list) -> list:
+    permissions = claim_auth.get("roles", [])
+    return permissions
+
 
 # Add Keycloak middleware
 setup_keycloak_middleware(
     app,
     keycloak_configuration=keycloak_config,
     exclude_patterns=["/docs", "/openapi.json"],
+    scope_mapper=scope_mapper,
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL")
