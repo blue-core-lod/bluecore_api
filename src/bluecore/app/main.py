@@ -1,8 +1,9 @@
 import os
 import sys
+
 from pathlib import Path
 from uuid import uuid4
-
+from datetime import datetime, UTC
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -47,8 +48,13 @@ async def index():
 async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
 ):
+    time_now = datetime.now(UTC)
     db_instance = Instance(
-        data=instance.data, uri=instance.uri, work_id=instance.work_id
+        data=instance.data,
+        uri=instance.uri,
+        work_id=instance.work_id,
+        created_at=time_now,
+        updated_at=time_now
     )
     db.add(db_instance)
     db.commit()
@@ -88,7 +94,13 @@ async def update_instance(
 
 @app.post("/works/", response_model=WorkSchema, status_code=201)
 async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
-    db_work = Work(data=work.data, uri=work.uri)
+    time_now = datetime.now(UTC)
+    db_work = Work(
+        data=work.data,
+        uri=work.uri,
+        created_at=time_now,
+        updated_at=time_now
+    )
     db.add(db_work)
     db.commit()
     db.refresh(db_work)
