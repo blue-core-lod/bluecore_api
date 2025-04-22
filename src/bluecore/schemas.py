@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 
 class ErrorResponse(BaseModel):
@@ -78,7 +78,7 @@ class ActivityStreamsEntityChangeActivitiesSchema(BaseModel):
 
 
 class ActivityStreamsChangeSetSchema(BaseModel):
-    context: List[str] = Field(alias="@context")
+    context: List[Union[str, Dict[str, str]]] = Field(alias="@context")
     type: str
     id: str
     partOf: str
