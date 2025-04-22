@@ -54,7 +54,7 @@ async def create_instance(
         uri=instance.uri,
         work_id=instance.work_id,
         created_at=time_now,
-        updated_at=time_now
+        updated_at=time_now,
     )
     db.add(db_instance)
     db.commit()
@@ -99,7 +99,7 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
         data=work.data,
         uri=work.uri,
         created_at=time_now,
-        updated_at=time_now
+        updated_at=time_now,
     )
     db.add(db_work)
     db.commit()
