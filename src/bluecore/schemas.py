@@ -1,7 +1,6 @@
-from typing import Optional
-
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel, Field
+from typing import Dict, List, Optional
 
 
 class ErrorResponse(BaseModel):
@@ -51,3 +50,39 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = "works"
+
+
+class ActivityStreamsEntryPointSchema(BaseModel):
+    context: List[str] = Field(alias="@context")
+    summary: str
+    type: str
+    id: str
+    url: Optional[str] = None
+    first: Dict[str, str]
+    last: Dict[str, str]
+    totalItems: int
+
+
+class ActivityStreamsObjectSchema(BaseModel):
+    type: Optional[str] = None
+    updated: Optional[str] = None
+    id: str
+
+
+class ActivityStreamsEntityChangeActivitiesSchema(BaseModel):
+    summary: str
+    published: str
+    type: str
+    partOf: Optional[str] = None
+    object: ActivityStreamsObjectSchema
+
+
+class ActivityStreamsChangeSetSchema(BaseModel):
+    context: List[str] = Field(alias="@context")
+    type: str
+    id: str
+    partOf: str
+    totalItems: Optional[int] = None
+    prev: Optional[str] = None
+    next: Optional[str] = None
+    orderedItems: List[ActivityStreamsEntityChangeActivitiesSchema]
