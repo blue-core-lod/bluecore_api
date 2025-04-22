@@ -51,3 +51,12 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = "works"
+
+
+class BatchCreateSchema(BaseModel):
+    uri: Optional[str] = None
+
+
+class BatchSchema(BaseModel):
+    uri: Optional[str] = None
+    workflow_id: str
