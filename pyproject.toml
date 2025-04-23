@@ -18,6 +18,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "ruff",
+  "pytest>=8.3.4",
   "pytest-mock-resources[docker]>=2.12.1",
   "pytest-mock>=3.14.0",
   "pytest-httpx>=0.35.0",
