@@ -3,7 +3,7 @@
 API for managing Blue Core resources and workflows using PostgreSQL and Airflow platforms.
 
 
-## Project structure
+## 🗂️ Project structure
 ```
 bluecore_store_migrations/
 |  |── env.py
@@ -24,21 +24,24 @@ tests/
 └── README.md
 ```
 
+---
 
-## Installation
+## 🛠️ Installation
 
-### Prerequisites
+### 🧰 Prerequisites
 - [uv](https://github.com/astral-sh/uv)
 - [Docker](https://www.docker.com/)
 - [Blue Core Data Models][BLUECORE_MODELS]
  
-### Installation instructions
+### 🔧 Installation instructions
 1.  Run `uv pip install -r requirements.txt`, and follow the instructions that appear.
 2.  Run `docker-compose pull` to pull down all images.
 3.  Clone the [Blue Core Data Models][BLUECORE_MODELS] repository to run the Alembic
     database migrations.
 
-## Running the application
+---
+
+## 🚀 Running the application
 To start all of the supporting services (PostgreSQL, etc.):
 `docker-compose up -d`
 
@@ -49,7 +52,6 @@ the `create-db.sql` script is run that creates a `bluecore` database with a
 After the database is up, change directories to the cloned [Blue Core Data Models][BLUECORE_MODELS] and then from that directory run `uv run alembic upgrade head`
 to create the latest database tables and indices for the database.
 
-
 **In development**: To start the FastAPI rest server in dev mode:
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
 2. Run the application at *http://localhost:3000*
@@ -58,17 +60,20 @@ to create the latest database tables and indices for the database.
 
 This is in development mode and code changes will immediately be loaded without having to restart the server.
 
-## Developers
+---
 
-### Linter for Python 
+## 👨‍💻 Developers
+
+### 🧹 Linter for Python 
 Bluecore API uses [ruff](https://docs.astral.sh/ruff/)
 - `uv run ruff check`
 
 To auto-fix errors in both (where possible):
 - `uv run ruff check --fix`
 
-### Unit, feature, and integration tests
-Unit and Feature Tests are written with pytest.
+### 🧪 Unit, feature, and integration tests
+The test suite is written using pytest and is executed via uv.
+All tests are located in the `tests/` directory.
 
 To run all of the tests:
 - `uv run pytest`
