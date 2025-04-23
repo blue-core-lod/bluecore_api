@@ -3,3 +3,4 @@
 *swp
 .cognitoToken
 __pycache__*
+uploads/*

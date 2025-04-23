@@ -1,6 +1,6 @@
 # Blue Core API
 
-API for managing Blue Core resources and workflows using PostgresSQL and Airflow platforms.
+API for managing Blue Core resources and workflows using PostgreSQL and Airflow platforms.
 
 
 ## Project structure
@@ -39,7 +39,7 @@ tests/
     database migrations.
 
 ## Running the application
-To start all of the supporting services (PostgresSQL, etc.):
+To start all of the supporting services (PostgreSQL, etc.):
 `docker-compose up -d`
 
 The Postgres Docker database will be available on port 5432. When the database is first brought up, 
@@ -47,13 +47,14 @@ the `create-db.sql` script is run that creates a `bluecore` database with a
 `bluecore_admin` user. 
 
 After the database is up, change directories to the cloned [Blue Core Data Models][BLUECORE_MODELS] and then from that directory run `uv run alembic upgrade head`
-to create the latest database tables and indicies for the database.
+to create the latest database tables and indices for the database.
 
 
 **In development**: To start the FastAPI rest server in dev mode:
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
-2. Run the application at [http://localhost:3000](http://localhost:3000):
+2. Run the application at *http://localhost:3000*
 `uv run fastapi dev src/bluecore/app/main.py --port 3000`
+3. Look at the API docs at *https://localhost:3000/docs/*
 
 This is in development mode and code changes will immediately be loaded without having to restart the server.
 

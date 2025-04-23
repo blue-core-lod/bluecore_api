@@ -52,6 +52,15 @@ class WorkSchema(ResourceBaseSchema):
     type: str = "works"
 
 
+class BatchCreateSchema(BaseModel):
+    uri: Optional[str] = None
+
+
+class BatchSchema(BaseModel):
+    uri: Optional[str] = None
+    workflow_id: str
+
+
 class ActivityStreamsEntryPointSchema(BaseModel):
     context: List[str] = Field(alias="@context")
     summary: str
