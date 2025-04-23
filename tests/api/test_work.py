@@ -84,7 +84,9 @@ def test_create_work(client):
     # Assert timestamps exist and are identical
     assert "created_at" in data
     assert "updated_at" in data
-    assert data["created_at"] == data["updated_at"], "created_at and updated_at should match on creation"
+    assert data["created_at"] == data["updated_at"], (
+        "created_at and updated_at should match on creation"
+    )
 
 
 def test_update_work(client):
@@ -129,4 +131,6 @@ def test_update_work(client):
     # Assert timestamps exist and are now different
     assert "created_at" in data
     assert "updated_at" in data
-    assert data["created_at"] != data["updated_at"], "created_at and updated_at should not match on update"
+    assert data["created_at"] != data["updated_at"], (
+        "created_at and updated_at should not match on update"
+    )
