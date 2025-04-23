@@ -81,6 +81,11 @@ def test_create_work(client):
 
     assert data["data"] == payload["data"]
 
+    # Assert timestamps exist and are identical
+    assert "created_at" in data
+    assert "updated_at" in data
+    assert data["created_at"] == data["updated_at"], "created_at and updated_at should match on creation"
+
 
 def test_update_work(client):
     payload = {
@@ -120,3 +125,8 @@ def test_update_work(client):
     )
 
     assert str(name) == "A New Work Name"
+
+    # Assert timestamps exist and are now different
+    assert "created_at" in data
+    assert "updated_at" in data
+    assert data["created_at"] != data["updated_at"], "created_at and updated_at should not match on update"

@@ -76,6 +76,11 @@ def test_create_instance(client):
     assert data["data"] == payload["data"]
     assert data["uri"] == payload["uri"]
 
+    # Assert timestamps exist and are identical
+    assert "created_at" in data
+    assert "updated_at" in data
+    assert data["created_at"] == data["updated_at"], "created_at and updated_at should match on creation"
+
 
 def test_update_instance(db_session, client):
     db_session.add(
@@ -94,3 +99,8 @@ def test_update_instance(db_session, client):
     get_response = client.get("/instances/2")
     data = get_response.json()
     assert data["uri"] == new_uri
+
+    # Assert timestamps exist and are now different
+    assert "created_at" in data
+    assert "updated_at" in data
+    assert data["created_at"] != data["updated_at"], "created_at and updated_at should not match on update"
