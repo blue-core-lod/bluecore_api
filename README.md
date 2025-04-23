@@ -71,6 +71,16 @@ Bluecore API uses [ruff](https://docs.astral.sh/ruff/)
 To auto-fix errors in both (where possible):
 - `uv run ruff check --fix`
 
+Check formatting differences without changing files:
+- `uv run ruff format --diff`
+
+Apply Ruff's code formatting:
+- `uv run ruff format`
+
+
+💡 It's a good idea to run both check and format to catch lint and formatting issues. 
+Github Actions will fail if either check or format fails.
+
 ### 🧪 Unit, feature, and integration tests
 The test suite is written using pytest and is executed via uv.
 All tests are located in the `tests/` directory.
