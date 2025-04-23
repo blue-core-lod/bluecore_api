@@ -172,7 +172,11 @@ async def update_work(
     return db_work
 
 
-@app.post("/batches/", response_model=BatchSchema)
+@app.post(
+    "/batches/",
+    response_model=BatchSchema,
+    dependencies=[Depends(CheckPermissions(["create"]))],
+)
 async def create_batch(batch: BatchCreateSchema):
     try:
         workflow_id = await workflow.create_batch_from_uri(batch.uri)
@@ -183,7 +187,11 @@ async def create_batch(batch: BatchCreateSchema):
     return batch
 
 
-@app.post("/batches/upload/", response_model=BatchSchema)
+@app.post(
+    "/batches/upload/",
+    response_model=BatchSchema,
+    dependencies=[Depends(CheckPermissions(["create"]))],
+)
 async def create_batch_file(file: UploadFile = File(...)):
     try:
         upload_dir = Path("./uploads")

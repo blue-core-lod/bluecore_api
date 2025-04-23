@@ -21,7 +21,11 @@ async def test_create_batch_from_uri(client, httpx_mock: HTTPXMock):
         json={"dag_run_id": "12345"},
     )
 
-    response = client.post("/batches/", json={"uri": "https://example.com"})
+    response = client.post(
+        "/batches/",
+        headers={"X-User": "cataloger"},
+        json={"uri": "https://example.com"},
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -38,7 +42,11 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
         json={"dag_run_id": "12345"},
     )
 
-    response = client.post("/batches/upload/", files={"file": open("README.md", "rb")})
+    response = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger"},
+        files={"file": open("README.md", "rb")},
+    )
 
     assert response.status_code == 200
     data = response.json()
