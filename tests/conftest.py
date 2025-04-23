@@ -86,7 +86,6 @@ def client(mocker, db_session, app):
         ],
     )
 
-    mocker.patch("fastapi_keycloak_middleware.setup_keycloak_middleware")
     from bluecore.app.main import get_db
 
     def override_get_db():
