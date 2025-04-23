@@ -64,7 +64,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.4.1" },
+    { name = "bluecore-models", specifier = ">=0.4.3" },
     { name = "fastapi", extras = ["standard"] },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
@@ -84,16 +84,16 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.4.1"
+version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
     { name = "psycopg2-binary" },
     { name = "rdflib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b5/c3/86ef97c3c579ff50171bf6d425f6ad377ac965e8b37d070d0209b9d625d0/bluecore_models-0.4.1.tar.gz", hash = "sha256:62dd345a0ef31e6562b96d2e26f0e962ba66ec3cfbad57cda2f7312458d3fed4", size = 31917 }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/c5/9823d7ac9b4e174ddd7eb439dcf0198d9de08aa9988962170ce6337470b5/bluecore_models-0.4.3.tar.gz", hash = "sha256:131ffd4d7468e3c3b9e2c45f6209be546760c938db3d9851fc47d8d3900eba11", size = 32940 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6b/53/796a89f2691166401e96c5281bd5aa645abdb5ad4e17c403e482aabe6a14/bluecore_models-0.4.1-py3-none-any.whl", hash = "sha256:f2eb95836295d09aaab5f621c516c776eb0f8ed524a1e2c27e91bc71abc6152d", size = 9432 },
+    { url = "https://files.pythonhosted.org/packages/d0/f2/80f7e33a3b8a963e8af0077ba5999da608415716af283b81306293a2578a/bluecore_models-0.4.3-py3-none-any.whl", hash = "sha256:21d47ab9554ed0a7a5efd99cae7f07b3b901d5bf5929c7bd4a282114f604b79a", size = 9941 },
 ]
 
 [[package]]
