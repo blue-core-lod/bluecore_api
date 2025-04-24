@@ -3,12 +3,13 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, File, UploadFile, Request
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
     KeycloakConfiguration,
     get_user,
+    get_auth,
     setup_keycloak_middleware,
 )
 from sqlalchemy import create_engine
@@ -43,19 +44,37 @@ keycloak_config = KeycloakConfiguration(
 
 app = FastAPI()
 
+# ==============================================================================
+# Bypass Keycloak auth in local-only dev mode by setting DEVELOPER_MODE=true
+# Sets up mocked auth and user dependencies instead of requiring real tokens
+# ------------------------------------------------------------------------------
+def enable_developer_mode(app):
+    developer_permissions = ["create", "update"] # update to add more permissions
+    async def mocked_get_auth(request: Request):
+        return developer_permissions
+    async def mocked_get_user(request: Request):
+        return "developer"
+    app.dependency_overrides[get_auth] = mocked_get_auth
+    app.dependency_overrides[get_user] = mocked_get_user
+    print("\033[1;35m🚧 DEVELOPER_MODE is ON — Keycloak is bypassed with mock permissions\033[0m")
+
 
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
 
 
-# Add Keycloak middleware
-setup_keycloak_middleware(
-    app,
-    keycloak_configuration=keycloak_config,
-    exclude_patterns=["/docs", "/openapi.json"],
-    scope_mapper=scope_mapper,
-)
+if os.getenv("DEVELOPER_MODE") == "true":
+    enable_developer_mode(app)
+else:
+    # Add Keycloak middleware
+    setup_keycloak_middleware(
+        app,
+        keycloak_configuration=keycloak_config,
+        exclude_patterns=["/docs", "/openapi.json"],
+        scope_mapper=scope_mapper,
+    )
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
