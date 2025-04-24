@@ -84,7 +84,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.4.1" },
+    { name = "bluecore-models", specifier = ">=0.4.3" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "pgvector" },
@@ -101,7 +101,7 @@ dev = [
     { name = "pytest-httpx", specifier = ">=0.35.0" },
     { name = "pytest-mock", specifier = ">=3.14.0" },
     { name = "pytest-mock-resources", extras = ["docker"], specifier = ">=2.12.1" },
-    { name = "ruff" },
+    { name = "ruff", specifier = ">=0.11.6" },
 ]
 
 [[package]]
