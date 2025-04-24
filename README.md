@@ -52,7 +52,6 @@ the `create-db.sql` script is run that creates a `bluecore` database with a
 After the database is up, change directories to the cloned [Blue Core Data Models][BLUECORE_MODELS] and then from that directory run `uv run alembic upgrade head`
 to create the latest database tables and indices for the database.
 
-
 **In development**: To start the FastAPI rest server in dev mode:
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
 2. Run the application at *http://localhost:3000*
