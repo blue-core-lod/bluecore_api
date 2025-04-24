@@ -1,18 +1,19 @@
-import os
-import sys
-from pathlib import Path
-from uuid import uuid4
-
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Any, Dict
+from uuid import uuid4
+
+import json
+import os
+import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
-
-from bluecore_models.models import Instance, Work
-
 from bluecore import workflow
+from bluecore.app.change_notifications.activity_streams import ActivityStreamsGenerator
+from bluecore.app.resource_manager.resource_manager import ResourceManager
+from bluecore_models.models import Instance, Work
 from bluecore.schemas import (
     ActivityStreamsChangeSetSchema,
     ActivityStreamsEntryPointSchema,
@@ -25,10 +26,6 @@ from bluecore.schemas import (
     WorkCreateSchema,
     WorkUpdateSchema,
 )
-
-from bluecore.app.change_notifications.activity_streams import ActivityStreamsGenerator
-from bluecore.app.resource_manager.resource_manager import ResourceManager
-from bluecore_models.models import Instance, Work
 
 app = FastAPI()
 
@@ -50,6 +47,29 @@ def get_db():
 @app.get("/")
 async def index():
     return {"message": "Blue Core API"}
+
+
+@app.post("/bogus_instances/{id}", response_model=InstanceSchema, status_code=201)
+async def bogus_create_instance(id: int, db: Session = Depends(get_db)) -> Instance:
+    data = json.dumps({"name": f"Shinwoo create instance {id}"})
+    instance = InstanceCreateSchema(
+        data=data,
+        work_id=id,
+        uri=f"https://bogus.org/instances/{id}",
+    )
+    return RESOURCE_MANAGER.create_instance(instance=instance, db=db)
+
+
+@app.put("/bogus_instances/{instance_id}", response_model=InstanceSchema)
+async def bogus_update_instance(instance_id: int, db: Session = Depends(get_db)):
+    inst = db.query(Instance).filter(Instance.id == instance_id).first()
+    instance = InstanceUpdateSchema(
+        data=json.dumps({"name": f"Shinwoo update instance {inst.id}"}),
+        work_id=inst.work_id,
+    )
+    return RESOURCE_MANAGER.update_instance(
+        instance_id=instance_id, instance=instance, db=db
+    )
 
 
 @app.post("/instances/", response_model=InstanceSchema, status_code=201)
@@ -78,9 +98,25 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)) -> 
     return RESOURCE_MANAGER.create_work(work=work, db=db)
 
 
+@app.post("/bogus_works/{id}", response_model=WorkSchema, status_code=201)
+async def bogus_create_work(id: int, db: Session = Depends(get_db)) -> Work:
+    work: WorkCreateSchema = WorkCreateSchema(
+        data=json.dumps({"name": f"Shinwoo create work {id}"}),
+        uri=f"https://bogus.org/works/{id}",
+    )
+    return RESOURCE_MANAGER.create_work(work=work, db=db)
+
+
 @app.get("/works/{work_id}", response_model=WorkSchema)
 async def read_work(work_id: int, db: Session = Depends(get_db)) -> Work:
     return RESOURCE_MANAGER.read_work(work_id=work_id, db=db)
+
+
+@app.put("/bogus_works/{work_id}", response_model=WorkSchema)
+async def bogus_update_work(work_id: int, db: Session = Depends(get_db)) -> Work:
+    data = json.dumps({"name": f"Shinwoo update work {work_id}"})
+    work = WorkUpdateSchema(data=data)
+    return RESOURCE_MANAGER.update_work(work_id=work_id, work=work, db=db)
 
 
 @app.put("/works/{work_id}", response_model=WorkSchema)
@@ -136,9 +172,6 @@ async def instances_activity_streams_page(
     id: int = 0, db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     return ACTIVITY_STREAMS_GENERATOR.instances_activity_streams_page(id=id, db=db)
-    db.commit()
-    db.refresh(db_work)
-    return db_work
 
 
 @app.post("/batches/", response_model=BatchSchema)

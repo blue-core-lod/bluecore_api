@@ -1,11 +1,10 @@
+from bluecore.utils.constants import ACTIVITY_STREAMS_PAGE_LENGTH, BCType, BFType
 from bluecore_models.models import ResourceBase, Version
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Any, Dict, List, Union
 import math
 import os
-
-from bluecore.utils.constants import ACTIVITY_STREAMS_PAGE_LENGTH, BFType
 
 HOST = os.getenv("HOST", "http://127.0.0.1:3000")
 
@@ -15,7 +14,20 @@ class ActivityStreamsGenerator:
     A class to handle change notifications.
     """
 
-    def activity_streams_feed(self, db: Session, bf_type: str) -> Dict[str, Any]:
+    page_length: int = 1
+
+    def __init__(self, page_length: int = ACTIVITY_STREAMS_PAGE_LENGTH):
+        """
+        Initializes the ActivityStreamsGenerator with a specified page length.
+        The page length is set to 100 by default.
+        Don't change this value unless running tests.
+
+        Args:
+            page_length (int): The number of items per page for the activity streams.
+        """
+        self.page_length = page_length
+
+    def activity_streams_feed(self, db: Session, bc_type: str) -> Dict[str, Any]:
         """
         Generates an activity streams feed for a given resource type.
 
@@ -40,10 +52,10 @@ class ActivityStreamsGenerator:
         total = (
             db.query(func.count(Version.id))
             .join(ResourceBase)
-            .filter(ResourceBase.type == bf_type)
+            .filter(ResourceBase.type == bc_type)
             .scalar()
         )
-        last_page: int = math.ceil(total / ACTIVITY_STREAMS_PAGE_LENGTH)
+        last_page: int = math.ceil(total / self.page_length)
         return {
             "@context": [
                 "https://www.w3.org/ns/activitystreams",
@@ -51,20 +63,20 @@ class ActivityStreamsGenerator:
             ],
             "summary": "Bluecore",
             "type": "OrderedCollection",
-            "id": f"{HOST}/change_documents/{bf_type}/activitystreams/feed",
+            "id": f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
             "totalItems": total,
             "first": {
-                "id": f"{HOST}/change_documents/{bf_type}/activitystreams/page/1",
+                "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/1",
                 "type": "OrderedCollectionPage",
             },
             "last": {
-                "id": f"{HOST}/change_documents/{bf_type}/activitystreams/page/{last_page}",
+                "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/{last_page}",
                 "type": "OrderedCollectionPage",
             },
         }
 
     def activity_streams_page(
-        self, id: int, db: Session, bf_type: str
+        self, id: int, db: Session, bc_type: str
     ) -> Dict[str, Any]:
         """
         Retrieves a paginated list of activity streams for a given resource type.
@@ -88,20 +100,18 @@ class ActivityStreamsGenerator:
         total = (
             db.query(func.count(Version.id))
             .join(ResourceBase)
-            .filter(ResourceBase.type == bf_type)
+            .filter(ResourceBase.type == bc_type)
             .scalar()
         )
 
         query = (
-            db.query(Version).join(ResourceBase).filter(ResourceBase.type == bf_type)
+            db.query(Version).join(ResourceBase).filter(ResourceBase.type == bc_type)
         )
         paginated_query = (
-            query.offset((id - 1) * ACTIVITY_STREAMS_PAGE_LENGTH)
-            .limit(ACTIVITY_STREAMS_PAGE_LENGTH)
-            .all()
+            query.offset((id - 1) * self.page_length).limit(self.page_length).all()
         )
         return self._generate_page(
-            id=id, items=paginated_query, total=total, bf_type=bf_type
+            id=id, items=paginated_query, total=total, bc_type=bc_type
         )
 
     def instances_activity_streams_feed(self, db: Session) -> Dict[str, Any]:
@@ -115,7 +125,7 @@ class ActivityStreamsGenerator:
             Dict[str, Any]: activity streams feed in the OrderedCollection format
         """
 
-        return self.activity_streams_feed(db=db, bf_type=BFType.INSTANCES)
+        return self.activity_streams_feed(db=db, bc_type=BCType.INSTANCES)
 
     def instances_activity_streams_page(self, id: int, db: Session) -> Dict[str, Any]:
         """
@@ -129,7 +139,7 @@ class ActivityStreamsGenerator:
             Dict[str, Any]: activity streams in the OrderedCollectionPage format
         """
 
-        return self.activity_streams_page(id=id, db=db, bf_type=BFType.INSTANCES)
+        return self.activity_streams_page(id=id, db=db, bc_type=BCType.INSTANCES)
 
     def works_activity_streams_feed(self, db: Session) -> Dict[str, Any]:
         """
@@ -142,7 +152,7 @@ class ActivityStreamsGenerator:
             Dict[str, Any]: activity streams feed in the OrderedCollection format
         """
 
-        return self.activity_streams_feed(db=db, bf_type=BFType.WORKS)
+        return self.activity_streams_feed(db=db, bc_type=BCType.WORKS)
 
     def works_activity_streams_page(self, id: int, db: Session) -> Dict[str, Any]:
         """
@@ -156,10 +166,10 @@ class ActivityStreamsGenerator:
             Dict[str, Any]: activity streams in the OrderedCollectionPage format
         """
 
-        return self.activity_streams_page(id=id, db=db, bf_type=BFType.WORKS)
+        return self.activity_streams_page(id=id, db=db, bc_type=BCType.WORKS)
 
-    def _determine_prev_next(
-        self, id: int, total_pages: int, bf_type: str
+    def determine_prev_next(
+        self, id: int, total_pages: int, bc_type: str
     ) -> Dict[str, Union[str, None]]:
         """
         Private method to determine the previous and next page URLs.
@@ -177,29 +187,67 @@ class ActivityStreamsGenerator:
             id = total_pages
 
         if id < total_pages:
-            next = f"{HOST}/change_documents/{bf_type}/activitystreams/page/{id + 1}"
+            next = f"{HOST}/change_documents/{bc_type}/activitystreams/page/{id + 1}"
             if id > 1:
                 prev = (
-                    f"{HOST}/change_documents/{bf_type}/activitystreams/page/{id - 1}"
+                    f"{HOST}/change_documents/{bc_type}/activitystreams/page/{id - 1}"
                 )
             else:
                 prev = None
         else:
             # id == total_pages
             if total_pages > 1:
-                prev = f"{HOST}/change_documents/{bf_type}/activitystreams/page/{total_pages - 1}"
+                prev = f"{HOST}/change_documents/{bc_type}/activitystreams/page/{total_pages - 1}"
             else:
                 prev = None
             next = None
 
         return {"prev": prev, "next": next}
 
+    def determine_create_update(
+        self,
+        resource_created_at: str,
+        resource_updated_at: str,
+        version_created_at: str,
+    ) -> str:
+        """
+        Determines whether the version is a create or update based on timestamps.
+        This method compares the created and updated timestamps of the resource
+        and the version to determine if the version represents a new entity
+        If resource updated_at and version created_at are the same:
+        - If resource created_at and resource updated_at are the same, it is a "Create"
+        - If resource created_at and resource updated_at are different, it is an "Update"
+        If resource updated_at and version created_at are different:
+        - If resource created_at and version created_at are the same, it is a "Create"
+        - Otherwise, it is an "Update"
+
+        Args:
+            resource_created_at (str): ResourceBase created_at timestamp
+            resource_updated_at (str): ResourceBase updated_at timestamp
+            version_created_at (str): Version created_at timestamp
+
+        Returns:
+            str: Create or Update
+        """
+        rca = resource_created_at[:23]
+        rua = resource_updated_at[:23]
+        vca = version_created_at[:23]
+        if resource_updated_at == version_created_at:
+            if rua == rca:
+                return "Create"
+            else:
+                return "Update"
+        elif rca == vca:
+            return "Create"
+        else:
+            return "Update"
+
     def _generate_page(
         self,
         id: int,
         items: List[Version],
         total: int,
-        bf_type: str,
+        bc_type: str,
     ) -> Dict[str, Any]:
         """
           Private method to generate an activity streams page for a given resource type.
@@ -214,9 +262,9 @@ class ActivityStreamsGenerator:
             Dict[str, Any]: A dictionary representing the activity streams page
         """
 
-        total_pages = math.ceil(total / ACTIVITY_STREAMS_PAGE_LENGTH)
-        prev_next = self._determine_prev_next(
-            id=id, total_pages=total_pages, bf_type=bf_type
+        total_pages = math.ceil(total / self.page_length)
+        prev_next = self.determine_prev_next(
+            id=id, total_pages=total_pages, bc_type=bc_type
         )
 
         return {
@@ -226,8 +274,8 @@ class ActivityStreamsGenerator:
                 {"bf": "http://id.loc.gov/ontologies/bibframe/"},
             ],
             "type": "OrderedCollectionPage",
-            "id": f"{HOST}/change_documents/{bf_type}/activitystreams/page/{id}",
-            "partOf": f"{HOST}/change_documents/{bf_type}/activitystreams/feed",
+            "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/{id}",
+            "partOf": f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
             "prev": prev_next["prev"],
             "next": prev_next["next"],
             "orderedItems": self._generate_ordered_items(items),
@@ -248,22 +296,28 @@ class ActivityStreamsGenerator:
         ordered_items: List[Dict[str, Any]] = []
         for version in versions:
             resource = version.resource
-            # truncate the created_at timestamp for comparison
-            r_created_at = str(resource.created_at)[:-4]
-            v_created_at = str(version.created_at)[:-4]
-            if r_created_at == v_created_at:
-                my_type = "Create"
+            if resource.type == BCType.WORKS:
+                resource_type = BFType.WORK
+            elif resource.type == BCType.INSTANCES:
+                resource_type = BFType.INSTANCE
             else:
-                my_type = "Update"
+                raise ValueError(
+                    f"Unknown resource type: {resource.type} for resource {resource.id}"
+                )
+
             ordered_items.append(
                 {
-                    "summary": f"New entity for {resource.uri}",
+                    "summary": f"New entity for bf:{resource_type}",
                     "published": str(version.created_at),
-                    "type": my_type,
+                    "type": self.determine_create_update(
+                        str(resource.created_at),
+                        str(resource.updated_at),
+                        str(version.created_at),
+                    ),
                     "object": {
-                        "id": f"{HOST}/{resource.type}/{resource.id}",
+                        "id": resource.uri,
                         "updated": str(version.created_at),
-                        "type": f"bf:{resource.type.capitalize()}",
+                        "type": f"bf:{resource_type}",
                     },
                 }
             )
