@@ -147,70 +147,70 @@ def test_determine_create_update() -> None:
             resource_updated_at=date["resource_updated_at"],
             version_created_at=date["version_created_at"],
         )
-        assert (
-            result == date["type"]
-        ), f"Test case {date['label']}: expected {date['type']} but got {result}"
+        assert result == date["type"], (
+            f"Test case {date['label']}: expected {date['type']} but got {result}"
+        )
 
 
 def feed_test(feed: ActivityStreamsEntryPointSchema, expected: Dict[str, Any]) -> None:
-    assert (
-        feed.id == expected["id"]
-    ), f"{expected['label']} id: {expected['id']} but got {feed.id}"
-    assert (
-        feed.type == "OrderedCollection"
-    ), f"{expected['label']} type: {expected['type']} but got {feed.type}"
-    assert (
-        feed.first["type"] == "OrderedCollectionPage"
-    ), f"{expected['label']} first type: {expected['first']['type']} but got {feed.first['type']}"
-    assert (
-        feed.first["id"] == expected["first"]["id"]
-    ), f"{expected['label']} first id: {expected['first']['id']} but got {feed.first['id']}"
-    assert (
-        feed.last["type"] == "OrderedCollectionPage"
-    ), f"{expected['label']} last type: {expected['last']['type']} but got {feed.last['type']}"
-    assert (
-        feed.last["id"] == expected["last"]["id"]
-    ), f"{expected['label']} last id: {expected['last']['id']} but got {feed.last['id']}"
-    assert (
-        feed.totalItems == expected["totalItems"]
-    ), f"{expected['label']} totalItems: {expected['totalItems']} but got {feed.totalItems}"
+    assert feed.id == expected["id"], (
+        f"{expected['label']} id: {expected['id']} but got {feed.id}"
+    )
+    assert feed.type == "OrderedCollection", (
+        f"{expected['label']} type: {expected['type']} but got {feed.type}"
+    )
+    assert feed.first["type"] == "OrderedCollectionPage", (
+        f"{expected['label']} first type: {expected['first']['type']} but got {feed.first['type']}"
+    )
+    assert feed.first["id"] == expected["first"]["id"], (
+        f"{expected['label']} first id: {expected['first']['id']} but got {feed.first['id']}"
+    )
+    assert feed.last["type"] == "OrderedCollectionPage", (
+        f"{expected['label']} last type: {expected['last']['type']} but got {feed.last['type']}"
+    )
+    assert feed.last["id"] == expected["last"]["id"], (
+        f"{expected['label']} last id: {expected['last']['id']} but got {feed.last['id']}"
+    )
+    assert feed.totalItems == expected["totalItems"], (
+        f"{expected['label']} totalItems: {expected['totalItems']} but got {feed.totalItems}"
+    )
 
 
 def page_test(page: ActivityStreamsChangeSetSchema, expected: Dict[str, Any]) -> None:
-    assert (
-        page.type == "OrderedCollectionPage"
-    ), f"Test page {expected['label']}: expected OrderedCollectionPage but got {page.type}"
+    assert page.type == "OrderedCollectionPage", (
+        f"Test page {expected['label']}: expected OrderedCollectionPage but got {page.type}"
+    )
 
-    assert (
-        page.id == expected["id"]
-    ), f"Test page {expected['label']}: id: expected {expected['id']} but got {page.id}"
-    assert (
-        page.partOf == expected["partOf"]
-    ), f"Test page {expected['label']}: partOf: expected {expected['partOf']} but got {page.partOf}"
-    assert (
-        page.totalItems == expected["totalItems"]
-    ), f"Test page {expected['label']}: totalItems: expected {expected['totalItems']} but got {page.totalItems}"
-    assert len(page.orderedItems) == len(
-        expected["orderedItems"]
-    ), f"Test page {expected['label']}: length of orderedItems: expected {len(expected['orderedItems'])} but got {len(page.orderedItems)}"
-    assert (
-        page.prev == expected["prev"]
-    ), f"Test page {expected['label']}: prev: expected {expected['prev']} but got {page.prev}"
-    assert (
-        page.next == expected["next"]
-    ), f"Test page {expected['label']}: next: expected {expected['next']} but got {page.next}"
+    assert page.id == expected["id"], (
+        f"Test page {expected['label']}: id: expected {expected['id']} but got {page.id}"
+    )
+    assert page.partOf == expected["partOf"], (
+        f"Test page {expected['label']}: partOf: expected {expected['partOf']} but got {page.partOf}"
+    )
+    assert page.totalItems == expected["totalItems"], (
+        f"Test page {expected['label']}: totalItems: expected {expected['totalItems']} but got {page.totalItems}"
+    )
+    assert len(page.orderedItems) == len(expected["orderedItems"]), (
+        f"Test page {expected['label']}: length of orderedItems: expected {len(expected['orderedItems'])} but got {len(page.orderedItems)}"
+    )
+    assert page.prev == expected["prev"], (
+        f"Test page {expected['label']}: prev: expected {expected['prev']} but got {page.prev}"
+    )
+    assert page.next == expected["next"], (
+        f"Test page {expected['label']}: next: expected {expected['next']} but got {page.next}"
+    )
     for ordered_items, expected_ordered_items in zip(
         page.orderedItems, expected["orderedItems"]
     ):
-        assert (
-            ordered_items.type == expected_ordered_items["type"]
-        ), f"Test page {expected['label']}: type of ordered item: expected {expected_ordered_items['type']} but got {ordered_items.type}"
-        assert (
-            ordered_items.object.id == expected_ordered_items["object"]["id"]
-        ), f"Test page {expected['label']}: id of object: expected {expected_ordered_items['object']['id']} but got {ordered_items.object.id}"
-        assert (
-            ordered_items.object.type == expected_ordered_items["object"]["type"]
-        ), f"Test page {expected['label']}: type of object: expected {expected_ordered_items['object']['type']} but got {ordered_items.object.type}"
+        assert ordered_items.type == expected_ordered_items["type"], (
+            f"Test page {expected['label']}: type of ordered item: expected {expected_ordered_items['type']} but got {ordered_items.type}"
+        )
+        assert ordered_items.object.id == expected_ordered_items["object"]["id"], (
+            f"Test page {expected['label']}: id of object: expected {expected_ordered_items['object']['id']} but got {ordered_items.object.id}"
+        )
+        assert ordered_items.object.type == expected_ordered_items["object"]["type"], (
+            f"Test page {expected['label']}: type of object: expected {expected_ordered_items['object']['type']} but got {ordered_items.object.type}"
+        )
 
 
 def test_work_activity_streams_add(client: TestClient, db_session: Session) -> None:
