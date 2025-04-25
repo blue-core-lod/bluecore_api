@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from pytest_httpx import HTTPXMock
 
 
@@ -56,3 +55,7 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
     upload_file = Path("./uploads/") / data["uri"]
     assert upload_file.is_file()
     assert upload_file.open("r").read() == open("README.md").read()
+
+
+if __name__ == "__main__":
+    pytest.main()

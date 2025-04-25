@@ -9,15 +9,6 @@ from bluecore.schemas import (
     WorkCreateSchema,
     WorkUpdateSchema,
 )
-from bluecore_models.models import (
-    Base,
-    BibframeClass,
-    Instance,
-    ResourceBase,
-    ResourceBibframeClass,
-    Version,
-    Work,
-)
 from bluecore.utils.constants import BCType, BFType
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session

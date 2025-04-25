@@ -111,12 +111,12 @@ async def index():
 )
 async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
-):
+) -> Instance:
     return RESOURCE_MANAGER.create_instance(instance=instance, db=db)
 
 
 @app.get("/instances/{instance_id}", response_model=InstanceSchema)
-async def read_instance(instance_id: int, db: Session = Depends(get_db)):
+async def read_instance(instance_id: int, db: Session = Depends(get_db)) -> Instance:
     return RESOURCE_MANAGER.read_instance(instance_id=instance_id, db=db)
 
 
@@ -127,7 +127,7 @@ async def read_instance(instance_id: int, db: Session = Depends(get_db)):
 )
 async def update_instance(
     instance_id: int, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
-):
+) -> Instance:
     return RESOURCE_MANAGER.update_instance(
         instance_id=instance_id, instance=instance, db=db
     )
