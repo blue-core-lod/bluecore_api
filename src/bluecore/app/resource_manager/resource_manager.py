@@ -5,19 +5,24 @@ from bluecore.schemas import (
     WorkUpdateSchema,
 )
 from bluecore_models.models import Instance, Work
+from datetime import datetime, UTC
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 
 class ResourceManager:
     def create_instance(self, instance: InstanceCreateSchema, db: Session) -> Instance:
+        time_now = datetime.now(UTC)
         db_instance = Instance(
-            data=instance.data, uri=instance.uri, work_id=instance.work_id
+            data=instance.data,
+            uri=instance.uri,
+            work_id=instance.work_id,
+            created_at=time_now,
+            updated_at=time_now,
         )
         db.add(db_instance)
         db.commit()
         db.refresh(db_instance)
-
         return db_instance
 
     def read_instance(self, instance_id: int, db: Session) -> Instance:
@@ -51,11 +56,16 @@ class ResourceManager:
         return db_instance
 
     def create_work(self, work: WorkCreateSchema, db: Session) -> Work:
-        db_work = Work(data=work.data, uri=work.uri)
+        time_now = datetime.now(UTC)
+        db_work = Work(
+            data=work.data,
+            uri=work.uri,
+            created_at=time_now,
+            updated_at=time_now,
+        )
         db.add(db_work)
         db.commit()
         db.refresh(db_work)
-
         return db_work
 
     def read_work(self, work_id: int, db: Session) -> Work:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 from bluecore.app.change_notifications.activity_streams import ActivityStreamsGenerator
 from bluecore.app.resource_manager.resource_manager import ResourceManager
-from bluecore.app.main import app, get_db
 from bluecore.schemas import (
     ActivityStreamsChangeSetSchema,
     ActivityStreamsEntryPointSchema,
@@ -21,46 +20,13 @@ from bluecore_models.models import (
 )
 from bluecore.utils.constants import BCType, BFType
 from fastapi.testclient import TestClient
-from pytest_mock_resources import create_postgres_fixture
 from sqlalchemy.orm import Session
 from typing import Any, Dict, List
 import json
 import pytest
 
 
-db_session: Session = create_postgres_fixture(session=True)
-
-
 TEST_PAGE_LENGTH = 2
-
-
-@pytest.fixture
-def client(db_session: Session) -> TestClient:
-    Base.metadata.create_all(
-        bind=db_session.get_bind(),
-        tables=[
-            ResourceBase.__table__,
-            BibframeClass.__table__,
-            Instance.__table__,
-            ResourceBibframeClass.__table__,
-            Version.__table__,
-            Work.__table__,
-        ],
-    )
-
-    def override_get_db():
-        db = db_session
-        try:
-            yield db
-        finally:
-            db.close()
-
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
-
-    db_session.close()
-    Base.metadata.drop_all(bind=db_session.get_bind())
 
 
 def get_test_activity_streams_generator() -> ActivityStreamsGenerator:
@@ -718,3 +684,7 @@ def test_instance_activity_streams_update(
         )
         assert response.status_code == 200
         # assert response.json() == page
+
+
+if __name__ == "__main__":
+    pytest.main()
