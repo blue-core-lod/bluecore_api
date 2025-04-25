@@ -5,22 +5,20 @@ API for managing Blue Core resources and workflows using PostgreSQL and Airflow 
 
 ## 🗂️ Project structure
 ```
-bluecore_store_migrations/
-|  |── env.py
-|  |── versions/
-|
-src/bluecore_api/
-│   │
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py
-│   │   ├── config.py
-│   │   
-│   │  
-│   └── models.py
+src/bluecore
+│   ├── app
+│   │   ├── change_notifications
+│   │   │   └── activity_streams.py
+│   │   ├── main.py
+│   │   └── resource_manager
+│   │       └── resource_manager.py
+│   ├── schemas.py
+│   ├── utils
+│   │   └── constants.py
+│   └── workflow.py
 tests/
 |
-├── pyproject.yaml
+├── pyproject.toml
 └── README.md
 ```
 
