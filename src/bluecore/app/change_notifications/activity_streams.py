@@ -1,8 +1,14 @@
+from bluecore.schemas import (
+    ActivityStreamsChangeSetSchema,
+    ActivityStreamsEntityChangeActivitiesSchema,
+    ActivityStreamsEntryPointSchema,
+    ActivityStreamsObjectSchema,
+)
 from bluecore.utils.constants import ACTIVITY_STREAMS_PAGE_LENGTH, BCType, BFType
 from bluecore_models.models import ResourceBase, Version
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 import math
 import os
 
@@ -19,7 +25,7 @@ class ActivityStreamsGenerator:
     def __init__(self, page_length: int = ACTIVITY_STREAMS_PAGE_LENGTH):
         """
         Initializes the ActivityStreamsGenerator with a specified page length.
-        The page length is set to 100 by default.
+        The page length is set to ACTIVITY_STREAMS_PAGE_LENGTH (100) by default.
         Don't change this value unless running tests.
 
         Args:
@@ -27,7 +33,9 @@ class ActivityStreamsGenerator:
         """
         self.page_length = page_length
 
-    def activity_streams_feed(self, db: Session, bc_type: str) -> Dict[str, Any]:
+    def activity_streams_feed(
+        self, db: Session, bc_type: str
+    ) -> ActivityStreamsEntryPointSchema:
         """
         Generates an activity streams feed for a given resource type.
 
@@ -40,14 +48,14 @@ class ActivityStreamsGenerator:
         specification, and includes a context URL for the EMM specification.
 
         Args:
-            db (Session): The database session used to query the resource data.
-            bf_type (str): The type of the resource for which the activity
-                  streams feed is being generated.
+            db (Session): database session used to query the resource data
+            bf_type (str): type of the resource for which the activity
+                  streams feed is being generated
 
         Returns:
-            Dict[str, Any]: A dictionary representing the activity streams feed
+            ActivityStreamsEntryPointSchema: activity streams feed
                   in the OrderedCollection format, including metadata
-                  and pagination details.
+                  and pagination details
         """
         total = (
             db.query(func.count(Version.id))
@@ -56,28 +64,28 @@ class ActivityStreamsGenerator:
             .scalar()
         )
         last_page: int = math.ceil(total / self.page_length)
-        return {
-            "@context": [
+        return ActivityStreamsEntryPointSchema(
+            context=[
                 "https://www.w3.org/ns/activitystreams",
                 "https://emm-spec.org/1.0/context.json",
             ],
-            "summary": "Bluecore",
-            "type": "OrderedCollection",
-            "id": f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
-            "totalItems": total,
-            "first": {
+            summary="Bluecore",
+            type="OrderedCollection",
+            id=f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
+            totalItems=total,
+            first={
                 "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/1",
                 "type": "OrderedCollectionPage",
             },
-            "last": {
+            last={
                 "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/{last_page}",
                 "type": "OrderedCollectionPage",
             },
-        }
+        )
 
     def activity_streams_page(
         self, id: int, db: Session, bc_type: str
-    ) -> Dict[str, Any]:
+    ) -> ActivityStreamsChangeSetSchema:
         """
         Retrieves a paginated list of activity streams for a given resource type.
 
@@ -95,7 +103,7 @@ class ActivityStreamsGenerator:
             bf_type (str): type of resource to filter the activity streams
 
         Returns:
-            Dict[str, Any]: activity streams in the OrderedCollectionPage format
+            ActivityStreamsChangeSetSchema: activity streams in the OrderedCollectionPage format
         """
         total = (
             db.query(func.count(Version.id))
@@ -114,7 +122,9 @@ class ActivityStreamsGenerator:
             id=id, items=paginated_query, total=total, bc_type=bc_type
         )
 
-    def instances_activity_streams_feed(self, db: Session) -> Dict[str, Any]:
+    def instances_activity_streams_feed(
+        self, db: Session
+    ) -> ActivityStreamsEntryPointSchema:
         """
         This function generates an activity streams feed for instances.
 
@@ -122,12 +132,14 @@ class ActivityStreamsGenerator:
             db (Session): The database session to use for querying.
 
         Returns:
-            Dict[str, Any]: activity streams feed in the OrderedCollection format
+            ActivityStreamsEntryPointSchema: activity streams feed in the OrderedCollection format
         """
 
         return self.activity_streams_feed(db=db, bc_type=BCType.INSTANCES)
 
-    def instances_activity_streams_page(self, id: int, db: Session) -> Dict[str, Any]:
+    def instances_activity_streams_page(
+        self, id: int, db: Session
+    ) -> ActivityStreamsChangeSetSchema:
         """
         This function retrieves a paginated list of activity streams for instances.
 
@@ -136,12 +148,14 @@ class ActivityStreamsGenerator:
             db (Session): database session to use for querying
 
         Returns:
-            Dict[str, Any]: activity streams in the OrderedCollectionPage format
+            ActivityStreamsChangeSetSchema: activity streams in the OrderedCollectionPage format
         """
 
         return self.activity_streams_page(id=id, db=db, bc_type=BCType.INSTANCES)
 
-    def works_activity_streams_feed(self, db: Session) -> Dict[str, Any]:
+    def works_activity_streams_feed(
+        self, db: Session
+    ) -> ActivityStreamsEntryPointSchema:
         """
         This function generates an activity streams feed for works.
 
@@ -149,12 +163,14 @@ class ActivityStreamsGenerator:
             db (Session): database session to use for querying
 
         Returns:
-            Dict[str, Any]: activity streams feed in the OrderedCollection format
+            ActivityStreamsEntryPointSchema: activity streams feed in the OrderedCollection format
         """
 
         return self.activity_streams_feed(db=db, bc_type=BCType.WORKS)
 
-    def works_activity_streams_page(self, id: int, db: Session) -> Dict[str, Any]:
+    def works_activity_streams_page(
+        self, id: int, db: Session
+    ) -> ActivityStreamsChangeSetSchema:
         """
         This function retrieves a paginated list of activity streams for instances.
 
@@ -163,7 +179,7 @@ class ActivityStreamsGenerator:
             db (Session): database session to use for querying
 
         Returns:
-            Dict[str, Any]: activity streams in the OrderedCollectionPage format
+            ActivityStreamsChangeSetSchema: activity streams in the OrderedCollectionPage format
         """
 
         return self.activity_streams_page(id=id, db=db, bc_type=BCType.WORKS)
@@ -211,7 +227,7 @@ class ActivityStreamsGenerator:
         version_created_at: str,
     ) -> str:
         """
-        Determines whether the version is a create or update based on timestamps.
+        Determines whether the version is a create or an update based on timestamps.
         This method compares the created and updated timestamps of the resource
         and the version to determine if the version represents a new entity
         If resource updated_at and version created_at are the same:
@@ -248,18 +264,18 @@ class ActivityStreamsGenerator:
         items: List[Version],
         total: int,
         bc_type: str,
-    ) -> Dict[str, Any]:
+    ) -> ActivityStreamsChangeSetSchema:
         """
           Private method to generate an activity streams page for a given resource type.
 
         Args:
-            id (int): The page number to retrieve.
-            items (List[Version]): The list of versions to include in the page.
-            total (int): The total number of items available.
-            bf_type (str): The type of resource for which the activity streams page is being generated.
+            id (int): page number to generate
+            items (List[Version]): list of versions to include in the page
+            total (int): total number of items available
+            bc_type (str): type of resource: BCType.Works or BCType.Instances
 
         Returns:
-            Dict[str, Any]: A dictionary representing the activity streams page
+            ActivityStreamsChangeSetSchema: activity streams for a given page
         """
 
         total_pages = math.ceil(total / self.page_length)
@@ -267,33 +283,40 @@ class ActivityStreamsGenerator:
             id=id, total_pages=total_pages, bc_type=bc_type
         )
 
-        return {
-            "@context": [
+        return ActivityStreamsChangeSetSchema(
+            context=[
                 "https://www.w3.org/ns/activitystreams",
                 "https://emm-spec.org/1.0/context.json",
                 {"bf": "http://id.loc.gov/ontologies/bibframe/"},
             ],
-            "type": "OrderedCollectionPage",
-            "id": f"{HOST}/change_documents/{bc_type}/activitystreams/page/{id}",
-            "partOf": f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
-            "prev": prev_next["prev"],
-            "next": prev_next["next"],
-            "orderedItems": self._generate_ordered_items(items),
-            "totalItems": len(items),
-        }
+            type="OrderedCollectionPage",
+            id=f"{HOST}/change_documents/{bc_type}/activitystreams/page/{id}",
+            partOf=f"{HOST}/change_documents/{bc_type}/activitystreams/feed",
+            prev=prev_next["prev"],
+            next=prev_next["next"],
+            orderedItems=self._generate_ordered_items(items),
+            totalItems=len(items),
+        )
 
-    def _generate_ordered_items(self, versions: List[Version]) -> List[Dict[str, Any]]:
+    # When https://github.com/blue-core-lod/bluecore_api/issues/66 is complete,
+    # we can add list of urls to the ordered items object
+    # def generate_url(self) -> List[str]:
+    #     return []
+
+    def _generate_ordered_items(
+        self, versions: List[Version]
+    ) -> List[ActivityStreamsEntityChangeActivitiesSchema]:
         """
         Private method to generate ordered items for the activity streams page.
 
         Args:
-            versions (List[Version]): The list of versions to include in the ordered items.
+            versions (List[Version]): list of versions to include in the ordered items
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries representing the ordered items
+            List[ActivityStreamsEntityChangeActivitiesSchema]: list of ordered items
         """
 
-        ordered_items: List[Dict[str, Any]] = []
+        ordered_items: List[ActivityStreamsEntityChangeActivitiesSchema] = []
         for version in versions:
             resource = version.resource
             if resource.type == BCType.WORKS:
@@ -306,20 +329,21 @@ class ActivityStreamsGenerator:
                 )
 
             ordered_items.append(
-                {
-                    "summary": f"New entity for bf:{resource_type}",
-                    "published": str(version.created_at),
-                    "type": self.determine_create_update(
+                ActivityStreamsEntityChangeActivitiesSchema(
+                    summary=f"New entity for bf:{resource_type}",
+                    published=str(version.created_at),
+                    type=self.determine_create_update(
                         str(resource.created_at),
                         str(resource.updated_at),
                         str(version.created_at),
                     ),
-                    "object": {
-                        "id": resource.uri,
-                        "updated": str(version.created_at),
-                        "type": f"bf:{resource_type}",
-                    },
-                }
+                    object=ActivityStreamsObjectSchema(
+                        id=resource.uri,
+                        updated=str(version.created_at),
+                        type=f"bf:{resource_type}",
+                        # url=self.generate_url(),
+                    ),
+                )
             )
 
         return ordered_items

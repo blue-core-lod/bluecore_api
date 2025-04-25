@@ -1,6 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated, Dict, List, Optional, Union
 
 
 class ErrorResponse(BaseModel):
@@ -62,7 +62,13 @@ class BatchSchema(BaseModel):
 
 
 class ActivityStreamsEntryPointSchema(BaseModel):
-    context: List[str] = Field(alias="@context")
+    # populate_by_name is getting deprecated in pydantic v2.11
+    #   and will be removed in v3.0.0
+    # When upgrading pydantic, change this to
+    #   model_config = ConfigDict(validate_by_alias=True, validate_by_name=False)
+    model_config = ConfigDict(populate_by_name=True)
+
+    context: Annotated[List[str], Field(alias="@context")]
     summary: str
     type: str
     id: str
@@ -87,7 +93,13 @@ class ActivityStreamsEntityChangeActivitiesSchema(BaseModel):
 
 
 class ActivityStreamsChangeSetSchema(BaseModel):
-    context: List[Union[str, Dict[str, str]]] = Field(alias="@context")
+    # populate_by_name is getting deprecated in pydantic v2.11
+    #   and will be removed in v3.0.0
+    # When upgrading pydantic, change this to
+    #   model_config = ConfigDict(validate_by_alias=True, validate_by_name=False)
+    model_config = ConfigDict(populate_by_name=True)
+
+    context: Annotated[List[Union[str, Dict[str, str]]], Field(alias="@context")]
     type: str
     id: str
     partOf: str
