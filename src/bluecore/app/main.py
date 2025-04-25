@@ -112,7 +112,7 @@ async def index():
 async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
 ):
-    RESOURCE_MANAGER.create_instance(instance=instance, db=db)
+    return RESOURCE_MANAGER.create_instance(instance=instance, db=db)
 
 
 @app.get("/instances/{instance_id}", response_model=InstanceSchema)
