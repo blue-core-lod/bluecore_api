@@ -2,6 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from datetime import datetime
+from bluecore.constants import BluecoreType
 
 
 class ErrorResponse(BaseModel):
@@ -29,7 +30,7 @@ class InstanceCreateSchema(BaseModel):
 
 
 class InstanceSchema(ResourceBaseSchema):
-    type: str = "instances"
+    type: str = BluecoreType.INSTANCES
     work_id: Optional[int]
 
 
@@ -50,7 +51,7 @@ class WorkUpdateSchema(BaseModel):
 
 
 class WorkSchema(ResourceBaseSchema):
-    type: str = "works"
+    type: str = BluecoreType.WORKS
 
 
 class BatchCreateSchema(BaseModel):

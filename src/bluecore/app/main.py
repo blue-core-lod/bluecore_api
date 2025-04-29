@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_models.models import Instance, Work
 from bluecore import workflow
-from bluecore.schemas import (
+from bluecore.schemas.schemas import (
     BatchCreateSchema,
     BatchSchema,
     InstanceCreateSchema,
