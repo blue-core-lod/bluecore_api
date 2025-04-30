@@ -86,7 +86,7 @@ def client(mocker, db_session, app):
         ],
     )
 
-    from bluecore.app.main import get_db
+    from bluecore.database import get_db
 
     def override_get_db():
         db = db_session

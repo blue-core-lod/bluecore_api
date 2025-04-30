@@ -13,12 +13,12 @@ from fastapi_keycloak_middleware import (
     get_auth,
     setup_keycloak_middleware,
 )
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_models.models import Instance, Work
 from bluecore import workflow
+from bluecore.database import get_db
 from bluecore.schemas.schemas import (
     BatchCreateSchema,
     BatchSchema,
@@ -77,19 +77,6 @@ else:
         exclude_patterns=["/docs", "/openapi.json"],
         scope_mapper=scope_mapper,
     )
-
-
-DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def get_db():
-    db = Session()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @app.get("/")
