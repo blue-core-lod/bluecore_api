@@ -19,6 +19,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_models.models import Instance, Work
 from bluecore import workflow
 from bluecore.database import get_db
+from bluecore.change_documents.routes import change_documents
 from bluecore.schemas.schemas import (
     BatchCreateSchema,
     BatchSchema,
@@ -40,6 +41,7 @@ keycloak_config = KeycloakConfiguration(
 )
 
 app = FastAPI()
+app.include_router(change_documents)
 
 
 # ==============================================================================
