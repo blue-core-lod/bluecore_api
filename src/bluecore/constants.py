@@ -13,3 +13,13 @@ class BluecoreType(StringEnum):
 
     WORKS = "works"
     INSTANCES = "instances"
+
+
+class BibframeType(StringEnum):
+    """Bibframe type enum."""
+
+    WORK = "Work"
+    INSTANCE = "Instance"
+
+
+DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
