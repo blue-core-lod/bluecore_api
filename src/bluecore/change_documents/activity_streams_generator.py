@@ -1,19 +1,14 @@
 from bluecore.constants import (
     DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH,
-    # BibframeType,
     BluecoreType,
 )
 from bluecore.schemas.change_documents.schemas import (
     ChangeSetSchema,
-    # EntityChangeActivitiesSchema,
-    # EntityChangeObjectSchema,
     EntryPointSchema,
 )
 from bluecore_models.models import ResourceBase, Version
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-
-# from typing import Dict, List, Union
 import math
 import os
 
