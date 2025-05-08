@@ -30,15 +30,6 @@ from bluecore.schemas.schemas import (
     WorkUpdateSchema,
 )
 
-keycloak_config = KeycloakConfiguration(
-    url=os.getenv("KEYCLOAK_URL"),
-    realm=os.getenv("KEYCLOAK_REALM"),
-    client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
-    client_secret=os.getenv("KEYCLOAK_CLIENT_SECRET"),
-    authorization_method=AuthorizationMethod.CLAIM,
-    authorization_claim="realm_access",
-)
-
 app = FastAPI()
 
 
@@ -70,6 +61,15 @@ async def scope_mapper(claim_auth: list) -> list:
 if os.getenv("DEVELOPER_MODE") == "true":
     enable_developer_mode(app)
 else:
+    keycloak_config = KeycloakConfiguration(
+        url=os.getenv("KEYCLOAK_URL"),
+        realm=os.getenv("KEYCLOAK_REALM"),
+        client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
+        client_secret=os.getenv("KEYCLOAK_CLIENT_SECRET"),
+        authorization_method=AuthorizationMethod.CLAIM,
+        authorization_claim="realm_access",
+    )
+
     # Add Keycloak middleware
     setup_keycloak_middleware(
         app,
