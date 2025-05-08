@@ -74,7 +74,7 @@ else:
     setup_keycloak_middleware(
         app,
         keycloak_configuration=keycloak_config,
-        exclude_patterns=["/docs", "/openapi.json"],
+        exclude_patterns=["/docs", "/openapi.json", "/api/docs", "/api/openapi.json"],
         scope_mapper=scope_mapper,
     )
 
