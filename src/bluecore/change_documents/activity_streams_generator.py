@@ -2,12 +2,20 @@ from bluecore.constants import (
     BluecoreType,
     DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH,
 )
+from bluecore_models.models import ResourceBase, Version
 from bluecore.schemas.change_documents.schemas import (
     ChangeSetSchema,
     EntryPointSchema,
 )
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+import math
 import os
+
+page_length: int = int(
+    os.getenv("ACTIVITY_STREAMS_PAGE_LENGTH", DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH)
+)
+host: str = os.getenv("ACTIVITY_STREAMS_HOST", "http://127.0.0.1:3000")
 
 
 class ActivityStreamsGenerator:
@@ -33,6 +41,25 @@ class ActivityStreamsGenerator:
         self.page_length = page_length
         self.host = host
 
+    def total_items(self, db: Session, bc_type: BluecoreType) -> int:
+        """
+        Returns the total number of items in the activity streams.
+        This method is a placeholder and should be implemented to return
+        the actual total number of items.
+
+        Returns:
+            int: The total number of items in the activity streams.
+        """
+        return (
+            db.scalar(
+                select(func.count(Version.id))
+                .select_from(Version)
+                .join(ResourceBase)
+                .filter(ResourceBase.type == bc_type)
+            )
+            or 0
+        )
+
     def entry_point(self, db: Session, bc_type: BluecoreType) -> EntryPointSchema:
         """
         Generates an entry point for a given resource type.
@@ -55,16 +82,18 @@ class ActivityStreamsGenerator:
                   in the OrderedCollection format, including metadata
                   and pagination details
         """
+        total = self.total_items(db=db, bc_type=bc_type)
+        last_page: int = math.ceil(total / page_length)
         return EntryPointSchema(
             summary="Bluecore",
-            id="TBD",
-            totalItems=0,
+            id=f"{self.host}/change_documents/{bc_type}/feed",
+            totalItems=total,
             first={
-                "id": "TBD",
+                "id": f"{self.host}/change_documents/{bc_type}/page/1",
                 "type": "OrderedCollectionPage",
             },
             last={
-                "id": "TBD",
+                "id": f"{self.host}/change_documents/{bc_type}/page/{last_page}",
                 "type": "OrderedCollectionPage",
             },
         )
@@ -105,7 +134,7 @@ class ActivityStreamsGenerator:
             db (Session): The database session to use for querying.
 
         Returns:
-            ActivityStreamsEntryPointSchema: activity streams feed in the OrderedCollection format
+            EntryPointSchema: instances entry point in the OrderedCollection format
         """
 
         return self.entry_point(db=db, bc_type=BluecoreType.INSTANCES)
@@ -132,7 +161,7 @@ class ActivityStreamsGenerator:
             db (Session): database session to use for querying
 
         Returns:
-            EntryPointSchema: activity streams feed in the OrderedCollection format
+            EntryPointSchema: works entry point in the OrderedCollection format
         """
 
         return self.entry_point(db=db, bc_type=BluecoreType.WORKS)
@@ -163,10 +192,6 @@ def get_activity_streams_generator() -> ActivityStreamsGenerator:
         ActivityStreamsGenerator: An instance of the ActivityStreamsGenerator class.
     """
     return ActivityStreamsGenerator(
-        page_length=int(
-            os.getenv(
-                "ACTIVITY_STREAMS_PAGE_LENGTH", DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH
-            )
-        ),
-        host=os.getenv("ACTIVITY_STREAMS_HOST", "http://127.0.0.1:3000"),
+        page_length=page_length,
+        host=host,
     )
