@@ -100,6 +100,7 @@ async def create_instance(
         data=instance.data,
         uri=instance.uri,
         work_id=instance.work_id,
+        uuid=uuid4(),
         created_at=time_now,
         updated_at=time_now,
     )
@@ -109,9 +110,9 @@ async def create_instance(
     return db_instance
 
 
-@app.get("/instances/{instance_id}", response_model=InstanceSchema)
-async def read_instance(instance_id: int, db: Session = Depends(get_db)):
-    db_instance = db.query(Instance).filter(Instance.id == instance_id).first()
+@app.get("/instances/{instance_uuid}", response_model=InstanceSchema)
+async def read_instance(instance_uuid: str, db: Session = Depends(get_db)):
+    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
 
     if db_instance is None:
         raise HTTPException(status_code=404, detail="Instance not found")
@@ -119,16 +120,18 @@ async def read_instance(instance_id: int, db: Session = Depends(get_db)):
 
 
 @app.put(
-    "/instances/{instance_id}",
+    "/instances/{instance_uuid}",
     response_model=InstanceSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
 )
 async def update_instance(
-    instance_id: int, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
+    instance_uuid: str, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
 ):
-    db_instance = db.query(Instance).filter(Instance.id == instance_id).first()
+    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
     if db_instance is None:
-        raise HTTPException(status_code=404, detail=f"Instance {instance_id} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Instance {instance_uuid} not found"
+        )
 
     # Update fields if they are provided
     if instance.data is not None:
@@ -154,6 +157,7 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     db_work = Work(
         data=work.data,
         uri=work.uri,
+        uuid=uuid4(),
         created_at=time_now,
         updated_at=time_now,
     )
@@ -163,25 +167,25 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     return db_work
 
 
-@app.get("/works/{work_id}", response_model=WorkSchema)
-async def read_work(work_id: int, db: Session = Depends(get_db)):
-    db_work = db.query(Work).filter(Work.id == work_id).first()
+@app.get("/works/{work_uuid}", response_model=WorkSchema)
+async def read_work(work_uuid: str, db: Session = Depends(get_db)):
+    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
     if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_id} not found")
+        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
     return db_work
 
 
 @app.put(
-    "/works/{work_id}",
+    "/works/{work_uuid}",
     response_model=WorkSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
 )
 async def update_work(
-    work_id: int, work: WorkUpdateSchema, db: Session = Depends(get_db)
+    work_uuid: str, work: WorkUpdateSchema, db: Session = Depends(get_db)
 ):
-    db_work = db.query(Work).filter(Work.id == work_id).first()
+    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
     if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_id} not found")
+        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
 
     # Update fields if they are provided
     if work.data is not None:
