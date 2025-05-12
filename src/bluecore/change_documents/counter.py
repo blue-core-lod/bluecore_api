@@ -10,14 +10,6 @@ class Counter:
     """
 
     def total_items(self, db: Session, bc_type: BluecoreType) -> int:
-        """
-        Returns the total number of items in the activity streams.
-        This method is a placeholder and should be implemented to return
-        the actual total number of items.
-
-        Returns:
-            int: The total number of items in the activity streams.
-        """
         return (
             db.scalar(
                 select(func.count(Version.id))

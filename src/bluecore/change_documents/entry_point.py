@@ -14,7 +14,7 @@ class EntryPoint(Counter, EntryPointSchema):
         total = self.total_items(db=db, bc_type=bc_type)
         last_page: int = math.ceil(total / page_length)
         super().__init__(
-            summary="Bluecore",
+            summary="Bluecore Activity Streams Entry Point",
             id=f"{host}/change_documents/{bc_type}/feed",
             totalItems=total,
             first={
