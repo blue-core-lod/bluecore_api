@@ -23,7 +23,10 @@ class EntryPointSchema(BaseModel):
     #   and will be removed in v3.0.0
     # When upgrading pydantic, change this to
     #   model_config = ConfigDict(validate_by_alias=True, validate_by_name=False)
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        revalidate_instances="subclass-instances",
+    )
 
     context: Annotated[List[str], Field(alias="@context")] = ENTRY_POINT_CONTEXT
     summary: str
@@ -54,7 +57,10 @@ class ChangeSetSchema(BaseModel):
     #   and will be removed in v3.0.0
     # When upgrading pydantic, change this to
     #   model_config = ConfigDict(validate_by_alias=True, validate_by_name=False)
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        revalidate_instances="subclass-instances",
+    )
 
     context: Annotated[List[Union[str, Dict[str, str]]], Field(alias="@context")] = (
         CHANGE_SET_CONTEXT

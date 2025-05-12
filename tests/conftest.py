@@ -30,6 +30,9 @@ os.environ["KEYCLOAK_REALM"] = "bluecore"
 os.environ["KEYCLOAK_CLIENT_ID"] = "bluecore"
 os.environ["KEYCLOAK_CLIENT_SECRET"] = "abcded235"
 
+os.environ["ACTIVITY_STREAMS_PAGE_LENGTH"] = "2"
+os.environ["ACTIVITY_STREAMS_HOST"] = "http://127.0.0.1:3000"
+
 
 @pytest.fixture(scope="session")
 def pmr_postgres_config():
@@ -100,6 +103,7 @@ def client(mocker, db_session, app):
     with TestClient(app) as c:
         yield c
 
+    db_session.close()
     Base.metadata.drop_all(bind=db_session.get_bind())
 
 
