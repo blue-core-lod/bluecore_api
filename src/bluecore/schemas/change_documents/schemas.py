@@ -39,12 +39,20 @@ class EntryPointSchema(BaseModel):
 
 
 class EntityChangeObjectSchema(BaseModel):
+    model_config = ConfigDict(
+        revalidate_instances="subclass-instances",
+    )
+
     type: Optional[str] = None
     updated: Optional[str] = None
     id: str
 
 
 class EntityChangeActivitiesSchema(BaseModel):
+    model_config = ConfigDict(
+        revalidate_instances="subclass-instances",
+    )
+
     summary: str
     published: str
     type: str

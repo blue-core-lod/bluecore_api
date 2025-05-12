@@ -1,3 +1,4 @@
+from bluecore.change_documents.change_set import ChangeSet
 from bluecore.change_documents.entry_point import EntryPoint
 from bluecore.constants import BluecoreType, DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH
 from bluecore.database import get_db
@@ -42,10 +43,12 @@ async def instances_change_set(
     id: int,
     db: Session = Depends(get_db),
 ) -> ChangeSetSchema:
-    return ChangeSetSchema(
-        id="TBD",
-        partOf="TBD",
-        orderedItems=[],
+    return ChangeSet(
+        db=db,
+        bc_type=BluecoreType.INSTANCES,
+        id=id,
+        host=host,
+        page_length=page_length,
     )
 
 
@@ -74,8 +77,10 @@ async def works_change_set(
     id: int,
     db: Session = Depends(get_db),
 ) -> ChangeSetSchema:
-    return ChangeSetSchema(
-        id="TBD",
-        partOf="TBD",
-        orderedItems=[],
+    return ChangeSet(
+        db=db,
+        bc_type=BluecoreType.WORKS,
+        id=id,
+        host=host,
+        page_length=page_length,
     )
