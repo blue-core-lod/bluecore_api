@@ -12,7 +12,7 @@ async def create_batch_from_uri(uri: str) -> str:
     bluecore_workflow_url = os.environ.get(
         "AIRFLOW_URL", "http://airflow-webserver:8080/workflows"
     )
-    url = f"{bluecore_workflow_url}/api/v1/dags/process/dagRuns"
+    url = f"{bluecore_workflow_url}/api/v1/dags/resource_loader/dagRuns"
 
     auth = httpx.BasicAuth(
         username=os.environ.get("AIRFLOW_WWW_USER_USERNAME", ""),
