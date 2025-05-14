@@ -10,7 +10,7 @@ async def create_batch_from_uri(uri: str) -> str:
     A URI can have https, http, s3 or file protocol.
     """
     bluecore_workflow_url = os.environ.get(
-        "AIRFLOW_URL", "http://airflow-webserver:8080"
+        "AIRFLOW_URL", "http://airflow-webserver:8080/workflows"
     )
     url = f"{bluecore_workflow_url}/api/v1/dags/process/dagRuns"
 
