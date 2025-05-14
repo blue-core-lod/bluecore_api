@@ -66,8 +66,8 @@ else:
     keycloak_config = KeycloakConfiguration(
         url=os.getenv("KEYCLOAK_URL"),
         realm=os.getenv("KEYCLOAK_REALM"),
-        client_id=os.getenv("KEYCLOAK_CLIENT_ID"),
-        client_secret=os.getenv("KEYCLOAK_CLIENT_SECRET"),
+        client_id=os.getenv("API_KEYCLOAK_CLIENT_ID"),
+        client_secret=os.getenv("API_KEYCLOAK_CLIENT_SECRET"),
         authorization_method=AuthorizationMethod.CLAIM,
         authorization_claim="realm_access",
     )
