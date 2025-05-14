@@ -17,7 +17,7 @@ async def test_create_batch_from_uri(client, httpx_mock: HTTPXMock):
     # mock the call to airflow api
     httpx_mock.add_response(
         method="POST",
-        url=re.compile(r".*/api/v1/dags/process/dagRuns$"),
+        url=re.compile(r".*/api/v1/dags/resource_loader/dagRuns$"),
         json={"dag_run_id": "12345"},
     )
 
@@ -38,7 +38,7 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
     # mock the call to airflow api
     httpx_mock.add_response(
         method="POST",
-        url=re.compile(r".*/api/v1/dags/process/dagRuns$"),
+        url=re.compile(r".*/api/v1/dags/resource_loader/dagRuns$"),
         json={"dag_run_id": "12345"},
     )
 
