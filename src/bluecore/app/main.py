@@ -217,18 +217,20 @@ async def create_batch(batch: BatchCreateSchema):
 async def create_batch_file(file: UploadFile = File(...)):
     try:
         upload_dir = Path("./uploads")
-        batch_file = upload_dir / str(uuid4()) / file.filename
-        batch_file.parent.mkdir(parents=False, exist_ok=True)
+        batch_file = f"{uuid4()}/{file.filename}"
+        batch_path = upload_dir / batch_file
+        batch_path.parent.mkdir(parents=False, exist_ok=True)
 
-        with batch_file.open("wb") as fh:
+        with batch_path.open("wb") as fh:
             while buff := file.file.read(1024 * 1024):
                 fh.write(buff)
 
-        uri = "file:{batch_file.absolute()}"
-        workflow_id = await workflow.create_batch_from_uri(uri)
+        # Pattern expected by the Airflow resource_loader DAG
+        file_location = f"/opt/airflow/uploads/{batch_file}"
+        workflow_id = await workflow.create_batch_from_uri(file_location)
 
     except workflow.WorkflowError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    batch = {"uri": str(batch_file.relative_to(upload_dir)), "workflow_id": workflow_id}
+    batch = {"uri": file_location, "workflow_id": workflow_id}
     return batch

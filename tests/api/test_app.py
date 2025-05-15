@@ -53,6 +53,6 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
     assert data["uri"].endswith("README.md")
     assert data["workflow_id"] == "12345"
 
-    upload_file = Path("./uploads/") / data["uri"]
+    upload_file = Path("./uploads/") / data["uri"].split("uploads/")[-1]
     assert upload_file.is_file()
     assert upload_file.open("r").read() == open("README.md").read()
