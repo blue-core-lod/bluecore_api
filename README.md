@@ -66,7 +66,7 @@ This is in development mode and code changes will immediately be loaded without 
 
 ### 🔐 Bypassing Keycloak 
 To access the API without needing to authenticate with Keycloak: 
-* run `export DEVELOPER_MODE=true` before running the application.
+* run `export BYPASS_KEYCLOAK=true` before running the application.
 
 ### 🧹 Linter for Python 
 Bluecore API uses [ruff](https://docs.astral.sh/ruff/)
