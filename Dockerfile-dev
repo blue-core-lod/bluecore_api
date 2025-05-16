@@ -16,6 +16,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN uv pip compile pyproject.toml -o requirements.txt
 RUN uv pip install --system -r requirements.txt
 
-CMD ["uv", "run", "fastapi", "run", "src/bluecore/app/main.py", "--port", "8100", "--root-path", "/api"]
+CMD ["uv", "run", "fastapi", "dev", "src/bluecore/app/main.py", "--host", "0.0.0.0", "--port", "8100", "--root-path", "/api"]
