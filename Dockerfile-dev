@@ -1,0 +1,23 @@
+# Dockerfile.dev
+
+FROM python:3.12-slim-bookworm
+
+# Install required system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  curl ca-certificates git && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install uv (Python dependency manager)
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+ENV PATH="/root/.local/bin/:$PATH"
+
+WORKDIR /app
+
+COPY . .
+
+RUN uv pip install --system -r requirements.txt
+
+CMD ["uv", "run", "fastapi", "run", "src/bluecore/app/main.py", "--port", "8100", "--root-path", "/api"]
