@@ -54,7 +54,7 @@ to create the latest database tables and indices for the database.
 
 **🛠️ In development (Non Dockerized)**: To start the FastAPI rest server in dev mode:
 > ⚠️ Note: This method only runs the api server and not the supporting services in docker (keycloak, nginx, etc.)
-> [Recommended: Run with Docker](#running-locally-with-docker)
+> [Recommended: Run with Docker](#-running-locally-with-docker)
 
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
 2. Run the application at *http://localhost:3000*
