@@ -52,7 +52,10 @@ the `create-db.sql` script is run that creates a `bluecore` database with a
 After the database is up, change directories to the cloned [Blue Core Data Models][BLUECORE_MODELS] and then from that directory run `uv run alembic upgrade head`
 to create the latest database tables and indices for the database.
 
-**In development**: To start the FastAPI rest server in dev mode:
+**🛠️ In development (Non Dockerized)**: To start the FastAPI rest server in dev mode:
+> ⚠️ Note: This method only runs the api server and not the supporting services in docker (keycloak, nginx, etc.)
+> [Recommended: Run with Docker](#-running-locally-with-docker)
+
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
 2. Run the application at *http://localhost:3000*
 `uv run fastapi dev src/bluecore/app/main.py --port 3000`
@@ -63,10 +66,27 @@ This is in development mode and code changes will immediately be loaded without 
 ---
 
 ## 👨‍💻 Developers
+### 🐳 Running Locally with Docker
+Dev Docker compose file needs to be specified when starting the container service.
+
+```bash
+docker compose -f compose-dev.yaml up
+```
+### 🚧 Accessing App
+Local development URL:
+>  - http://localhost
+
+
 
 ### 🔐 Bypassing Keycloak 
-To access the API without needing to authenticate with Keycloak: 
-* run `export DEVELOPER_MODE=true` before running the application.
+To access the API without needing the API to authenticate with Keycloak: 
+* Uncomment `BYPASS_KEYCLOAK: "true"` in `compose-dev.yaml`
+
+### 🔑 Logging into Keycloak master realm
+You can also create a new realm and client in Keycloak by going to:
+> - http://localhost/keycloak 
+> - username: `admin` 
+> - password: `gracious-professed`
 
 ### 🧹 Linter for Python 
 Bluecore API uses [ruff](https://docs.astral.sh/ruff/)
