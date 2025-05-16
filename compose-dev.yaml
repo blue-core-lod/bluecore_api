@@ -1,15 +1,45 @@
+x-keycloak-env: &keycloak-env
+  ####################################
+  ## Keycloak Environment Variables ##
+  ####################################
+  # ----- Bluecore realm and keycloak path -------------
+  KEYCLOAK_REALM: 'bluecore'
+  # ----- Master realm Admin credentials ---------------
+  KEYCLOAK_ADMIN: admin
+  KEYCLOAK_ADMIN_PASSWORD: admin
+  # ----- Keycloak database connection -----------------
+  KC_DB: postgres
+  KC_DB_SCHEMA: public
+  KC_DB_URL_HOST: bluecore-store
+  KC_DB_URL_PORT: 5432
+  KC_DB_URL_DATABASE: keycloak
+  KC_DB_USERNAME: bluecore_admin
+  KC_DB_PASSWORD: bluecore_admin
+  # ----- Keycloak health check enabled -----------------
+  KC_HEALTH_ENABLED: 'true'
+  # ----- Keycloak HTTP and proxy access settings -------
+  KEYCLOAK_URL: 'http://keycloak:8080/keycloak'
+  KC_HOSTNAME_STRICT: "false"
+  API_KEYCLOAK_CLIENT_ID: 'bluecore_api'
+  API_KEYCLOAK_CLIENT_SECRET: 'K0b2aBJlqDFcTiozMTP5XM6vf2G9E18W'
+  KC_PROXY_HEADERS: 'xforwarded'
+  KC_PROXY: 'edge'
+  KC_HTTP_ENABLED: 'true'
+  KC_HTTP_RELATIVE_PATH: '/keycloak/'
+  KC_LOG_LEVEL: 'INFO'
+
 services:
   bluecore-store:
     image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: bluecore_admin
       POSTGRES_PASSWORD: bluecore_admin
-      POSTGRES_DB: bluecore
+      POSTGRES_MULTIPLE_DB: bluecore, keycloak
     ports:
       - "5432:5432"
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-      - ./create-db.sql:/docker-entrypoint-initdb.d/create_database.sql
+      - ./scripts/init-multi-postgres-dbs.sh:/docker-entrypoint-initdb.d/init-multi-postgres-dbs.sh
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "bluecore_admin"]
       interval: 10s
@@ -29,10 +59,31 @@ services:
     volumes:
       - .:/app
     environment:
+      <<: *keycloak-env
       UV_CACHE_DIR: /tmp/uv-cache
       DATABASE_URL: postgresql+psycopg2://bluecore_admin:bluecore_admin@bluecore-store:5432/bluecore
-      DEVELOPER_MODE: "true"
+#      DEVELOPER_MODE: "true"
     command: ["uv", "run", "fastapi", "run", "src/bluecore/app/main.py", "--port", "8100", "--root-path", "/api"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.2
+    command: start-dev  --import-realm
+    environment:
+      <<: *keycloak-env
+    depends_on:
+      bluecore-store:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak-export/bluecore-realm.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak-export/:/opt/keycloak/data/export
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<> /dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: http://localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; if [ $? -eq 0 ]; then echo 'Healthcheck Successful'; exit 0; else echo 'Healthcheck Failed'; exit 1; fi;"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+    restart: always
 
 volumes:
   postgres-db-volume:
