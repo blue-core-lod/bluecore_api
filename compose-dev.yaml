@@ -6,7 +6,7 @@ x-keycloak-env: &keycloak-env
   KEYCLOAK_REALM: 'bluecore'
   # ----- Master realm Admin credentials ---------------
   KEYCLOAK_ADMIN: admin
-  KEYCLOAK_ADMIN_PASSWORD: admin
+  KEYCLOAK_ADMIN_PASSWORD: gracious-professed
   # ----- Keycloak database connection -----------------
   KC_DB: postgres
   KC_DB_SCHEMA: public
