@@ -54,8 +54,8 @@ services:
     depends_on:
       bluecore-store:
         condition: service_healthy
-    ports:
-      - "8100:8100"
+    expose:
+      - 8100
     volumes:
       - .:/app
     environment:
@@ -73,8 +73,9 @@ services:
     depends_on:
       bluecore-store:
         condition: service_healthy
-    ports:
-      - "8081:8080"
+    expose:
+      - 8080
+      - 8443
     volumes:
       - ./keycloak-export/bluecore-realm.json:/opt/keycloak/data/import/realm.json
       - ./keycloak-export/:/opt/keycloak/data/export
@@ -84,6 +85,15 @@ services:
       timeout: 10s
       retries: 20
     restart: always
+
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - keycloak
 
 volumes:
   postgres-db-volume:
