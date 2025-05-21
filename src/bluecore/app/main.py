@@ -36,10 +36,10 @@ app.include_router(change_documents)
 
 
 # ==============================================================================
-# Bypass Keycloak auth in local-only dev mode by setting DEVELOPER_MODE=true
+# Bypass Keycloak auth in local-only dev mode by setting BYPASS_KEYCLOAK=true
 # Sets up mocked auth and user dependencies instead of requiring real tokens
 # ------------------------------------------------------------------------------
-def enable_developer_mode(app):
+def bypass_keycloak(app):
     developer_permissions = ["create", "update"]  # update to add more permissions
 
     async def mocked_get_auth(request: Request):
@@ -51,7 +51,7 @@ def enable_developer_mode(app):
     app.dependency_overrides[get_auth] = mocked_get_auth
     app.dependency_overrides[get_user] = mocked_get_user
     print(
-        "\033[1;35m🚧 DEVELOPER_MODE is ON — Keycloak is bypassed with mock permissions\033[0m"
+        "\033[1;35m🚧 BYPASS_KEYCLOAK is ON — Keycloak is bypassed with mock permissions\033[0m"
     )
 
 
@@ -60,8 +60,8 @@ async def scope_mapper(claim_auth: list) -> list:
     return permissions
 
 
-if os.getenv("DEVELOPER_MODE") == "true":
-    enable_developer_mode(app)
+if os.getenv("BYPASS_KEYCLOAK") == "true":
+    bypass_keycloak(app)
 else:
     keycloak_config = KeycloakConfiguration(
         url=os.getenv("KEYCLOAK_URL"),
