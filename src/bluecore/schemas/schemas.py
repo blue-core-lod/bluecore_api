@@ -26,7 +26,6 @@ class ResourceBaseSchema(BaseModel):
 class InstanceCreateSchema(BaseModel):
     work_id: Optional[int]
     data: str
-    uri: Optional[str]
 
 
 class InstanceSchema(ResourceBaseSchema):
@@ -41,12 +40,10 @@ class InstanceUpdateSchema(BaseModel):
 
 class WorkCreateSchema(BaseModel):
     data: str
-    uri: Optional[str]
 
 
 class WorkUpdateSchema(BaseModel):
     data: Optional[str] = None
-    uri: Optional[str] = None
 
 
 class WorkSchema(ResourceBaseSchema):

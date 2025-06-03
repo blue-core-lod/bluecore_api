@@ -142,8 +142,6 @@ async def update_instance(
     # Update fields if they are provided
     if instance.data is not None:
         db_instance.data = instance.data
-    if instance.uri is not None:
-        db_instance.uri = instance.uri
     if instance.work_id is not None:
         db_instance.work_id = instance.work_id
 
@@ -196,11 +194,9 @@ async def update_work(
     if db_work is None:
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
 
-    # Update fields if they are provided
+    # Update data if it is provided
     if work.data is not None:
         db_work.data = work.data
-    if work.uri is not None:
-        db_work.uri = work.uri
 
     db.commit()
     db.refresh(db_work)
