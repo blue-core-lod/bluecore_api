@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_models.models import Instance, Work
+from bluecore_models.utils.graph import handle_external_subject
 from bluecore import workflow
 from bluecore.database import get_db
 from bluecore.change_documents.routes import change_documents
@@ -33,6 +34,8 @@ from bluecore.schemas.schemas import (
 
 app = FastAPI()
 app.include_router(change_documents)
+
+BLUECORE_ENV = os.environ.get("BLUECORE_ENV", "https://bcld.info")
 
 
 # ==============================================================================
@@ -83,7 +86,7 @@ else:
 
 @app.get("/")
 async def index():
-    return {"message": "Blue Core API"}
+    return {"message": f"Blue Core API"}
 
 
 @app.post(
@@ -96,11 +99,14 @@ async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
 ):
     time_now = datetime.now(UTC)
+    updated_payload = handle_external_subject(
+        data=instance.data, type="instances", bluecore_base_url=BLUECORE_ENV
+    )
     db_instance = Instance(
-        data=instance.data,
-        uri=instance.uri,
+        data=updated_payload.get("data"),
+        uri=updated_payload.get("uri"),
         work_id=instance.work_id,
-        uuid=uuid4(),
+        uuid=updated_payload.get("uuid"),
         created_at=time_now,
         updated_at=time_now,
     )
@@ -154,10 +160,13 @@ async def update_instance(
 )
 async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     time_now = datetime.now(UTC)
+    updated_payload = handle_external_subject(
+        data=work.data, type="works", bluecore_base_url=BLUECORE_ENV
+    )
     db_work = Work(
-        data=work.data,
-        uri=work.uri,
-        uuid=uuid4(),
+        data=updated_payload.get("data"),
+        uri=updated_payload.get("uri"),
+        uuid=updated_payload.get("uuid"),
         created_at=time_now,
         updated_at=time_now,
     )

@@ -35,8 +35,7 @@ class InstanceSchema(ResourceBaseSchema):
 
 
 class InstanceUpdateSchema(BaseModel):
-    data: Optional[bytes] = None
-    uri: Optional[str] = None
+    data: Optional[str] = None
     work_id: Optional[int] = None
 
 
