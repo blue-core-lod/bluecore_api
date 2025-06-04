@@ -54,9 +54,10 @@ to create the latest database tables and indices for the database.
 
 **In development**: To start the FastAPI rest server in dev mode:
 1. Run `export DATABASE_URL=postgresql://bluecore_admin:bluecore_admin@localhost/bluecore` to add the needed environmental variable 
-2. Run the application at *http://localhost:3000*
+2. Run `export BLUECORE_ENV=https://dev.bcld.info` if you want the change the root for minting URLs that is different from the default of `https://bcld.info`.  
+3. Run the application at *http://localhost:3000*
 `uv run fastapi dev src/bluecore/app/main.py --port 3000`
-3. Look at the API docs at *https://localhost:3000/docs/*
+4. Look at the API docs at *https://localhost:3000/docs/*
 
 This is in development mode and code changes will immediately be loaded without having to restart the server.
 
