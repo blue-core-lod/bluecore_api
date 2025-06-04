@@ -86,7 +86,7 @@ else:
 
 @app.get("/")
 async def index():
-    return {"message": f"Blue Core API"}
+    return {"message": "Blue Core API"}
 
 
 @app.post(
