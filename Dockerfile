@@ -19,4 +19,4 @@ RUN uv sync
 RUN uv build
 RUN uv pip install --system dist/*.whl
 
-CMD ["uv", "run", "fastapi", "run", "src/bluecore/app/main.py", "--port", "8100", "--root-path", "/api"] 
+CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"] 

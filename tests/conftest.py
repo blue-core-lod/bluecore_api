@@ -25,6 +25,7 @@ if os.getenv("DATABASE_URL") is None:
         "postgresql://bluecore_admin:bluecore_admin@localhost/bluecore"
     )
 
+os.environ["AIRFLOW_URL"] = "http://airflow:8080"
 os.environ["KEYCLOAK_URL"] = "http://localhost:8080/auth"
 os.environ["KEYCLOAK_REALM"] = "bluecore"
 os.environ["API_KEYCLOAK_CLIENT_ID"] = "bluecore"
@@ -67,7 +68,7 @@ async def mocked_get_user(request: Request):
 def app(session_mocker):
     session_mocker.patch("fastapi_keycloak_middleware.setup_keycloak_middleware")
 
-    from bluecore.app.main import app
+    from bluecore_api.app.main import app
 
     app.dependency_overrides[get_user] = mocked_get_user
     app.dependency_overrides[get_auth] = mocked_get_auth
@@ -89,7 +90,7 @@ def client(mocker, db_session, app):
         ],
     )
 
-    from bluecore.database import get_db
+    from bluecore_api.database import get_db
 
     def override_get_db():
         db = db_session
