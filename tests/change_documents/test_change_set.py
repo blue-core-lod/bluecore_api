@@ -1,10 +1,10 @@
 from __future__ import annotations
 from bluecore_models.models import Work, Instance
-from bluecore.change_documents.change_set import (
+from bluecore_api.change_documents.change_set import (
     ChangeSet,
 )
-from bluecore.constants import BibframeType, BluecoreType
-from bluecore.schemas.change_documents.schemas import (
+from bluecore_api.constants import BibframeType, BluecoreType
+from bluecore_api.schemas.change_documents.schemas import (
     ChangeSetSchema,
 )
 

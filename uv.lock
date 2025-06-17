@@ -67,9 +67,11 @@ dependencies = [
     { name = "fastapi-keycloak-middleware" },
     { name = "pgvector" },
     { name = "psycopg2-binary" },
+    { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "rdflib" },
     { name = "sqlalchemy" },
+    { name = "typer" },
 ]
 
 [package.dev-dependencies]
@@ -89,9 +91,11 @@ requires-dist = [
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rdflib", specifier = ">=7.1.3" },
     { name = "sqlalchemy" },
+    { name = "typer", specifier = ">=0.15.4" },
 ]
 
 [package.metadata.requires-dev]
