@@ -16,7 +16,7 @@ from fastapi_keycloak_middleware import (
 from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
-from bluecore_models.models import Instance, Work
+from bluecore_models.models import Instance, OtherResource, Work
 from bluecore_models.utils.graph import handle_external_subject
 from bluecore_api import workflow
 from bluecore_api.database import get_db
@@ -27,6 +27,8 @@ from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
     InstanceSchema,
     InstanceUpdateSchema,
+    OtherResourceSchema,
+    OtherResourceUpdateSchema,
     WorkCreateSchema,
     WorkSchema,
     WorkUpdateSchema,
@@ -200,6 +202,18 @@ async def update_work(
     db.commit()
     db.refresh(db_work)
     return db_work
+
+
+@app.get("/resources/{resource_id}", response_model=OtherResourceSchema)
+async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
+    db_other_resource = (
+        db.query(OtherResource).filter(OtherResource.id == resource_id).first()
+    )
+    if db_other_resource is None:
+        raise HTTPException(
+            status_code=404, detail=f"Other Resource {resource_id} not found"
+        )
+    return db_other_resource
 
 
 @app.post(
