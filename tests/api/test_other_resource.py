@@ -1,0 +1,29 @@
+import pytest
+import rdflib
+
+from bluecore_models.models import OtherResource
+from bluecore_models.utils.graph import init_graph, BF
+
+
+@pytest.fixture
+def other_graph():
+    other_resource_graph = init_graph()
+    unknown_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/mstatus/u")
+    other_resource_graph.add((unknown_uri, rdflib.RDF.type, rdflib.SKOS.Concept))
+    other_resource_graph.add(
+        (unknown_uri, rdflib.SKOS.prefLabel, rdflib.Literal("unknown"))
+    )
+    return other_resource_graph
+
+
+def test_read_other_resource(client, db_session, other_graph):
+    db_session.add(
+        OtherResource(
+            id=3,
+            data=other_graph.serialize(format="json-ld"),
+            uri="http://id.loc.gov/vocabulary/mstatus/u",
+        )
+    )
+    response = client.get("/resources/3")
+    assert response.status_code == 200
+    assert response.json()["uri"] == "http://id.loc.gov/vocabulary/mstatus/u"
