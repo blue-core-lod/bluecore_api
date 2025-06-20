@@ -20,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.instances import endpoints as instance_routes
-from bluecore_api.app.routes.resources import endpoints as resource_routes
+from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.schemas.schemas import (
     BatchCreateSchema,

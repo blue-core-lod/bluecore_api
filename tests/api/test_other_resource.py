@@ -42,3 +42,39 @@ def test_create_other_resource(client, other_graph):
         data=create_resource_response.json()["data"], format="json-ld"
     )
     assert len(other_resource_graph) == len(other_graph)
+
+
+def test_update_other_resource(client, db_session, other_graph):
+    unknown_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/mstatus/u")
+    db_session.add(
+        OtherResource(
+            id=3,
+            data=other_graph.serialize(format="json-ld"),
+            uri=str(unknown_uri),
+        )
+    )
+
+    other_graph.add(
+        (
+            unknown_uri,
+            rdflib.RDFS.label,
+            rdflib.Literal("Status of the resource is unknown"),
+        )
+    )
+
+    update_response = client.put(
+        "/resources/3",
+        headers={"X-User": "cataloger"},
+        json={"data": other_graph.serialize(format="json-ld")},
+    )
+
+    assert update_response.status_code == 200
+
+    get_response = client.get("/resources/3")
+    assert get_response.status_code == 200
+
+    new_graph = init_graph()
+    new_graph.parse(data=get_response.json()["data"], format="json-ld")
+
+    label = new_graph.value(subject=unknown_uri, predicate=rdflib.RDFS.label)
+    assert str(label).startswith("Status of the resource is unknown")

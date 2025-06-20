@@ -34,7 +34,7 @@ async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
 )
-async def create_instance(
+async def create_other_resource(
     resource: OtherResourceCreateSchema, db: Session = Depends(get_db)
 ):
     time_now = datetime.now(UTC)
@@ -45,6 +45,32 @@ async def create_instance(
         updated_at=time_now,
     )
     db.add(db_other_resource)
+    db.commit()
+    db.refresh(db_other_resource)
+    return db_other_resource
+
+
+@endpoints.put(
+    "/resources/{resource_id}",
+    response_model=OtherResourceSchema,
+    dependencies=[Depends(CheckPermissions(["update"]))],
+)
+async def update_other_resource(
+    resource_id: str,
+    other_resource: OtherResourceUpdateSchema,
+    db: Session = Depends(get_db),
+):
+    db_other_resource = (
+        db.query(OtherResource).filter(OtherResource.id == resource_id).first()
+    )
+    if db_other_resource is None:
+        raise HTTPException(
+            status_code=404, detail=f"Other Resource {resource_id} not found"
+        )
+    if other_resource.data:
+        db_other_resource.data = other_resource.data
+    if other_resource.uri:
+        db_other_resource.uri = other_resource.uri
     db.commit()
     db.refresh(db_other_resource)
     return db_other_resource
