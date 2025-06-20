@@ -16,26 +16,22 @@ from fastapi_keycloak_middleware import (
 from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
-from bluecore_models.models import Instance, OtherResource, Work
-from bluecore_models.utils.graph import handle_external_subject
+
 from bluecore_api import workflow
-from bluecore_api.database import get_db
 from bluecore_api.change_documents.routes import change_documents
+from bluecore_api.app.routes.instances import endpoints as instance_routes
+from bluecore_api.app.routes.resources import endpoints as resource_routes
+from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.schemas.schemas import (
     BatchCreateSchema,
     BatchSchema,
-    InstanceCreateSchema,
-    InstanceSchema,
-    InstanceUpdateSchema,
-    OtherResourceSchema,
-    OtherResourceUpdateSchema,
-    WorkCreateSchema,
-    WorkSchema,
-    WorkUpdateSchema,
 )
 
 app = FastAPI()
 app.include_router(change_documents)
+app.include_router(instance_routes)
+app.include_router(resource_routes)
+app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -88,132 +84,6 @@ else:
 @app.get("/")
 async def index():
     return {"message": "Blue Core API"}
-
-
-@app.post(
-    "/instances/",
-    response_model=InstanceSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
-    status_code=201,
-)
-async def create_instance(
-    instance: InstanceCreateSchema, db: Session = Depends(get_db)
-):
-    time_now = datetime.now(UTC)
-    updated_payload = handle_external_subject(
-        data=instance.data, type="instances", bluecore_base_url=BLUECORE_URL
-    )
-    db_instance = Instance(
-        data=updated_payload.get("data"),
-        uri=updated_payload.get("uri"),
-        work_id=instance.work_id,
-        uuid=updated_payload.get("uuid"),
-        created_at=time_now,
-        updated_at=time_now,
-    )
-    db.add(db_instance)
-    db.commit()
-    db.refresh(db_instance)
-    return db_instance
-
-
-@app.get("/instances/{instance_uuid}", response_model=InstanceSchema)
-async def read_instance(instance_uuid: str, db: Session = Depends(get_db)):
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
-
-    if db_instance is None:
-        raise HTTPException(status_code=404, detail="Instance not found")
-    return db_instance
-
-
-@app.put(
-    "/instances/{instance_uuid}",
-    response_model=InstanceSchema,
-    dependencies=[Depends(CheckPermissions(["update"]))],
-)
-async def update_instance(
-    instance_uuid: str, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
-):
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
-    if db_instance is None:
-        raise HTTPException(
-            status_code=404, detail=f"Instance {instance_uuid} not found"
-        )
-
-    # Update fields if they are provided
-    if instance.data is not None:
-        db_instance.data = instance.data
-    if instance.work_id is not None:
-        db_instance.work_id = instance.work_id
-
-    db.commit()
-    db.refresh(db_instance)
-    return db_instance
-
-
-@app.post(
-    "/works/",
-    response_model=WorkSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
-    status_code=201,
-)
-async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
-    time_now = datetime.now(UTC)
-    updated_payload = handle_external_subject(
-        data=work.data, type="works", bluecore_base_url=BLUECORE_URL
-    )
-    db_work = Work(
-        data=updated_payload.get("data"),
-        uri=updated_payload.get("uri"),
-        uuid=updated_payload.get("uuid"),
-        created_at=time_now,
-        updated_at=time_now,
-    )
-    db.add(db_work)
-    db.commit()
-    db.refresh(db_work)
-    return db_work
-
-
-@app.get("/works/{work_uuid}", response_model=WorkSchema)
-async def read_work(work_uuid: str, db: Session = Depends(get_db)):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-    return db_work
-
-
-@app.put(
-    "/works/{work_uuid}",
-    response_model=WorkSchema,
-    dependencies=[Depends(CheckPermissions(["update"]))],
-)
-async def update_work(
-    work_uuid: str, work: WorkUpdateSchema, db: Session = Depends(get_db)
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-
-    # Update data if it is provided
-    if work.data is not None:
-        db_work.data = work.data
-
-    db.commit()
-    db.refresh(db_work)
-    return db_work
-
-
-@app.get("/resources/{resource_id}", response_model=OtherResourceSchema)
-async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
-    db_other_resource = (
-        db.query(OtherResource).filter(OtherResource.id == resource_id).first()
-    )
-    if db_other_resource is None:
-        raise HTTPException(
-            status_code=404, detail=f"Other Resource {resource_id} not found"
-        )
-    return db_other_resource
 
 
 @app.post(
