@@ -43,6 +43,11 @@ class OtherResourceSchema(BaseModel):
     uri: Optional[str] = None
 
 
+class OtherResourceCreateSchema(BaseModel):
+    data: str
+    uri: Optional[str] = None
+
+
 class OtherResourceUpdateSchema(BaseModel):
     data: Optional[str] = None
     uri: Optional[str] = None

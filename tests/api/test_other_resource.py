@@ -2,7 +2,7 @@ import pytest
 import rdflib
 
 from bluecore_models.models import OtherResource
-from bluecore_models.utils.graph import init_graph, BF
+from bluecore_models.utils.graph import init_graph
 
 
 @pytest.fixture
@@ -27,3 +27,18 @@ def test_read_other_resource(client, db_session, other_graph):
     response = client.get("/resources/3")
     assert response.status_code == 200
     assert response.json()["uri"] == "http://id.loc.gov/vocabulary/mstatus/u"
+
+
+def test_create_other_resource(client, other_graph):
+    create_resource_response = client.post(
+        "/resources/",
+        headers={"X-User": "cataloger"},
+        json={"data": other_graph.serialize(format="json-ld"), "uri": None},
+    )
+
+    assert create_resource_response.status_code == 201
+    other_resource_graph = init_graph()
+    other_resource_graph.parse(
+        data=create_resource_response.json()["data"], format="json-ld"
+    )
+    assert len(other_resource_graph) == len(other_graph)
