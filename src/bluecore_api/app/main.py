@@ -3,7 +3,7 @@ import sys
 
 from pathlib import Path
 from uuid import uuid4
-from datetime import datetime, UTC
+
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile, Request
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
@@ -13,7 +13,6 @@ from fastapi_keycloak_middleware import (
     get_auth,
     setup_keycloak_middleware,
 )
-from sqlalchemy.orm import Session
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
