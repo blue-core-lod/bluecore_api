@@ -51,7 +51,7 @@ AIRFLOW_WWW_USER_PASSWORD="airflow"
 
 ## 💾 Uploads Directory
 
-The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to he Airflow environment.
+The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to the Airflow environment.
 
 For example:
 
