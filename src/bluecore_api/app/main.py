@@ -11,11 +11,12 @@ from fastapi_keycloak_middleware import (
     KeycloakConfiguration,
     get_user,
     get_auth,
-    setup_keycloak_middleware,
+    KeycloakMiddleware,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
+from bluecore_api.middleware.bypass_keycloak_auth import BypassKeycloakForGetPaths
 from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.instances import endpoints as instance_routes
@@ -26,11 +27,11 @@ from bluecore_api.schemas.schemas import (
     BatchSchema,
 )
 
-app = FastAPI()
-app.include_router(change_documents)
-app.include_router(instance_routes)
-app.include_router(resource_routes)
-app.include_router(work_routes)
+base_app = FastAPI()
+base_app.include_router(change_documents)
+base_app.include_router(instance_routes)
+base_app.include_router(resource_routes)
+base_app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -55,13 +56,19 @@ def enable_developer_mode(app):
     )
 
 
+# Dependency to allow unauthenticated GETs
+async def require_auth_except_get(request: Request):
+    if request.method != "GET":
+        await CheckPermissions(["read"])(request)
+
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
 
-
+# Auth or dev mode config
 if os.getenv("DEVELOPER_MODE") == "true":
-    enable_developer_mode(app)
+    enable_developer_mode(base_app)
+    app = base_app
 else:
     keycloak_config = KeycloakConfiguration(
         url=os.getenv("KEYCLOAK_URL"),
@@ -71,21 +78,31 @@ else:
         authorization_claim="realm_access",
     )
 
-    # Add Keycloak middleware
-    setup_keycloak_middleware(
-        app,
+    keycloak_middleware = KeycloakMiddleware(
+        app=base_app,
         keycloak_configuration=keycloak_config,
-        exclude_patterns=["/docs", "/openapi.json", "/api/docs", "/api/openapi.json"],
         scope_mapper=scope_mapper,
+        exclude_patterns=[],
     )
 
+    # Setup app to allow listed GET paths to work without keycloak authentication
+    app = BypassKeycloakForGetPaths(
+        app=base_app,
+        keycloak_middleware=keycloak_middleware
+    )
 
-@app.get("/")
+#########################-------------------------------------------------------
+##  Public GET Routes  ##
+#########################
+@base_app.get("/", dependencies=[Depends(require_auth_except_get)])
 async def index():
     return {"message": "Blue Core API"}
 
 
-@app.post(
+############################----------------------------------------------------
+##  Authenticated Routes  ##
+############################
+@base_app.post(
     "/batches/",
     response_model=BatchSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
@@ -100,7 +117,7 @@ async def create_batch(batch: BatchCreateSchema):
     return batch
 
 
-@app.post(
+@base_app.post(
     "/batches/upload/",
     response_model=BatchSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
