@@ -1,10 +1,10 @@
 from __future__ import annotations
 from bluecore_models.models import Work, Instance
-from bluecore.change_documents.entry_point import (
+from bluecore_api.change_documents.entry_point import (
     EntryPoint,
 )
-from bluecore.constants import BluecoreType
-from bluecore.schemas.change_documents.schemas import (
+from bluecore_api.constants import BluecoreType
+from bluecore_api.schemas.change_documents.schemas import (
     EntryPointSchema,
 )
 

@@ -1,14 +1,22 @@
-FROM cimg/node:16.8
+FROM python:3.12-slim-bookworm
 
-WORKDIR /home/circleci
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
 
-COPY --chown=circleci:circleci package.json .
-COPY --chown=circleci:circleci package-lock.json .
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
 
-RUN npm install
+RUN sh /uv-installer.sh && rm /uv-installer.sh
 
-COPY --chown=circleci:circleci . .
+ENV PATH="/root/.local/bin/:$PATH"
 
-ENV NODE_ENV production
+WORKDIR /bluecore_api
 
-CMD ["npm", "start"]
+COPY src src
+ADD pyproject.toml .
+ADD uv.lock .
+ADD README.md .
+
+RUN uv sync
+RUN uv build
+RUN uv pip install --system dist/*.whl
+
+CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"] 
