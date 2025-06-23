@@ -38,6 +38,24 @@ class InstanceUpdateSchema(BaseModel):
     work_id: Optional[int] = None
 
 
+class OtherResourceSchema(BaseModel):
+    data: str
+    uri: Optional[str] = None
+    is_profile: bool
+
+
+class OtherResourceCreateSchema(BaseModel):
+    data: str
+    uri: Optional[str] = None
+    is_profile: bool = False
+
+
+class OtherResourceUpdateSchema(BaseModel):
+    data: Optional[str] = None
+    uri: Optional[str] = None
+    is_profile: Optional[bool] = None
+
+
 class WorkCreateSchema(BaseModel):
     data: str
 
