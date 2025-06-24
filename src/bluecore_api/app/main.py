@@ -9,24 +9,24 @@ from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
     KeycloakConfiguration,
-    get_user,
-    get_auth,
     KeycloakMiddleware,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
-from bluecore_api.middleware.bypass_keycloak_auth import BypassKeycloakForGetPaths
+from bluecore_api.middleware.keycloak_auth import (
+    BypassKeycloakForGet,
+    CompatibleFastAPI,
+    enable_developer_mode,
+)
 from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
-from bluecore_api.schemas.schemas import (
-    BatchCreateSchema,
-    BatchSchema,
-)
+from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
+# Init base app
 base_app = FastAPI()
 base_app.include_router(change_documents)
 base_app.include_router(instance_routes)
@@ -36,31 +36,12 @@ base_app.include_router(work_routes)
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
-# ==============================================================================
-# Bypass Keycloak auth in local-only dev mode by setting DEVELOPER_MODE=true
-# Sets up mocked auth and user dependencies instead of requiring real tokens
-# ------------------------------------------------------------------------------
-def enable_developer_mode(app):
-    developer_permissions = ["create", "update"]  # update to add more permissions
-
-    async def mocked_get_auth(request: Request):
-        return developer_permissions
-
-    async def mocked_get_user(request: Request):
-        return "developer"
-
-    app.dependency_overrides[get_auth] = mocked_get_auth
-    app.dependency_overrides[get_user] = mocked_get_user
-    print(
-        "\033[1;35m🚧 DEVELOPER_MODE is ON — Keycloak is bypassed with mock permissions\033[0m"
-    )
-
-
-# Dependency to allow unauthenticated GETs
+# Check to see if GET request is allowed unauthenticated
 async def require_auth_except_get(request: Request):
     if request.method != "GET":
         await CheckPermissions(["read"])(request)
 
+# Role mapper
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
@@ -68,7 +49,7 @@ async def scope_mapper(claim_auth: list) -> list:
 # Auth or dev mode config
 if os.getenv("DEVELOPER_MODE") == "true":
     enable_developer_mode(base_app)
-    app = base_app
+    application = base_app
 else:
     keycloak_config = KeycloakConfiguration(
         url=os.getenv("KEYCLOAK_URL"),
@@ -85,11 +66,11 @@ else:
         exclude_patterns=[],
     )
 
-    # Setup app to allow listed GET paths to work without keycloak authentication
-    app = BypassKeycloakForGetPaths(
-        app=base_app,
-        keycloak_middleware=keycloak_middleware
+    middleware_wrapped_app = BypassKeycloakForGet(
+        app=base_app, keycloak_middleware=keycloak_middleware
     )
+    application = CompatibleFastAPI(app=middleware_wrapped_app)
+
 
 #########################-------------------------------------------------------
 ##  Public GET Routes  ##
