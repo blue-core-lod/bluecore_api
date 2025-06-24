@@ -47,8 +47,8 @@ class BypassKeycloakForGet:
         "/api/openapi.json",
     }
 
-    # Add GET path prefixes (e.g., /instances/, /works/)
-    PREFIX_PATHS = {"/instances/", "/works/"}
+    """Add GET path prefixes (e.g., /instances/, /works/)"""
+    PREFIX_PATHS = {"/instances/", "/works/", "/api/instances/", "/api/works/"}
 
     def __init__(self, app, keycloak_middleware):
         self.inner_app = app
