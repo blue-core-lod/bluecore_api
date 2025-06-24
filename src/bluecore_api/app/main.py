@@ -41,10 +41,12 @@ async def require_auth_except_get(request: Request):
     if request.method != "GET":
         await CheckPermissions(["read"])(request)
 
+
 # Role mapper
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
+
 
 # Auth or dev mode config
 if os.getenv("DEVELOPER_MODE") == "true":
