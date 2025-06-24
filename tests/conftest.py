@@ -69,12 +69,12 @@ async def mocked_get_user(request: Request):
 def app(session_mocker):
     session_mocker.patch("fastapi_keycloak_middleware.setup_keycloak_middleware")
 
-    from bluecore_api.app.main import app
+    from bluecore_api.app.main import base_app as test_app
 
-    app.dependency_overrides[get_user] = mocked_get_user
-    app.dependency_overrides[get_auth] = mocked_get_auth
+    test_app.dependency_overrides[get_user] = mocked_get_user
+    test_app.dependency_overrides[get_auth] = mocked_get_auth
 
-    yield app
+    yield test_app
 
 
 @pytest.fixture
