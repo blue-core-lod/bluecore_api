@@ -35,18 +35,10 @@ base_app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
-
-# Check to see if GET request is allowed unauthenticated
-async def require_auth_except_get(request: Request):
-    if request.method != "GET":
-        await CheckPermissions(["read"])(request)
-
-
 # Role mapper
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
-
 
 # Auth or dev mode config
 if os.getenv("DEVELOPER_MODE") == "true":
@@ -77,7 +69,7 @@ else:
 #########################-------------------------------------------------------
 ##  Public GET Routes  ##
 #########################
-@base_app.get("/", dependencies=[Depends(require_auth_except_get)])
+@base_app.get("/")
 async def index():
     return {"message": "Blue Core API"}
 
