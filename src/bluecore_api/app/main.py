@@ -26,7 +26,7 @@ from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
-# Init base app
+"""Init base app"""
 base_app = FastAPI()
 base_app.include_router(change_documents)
 base_app.include_router(instance_routes)
@@ -36,13 +36,13 @@ base_app.include_router(work_routes)
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
-# Role mapper
 async def scope_mapper(claim_auth: list) -> list:
+    """Role mapper"""
     permissions = claim_auth.get("roles", [])
     return permissions
 
 
-# Auth or dev mode config
+"""Auth or dev mode config"""
 if os.getenv("DEVELOPER_MODE") == "true":
     enable_developer_mode(base_app)
     application = base_app
@@ -68,23 +68,19 @@ else:
     application = CompatibleFastAPI(app=middleware_wrapped_app)
 
 
-#########################-------------------------------------------------------
-##  Public GET Routes  ##
-#########################
 @base_app.get("/")
 async def index():
+    """Public route for API root."""
     return {"message": "Blue Core API"}
 
 
-############################----------------------------------------------------
-##  Authenticated Routes  ##
-############################
 @base_app.post(
     "/batches/",
     response_model=BatchSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
 )
 async def create_batch(batch: BatchCreateSchema):
+    """Authenticated route to create a batch from a URI."""
     try:
         workflow_id = await workflow.create_batch_from_uri(batch.uri)
     except workflow.WorkflowError as e:
@@ -100,6 +96,10 @@ async def create_batch(batch: BatchCreateSchema):
     dependencies=[Depends(CheckPermissions(["create"]))],
 )
 async def create_batch_file(file: UploadFile = File(...)):
+    """
+    Authenticated route to upload a batch file and trigger
+    the resource_loader Airflow DAG.
+    """
     try:
         upload_dir = Path("./uploads")
         batch_file = f"{uuid4()}/{file.filename}"

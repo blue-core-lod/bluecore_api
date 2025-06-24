@@ -2,10 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi_keycloak_middleware import get_auth, get_user
 
 
-#######################################################################---------
-##  Bypass Keycloak auth in dev mode by setting DEVELOPER_MODE=true  ##
-#######################################################################
 def enable_developer_mode(app):
+    """Bypass Keycloak auth in dev mode by setting DEVELOPER_MODE=true"""
     developer_permissions = ["create", "update"]  # update to add more permissions
 
     async def mocked_get_auth(request: Request):
@@ -21,10 +19,9 @@ def enable_developer_mode(app):
     )
 
 
-############################################################--------------------
-##  Compatibility wrapper for FastAPI dev server support  ##
-############################################################
 class CompatibleFastAPI(FastAPI):
+    """Compatibility wrapper for FastAPI dev server support"""
+
     def __init__(self, app, **kwargs):
         super().__init__(**kwargs)
         self._asgi_app = app
@@ -33,11 +30,9 @@ class CompatibleFastAPI(FastAPI):
         await self._asgi_app(scope, receive, send)
 
 
-##############################################----------------------------------
-##  Bypass Keycloak for specific GET paths  ##
-##############################################
 class BypassKeycloakForGet:
-    # Add specific GET paths to bypass authentication
+    """Add specific GET paths to bypass keycloak authentication"""
+
     EXACT_PATHS = {
         "/",
         "/api",
