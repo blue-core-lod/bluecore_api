@@ -35,10 +35,12 @@ base_app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
+
 # Role mapper
 async def scope_mapper(claim_auth: list) -> list:
     permissions = claim_auth.get("roles", [])
     return permissions
+
 
 # Auth or dev mode config
 if os.getenv("DEVELOPER_MODE") == "true":
