@@ -48,7 +48,7 @@ if os.getenv("DEVELOPER_MODE") == "true":
     application = base_app
 else:
     keycloak_config = KeycloakConfiguration(
-        url=os.getenv("KEYCLOAK_URL"),
+        url=os.getenv("KEYCLOAK_INTERNAL_URL"),
         realm="bluecore",
         client_id=os.getenv("API_KEYCLOAK_CLIENT_ID"),
         authorization_method=AuthorizationMethod.CLAIM,

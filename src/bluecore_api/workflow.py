@@ -6,9 +6,7 @@ import httpx
 
 AIRFLOW_USER = os.environ.get("AIRFLOW_WWW_USER_USERNAME")
 AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_WWW_USER_PASSWORD")
-AIRFLOW_URL = os.environ.get(
-    "AIRFLOW_URL", "http://airflow-webserver:8080/workflows"
-).rstrip("/")
+AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL").rstrip("/")
 
 
 async def create_batch_from_uri(uri: str) -> str:
@@ -19,7 +17,7 @@ async def create_batch_from_uri(uri: str) -> str:
 
     token = await get_token()
 
-    url = f"{AIRFLOW_URL}/api/v2/dags/resource_loader/dagRuns"
+    url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/resource_loader/dagRuns"
     now = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     async with httpx.AsyncClient() as client:
@@ -52,7 +50,7 @@ async def get_token() -> str:
     # See: https://github.com/apache/airflow/issues/51362
 
     resp = httpx.post(
-        f"{AIRFLOW_URL}/auth/token",
+        f"{AIRFLOW_INTERNAL_URL}/auth/token",
         json={"username": AIRFLOW_USER, "password": AIRFLOW_PASSWORD},
     )
     resp.raise_for_status()

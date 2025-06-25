@@ -36,8 +36,9 @@ Next you will want to clone bluecore_api repository and create a `.env` file tha
 # service uris
 DATABASE_URL="postgresql://airflow:airflow@localhost/bluecore"
 BLUECORE_URL="http://localhost:3000/"
-AIRFLOW_URL="http://localhost:8080/"
-KEYCLOAK_URL="http://localhost:8081/keycloak/"
+AIRFLOW_INTERNAL_URL="http://localhost:8080"
+KEYCLOAK_EXTERNAL_URL="http://localhost:8081/keycloak/"
+KEYCLOAK_INTERNAL_URL="http://localhost:8081/keycloak/"
 
 # keycloak config so blucore_api users can authenticate
 API_KEYCLOAK_CLIENT_ID="bluecore_api"
