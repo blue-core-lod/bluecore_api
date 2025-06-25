@@ -27,25 +27,6 @@ def token():
 
 
 @app.command()
-def root():
-    """
-    Get a Keycloak access token for a given user.
-    """
-    try:
-        token = _get_token()
-
-        resp = httpx.get(
-            f"{state['bluecore_url']}/",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        printr(resp)
-
-    except httpx.HTTPError as e:
-        printr(f"[red]{e}[/red]")
-        raise Exit(1)
-
-
-@app.command()
 def load(
     file: Annotated[
         Path, Argument(exists=True, dir_okay=False, readable=True, resolve_path=True)
@@ -56,9 +37,8 @@ def load(
     """
     try:
         token = _get_token()
-
         resp = httpx.post(
-            f"{state['bluecore_url']}/batches/upload/",
+            f"{state['api_url']}/batches/upload/",
             headers={"Authorization": f"Bearer {token}"},
             files={"file": file.open("rb")},
         )
@@ -74,6 +54,8 @@ def load(
 @app.callback()
 def main(
     bluecore_url: Annotated[str, Option(help="Bluecore URL")] = None,
+    api_url: Annotated[str, Option(help="Bluecore API URL")] = None,
+    keycloak_url: Annotated[str, Option(help="Keycloak URL")] = None,
     username: Annotated[str, Option(help="Bluecore username")] = None,
     password: Annotated[str, Option(help="Bluecore password")] = None,
     verbose: Annotated[bool, Option(help="Verbose output")] = False,
@@ -91,13 +73,22 @@ def main(
     )
     state["verbose"] = verbose
 
-    # usually the Keycloak URL is the same as the BlueCore URL, but sometimes in
+    # usually the Keycloak URL hangs off the BlueCore URL, but sometimes in
     # development it's helpful to specify it separately
-    state["keycloak_url"] = env("KEYCLOAK_URL") or state["bluecore_url"]
+    state["keycloak_url"] = (
+        keycloak_url
+        or env("KEYCLOAK_EXTERNAL_URL")
+        or state["bluecore_url"] + "/keycloak/"
+    )
+
+    # usually the API URL hangs off the BlueCore URL, but sometimes in
+    # development it's helpful to specify it separately
+    state["api_url"] = api_url or env("API_URL") or state["bluecore_url"] + "/api/"
 
     # remove trailing slashes from URLs
     state["bluecore_url"] = state["bluecore_url"].rstrip("/")
     state["keycloak_url"] = state["keycloak_url"].rstrip("/")
+    state["api_url"] = state["api_url"].rstrip("/")
 
     if verbose:
         printr("\n[bold]Configuration:[/bold]")
