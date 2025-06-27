@@ -35,7 +35,7 @@ class BypassKeycloakForGet:
 
     EXACT_PATHS = {
         "/",
-        "/api",
+        "/api/",
         "/docs",
         "/api/docs",
         "/openapi.json",
