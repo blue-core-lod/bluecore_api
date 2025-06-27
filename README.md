@@ -73,10 +73,10 @@ uv run dotenv run fastapi dev src/bluecore_api/app/main.py --port 3000
 If you want to try loading some data you can use the `bluecore` utility:
 
 ```shell
-uv run bluecore load sample/batch.jsonld 
+uv run bluecore load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
 ```
 
-This will load a batch of data to the bluecore_api API, and tell [Blue Core Workflows] to load it.
+This will tell the Blue Core API to load the data at that URL into the database.
 
 ## HTTP Requests
 
