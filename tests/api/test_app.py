@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from pytest_httpx import HTTPXMock
 
 

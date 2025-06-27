@@ -36,8 +36,10 @@ Next you will want to clone bluecore_api repository and create a `.env` file tha
 # service uris
 DATABASE_URL="postgresql://airflow:airflow@localhost/bluecore"
 BLUECORE_URL="http://localhost:3000/"
-AIRFLOW_URL="http://localhost:8080/"
-KEYCLOAK_URL="http://localhost:8081/keycloak/"
+AIRFLOW_INTERNAL_URL="http://localhost:8080"
+KEYCLOAK_EXTERNAL_URL="http://localhost:8081/keycloak/"
+KEYCLOAK_INTERNAL_URL="http://localhost:8081/keycloak/"
+USE_KEYCLOAK_INTROSPECTION=true # Set to false in production (defaults to true for dev and testing)
 
 # keycloak config so blucore_api users can authenticate
 API_KEYCLOAK_CLIENT_ID="bluecore_api"
@@ -51,7 +53,7 @@ AIRFLOW_WWW_USER_PASSWORD="airflow"
 
 ## 💾 Uploads Directory
 
-The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to he Airflow environment.
+The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to the Airflow environment.
 
 For example:
 
@@ -80,10 +82,10 @@ If you want to try loading some data you can use the `bluecore` utility:
 3. Look at the API docs at *https://localhost:3000/docs/*
 
 ```shell
-uv run bluecore load sample/batch.jsonld 
+uv run bluecore load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
 ```
 
-This will load a batch of data to the bluecore_api API, and tell [Blue Core Workflows] to load it.
+This will tell the Blue Core API to load the data at that URL into the database.
 
 ## HTTP Requests
 ## 👨‍💻 Developers

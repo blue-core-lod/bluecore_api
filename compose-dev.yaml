@@ -20,13 +20,31 @@ x-keycloak-env: &keycloak-env
   # ----- Keycloak HTTP and proxy access settings -------
   KEYCLOAK_URL: 'http://keycloak:8080/keycloak'
   KC_HOSTNAME_STRICT: "false"
-  API_KEYCLOAK_CLIENT_ID: 'bluecore_api'
   API_KEYCLOAK_CLIENT_SECRET: 'K0b2aBJlqDFcTiozMTP5XM6vf2G9E18W'
   KC_PROXY_HEADERS: 'xforwarded'
   KC_PROXY: 'edge'
   KC_HTTP_ENABLED: 'true'
   KC_HTTP_RELATIVE_PATH: '/keycloak/'
   KC_LOG_LEVEL: 'INFO'
+
+  ## service uris -----------------------------------------------------------------
+  DATABASE_URL: "postgresql://airflow:airflow@localhost/bluecore"
+  BLUECORE_URL: "http://localhost:3000/"
+  AIRFLOW_INTERNAL_URL: "http://localhost:8080/"
+  KEYCLOAK_EXTERNAL_URL: "http://localhost:8081/keycloak/"
+#  KEYCLOAK_INTERNAL_URL: "http://localhost:8081/keycloak/"
+  KEYCLOAK_INTERNAL_URL: "http://keycloak:8080/keycloak/"
+
+  ## keycloak config so blucore_api users can authenticate ------------------------
+  API_KEYCLOAK_CLIENT_ID: "bluecore_api"
+  API_KEYCLOAK_USER: "developer"
+  API_KEYCLOAK_PASSWORD: "123456"
+
+  ## credentials so bluecore_api can talk to airflow ------------------------------
+  AIRFLOW_WWW_USER_USERNAME: "airflow"
+  AIRFLOW_WWW_USER_PASSWORD: "airflow"
+  USE_KEYCLOAK_INTROSPECTION: false
+
 
 services:
   bluecore-store:

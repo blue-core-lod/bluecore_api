@@ -14,6 +14,7 @@ from bluecore_models.models import (
     Base,
     BibframeClass,
     Instance,
+    OtherResource,
     ResourceBase,
     ResourceBibframeClass,
     Version,
@@ -25,8 +26,8 @@ if os.getenv("DATABASE_URL") is None:
         "postgresql://bluecore_admin:bluecore_admin@localhost/bluecore"
     )
 
-os.environ["AIRFLOW_URL"] = "http://airflow:8080"
-os.environ["KEYCLOAK_URL"] = "http://localhost:8080/auth"
+os.environ["AIRFLOW_INTERNAL_URL"] = "http://airflow:8080"
+os.environ["KEYCLOAK_INTERNAL_URL"] = "http://localhost:8080/auth"
 os.environ["KEYCLOAK_REALM"] = "bluecore"
 os.environ["API_KEYCLOAK_CLIENT_ID"] = "bluecore"
 os.environ["API_KEYCLOAK_CLIENT_SECRET"] = "abcded235"
@@ -68,12 +69,12 @@ async def mocked_get_user(request: Request):
 def app(session_mocker):
     session_mocker.patch("fastapi_keycloak_middleware.setup_keycloak_middleware")
 
-    from bluecore_api.app.main import app
+    from bluecore_api.app.main import base_app as test_app
 
-    app.dependency_overrides[get_user] = mocked_get_user
-    app.dependency_overrides[get_auth] = mocked_get_auth
+    test_app.dependency_overrides[get_user] = mocked_get_user
+    test_app.dependency_overrides[get_auth] = mocked_get_auth
 
-    yield app
+    yield test_app
 
 
 @pytest.fixture
@@ -84,6 +85,7 @@ def client(mocker, db_session, app):
             ResourceBase.__table__,
             BibframeClass.__table__,
             Instance.__table__,
+            OtherResource.__table__,
             ResourceBibframeClass.__table__,
             Version.__table__,
             Work.__table__,
