@@ -39,6 +39,7 @@ BLUECORE_URL="http://localhost:3000/"
 AIRFLOW_INTERNAL_URL="http://localhost:8080"
 KEYCLOAK_EXTERNAL_URL="http://localhost:8081/keycloak/"
 KEYCLOAK_INTERNAL_URL="http://localhost:8081/keycloak/"
+USE_KEYCLOAK_INTROSPECTION=true # Set to false in production (defaults to true for dev and testing)
 
 # keycloak config so blucore_api users can authenticate
 API_KEYCLOAK_CLIENT_ID="bluecore_api"
