@@ -27,7 +27,7 @@ def token():
 
 
 @app.command()
-def load(
+def load_file(
     file: Annotated[
         Path, Argument(exists=True, dir_okay=False, readable=True, resolve_path=True)
     ],
@@ -41,6 +41,27 @@ def load(
             f"{state['api_url']}/batches/upload/",
             headers={"Authorization": f"Bearer {token}"},
             files={"file": file.open("rb")},
+        )
+
+        resp.raise_for_status()
+        printr(resp.json())
+
+    except httpx.HTTPError as e:
+        printr(f"[red]{e}[/red]")
+        raise Exit(1)
+
+
+@app.command()
+def load_url(url: Annotated[str, Argument()]):
+    """
+    Upload a Bibframe JSON-LD document URL as a batch import.
+    """
+    try:
+        token = _get_token()
+        resp = httpx.post(
+            f"{state['api_url']}/batches/",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"uri": url},
         )
 
         resp.raise_for_status()
