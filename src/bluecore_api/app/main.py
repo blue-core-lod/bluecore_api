@@ -28,6 +28,7 @@ from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
 """Init base app"""
 base_app = FastAPI()
+base_app = FastAPI(root_path="/api")
 base_app.include_router(change_documents)
 base_app.include_router(instance_routes)
 base_app.include_router(resource_routes)
