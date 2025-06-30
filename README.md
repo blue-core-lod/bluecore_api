@@ -39,7 +39,7 @@ BLUECORE_URL="http://localhost:3000/"
 AIRFLOW_INTERNAL_URL="http://localhost:8080"
 KEYCLOAK_EXTERNAL_URL="http://localhost:8081/keycloak/"
 KEYCLOAK_INTERNAL_URL="http://localhost:8081/keycloak/"
-USE_KEYCLOAK_INTROSPECTION=true # Set to false in production (defaults to true for dev and testing)
+USE_KEYCLOAK_INTROSPECTION=false # Set to true only in development to start without keycloak
 
 # keycloak config so blucore_api users can authenticate
 API_KEYCLOAK_CLIENT_ID="bluecore_api"
@@ -74,7 +74,7 @@ uv run dotenv run fastapi dev src/bluecore_api/app/main.py --port 3000
 If you want to try loading some data you can use the `bluecore` utility:
 
 ```shell
-uv run bluecore load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
+uv run bluecore --verbose load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
 ```
 
 This will tell the Blue Core API to load the data at that URL into the database.
