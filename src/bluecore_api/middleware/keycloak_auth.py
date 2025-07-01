@@ -43,7 +43,14 @@ class BypassKeycloakForGet:
     }
 
     """Add GET path prefixes (e.g., /instances/, /works/)"""
-    PREFIX_PATHS = {"/instances/", "/works/", "/api/instances/", "/api/works/"}
+    PREFIX_PATHS = {
+        "/instances/",
+        "/works/",
+        "/api/instances/",
+        "/api/works/",
+        "/change_documents/",
+        "/search",
+    }
 
     def __init__(self, app, keycloak_middleware):
         self.inner_app = app

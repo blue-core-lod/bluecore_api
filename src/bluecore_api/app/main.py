@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, File, UploadFile, Request
+from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
@@ -23,6 +23,7 @@ from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
+from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
@@ -32,6 +33,7 @@ base_app = FastAPI(root_path="/api")
 base_app.include_router(change_documents)
 base_app.include_router(instance_routes)
 base_app.include_router(resource_routes)
+base_app.include_router(search_routes)
 base_app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
