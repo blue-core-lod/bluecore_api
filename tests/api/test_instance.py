@@ -53,16 +53,16 @@ def test_create_instance(client):
         "https://bluecore.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
     )
 
-    assert str(new_work_uri).startswith(
-        "https://bcld.info/instances"
-    ), "Minted URI uses default base url https://bcld.info/"
+    assert str(new_work_uri).startswith("https://bcld.info/instances"), (
+        "Minted URI uses default base url https://bcld.info/"
+    )
 
     # Assert timestamps exist and are identical
     assert "created_at" in data
     assert "updated_at" in data
-    assert (
-        data["created_at"] == data["updated_at"]
-    ), "created_at and updated_at should match on creation"
+    assert data["created_at"] == data["updated_at"], (
+        "created_at and updated_at should match on creation"
+    )
 
 
 def test_update_instance(client, db_session):
@@ -115,9 +115,9 @@ def test_update_instance(client, db_session):
     # Assert timestamps exist and are now different
     assert "created_at" in payload
     assert "updated_at" in payload
-    assert (
-        payload["created_at"] != payload["updated_at"]
-    ), "created_at and updated_at should not match on update"
+    assert payload["created_at"] != payload["updated_at"], (
+        "created_at and updated_at should not match on update"
+    )
 
 
 if __name__ == "__main__":
