@@ -28,6 +28,7 @@ from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
 """Init base app"""
 base_app = FastAPI()
+base_app = FastAPI(root_path="/api")
 base_app.include_router(change_documents)
 base_app.include_router(instance_routes)
 base_app.include_router(resource_routes)
@@ -48,7 +49,7 @@ if os.getenv("DEVELOPER_MODE") == "true":
     application = base_app
 else:
     keycloak_config = KeycloakConfiguration(
-        use_introspection_endpoint=os.getenv("USE_KEYCLOAK_INTROSPECTION", "true")
+        use_introspection_endpoint=os.getenv("USE_KEYCLOAK_INTROSPECTION", "false")
         == "true",
         url=os.getenv("KEYCLOAK_INTERNAL_URL"),
         realm="bluecore",

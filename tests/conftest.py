@@ -25,7 +25,7 @@ if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
         "postgresql://bluecore_admin:bluecore_admin@localhost/bluecore"
     )
-
+os.environ["USE_KEYCLOAK_INTROSPECTION"] = "true"
 os.environ["AIRFLOW_INTERNAL_URL"] = "http://airflow:8080"
 os.environ["KEYCLOAK_INTERNAL_URL"] = "http://localhost:8080/auth"
 os.environ["KEYCLOAK_REALM"] = "bluecore"

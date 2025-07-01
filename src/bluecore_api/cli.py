@@ -104,7 +104,7 @@ def main(
 
     # usually the API URL hangs off the BlueCore URL, but sometimes in
     # development it's helpful to specify it separately
-    state["api_url"] = api_url or env("API_URL") or state["bluecore_url"] + "/api/"
+    state["api_url"] = api_url or env("API_URL") or state["bluecore_url"] + "api/"
 
     # remove trailing slashes from URLs
     state["bluecore_url"] = state["bluecore_url"].rstrip("/")
