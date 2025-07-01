@@ -1,4 +1,5 @@
 import os
+import rdflib
 
 from datetime import datetime, UTC
 
@@ -8,7 +9,7 @@ from fastapi_keycloak_middleware import CheckPermissions
 
 from sqlalchemy.orm import Session
 
-from bluecore_models.utils.graph import handle_external_subject
+from bluecore_models.utils.graph import frame_jsonld, handle_external_subject
 from bluecore_models.models import Instance
 
 from bluecore_api.database import get_db
@@ -75,7 +76,8 @@ async def update_instance(
 
     # Update fields if they are provided
     if instance.data is not None:
-        db_instance.data = instance.data
+        graph = rdflib.Graph().parse(data=instance.data, format="json-ld")
+        db_instance.data = frame_jsonld(db_instance.uri, graph)
     if instance.work_id is not None:
         db_instance.work_id = instance.work_id
 

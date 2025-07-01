@@ -3,6 +3,8 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 from bluecore_api.constants import BluecoreType
+from typing import Any, Dict
+from uuid import UUID
 
 
 class ErrorResponse(BaseModel):
@@ -14,8 +16,9 @@ class ErrorResponse(BaseModel):
 class ResourceBaseSchema(BaseModel):
     id: Optional[int]
     type: str
-    data: str
+    data: Dict[str, Any]
     uri: Optional[str]
+    uuid: Optional[UUID]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
