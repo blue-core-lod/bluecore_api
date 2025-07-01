@@ -49,7 +49,7 @@ class BypassKeycloakForGet:
         "/api/instances/",
         "/api/works/",
         "/change_documents/",
-        "/search/",
+        "/search",
     }
 
     def __init__(self, app, keycloak_middleware):
