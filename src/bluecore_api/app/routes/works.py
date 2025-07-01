@@ -1,15 +1,15 @@
 import os
+import rdflib
 
 from datetime import datetime, UTC
 
 from fastapi import APIRouter, Depends, HTTPException
-
 from fastapi_keycloak_middleware import CheckPermissions
 
 from sqlalchemy.orm import Session
 
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import handle_external_subject
+from bluecore_models.utils.graph import frame_jsonld, handle_external_subject
 
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
@@ -69,7 +69,8 @@ async def update_work(
 
     # Update data if it is provided
     if work.data is not None:
-        db_work.data = work.data
+        graph = rdflib.Graph().parse(data=work.data, format="json-ld")
+        db_work.data = frame_jsonld(db_work.uri, graph)
 
     db.commit()
     db.refresh(db_work)

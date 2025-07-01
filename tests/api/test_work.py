@@ -1,29 +1,33 @@
+import json
 import pathlib
-
 import pytest
 import rdflib
 
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import init_graph, BF
+from bluecore_models.utils.graph import init_graph, frame_jsonld, BF
 
 
 def test_get_work(client, db_session):
+    test_work_uuid = "22ba8203-4067-42ba-931e-3eb33bf4a749"
+    test_work_bluecore_uri = f"https://bcld.info/works/{test_work_uuid}"
+    graph = rdflib.Graph().parse(
+        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
+    )
+    data = frame_jsonld(test_work_bluecore_uri, graph)
     db_session.add(
         Work(
             id=1,
-            uuid="22ba8203-4067-42ba-931e-3eb33bf4a749",
-            uri="https://bcld.info/works/22ba8203-4067-42ba-931e-3eb33bf4a749",
-            data=pathlib.Path("tests/blue-core-work.jsonld").read_text(),
+            uuid=test_work_uuid,
+            uri=test_work_bluecore_uri,
+            data=data,
         ),
     )
-    response = client.get("/works/22ba8203-4067-42ba-931e-3eb33bf4a749")
+    response = client.get(f"/works/{test_work_uuid}")
 
     assert response.status_code == 200
     data = response.json()
 
-    assert data["uri"].startswith(
-        "https://bcld.info/works/22ba8203-4067-42ba-931e-3eb33bf4a749"
-    )
+    assert data["uri"].startswith(f"https://bcld.info/works/{test_work_uuid}")
 
 
 def test_create_work(client, mocker):
@@ -55,9 +59,9 @@ def test_create_work(client, mocker):
     # Assert timestamps exist and are identical
     assert "created_at" in data
     assert "updated_at" in data
-    assert data["created_at"] == data["updated_at"], (
-        "created_at and updated_at should match on creation"
-    )
+    assert (
+        data["created_at"] == data["updated_at"]
+    ), "created_at and updated_at should match on creation"
 
 
 def test_update_work(client, db_session):
@@ -72,7 +76,8 @@ def test_update_work(client, db_session):
 
     work_uri = rdflib.URIRef(create_response.json()["uri"])
     work_graph = init_graph()
-    work_graph.parse(data=create_response.json()["data"], format="json-ld")
+    data_str = json.dumps(create_response.json()["data"])
+    work_graph.parse(data=data_str, format="json-ld")
 
     work_graph.add(
         (
@@ -107,6 +112,10 @@ def test_update_work(client, db_session):
     # Assert timestamps exist and are now different
     assert "created_at" in data
     assert "updated_at" in data
-    assert data["created_at"] != data["updated_at"], (
-        "created_at and updated_at should not match on update"
-    )
+    assert (
+        data["created_at"] != data["updated_at"]
+    ), "created_at and updated_at should not match on update"
+
+
+if __name__ == "__main__":
+    pytest.main()

@@ -4,24 +4,28 @@ import pytest
 import rdflib
 
 from bluecore_models.models import Instance
-from bluecore_models.utils.graph import init_graph, BF
+from bluecore_models.utils.graph import frame_jsonld, init_graph, BF
 
 
 def test_get_instance(client, db_session):
+    test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
+    test_instance_bluecore_uri = f"https://bcld.info/instances/{test_instance_uuid}"
+    graph = rdflib.Graph().parse(
+        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
+    )
+    data = frame_jsonld(test_instance_bluecore_uri, graph)
     db_session.add(
         Instance(
             id=2,
-            uuid="75d831b9-e0d6-40f0-abb3-e9130622eb8a",
-            uri="https://bcld.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a",
-            data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
+            uuid=test_instance_uuid,
+            uri=test_instance_bluecore_uri,
+            data=data,
         )
     )
 
-    response = client.get("/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a")
+    response = client.get(f"/instances/{test_instance_uuid}")
     assert response.status_code == 200
-    assert response.json()["uri"].startswith(
-        "https://bcld.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    )
+    assert response.json()["uri"].startswith(test_instance_bluecore_uri)
 
 
 def test_create_instance(client):
@@ -49,16 +53,16 @@ def test_create_instance(client):
         "https://bluecore.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
     )
 
-    assert str(new_work_uri).startswith("https://bcld.info/instances"), (
-        "Minted URI uses default base url https://bcld.info/"
-    )
+    assert str(new_work_uri).startswith(
+        "https://bcld.info/instances"
+    ), "Minted URI uses default base url https://bcld.info/"
 
     # Assert timestamps exist and are identical
     assert "created_at" in data
     assert "updated_at" in data
-    assert data["created_at"] == data["updated_at"], (
-        "created_at and updated_at should match on creation"
-    )
+    assert (
+        data["created_at"] == data["updated_at"]
+    ), "created_at and updated_at should match on creation"
 
 
 def test_update_instance(client, db_session):
@@ -111,6 +115,10 @@ def test_update_instance(client, db_session):
     # Assert timestamps exist and are now different
     assert "created_at" in payload
     assert "updated_at" in payload
-    assert payload["created_at"] != payload["updated_at"], (
-        "created_at and updated_at should not match on update"
-    )
+    assert (
+        payload["created_at"] != payload["updated_at"]
+    ), "created_at and updated_at should not match on update"
+
+
+if __name__ == "__main__":
+    pytest.main()
