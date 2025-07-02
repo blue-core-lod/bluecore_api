@@ -2,10 +2,8 @@ def print_results(results, api_request, q={}, params=None):
     reset = "\033[0m"
     bold = "\033[1m"
     magenta = "\033[95m"
-    cyan = "\033[96m"
     green = "\033[92m"
     blue = "\033[94m"
-    yellow = "\033[93m"
 
     num_results = len(results)
     print()
