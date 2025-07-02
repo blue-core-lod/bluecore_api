@@ -16,6 +16,7 @@ from bluecore_api.schemas.schemas import (
     WorkSchema,
     WorkUpdateSchema,
 )
+
 endpoints = APIRouter()
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -50,6 +51,8 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_work)
     return db_work
+
+
 @endpoints.put(
     "/works/{work_uuid}",
     response_model=WorkSchema,
