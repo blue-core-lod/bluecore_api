@@ -8,6 +8,7 @@
 
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import List
 
 from bluecore_api.database import get_db
@@ -63,5 +64,16 @@ async def search(
         query = query.filter(*conditions).params(**params)
 
     query_results = query.all()
-    print_results(query_results, request.url, query, params)
+
+    #######################################
+    ##  EXPLAIN ANALYZE SQL PERFORMANCE  ##
+    #######################################
+    compiled_sql = str(query.statement.compile())  # ← no literal_binds!
+    explain_sql = f"EXPLAIN ANALYZE {compiled_sql}"
+    explain_result = db.execute(text(explain_sql), params)
+    explain_output = [row[0] for row in explain_result]
+
+    print_results(
+        query_results, request.url, query, params, search_params, explain_output
+    )
     return query_results
