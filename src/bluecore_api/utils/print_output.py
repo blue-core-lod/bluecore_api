@@ -1,4 +1,5 @@
 import json
+
 """
 ################################################################################
 # Renders the output of SQL and API requests in console with query performance #
@@ -9,7 +10,11 @@ import json
 # Call this after executing your query to debug or monitor your API behavior.
 # ------------------------------------------------------------------------------
 """
-def print_results(results, api_request, q={}, params=None, indexed_search_params=None, explain=None):
+
+
+def print_results(
+    results, api_request, q={}, params=None, indexed_search_params=None, explain=None
+):
     reset = "\033[0m"
     bold = "\033[1m"
     magenta = "\033[95m"
@@ -36,7 +41,8 @@ def print_results(results, api_request, q={}, params=None, indexed_search_params
     if indexed_search_params:
         indexed_present = {
             k: (
-                [v_i.strip('"').strip("'") for v_i in v] if isinstance(v, list)
+                [v_i.strip('"').strip("'") for v_i in v]
+                if isinstance(v, list)
                 else str(v).strip('"').strip("'")
             )
             for k, v in indexed_search_params.__dict__.items()
@@ -44,7 +50,9 @@ def print_results(results, api_request, q={}, params=None, indexed_search_params
         }
 
         if indexed_present:
-            print(f"{bold}{magenta}INDEXED SEARCH PARAMS:{reset}\n{blue}{json.dumps(indexed_present, indent=2)}{reset}")
+            print(
+                f"{bold}{magenta}INDEXED SEARCH PARAMS:{reset}\n{blue}{json.dumps(indexed_present, indent=2)}{reset}"
+            )
             print(f"{magenta}{'-' * 71}{reset}")
 
     """
