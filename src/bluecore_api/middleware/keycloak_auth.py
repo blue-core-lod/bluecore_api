@@ -49,6 +49,7 @@ class BypassKeycloakForGet:
         "/api/instances/",
         "/api/works/",
         "/change_documents/",
+        "/api/search"
         "/search",
     }
 
