@@ -16,7 +16,6 @@ TOP_LEVEL_KEYS = {
 ############################################################
 """
 MAPPED_KEYS = {
-    "mainTitle": ["title", "mainTitle"],
     "subtitle": ["title", "subtitle"],
     "nonSortNum": ["title", "bflc:nonSortNum"],
     "extent": ["extent", "http://www.w3.org/2000/01/rdf-schema#label"],
