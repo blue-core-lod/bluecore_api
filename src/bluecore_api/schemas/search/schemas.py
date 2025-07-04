@@ -1,44 +1,54 @@
-"""
-# ==============================================================================
-# Pydantic schema for /search.
-# Defines all user-facing query params.
-# FastAPI auto-generates OpenAPI docs and does runtime validation.
-# ------------------------------------------------------------------------------
-"""
-
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from fastapi import Query
+from typing import List, Optional, Annotated
+from dataclasses import dataclass
 
 
-class SearchParams(BaseModel):
-    resource_type: str = Field(
-        default="all",
-        alias="type",
-        description="Resource type: works, instances, or all",
-        min_length=1,
-        max_length=15,
-    )
-    uuid: Optional[str] = Field(
-        None,
-        description="Match native UUID column",
-        min_length=1,
-        max_length=500,
-    )
-    rdf_id: Optional[str] = Field(
-        None, description="RDF ID", min_length=1, max_length=150
-    )
-    rdf_type: Optional[str] = Field(
-        None, description="RDF @type", min_length=1, max_length=50
-    )
-    mainTitle: Optional[str] = Field(
-        None, description="Exact title", min_length=1, max_length=300
-    )
-    derivedFrom: Optional[str] = Field(
-        None,
-        description="Derived from URI",
-        min_length=1,
-        max_length=300,
-    )
-    uri: Optional[str] = Field(None, description="Match native URI column")
-    keys: List[str] = Field(default=[], alias="key", description="Dynamic keys")
-    values: List[str] = Field(default=[], alias="value", description="Dynamic values")
+@dataclass
+class SearchParams:
+    resource_type: Annotated[
+        str,
+        Query(
+            alias="type",
+            description="Resource type: works, instances, or all",
+            min_length=1,
+            max_length=15,
+        ),
+    ] = "all"
+
+    keywords: Annotated[
+        List[str],
+        Query(
+            alias="keyword",
+            description="Keyword Search: Use `ILIKE` across all JSONB data",
+        ),
+    ] = ()
+
+    uuid: Annotated[
+        Optional[str],
+        Query(description="Match native UUID column", min_length=1, max_length=500),
+    ] = None
+
+    rdf_id: Annotated[
+        Optional[str], Query(description="RDF ID", min_length=1, max_length=150)
+    ] = None
+
+    rdf_type: Annotated[
+        Optional[str], Query(description="RDF @type", min_length=1, max_length=50)
+    ] = None
+
+    mainTitle: Annotated[
+        Optional[str], Query(description="Exact title", min_length=1, max_length=300)
+    ] = None
+
+    derivedFrom: Annotated[
+        Optional[str],
+        Query(description="Derived from URI", min_length=1, max_length=300),
+    ] = None
+
+    uri: Annotated[Optional[str], Query(description="Match native URI column")] = None
+
+    keys: Annotated[List[str], Query(alias="key", description="Dynamic keys")] = ()
+
+    values: Annotated[
+        List[str], Query(alias="value", description="Dynamic values")
+    ] = ()
