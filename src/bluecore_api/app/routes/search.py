@@ -2,25 +2,27 @@
 # ==============================================================================
 # Search across resource types with proper use of JSONB indexes.
 # Supports RDF fields, mapped keys for @> optimization,
-# and dynamic top-level keys auto-normalized to keys/values.
+# dynamic top-level keys auto-normalized to keys/values,
+# and prints query performance stats with EXPLAIN ANALYZE.
 # ------------------------------------------------------------------------------
 """
 
 from bluecore_api.database import get_db
 from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH
-from bluecore_api.schemas.schemas import (
-    ResourceBaseSchema,
-)
+from bluecore_api.schemas.schemas import ResourceBaseSchema
+from bluecore_api.app.services.search_builder import build_search_query
+from bluecore_api.utils.print_output import print_results
 from bluecore_models.models import Instance, ResourceBase, Work
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi_pagination import Page
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi_pagination import Params, Page
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import select
+
 from sqlalchemy.orm import Session
+from sqlalchemy import text, select
 from typing import TypeVar
 
-
+from bluecore_api.schemas.search.schemas import SearchParams
 
 
 endpoints = APIRouter()
@@ -36,82 +38,64 @@ CustomPage = CustomizedPage[
 ]
 
 
+# ==============================================================================
+# Search across resource types with proper use of JSONB indexes.
+# Supports RDF fields, mapped keys for @> optimization,
+# dynamic top-level keys auto-normalized to keys/values,
+# and prints query performance stats with EXPLAIN ANALYZE.
+# ------------------------------------------------------------------------------
 @endpoints.get("/search/")
 async def search(
+    request: Request,
     db: Session = Depends(get_db),
-    type: str = "all",
-    size: int = DEFAULT_SEARCH_PAGE_LENGTH,
+    search_params: SearchParams = Depends(),
 ) -> CustomPage[ResourceBaseSchema]:
-    match type:
-        case "all":
-            stmt = (
-                select(ResourceBase)
-                .where(ResourceBase.type != "other_resources")
-                .limit(size)
-            )
+    match search_params.resource_type:
         case "works":
-            stmt = select(Work).limit(size)
+            stmt = select(Work)
         case "instances":
-            stmt = select(Instance).limit(size)
+            stmt = select(Instance)
+        case "all" | None:
+            stmt = select(ResourceBase).where(ResourceBase.type != text("'other_resources'"))
         case _:
             raise HTTPException(status_code=400, detail="Invalid type specified")
 
-    return paginate(db, stmt)
+    #######################
+    ##  BUILD SQL QUERY  ##
+    #######################
+    conditions, sql_params = build_search_query(request, search_params)
+
+    if conditions:
+        stmt = stmt.where(*conditions).params(**sql_params)
+
+    #######################################
+    ##  EXPLAIN ANALYZE SQL PERFORMANCE  ##
+    #######################################
+    compiled_sql = str(stmt.compile(compile_kwargs={"literal_binds": False}))
+    explain_sql = f"EXPLAIN ANALYZE {compiled_sql}"
+    explain_result = db.execute(text(explain_sql), sql_params)
+    explain_output = [row[0] for row in explain_result]
 
 
-# @endpoints.get("/search/", response_model=List[ResourceBaseSchema])
-# async def search(
-#     request: Request,
-#     db: Session = Depends(get_db),
-#     search_params: SearchParams = Depends(),
-# ):
-#     """
-#     #
-#         # Search the database for resources by type and optional filters.
-#         # --------------------------------------------------------------------------
-#         # This endpoint allows searching across different resource types
-#         # (works, instances, or all). You can filter results by UUID, RDF ID, RDF type,
-#         # main title, derivedFrom, and URI fields. All query parameters are optional,
-#         # allowing broad or very specific searches.
-#         # --------------------------------------------------------------------------
-#         # Example:
-#         # /search/?type=instances&mainTitle=Example
-#     #
-#     """
-#     if search_params.resource_type == "works":
-#         model = Work
-#     elif search_params.resource_type == "instances":
-#         model = Instance
-#     elif search_params.resource_type == "all":
-#         model = ResourceBase
-#         search_params.resource_type = None
-#     else:
-#         raise HTTPException(status_code=400, detail="Invalid type specified")
-#
-#     query = db.query(model)
-#
-#     """
-#     ##############################
-#     ##  SEARCH BUILDER SERVICE  ##
-#     ##############################
-#     Build WHERE conditions and parameters dynamically
-#     """
-#     conditions, params = build_search_query(request, search_params)
-#
-#     if conditions:
-#         query = query.filter(*conditions).params(**params)
-#
-#     query_results = query.all()
-#
-#     #######################################
-#     ##  EXPLAIN ANALYZE SQL PERFORMANCE  ##
-#     #######################################
-#     compiled_sql = str(query.statement.compile())  # ← no literal_binds!
-#     explain_sql = f"EXPLAIN ANALYZE {compiled_sql}"
-#     explain_result = db.execute(text(explain_sql), params)
-#     explain_output = [row[0] for row in explain_result]
-#
-#     print_results(
-#         query_results, request.url, query, params, search_params, explain_output
-#     )
-#     return query_results
+    ################
+    ##  Paginate  ##
+    ################
+    page = paginate(db, stmt)
+
+    ####################
+    ##  PRINT OUTPUT  ##
+    ####################
+    print_results(
+        page.items,
+        str(request.url),
+        compiled_sql,
+        sql_params,
+        search_params,
+        explain_output,
+        page.total,
+        page.page,
+        page.size,
+        page.pages,
+    )
+
+    return page

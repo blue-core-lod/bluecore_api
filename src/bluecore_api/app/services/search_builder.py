@@ -37,11 +37,9 @@ def build_search_query(request, search_params):
     keys = search_params.keys or []
     values = search_params.values or []
 
-    if resource_type:
+    if resource_type and resource_type not in ("all", None):
         conditions.append(text("type = :type"))
         params["type"] = resource_type
-    else:
-        conditions.append(text("type IN ('works', 'instances')"))
 
     if keywords:
         conditions, params = _build_sql_for_keywords(keywords, conditions, params)
@@ -108,10 +106,12 @@ def _normalize_keys(request, keys, values, conditions, params):
 
     known_facets = INDEXED_FACETS.union(
         TOP_LEVEL_KEYS
-    )  # OK, but doesn't affect the set directly
+    )
+
+    skip_keys = {"keyword", "page", "size"}
 
     for k, v in request.query_params.items():
-        if k not in known_facets and k != "keyword" and k not in seen_keys:
+        if k not in known_facets and k not in skip_keys and k not in seen_keys:
             keys.append(k)
             values.append(v)
             seen_keys.add(k)

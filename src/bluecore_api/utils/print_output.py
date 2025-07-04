@@ -13,7 +13,16 @@ import json
 
 
 def print_results(
-    results, api_request, q={}, params=None, indexed_search_params=None, explain=None
+    results,
+    api_request,
+    q={},
+    params=None,
+    indexed_search_params=None,
+    explain=None,
+    total=None,
+    page=None,
+    size=None,
+    pages=None,
 ):
     reset = "\033[0m"
     bold = "\033[1m"
@@ -88,12 +97,24 @@ def print_results(
     # Show total found and first 10 results
     # --------------------------------------------------------------------------
     """
-    print(f"{bold}{magenta}Total Works Found:{reset} {green}{num_results}{reset}")
+    print(f"{bold}{magenta}Total Works Found:{reset} {green}{total}{reset}")
+    print(f"{bold}{magenta}Current Page:{reset} {page}")
+    print(f"{bold}{magenta}Set Page Size:{reset} {size}")
+    print(f"{bold}{magenta}Total Pages:{reset} {pages}")
 
     if num_results > 0:
-        print(f"{bold}{magenta}First 10 Results:{reset}")
-        for i, res in enumerate(results[:10], start=1):
-            print(f"{magenta}  {i}. {reset}{res}")
+        print(f"{bold}{magenta}First 5 Results:{reset}")
+        for i, res in enumerate(results[:5], start=1):
+            uri = getattr(res, "uri", None)
+            typename = getattr(res, "type", None)
+            if not uri and hasattr(res, "data") and isinstance(res.data, dict):
+                uri = res.data.get("@id")
+            # Fallback: use type field if present else ResourceBaseSchema
+            classname = typename or res.__class__.__name__
+            if uri:
+                print(f"{magenta}  {i}.{reset} {blue}<{classname} {uri}>{reset}")
+            else:
+                print(f"{magenta}  {i}.{reset} {blue}{res}{reset}")
 
     print(f"{magenta}{'#' * 71}{reset}")
     print()
