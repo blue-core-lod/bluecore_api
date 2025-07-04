@@ -104,9 +104,7 @@ def _normalize_keys(request, keys, values, conditions, params):
             values.append(request.query_params[top_key])
             seen_keys.add(top_key)
 
-    known_facets = INDEXED_FACETS.union(
-        TOP_LEVEL_KEYS
-    )
+    known_facets = INDEXED_FACETS.union(TOP_LEVEL_KEYS)
 
     skip_keys = {"keyword", "page", "size"}
 

@@ -14,7 +14,7 @@ from bluecore_api.app.services.search_builder import build_search_query
 from bluecore_api.utils.print_output import print_results
 from bluecore_models.models import Instance, ResourceBase, Work
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi_pagination import Params, Page
+from fastapi_pagination import Page
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
 from fastapi_pagination.ext.sqlalchemy import paginate
 
@@ -56,7 +56,9 @@ async def search(
         case "instances":
             stmt = select(Instance)
         case "all" | None:
-            stmt = select(ResourceBase).where(ResourceBase.type != text("'other_resources'"))
+            stmt = select(ResourceBase).where(
+                ResourceBase.type != text("'other_resources'")
+            )
         case _:
             raise HTTPException(status_code=400, detail="Invalid type specified")
 
@@ -75,7 +77,6 @@ async def search(
     explain_sql = f"EXPLAIN ANALYZE {compiled_sql}"
     explain_result = db.execute(text(explain_sql), sql_params)
     explain_output = [row[0] for row in explain_result]
-
 
     ################
     ##  Paginate  ##
