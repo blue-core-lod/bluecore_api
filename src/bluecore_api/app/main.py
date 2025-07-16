@@ -5,6 +5,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
@@ -12,6 +14,7 @@ from fastapi_keycloak_middleware import (
     KeycloakMiddleware,
 )
 from fastapi_pagination import add_pagination
+
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
@@ -73,6 +76,12 @@ else:
         app=base_app, keycloak_middleware=keycloak_middleware
     )
     application = CompatibleFastAPI(app=middleware_wrapped_app)
+    base_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allows for any local client to connect
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @base_app.get("/")
