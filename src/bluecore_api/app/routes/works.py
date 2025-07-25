@@ -1,5 +1,5 @@
 import os
-import rdflib
+import json
 
 from datetime import datetime, UTC
 
@@ -9,7 +9,7 @@ from fastapi_keycloak_middleware import CheckPermissions
 from sqlalchemy.orm import Session
 
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import frame_jsonld, handle_external_subject
+from bluecore_models.utils.graph import handle_external_subject
 
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
@@ -43,8 +43,8 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
         data=work.data, type="works", bluecore_base_url=BLUECORE_URL
     )
     db_work = Work(
-        data=updated_payload.get("data"),
         uri=updated_payload.get("uri"),
+        data=updated_payload.get("data"),
         uuid=updated_payload.get("uuid"),
         created_at=time_now,
         updated_at=time_now,
@@ -69,8 +69,8 @@ async def update_work(
 
     # Update data if it is provided
     if work.data is not None:
-        graph = rdflib.Graph().parse(data=work.data, format="json-ld")
-        db_work.data = frame_jsonld(db_work.uri, graph)
+        # TODO: some day it would be nice to not have to parse work.data as JSON
+        db_work.data = json.loads(work.data)
 
     db.commit()
     db.refresh(db_work)

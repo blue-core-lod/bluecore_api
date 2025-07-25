@@ -10,7 +10,6 @@ from bluecore_api.schemas.change_documents.schemas import (
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-import json
 import pytest
 
 
@@ -20,12 +19,16 @@ HOST = "http://127.0.0.1:3000"
 
 def add_works(db: Session, start_index: int) -> None:
     for i in (1, 2, 3, 4):
-        data = {"name": f"jon_works_{i + start_index}"}
+        uri = f"https://bc_test.org/works/{i + start_index}"
         db.add(
             Work(
                 id=i + start_index,
-                uri=f"https://bc_test.org/works/{i + start_index}",
-                data=json.dumps(data),
+                uri=uri,
+                data={
+                    "@id": uri,
+                    "@type": "Work",
+                    "title": f"jon_works_{i + start_index}",
+                },
             ),
         )
     db.commit()
@@ -35,7 +38,8 @@ def update_works(db: Session, start_index: int) -> None:
     for i in (1, 2):
         index = i + start_index
         work = db.query(Work).filter(Work.id == index).first()
-        work.data = json.dumps({"name": f"jon_works_{index}_update"})
+        # the splat here is needed to preserve existing @id and @type for framing to succeed
+        work.data = {**work.data, "title": f"jon_works_{index}_update"}
     db.commit()
 
 
@@ -43,12 +47,16 @@ def add_instances(db: Session) -> None:
     works = db.query(Work).all()
     instance_id = 1
     for work in works:
-        data = {"name": f"jon_instances_{work.id}"}
+        uri = f"https://bc_test.org/instances/{instance_id}"
         db.add(
             Instance(
                 work_id=work.id,
-                data=json.dumps(data),
-                uri=f"https://bc_test.org/instances/{instance_id}",
+                uri=uri,
+                data={
+                    "@id": uri,
+                    "@type": "Instance",
+                    "name": f"jon_instances_{work.id}",
+                },
             )
         )
         instance_id += 1
@@ -58,7 +66,11 @@ def add_instances(db: Session) -> None:
 def update_instances(db: Session) -> None:
     instances = db.query(Instance).all()
     for instance in instances:
-        instance.data = json.dumps({"name": f"jon_instances_{instance.id}_update"})
+        # the splat here is needed to preserve existing @id and @type for framing to succeed
+        instance.data = {
+            **instance.data,
+            "title": f"jon_instances_{instance.id}_update",
+        }
     db.commit()
 
 
