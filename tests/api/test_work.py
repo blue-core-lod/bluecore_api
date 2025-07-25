@@ -4,22 +4,24 @@ import pytest
 import rdflib
 
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import init_graph, frame_jsonld, BF
+from bluecore_models.utils.graph import init_graph, load_jsonld, BF
 
 
 def test_get_work(client, db_session):
-    test_work_uuid = "22ba8203-4067-42ba-931e-3eb33bf4a749"
-    test_work_bluecore_uri = f"https://bcld.info/works/{test_work_uuid}"
-    graph = rdflib.Graph().parse(
-        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
-    )
-    data = frame_jsonld(test_work_bluecore_uri, graph)
+    # Note: since we are setting the JSON-LD data directly here on the Work model the
+    # URI needs to match whats in the JSON-LD file or else the JSON-LD
+    # framing will result in an empty graph.
+    test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
+    test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
+    jsonld_data = json.load(pathlib.Path("tests/blue-core-work.jsonld").open())
+    orig_graph = load_jsonld(jsonld_data)
+
     db_session.add(
         Work(
             id=1,
             uuid=test_work_uuid,
             uri=test_work_bluecore_uri,
-            data=data,
+            data=jsonld_data,
         ),
     )
     response = client.get(f"/works/{test_work_uuid}")
@@ -27,7 +29,10 @@ def test_get_work(client, db_session):
     assert response.status_code == 200
     data = response.json()
 
-    assert data["uri"].startswith(f"https://bcld.info/works/{test_work_uuid}")
+    assert data["uri"].startswith(test_work_bluecore_uri)
+
+    fetched_graph = load_jsonld(data["data"])
+    assert len(fetched_graph) == len(orig_graph)
 
 
 def test_create_work(client, mocker):
@@ -35,6 +40,7 @@ def test_create_work(client, mocker):
     original_graph.parse(
         data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
     )
+
     payload = {
         "data": original_graph.serialize(format="json-ld"),
     }
@@ -45,6 +51,7 @@ def test_create_work(client, mocker):
     assert create_response.status_code == 201
     data = create_response.json()
     new_graph = init_graph()
+
     new_graph.parse(data=data["data"], format="json-ld")
 
     assert len(original_graph) != len(new_graph)

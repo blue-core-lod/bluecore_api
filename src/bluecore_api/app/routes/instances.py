@@ -1,16 +1,12 @@
+import json
 import os
-import rdflib
+from datetime import UTC, datetime
 
-from datetime import datetime, UTC
-
-from fastapi import APIRouter, Depends, HTTPException
-
-from fastapi_keycloak_middleware import CheckPermissions
-
-from sqlalchemy.orm import Session
-
-from bluecore_models.utils.graph import frame_jsonld, handle_external_subject
 from bluecore_models.models import Instance
+from bluecore_models.utils.graph import handle_external_subject
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_keycloak_middleware import CheckPermissions
+from sqlalchemy.orm import Session
 
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
@@ -47,8 +43,8 @@ async def create_instance(
         data=instance.data, type="instances", bluecore_base_url=BLUECORE_URL
     )
     db_instance = Instance(
-        data=updated_payload.get("data"),
         uri=updated_payload.get("uri"),
+        data=updated_payload.get("data"),
         work_id=instance.work_id,
         uuid=updated_payload.get("uuid"),
         created_at=time_now,
@@ -76,8 +72,8 @@ async def update_instance(
 
     # Update fields if they are provided
     if instance.data is not None:
-        graph = rdflib.Graph().parse(data=instance.data, format="json-ld")
-        db_instance.data = frame_jsonld(db_instance.uri, graph)
+        # TODO: should instance.data be a dict instead of a JSON str?
+        db_instance.data = json.loads(instance.data)
     if instance.work_id is not None:
         db_instance.work_id = instance.work_id
 

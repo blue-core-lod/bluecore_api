@@ -1,31 +1,34 @@
+import json
 import pathlib
+
 import pytest
-
 import rdflib
-
 from bluecore_models.models import Instance
-from bluecore_models.utils.graph import frame_jsonld, init_graph, BF
+from bluecore_models.utils.graph import BF, init_graph, load_jsonld
 
 
 def test_get_instance(client, db_session):
     test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    test_instance_bluecore_uri = f"https://bcld.info/instances/{test_instance_uuid}"
-    graph = rdflib.Graph().parse(
-        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
-    )
-    data = frame_jsonld(test_instance_bluecore_uri, graph)
+    test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
+    jsonld_data = json.load(pathlib.Path("tests/blue-core-instance.jsonld").open())
+    orig_graph = load_jsonld(jsonld_data)
+
     db_session.add(
         Instance(
             id=2,
             uuid=test_instance_uuid,
             uri=test_instance_bluecore_uri,
-            data=data,
+            data=jsonld_data,
         )
     )
 
     response = client.get(f"/instances/{test_instance_uuid}")
     assert response.status_code == 200
+
     assert response.json()["uri"].startswith(test_instance_bluecore_uri)
+
+    fetched_graph = load_jsonld(response.json()["data"])
+    assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
 
 
 def test_create_instance(client):
@@ -79,7 +82,7 @@ def test_update_instance(client, db_session):
             id=2,
             uuid="75d831b9-e0d6-40f0-abb3-e9130622eb8a",
             uri=str(instance_uri),
-            data=instance_graph.serialize(format="json-ld"),
+            data=json.loads(instance_graph.serialize(format="json-ld")),
         )
     )
 
