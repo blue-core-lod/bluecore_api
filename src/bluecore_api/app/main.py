@@ -1,10 +1,12 @@
+import logging
 import os
 import sys
+import time
 
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_keycloak_middleware import (
@@ -83,7 +85,7 @@ else:
         allow_headers=["*"],
     )
     base_app.add_middleware(RedirectLocationMiddleware)
-
+    base_app.add_middleware(LoggingMiddleware)
 
 @base_app.get("/")
 async def index():
