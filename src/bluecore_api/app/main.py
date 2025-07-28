@@ -1,10 +1,12 @@
+import logging
 import os
 import sys
+import time
 
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi_keycloak_middleware import (
@@ -15,6 +17,26 @@ from fastapi_keycloak_middleware import (
 )
 from fastapi_pagination import add_pagination
 
+from starlette.middleware.base import BaseHTTPMiddleware
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        
+        # Log incoming request
+        logger.info(f"➡️ {request.method} {request.url.path} {request.headers}")
+        
+        response = await call_next(request)
+        
+        process_time = round((time.time() - start_time) * 1000, 2)
+        
+        # Log response status and duration
+        logger.info(f"⬅️ {request.method} {request.url.path} - {response.status_code} {response.headers} ({process_time} ms)")
+        
+        return response
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
@@ -82,7 +104,7 @@ else:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    base_app.add_middleware(LoggingMiddleware)
 
 @base_app.get("/")
 async def index():
