@@ -14,7 +14,7 @@ import pytest
 
 
 TEST_PAGE_LENGTH = 2
-HOST = "http://127.0.0.1:3000"
+CHANGE_DOCUMENTS_URL = "https://bcld.info/api/change_documents"
 
 
 def add_works(db: Session, start_index: int) -> None:
@@ -84,18 +84,16 @@ def test_work_change_set_add(client: TestClient, db_session: Session) -> None:
         db=db_session,
         bc_type=BluecoreType.WORKS,
         id=page_id,
-        host=HOST,
+        change_documents_url=CHANGE_DOCUMENTS_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert change_set.totalItems == 2
     assert change_set.prev is None
-    assert (
-        change_set.next
-        == f"http://127.0.0.1:3000/change_documents/works/page/{page_id + 1}"
-    )
+    assert change_set.next == f"{CHANGE_DOCUMENTS_URL}/works/page/{page_id + 1}"
     assert change_set.orderedItems[0].type == "Create"
     assert change_set.orderedItems[0].object.type == f"bf:{BibframeType.WORK}"
 
+    # The client should use the default value for CHANGE_DOCUMENTS_URL
     response = client.get(f"/change_documents/works/page/{page_id}")
     assert response.status_code == 200
     as_schema = ChangeSetSchema.model_validate(change_set)
@@ -113,14 +111,11 @@ def test_work_entry_point_update(client: TestClient, db_session: Session) -> Non
         db=db_session,
         bc_type=BluecoreType.WORKS,
         id=page_id,
-        host=HOST,
+        change_documents_url=CHANGE_DOCUMENTS_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert change_set.totalItems == 2
-    assert (
-        change_set.prev
-        == f"http://127.0.0.1:3000/change_documents/works/page/{page_id - 1}"
-    )
+    assert change_set.prev == f"{CHANGE_DOCUMENTS_URL}/works/page/{page_id - 1}"
     assert change_set.next is None
     assert change_set.orderedItems[0].type == "Update"
     assert change_set.orderedItems[0].object.type == f"bf:{BibframeType.WORK}"
@@ -137,14 +132,11 @@ def test_instance_entry_point_add(client: TestClient, db_session: Session) -> No
         db=db_session,
         bc_type=BluecoreType.INSTANCES,
         id=page_id,
-        host=HOST,
+        change_documents_url=CHANGE_DOCUMENTS_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert change_set.totalItems == 2
-    assert (
-        change_set.prev
-        == f"http://127.0.0.1:3000/change_documents/instances/page/{page_id - 1}"
-    )
+    assert change_set.prev == f"{CHANGE_DOCUMENTS_URL}/instances/page/{page_id - 1}"
     assert change_set.next is None
     assert change_set.orderedItems[0].type == "Create"
     assert change_set.orderedItems[0].object.type == f"bf:{BibframeType.INSTANCE}"
@@ -162,7 +154,7 @@ def test_instance_entry_point_update(client: TestClient, db_session: Session) ->
         db=db_session,
         bc_type=BluecoreType.INSTANCES,
         id=1,
-        host=HOST,
+        change_documents_url=CHANGE_DOCUMENTS_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert change_set.orderedItems[0].type == "Create"
@@ -173,18 +165,12 @@ def test_instance_entry_point_update(client: TestClient, db_session: Session) ->
         db=db_session,
         bc_type=BluecoreType.INSTANCES,
         id=page_id,
-        host=HOST,
+        change_documents_url=CHANGE_DOCUMENTS_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert change_set.totalItems == 2
-    assert (
-        change_set.prev
-        == f"http://127.0.0.1:3000/change_documents/instances/page/{page_id - 1}"
-    )
-    assert (
-        change_set.next
-        == f"http://127.0.0.1:3000/change_documents/instances/page/{page_id + 1}"
-    )
+    assert change_set.prev == f"{CHANGE_DOCUMENTS_URL}/instances/page/{page_id - 1}"
+    assert change_set.next == f"{CHANGE_DOCUMENTS_URL}/instances/page/{page_id + 1}"
 
     assert change_set.orderedItems[0].type == "Update"
     assert change_set.orderedItems[0].object.type == f"bf:{BibframeType.INSTANCE}"

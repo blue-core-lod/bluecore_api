@@ -81,12 +81,20 @@ class EntityChangeActivity(EntityChangeActivitiesSchema):
 
 class ChangeSet(Counter, ChangeSetSchema):
     def __init__(
-        self, db: Session, bc_type: BluecoreType, id: int, host: str, page_length: int
+        self,
+        db: Session,
+        bc_type: BluecoreType,
+        id: int,
+        change_documents_url: str,
+        page_length: int,
     ):
         total = self.total_items(db=db, bc_type=bc_type)
         total_pages = math.ceil(total / page_length)
         prev_next = self.determine_prev_next(
-            id=id, total_pages=total_pages, bc_type=bc_type, host=host
+            id=id,
+            total_pages=total_pages,
+            bc_type=bc_type,
+            change_documents_url=change_documents_url,
         )
 
         stmt = (
@@ -103,8 +111,8 @@ class ChangeSet(Counter, ChangeSetSchema):
             ordered_items.append(EntityChangeActivity(version=version))
 
         super().__init__(
-            id=f"{host}/change_documents/{bc_type}/page/{id}",
-            partOf=f"{host}/change_documents/{bc_type}/feed",
+            id=f"{change_documents_url}/{bc_type}/page/{id}",
+            partOf=f"{change_documents_url}/{bc_type}/feed",
             prev=prev_next["prev"],
             next=prev_next["next"],
             orderedItems=ordered_items,
@@ -116,7 +124,7 @@ class ChangeSet(Counter, ChangeSetSchema):
         id: int,
         total_pages: int,
         bc_type: BluecoreType,
-        host: str,
+        change_documents_url: str,
     ) -> Dict[str, Union[str, None]]:
         """
         Out of bounds conditions are not handled here.
@@ -126,12 +134,12 @@ class ChangeSet(Counter, ChangeSetSchema):
         if prev_id < 1:
             prev = None
         else:
-            prev = f"{host}/change_documents/{bc_type}/page/{prev_id}"
+            prev = f"{change_documents_url}/{bc_type}/page/{prev_id}"
 
         next_id = id + 1
         if next_id > total_pages:
             next = None
         else:
-            next = f"{host}/change_documents/{bc_type}/page/{next_id}"
+            next = f"{change_documents_url}/{bc_type}/page/{next_id}"
 
         return {"prev": prev, "next": next}

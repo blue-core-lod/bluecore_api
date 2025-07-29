@@ -13,7 +13,10 @@ import os
 page_length: int = int(
     os.getenv("ACTIVITY_STREAMS_PAGE_LENGTH", DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH)
 )
-host: str = os.getenv("BLUECORE_URL", "http://127.0.0.1:3000").rstrip("/")
+
+change_documents_url: str = os.getenv(
+    "CHANGE_DOCUMENTS_URL", "https://bcld.info/api/change_documents"
+).rstrip("/")
 
 change_documents = APIRouter()
 
@@ -29,7 +32,7 @@ async def instances_entry_point(
     return EntryPoint(
         db=db,
         bc_type=BluecoreType.INSTANCES,
-        host=host,
+        change_documents_url=change_documents_url,
         page_length=page_length,
     )
 
@@ -47,7 +50,7 @@ async def instances_change_set(
         db=db,
         bc_type=BluecoreType.INSTANCES,
         id=id,
-        host=host,
+        change_documents_url=change_documents_url,
         page_length=page_length,
     )
 
@@ -63,7 +66,7 @@ async def works_entry_point(
     return EntryPoint(
         db=db,
         bc_type=BluecoreType.WORKS,
-        host=host,
+        change_documents_url=change_documents_url,
         page_length=page_length,
     )
 
@@ -81,6 +84,6 @@ async def works_change_set(
         db=db,
         bc_type=BluecoreType.WORKS,
         id=id,
-        host=host,
+        change_documents_url=change_documents_url,
         page_length=page_length,
     )

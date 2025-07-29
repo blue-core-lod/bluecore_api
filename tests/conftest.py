@@ -33,7 +33,6 @@ os.environ["API_KEYCLOAK_CLIENT_ID"] = "bluecore"
 os.environ["API_KEYCLOAK_CLIENT_SECRET"] = "abcded235"
 
 os.environ["ACTIVITY_STREAMS_PAGE_LENGTH"] = "2"
-os.environ["ACTIVITY_STREAMS_HOST"] = "http://127.0.0.1:3000"
 
 
 @pytest.fixture(scope="session")
