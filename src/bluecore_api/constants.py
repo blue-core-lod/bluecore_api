@@ -22,5 +22,13 @@ class BibframeType(StringEnum):
     INSTANCE = "Instance"
 
 
+class SearchType(StringEnum):
+    """Search type enum."""
+
+    WORKS = "works"
+    INSTANCES = "instances"
+    ALL = "all"
+
+
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
 DEFAULT_SEARCH_PAGE_LENGTH = 10
