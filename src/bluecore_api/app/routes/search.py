@@ -28,6 +28,7 @@ CustomPage = CustomizedPage[
 
 SPACE_CONDENSER = re.compile(r"\s+")
 PHRASE_MAPPER = re.compile(r'"([^"]+)"')
+OR_MAPPER = re.compile(r"\s*\|\s*")
 
 
 def format_query(query: str) -> str:
@@ -47,9 +48,9 @@ def format_query(query: str) -> str:
     formatted = PHRASE_MAPPER.sub(
         lambda m: m.group(1).strip().replace(" ", "__PH__"), formatted
     )
+    formatted = OR_MAPPER.sub("__OR__", formatted)
     return (
-        formatted.replace(" | ", "__OR__")
-        .replace(" ", " & ")
+        formatted.replace(" ", " & ")
         .replace("__OR__", " | ")
         .replace("__PH__", " <-> ")
         .replace("*", ":*")
