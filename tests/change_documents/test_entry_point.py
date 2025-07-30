@@ -14,7 +14,7 @@ import pytest
 
 
 TEST_PAGE_LENGTH = 2
-HOST = "http://127.0.0.1:3000"
+BLUECORE_URL = "https://bcld.info"
 
 
 def add_works(db: Session, start_index: int) -> None:
@@ -81,13 +81,11 @@ def test_work_entry_point_add(client: TestClient, db_session: Session) -> None:
     entry_point = EntryPoint(
         db=db_session,
         bc_type=BluecoreType.WORKS,
-        host=HOST,
+        host=BLUECORE_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert entry_point.totalItems == 4
-    assert (
-        entry_point.last["id"] == "http://127.0.0.1:3000/change_documents/works/page/2"
-    )
+    assert entry_point.last["id"] == f"{BLUECORE_URL}/api/change_documents/works/page/2"
 
     response = client.get("/change_documents/works/feed")
     assert response.status_code == 200
@@ -104,13 +102,11 @@ def test_work_entry_point_update(client: TestClient, db_session: Session) -> Non
     entry_point = EntryPoint(
         db=db_session,
         bc_type=BluecoreType.WORKS,
-        host=HOST,
+        host=BLUECORE_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert entry_point.totalItems == 6
-    assert (
-        entry_point.last["id"] == "http://127.0.0.1:3000/change_documents/works/page/3"
-    )
+    assert entry_point.last["id"] == f"{BLUECORE_URL}/api/change_documents/works/page/3"
 
 
 def test_instance_entry_point_add(client: TestClient, db_session: Session) -> None:
@@ -122,13 +118,13 @@ def test_instance_entry_point_add(client: TestClient, db_session: Session) -> No
     entry_point = entry_point = EntryPoint(
         db=db_session,
         bc_type=BluecoreType.INSTANCES,
-        host=HOST,
+        host=BLUECORE_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert entry_point.totalItems == 4
     assert (
         entry_point.last["id"]
-        == "http://127.0.0.1:3000/change_documents/instances/page/2"
+        == f"{BLUECORE_URL}/api/change_documents/instances/page/2"
     )
 
 
@@ -143,13 +139,13 @@ def test_instance_entry_point_update(client: TestClient, db_session: Session) ->
     entry_point = entry_point = EntryPoint(
         db=db_session,
         bc_type=BluecoreType.INSTANCES,
-        host=HOST,
+        host=BLUECORE_URL,
         page_length=TEST_PAGE_LENGTH,
     )
     assert entry_point.totalItems == 8
     assert (
         entry_point.last["id"]
-        == "http://127.0.0.1:3000/change_documents/instances/page/4"
+        == f"{BLUECORE_URL}/api/change_documents/instances/page/4"
     )
 
     response = client.get("/change_documents/instances/feed")

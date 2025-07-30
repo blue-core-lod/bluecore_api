@@ -13,7 +13,7 @@ import os
 page_length: int = int(
     os.getenv("ACTIVITY_STREAMS_PAGE_LENGTH", DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH)
 )
-host: str = os.getenv("BLUECORE_URL", "http://127.0.0.1:3000").rstrip("/")
+host: str = os.getenv("BLUECORE_URL", "https://bcld.info").rstrip("/")
 
 change_documents = APIRouter()
 
