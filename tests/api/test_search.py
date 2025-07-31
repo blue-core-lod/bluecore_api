@@ -136,7 +136,7 @@ def test_search_profile_no_match(client: TestClient, db_session: Session):
     assert result["total"] == 0  # No profiles added, should return 0
 
 
-def test_search_prifile(client: TestClient, db_session: Session):
+def test_search_profile(client: TestClient, db_session: Session):
     add_other_resources(db_session)
 
     response = client.get(
