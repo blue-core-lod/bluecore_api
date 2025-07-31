@@ -103,8 +103,8 @@ class ChangeSet(Counter, ChangeSetSchema):
             ordered_items.append(EntityChangeActivity(version=version))
 
         super().__init__(
-            id=f"{host}/change_documents/{bc_type}/page/{id}",
-            partOf=f"{host}/change_documents/{bc_type}/feed",
+            id=f"{host}/api/change_documents/{bc_type}/page/{id}",
+            partOf=f"{host}/api/change_documents/{bc_type}/feed",
             prev=prev_next["prev"],
             next=prev_next["next"],
             orderedItems=ordered_items,
@@ -126,12 +126,12 @@ class ChangeSet(Counter, ChangeSetSchema):
         if prev_id < 1:
             prev = None
         else:
-            prev = f"{host}/change_documents/{bc_type}/page/{prev_id}"
+            prev = f"{host}/api/change_documents/{bc_type}/page/{prev_id}"
 
         next_id = id + 1
         if next_id > total_pages:
             next = None
         else:
-            next = f"{host}/change_documents/{bc_type}/page/{next_id}"
+            next = f"{host}/api/change_documents/{bc_type}/page/{next_id}"
 
         return {"prev": prev, "next": next}
