@@ -22,7 +22,7 @@ def test_read_other_resource(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=other_graph.serialize(format="json-ld"),
+            data=json.loads(other_graph.serialize(format="json-ld")),
             uri="http://id.loc.gov/vocabulary/mstatus/u",
         )
     )
@@ -41,7 +41,7 @@ def test_create_other_resource(client, other_graph):
     assert create_resource_response.status_code == 201
     other_resource_graph = init_graph()
     other_resource_graph.parse(
-        data=create_resource_response.json()["data"], format="json-ld"
+        data=json.dumps(create_resource_response.json()["data"]), format="json-ld"
     )
     assert len(other_resource_graph) == len(other_graph)
 
@@ -51,7 +51,7 @@ def test_update_other_resource(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=other_graph.serialize(format="json-ld"),
+            data=json.loads(other_graph.serialize(format="json-ld")),
             uri=str(unknown_uri),
         )
     )
@@ -76,7 +76,7 @@ def test_update_other_resource(client, db_session, other_graph):
     assert get_response.status_code == 200
 
     new_graph = init_graph()
-    new_graph.parse(data=get_response.json()["data"], format="json-ld")
+    new_graph.parse(data=json.dumps(get_response.json()["data"]), format="json-ld")
 
     label = new_graph.value(subject=unknown_uri, predicate=rdflib.RDFS.label)
     assert str(label).startswith("Status of the resource is unknown")
@@ -99,7 +99,7 @@ def test_json_other_resource(client):
 
     assert get_response.json()["is_profile"]
 
-    retrieved_document = json.loads(get_response.json()["data"])
+    retrieved_document = get_response.json()["data"]
 
     assert document == retrieved_document
 
@@ -109,7 +109,7 @@ def test_read_other_resource_by_uri(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=other_graph.serialize(format="json-ld"),
+            data=json.loads(other_graph.serialize(format="json-ld")),
             uri=external_uri,
         )
     )
@@ -124,7 +124,7 @@ def test_read_slice_other_resources(client, db_session):
         db_session.add(
             OtherResource(
                 id=i + 1,
-                data=json.dumps({"id": i + 1, "label": f"A label for {i + 1}"}),
+                data={"id": i + 1, "label": f"A label for {i + 1}"},
             )
         )
 
@@ -142,7 +142,7 @@ def test_read_slice_offset(client, db_session):
         db_session.add(
             OtherResource(
                 id=i + 1,
-                data=json.dumps({"id": i + 1, "label": f"A label for {i + 1}"}),
+                data={"id": i + 1, "label": f"A label for {i + 1}"},
             )
         )
     second_slice = client.get("/resources/?limit=5&offset=5")
@@ -152,5 +152,5 @@ def test_read_slice_offset(client, db_session):
     assert returned_payload["total"] == 8
     assert returned_payload["links"]["prev"].endswith("?limit=5&offset=0")
     assert "next" not in returned_payload["links"]
-    first_document = json.loads(returned_payload["resources"][0]["data"])
+    first_document = returned_payload["resources"][0]["data"]
     assert first_document["id"] == 6

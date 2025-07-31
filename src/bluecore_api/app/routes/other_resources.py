@@ -1,4 +1,5 @@
 import os
+import json
 
 from datetime import datetime, UTC
 
@@ -14,6 +15,7 @@ from bluecore_api.schemas.schemas import (
     OtherResourceCreateSchema,
     OtherResourceUpdateSchema,
 )
+
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -87,7 +89,7 @@ async def create_other_resource(
 ):
     time_now = datetime.now(UTC)
     db_other_resource = OtherResource(
-        data=resource.data,
+        data=json.loads(resource.data),
         uri=resource.uri,
         is_profile=resource.is_profile,
         created_at=time_now,
@@ -117,7 +119,8 @@ async def update_other_resource(
             status_code=404, detail=f"Other Resource {resource_id} not found"
         )
     if other_resource.data:
-        db_other_resource.data = other_resource.data
+        # bluecore_api #126
+        db_other_resource.data = json.loads(other_resource.data)
     if other_resource.uri:
         db_other_resource.uri = other_resource.uri
     if other_resource.is_profile is not None:

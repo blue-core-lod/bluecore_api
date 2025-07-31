@@ -1,9 +1,10 @@
 from bluecore_api.database import get_db
 from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH, SearchType
 from bluecore_api.schemas.schemas import (
+    OtherResourceSchema,
     ResourceBaseSchema,
 )
-from bluecore_models.models import ResourceBase
+from bluecore_models.models import OtherResource, ResourceBase
 from fastapi import APIRouter, Depends, Query
 from fastapi_pagination import Page
 from fastapi_pagination.customization import CustomizedPage, UseParamsFields
@@ -80,6 +81,27 @@ async def search(
     if q:
         stmt = stmt.where(
             func.to_tsquery("english", q).op("@@")(ResourceBase.data_vector)
+        )
+    stmt.limit(size)
+
+    return paginate(db, stmt)
+
+
+@endpoints.get("/search/profile")
+async def search_profile(
+    db: Session = Depends(get_db),
+    q: str = "",
+    size: int = DEFAULT_SEARCH_PAGE_LENGTH,
+) -> CustomPage[OtherResourceSchema]:
+    """
+    Search for profiles in the resource base.
+    """
+    stmt = select(OtherResource).where(OtherResource.is_profile.is_(True))
+
+    q = format_query(q)
+    if q:
+        stmt = stmt.where(
+            func.to_tsquery("english", q).op("@@")(OtherResource.data_vector)
         )
     stmt.limit(size)
 

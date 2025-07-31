@@ -1,5 +1,5 @@
 from bluecore_api.app.routes.search import format_query
-from bluecore_models.models import Work
+from bluecore_models.models import OtherResource, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 import json
@@ -40,6 +40,17 @@ def add_data(db_session: Session):
             data=jsonld_data,
         ),
     )
+
+def add_other_resources(db_session: Session):
+    json_data = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
+    db_session.add(
+        OtherResource(
+            uri="https://api.sinopia.io/profiles/test-profile",
+            data=json_data,
+            is_profile=True,
+        )
+    )
+    db_session.commit()
 
 
 def test_search(client: TestClient, db_session: Session):
@@ -115,6 +126,22 @@ def test_search_keyword_and_phrase(client: TestClient, db_session: Session):
     assert result["total"] == 1
     assert result["items"][0]["uri"].startswith(test_work_bluecore_uri)
 
+
+def test_search_profile_no_match(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    response = client.get("/search/profile", params={})
+    result = response.json()
+    assert result["total"] == 0  # No profiles added, should return 0
+
+
+def test_search_prifile(client: TestClient, db_session: Session):
+    add_other_resources(db_session)
+
+    response = client.get("/search/profile", params={"q": "id.loc.gov/ontologies/bibframe/language"})
+    result = response.json()
+    assert result["total"] == 1
+    assert result["items"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
 
 if __name__ == "__main__":
     pytest.main()

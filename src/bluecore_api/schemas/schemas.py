@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 from bluecore_api.constants import BluecoreType
-from typing import Any, Dict
+from typing import Any, Dict, List
 from uuid import UUID
 
 
@@ -42,7 +42,7 @@ class InstanceUpdateSchema(BaseModel):
 
 
 class OtherResourceSchema(BaseModel):
-    data: str
+    data: Dict[str, Any] | List[Any]
     uri: Optional[str] = None
     is_profile: bool
 
