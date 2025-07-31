@@ -41,6 +41,7 @@ def add_data(db_session: Session):
         ),
     )
 
+
 def add_other_resources(db_session: Session):
     json_data = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
     db_session.add(
@@ -138,10 +139,13 @@ def test_search_profile_no_match(client: TestClient, db_session: Session):
 def test_search_prifile(client: TestClient, db_session: Session):
     add_other_resources(db_session)
 
-    response = client.get("/search/profile", params={"q": "id.loc.gov/ontologies/bibframe/language"})
+    response = client.get(
+        "/search/profile", params={"q": "id.loc.gov/ontologies/bibframe/language"}
+    )
     result = response.json()
     assert result["total"] == 1
     assert result["items"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
+
 
 if __name__ == "__main__":
     pytest.main()
