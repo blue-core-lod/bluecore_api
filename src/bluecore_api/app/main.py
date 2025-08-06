@@ -23,6 +23,7 @@ from bluecore_api.middleware.keycloak_auth import (
     CompatibleFastAPI,
     enable_developer_mode,
 )
+from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
 from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.instances import endpoints as instance_routes
@@ -82,6 +83,7 @@ else:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    base_app.add_middleware(RedirectLocationMiddleware)
 
 
 @base_app.get("/")
