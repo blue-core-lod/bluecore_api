@@ -13,7 +13,6 @@ from fastapi_keycloak_middleware import (
     KeycloakConfiguration,
     KeycloakMiddleware,
 )
-from fastapi_pagination import add_pagination
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
@@ -40,7 +39,6 @@ base_app.include_router(instance_routes)
 base_app.include_router(resource_routes)
 base_app.include_router(search_routes)
 base_app.include_router(work_routes)
-add_pagination(base_app)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
