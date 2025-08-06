@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
 from bluecore_api.constants import BluecoreType
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 from uuid import UUID
 
 
@@ -78,3 +78,19 @@ class BatchCreateSchema(BaseModel):
 class BatchSchema(BaseModel):
     uri: Optional[str] = None
     workflow_id: str
+
+
+class LinksSchema(BaseModel):
+    first: str
+    prev: Optional[str] = None
+    next: Optional[str] = None
+
+
+class SearchResultSchema(BaseModel):
+    results: Sequence[ResourceBaseSchema]
+    links: LinksSchema
+
+
+class SearchProfileResultSchema(BaseModel):
+    results: Sequence[OtherResourceSchema]
+    links: LinksSchema

@@ -59,13 +59,12 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.6.3"
+version = "0.6.4"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-keycloak-middleware" },
-    { name = "fastapi-pagination" },
     { name = "pgvector" },
     { name = "psycopg2-binary" },
     { name = "python-dotenv" },
@@ -90,7 +89,6 @@ requires-dist = [
     { name = "bluecore-models" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
-    { name = "fastapi-pagination" },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
@@ -387,20 +385,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/57/e3/78f436e0e2978604a1d9c2fcada098b48127c09279e56c93a868fab80db6/fastapi_keycloak_middleware-1.3.0.tar.gz", hash = "sha256:9bedcacc7692980e9439fe436728100bce6c81c4ba2f74c501a88fd9a6e244a8", size = 17019, upload-time = "2025-06-03T11:16:42.685Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f8/00/2d98cd78fb25a45a686d50c2f921aa8710281676b796a8aecd2a16d615af/fastapi_keycloak_middleware-1.3.0-py3-none-any.whl", hash = "sha256:44c66d8431822e48b1fa1026d4601eba1f9cbffb070725c8983529cd6e812bf3", size = 22942, upload-time = "2025-06-03T11:16:41.228Z" },
-]
-
-[[package]]
-name = "fastapi-pagination"
-version = "0.13.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fastapi" },
-    { name = "pydantic" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/10/4c/e98a1665b6ac2e9e4ed98450e4e0ea48108f3bc52de517d9a70cc22761c2/fastapi_pagination-0.13.3.tar.gz", hash = "sha256:40c2383aff13a3a0e4a2742dfbf004572e88458cd8f338d85f90a27e07abab4a", size = 550898, upload-time = "2025-06-25T21:22:15.287Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/73/ef1ab892c2d189d8b6bd72325e9e710df6737c3b7976e12aa5749a56ea01/fastapi_pagination-0.13.3-py3-none-any.whl", hash = "sha256:e1b1cc7fa5c773c61087845ef8a73ed6b516071c057418698b9242461573f44e", size = 50986, upload-time = "2025-06-25T21:22:13.591Z" },
 ]
 
 [[package]]
