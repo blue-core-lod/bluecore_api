@@ -23,6 +23,10 @@ def test_format_query():
         format_query('test "hello world" | "phrase search terms"')
         == "test & hello <-> world | phrase <-> search <-> terms"
     )
+    assert (
+        format_query("bluecore:bf2:Monograph:Work")
+        == "bluecore & bf2 & Monograph & Work"
+    )
 
 
 test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
