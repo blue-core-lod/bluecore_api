@@ -42,6 +42,7 @@ def format_query(query: str) -> str:
     formatted = OR_MAPPER.sub("__OR__", formatted)
     return (
         formatted.replace(" ", " & ")
+        .replace(":", " & ")
         .replace("__OR__", " | ")
         .replace("__PH__", " <-> ")
         .replace("*", ":*")
