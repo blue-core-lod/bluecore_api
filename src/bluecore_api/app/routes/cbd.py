@@ -12,16 +12,6 @@ import xml.etree.ElementTree as ET
 endpoints = APIRouter()
 
 
-def find_work(work_id: str, db: Session) -> Work | None:
-    stmt = select(Work).where(Work.data["derivedFrom"]["@id"].astext == work_id)
-    return db.execute(stmt).scalars().first()
-
-
-def find_instance(instance_id: str, db: Session) -> Instance | None:
-    stmt = select(Instance).where(Work.data["derivedFrom"]["@id"].astext == instance_id)
-    return db.execute(stmt).scalars().first()
-
-
 def rename_namespace(root: ET.Element) -> ET.Element:
     nsmap = {
         "http://id.loc.gov/ontologies/bibframe/": "bf",
@@ -82,23 +72,17 @@ async def cbd(instance_uuid: str, response: Response, db: Session = Depends(get_
     reordered_instance_data = reorder_instance_types(db_instance.data)
     graph = load_jsonld(reordered_instance_data)
 
-    work_id: str = db_instance.data.get("instanceOf").get("@id")
-    work = find_work(work_id, db)
-    if not work:
-        raise HTTPException(status_code=404, detail="Work not found for this instance")
+    work = db_instance.work
     # The xml serialization uses the first @type to determine the root element
     # Make sure 'Work' is the first in the list of types for the work
     reordered_work_data = reorder_work_types(work.data)
     graph.parse(data=json.dumps(reordered_work_data), format="json-ld")
 
     # If the work has multiple instances, include them in the graph
-    if isinstance(work.data["hasInstance"], list):
-        for has_instance in work.data["hasInstance"]:
-            instance_id: str = has_instance.get("@id")
-            related_instance = find_instance(instance_id, db)
-            if related_instance and str(related_instance.uuid) != instance_uuid:
-                related_instance_data = reorder_instance_types(related_instance.data)
-                graph.parse(data=json.dumps(related_instance_data), format="json-ld")
+    for related_instance in work.instances:
+        if str(related_instance.uuid) != instance_uuid:
+            related_instance_data = reorder_instance_types(related_instance.data)
+            graph.parse(data=json.dumps(related_instance_data), format="json-ld")
 
     # For Marva editor, the response cannot contain xml declaration
     xml_content = graph.serialize(format="pretty-xml", max_depth=1, indent=2)
