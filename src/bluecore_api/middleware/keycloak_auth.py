@@ -62,10 +62,13 @@ class BypassKeycloakForGet:
         method = scope["method"]
         path = scope["path"]
 
-        if method == "GET" and (
-            path in self.EXACT_PATHS
-            or any(path.startswith(prefix) for prefix in self.PREFIX_PATHS)
-        ):
+        if (
+            method == "GET"
+            and (
+                path in self.EXACT_PATHS
+                or any(path.startswith(prefix) for prefix in self.PREFIX_PATHS)
+            )
+        ) or method == "OPTIONS":
             await self.inner_app(scope, receive, send)
         else:
             await self.keycloak_middleware(scope, receive, send)
