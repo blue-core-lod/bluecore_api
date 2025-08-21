@@ -31,6 +31,20 @@ class InstanceCreateSchema(BaseModel):
     data: str
 
 
+class InstanceCreateEmbeddingSchema(BaseModel):
+    instance_id: Optional[int]
+    instance_uri: str
+    version_id: Optional[int]
+    embedding: list
+
+
+class InstanceEmbeddingSchema(BaseModel):
+    instance_id: int
+    instance_uri: str
+    version_id: int
+    embedding: list
+
+
 class InstanceSchema(ResourceBaseSchema):
     type: str = BluecoreType.INSTANCES
     work_id: Optional[int]

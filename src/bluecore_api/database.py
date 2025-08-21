@@ -6,10 +6,13 @@ from sqlalchemy.orm import sessionmaker
 
 
 db_url = os.getenv("DATABASE_URL", "")
-engine = create_engine(db_url, )
+engine = create_engine(
+    db_url,
+)
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 milvus_url = os.getenv("MILVUS_URI")
+
 
 def get_db():
     db = Session()
@@ -19,7 +22,7 @@ def get_db():
         db.close()
 
 
-def get_vector_db():
+def get_vector_client():
     if not milvus_url:
         client = MilvusClient("test-vector.db")  # For testing
     else:
