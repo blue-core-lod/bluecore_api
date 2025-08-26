@@ -28,3 +28,15 @@ def get_vector_client():
     else:
         client = MilvusClient(uri=milvus_url)
     return client
+
+
+def filter_vector_result(
+    vector_client: MilvusClient, collection_name: str, version_id: int
+) -> list:
+    result = vector_client.query(
+        collection_name=collection_name,
+        filter=f"version == {version_id}",
+        output_fields=["text", "vector"],
+    )
+
+    return [{"text": r["text"], "vector": r["vector"]} for r in result]

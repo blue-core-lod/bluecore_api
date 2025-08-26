@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_keycloak_middleware import CheckPermissions
 from sqlalchemy.orm import Session
 
-from bluecore_api.database import get_db, get_vector_client
+from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
     InstanceCreateEmbeddingSchema,
@@ -23,16 +23,6 @@ from bluecore_api.schemas.schemas import (
 endpoints = APIRouter()
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
-
-
-def filter_vector_result(vector_client: MilvusClient, version_id: int) -> list:
-    result = vector_client.query(
-        collection_name="instances",
-        filter=f"version == {version_id}",
-        output_fields=["text", "vector"],
-    )
-
-    return [{"text": r["text"], "vector": r["vector"]} for r in result]
 
 
 @endpoints.get("/instances/{instance_uuid}", response_model=InstanceSchema)
@@ -59,7 +49,7 @@ async def get_embedding(
 
     version = max(db_instance.versions, key=lambda version: version.created_at)
 
-    filtered_result = filter_vector_result(vector_client, version.id)
+    filtered_result = filter_vector_result(vector_client, "instances", version.id)
 
     return {
         "instance_id": db_instance.id,
@@ -141,7 +131,7 @@ async def create_embedding(
 
     version = max(db_instance.versions, key=lambda version: version.created_at)
 
-    filtered_result = filter_vector_result(vector_client, version.id)
+    filtered_result = filter_vector_result(vector_client, "instances", version.id)
 
     if len(filtered_result) > 0:
         return {
@@ -153,7 +143,7 @@ async def create_embedding(
 
     create_embeddings(version, "instances", vector_client)
 
-    filtered_result = filter_vector_result(vector_client, version.id)
+    filtered_result = filter_vector_result(vector_client, "instances", version.id)
 
     return {
         "instance_id": db_instance.id,
