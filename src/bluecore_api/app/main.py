@@ -33,6 +33,12 @@ from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
+from starlette.middleware.base import BaseHTTPMiddleware
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 """Init base app"""
 base_app = FastAPI()
 base_app = FastAPI(root_path="/api")
@@ -44,6 +50,22 @@ base_app.include_router(search_routes)
 base_app.include_router(work_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        
+        # Log incoming request
+        logger.info(f"➡️ {request.method} {request.url.path} {request.headers}")
+        
+        response = await call_next(request)
+        
+        process_time = round((time.time() - start_time) * 1000, 2)
+        
+        # Log response status and duration
+        logger.info(f"⬅️ {request.method} {request.url.path} - {response.status_code} {response.headers} ({process_time} ms)")
+        
+        return response
 
 
 async def scope_mapper(claim_auth: list) -> list:
