@@ -19,4 +19,4 @@ RUN uv sync
 RUN uv build
 RUN uv pip install --system dist/*.whl
 
-CMD ["uv", "run", "uvicorn", "src.bluecore_api.app.main:base_app", "--host", "0.0.0.0", "--port", "8100", "--root-path", "/api", "--proxy-headers", "--forwarded-allow-ips", "*"]
+CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"] 
