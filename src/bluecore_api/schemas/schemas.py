@@ -31,13 +31,6 @@ class InstanceCreateSchema(BaseModel):
     data: str
 
 
-class InstanceCreateEmbeddingSchema(BaseModel):
-    instance_id: Optional[int]
-    instance_uri: str
-    version_id: Optional[int]
-    embedding: list
-
-
 class InstanceEmbeddingSchema(BaseModel):
     instance_id: int
     instance_uri: str
@@ -83,6 +76,13 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
+
+
+class WorkEmbeddingSchema(BaseModel):
+    work_id: int
+    work_uri: str
+    version_id: int
+    embedding: list
 
 
 class BatchCreateSchema(BaseModel):

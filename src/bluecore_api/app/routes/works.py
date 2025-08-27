@@ -3,6 +3,8 @@ import json
 
 from datetime import datetime, UTC
 
+from pymilvus import MilvusClient
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_keycloak_middleware import CheckPermissions
 
@@ -10,10 +12,12 @@ from sqlalchemy.orm import Session
 
 from bluecore_models.models import Work
 from bluecore_models.utils.graph import handle_external_subject
+from bluecore_models.utils.vector_db import create_embeddings
 
-from bluecore_api.database import get_db
+from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
+    WorkEmbeddingSchema,
     WorkSchema,
     WorkUpdateSchema,
 )
@@ -29,6 +33,29 @@ async def read_work(work_uuid: str, db: Session = Depends(get_db)):
     if db_work is None:
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
     return db_work
+
+
+@endpoints.get("/works/{work_uuid}/embeddings", response_model=WorkEmbeddingSchema)
+async def get_embedding(
+    work_uuid: str,
+    db: Session = Depends(get_db),
+    vector_client: MilvusClient = Depends(get_vector_client),
+):
+    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
+
+    if db_work is None:
+        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
+
+    version = max(db_work.versions, key=lambda version: version.created_at)
+
+    filtered_result = filter_vector_result(vector_client, "works", version.id)
+
+    return {
+        "work_id": db_work.id,
+        "version_id": version.id,
+        "embedding": filtered_result,
+        "work_uri": db_work.uri,
+    }
 
 
 @endpoints.post(
@@ -75,3 +102,34 @@ async def update_work(
     db.commit()
     db.refresh(db_work)
     return db_work
+
+
+@endpoints.post(
+    "/works/{work_uuid}/embeddings",
+    response_model=WorkEmbeddingSchema,
+    dependencies=[Depends(CheckPermissions(["create"]))],
+    status_code=201,
+)
+async def create_work_embedding(
+    work_uuid: str,
+    db: Session = Depends(get_db),
+    vector_client=Depends(get_vector_client),
+):
+    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
+    if db_work is None:
+        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
+
+    version = max(db_work.versions, key=lambda version: version.created_at)
+
+    filtered_result = filter_vector_result(vector_client, "works", version.id)
+
+    if len(filtered_result) < 1:
+        create_embeddings(version, "works", vector_client)
+        filtered_result = filter_vector_result(vector_client, "works", version.id)
+
+    return {
+        "work_id": db_work.id,
+        "version_id": version.id,
+        "embedding": filtered_result,
+        "work_uri": db_work.uri,
+    }
