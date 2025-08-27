@@ -3,8 +3,9 @@ import pathlib
 
 import pytest
 import rdflib
-from bluecore_models.models import Instance
+from bluecore_models.models import Instance, Version
 from bluecore_models.utils.graph import BF, init_graph, load_jsonld
+from bluecore_models.utils.vector_db import create_embeddings
 
 
 def test_get_instance(client, db_session):
@@ -121,6 +122,67 @@ def test_update_instance(client, db_session):
     assert payload["created_at"] != payload["updated_at"], (
         "created_at and updated_at should not match on update"
     )
+
+
+def test_get_instance_embeddings(client, db_session, vector_client):
+    sample_instance_graph = init_graph()
+    instance_uuid = "3890cc27-6fbf-42b6-8efb-d0ed40e9188e"
+    instance_uri = rdflib.URIRef(f"https://bcld.info/instances/{instance_uuid}")
+    sample_instance_graph.add((instance_uri, rdflib.RDF.type, BF.Instance))
+    title_uri = rdflib.URIRef(f"https://bcld.info/instances/{instance_uuid}#abdef345")
+    sample_instance_graph.add((instance_uri, BF.title, title_uri))
+    sample_instance_graph.add(
+        (title_uri, BF.mainTitle, rdflib.Literal("A Fine Instance", lang="en"))
+    )
+    db_session.add(
+        Instance(
+            id=3,
+            uuid=instance_uuid,
+            uri=str(instance_uri),
+            data=json.loads(sample_instance_graph.serialize(format="json-ld")),
+        )
+    )
+    version = db_session.query(Version).where(Version.resource_id == 3).first()
+    create_embeddings(version, "instances", vector_client)
+
+    # Query client for embeddings
+    get_response = client.get(f"/instances/{instance_uuid}/embeddings")
+    payload = get_response.json()
+
+    assert len(payload["embedding"]) == 3
+    # Sorting embeddings because Milvus doesn't ensure insert order
+    sorted_embedding = sorted(payload["embedding"], key=lambda x: x["text"])
+    assert len(sorted_embedding[0]["vector"]) == 768
+    assert sorted_embedding[2]["text"].startswith(
+        "<https://bcld.info/instances/3890cc27-6fbf-42b6-8efb-d0ed40e9188e> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://id.loc.gov/ontologies/bibframe/Instance>"
+    )
+
+
+def test_new_instance_embedding(client, db_session, vector_client):
+    sample_graph = init_graph()
+    uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
+    uri = rdflib.URIRef(
+        "https://bluecore.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
+    )
+    sample_graph.add((uri, rdflib.RDF.type, BF.Instance))
+    sample_graph.add((uri, rdflib.RDFS.label, rdflib.Literal("Another Instance")))
+
+    db_session.add(
+        Instance(
+            id=4,
+            uuid=uuid,
+            uri=str(uri),
+            data=json.loads(sample_graph.serialize(format="json-ld")),
+        )
+    )
+    post_result = client.post(
+        f"/instances/{uuid}/embeddings", headers={"X-User": "cataloger"}
+    )
+
+    payload = post_result.json()
+    assert payload["instance_uri"] == str(uri)
+    assert len(payload["embedding"]) == len(sample_graph)
+    assert len(payload["embedding"][0]["vector"]) == 768
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import pytest
 
 import pathlib
 import os
+import random
 import sys
 
 from pytest_mock_resources import PostgresConfig, create_postgres_fixture
@@ -9,6 +10,8 @@ from pytest_mock_resources import PostgresConfig, create_postgres_fixture
 from fastapi import Request
 from fastapi.testclient import TestClient
 from fastapi_keycloak_middleware import get_auth, get_user
+
+from pymilvus import MilvusClient
 
 from bluecore_models.models import (
     Base,
@@ -21,10 +24,13 @@ from bluecore_models.models import (
     Work,
 )
 
+from bluecore_models.utils.vector_db import init_collections
+
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
         "postgresql://bluecore_admin:bluecore_admin@localhost/bluecore"
     )
+os.environ["BLUECORE_URL"] = "https://bcld.info/"
 os.environ["USE_KEYCLOAK_INTROSPECTION"] = "true"
 os.environ["AIRFLOW_INTERNAL_URL"] = "http://airflow:8080"
 os.environ["KEYCLOAK_INTERNAL_URL"] = "http://localhost:8080/auth"
@@ -114,3 +120,37 @@ root_directory = pathlib.Path(__file__).parent.parent
 dir = root_directory / "src/"
 
 sys.path.append(str(dir))
+
+
+@pytest.fixture
+def vector_client():
+    client = MilvusClient("test-vector.db")
+    init_collections(client)
+    # Until milvus-lite PR https://github.com/milvus-io/milvus-lite/pull/303 is part of
+    # release, need to add some data to avoid an exception when trying to query an empty
+    # vector database
+    doc = {"id": 1000, "vector": [random.uniform(-1, 1) for _ in range(768)]}
+    client.insert(
+        "instances",
+        [
+            doc,
+        ],
+    )
+    client.insert(
+        "works",
+        [
+            doc,
+        ],
+    )
+
+    yield client
+
+    client.delete(collection_name="instances", filter="version == 1")
+    client.delete(collection_name="works", filter="version == 1")
+
+
+@pytest.fixture(autouse=True)
+def remove_vector_db():
+    vector_db_path = root_directory / "test-vector.db"
+    if vector_db_path.exists():
+        vector_db_path.unlink()
