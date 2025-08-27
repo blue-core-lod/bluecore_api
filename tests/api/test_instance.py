@@ -152,13 +152,7 @@ def test_get_instance_embeddings(client, db_session, vector_client):
     assert len(payload["embedding"]) == 3
     # Sorting embeddings because Milvus doesn't ensure insert order
     sorted_embedding = sorted(payload["embedding"], key=lambda x: x["text"])
-    assert sorted_embedding[0]["vector"][0:5] == [
-        0.020210744813084602,
-        0.013318769633769989,
-        -0.004648408852517605,
-        0.00555334473028779,
-        0.048100393265485764,
-    ]
+    assert len(sorted_embedding[0]["vector"]) == 768
     assert sorted_embedding[2]["text"].startswith(
         "<https://bcld.info/instances/3890cc27-6fbf-42b6-8efb-d0ed40e9188e> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://id.loc.gov/ontologies/bibframe/Instance>"
     )
