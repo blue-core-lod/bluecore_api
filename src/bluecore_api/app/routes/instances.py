@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
-    InstanceCreateEmbeddingSchema,
     InstanceEmbeddingSchema,
     InstanceSchema,
     InstanceUpdateSchema,
@@ -114,11 +113,11 @@ async def update_instance(
 
 @endpoints.post(
     "/instances/{instance_uuid}/embeddings",
-    response_model=InstanceCreateEmbeddingSchema,
+    response_model=InstanceEmbeddingSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
 )
-async def create_embedding(
+async def create_instance_embedding(
     instance_uuid: str,
     db: Session = Depends(get_db),
     vector_client=Depends(get_vector_client),
@@ -133,17 +132,9 @@ async def create_embedding(
 
     filtered_result = filter_vector_result(vector_client, "instances", version.id)
 
-    if len(filtered_result) > 0:
-        return {
-            "instance_id": db_instance.id,
-            "instance_uri": db_instance.uri,
-            "version_id": version.id,
-            "embedding": filtered_result,
-        }
-
-    create_embeddings(version, "instances", vector_client)
-
-    filtered_result = filter_vector_result(vector_client, "instances", version.id)
+    if len(filtered_result) < 1:
+        create_embeddings(version, "instances", vector_client)
+        filtered_result = filter_vector_result(vector_client, "instances", version.id)
 
     return {
         "instance_id": db_instance.id,
