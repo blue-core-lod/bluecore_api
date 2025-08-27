@@ -146,6 +146,7 @@ def vector_client():
     yield client
 
     client.delete(collection_name="instances", filter="version == 1")
+    client.delete(collection_name="works", filter="version == 1")
 
 
 @pytest.fixture(autouse=True)

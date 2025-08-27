@@ -3,8 +3,9 @@ import pathlib
 import pytest
 import rdflib
 
-from bluecore_models.models import Work
+from bluecore_models.models import Version, Work
 from bluecore_models.utils.graph import init_graph, load_jsonld, BF
+from bluecore_models.utils.vector_db import create_embeddings
 
 
 def test_get_work(client, db_session):
@@ -122,6 +123,57 @@ def test_update_work(client, db_session):
     assert data["created_at"] != data["updated_at"], (
         "created_at and updated_at should not match on update"
     )
+
+
+def test_get_work_embedding(client, db_session, vector_client):
+    sample_work_graph = init_graph()
+    sample_work_uuid = "55ce1584-9a98-4063-84c9-775c53623142"
+    sample_work_uri = rdflib.URIRef(f"https://bcld.info/works/{sample_work_uuid}")
+    sample_work_graph.add((sample_work_uri, rdflib.RDF.type, BF.Work))
+    sample_work_graph.add(
+        (sample_work_uri, rdflib.RDFS.label, rdflib.Literal("A Sample Work", lang="en"))
+    )
+    db_session.add(
+        Work(
+            id=3,
+            uuid=sample_work_uuid,
+            uri=str(sample_work_uri),
+            data=json.loads(sample_work_graph.serialize(format="json-ld")),
+        )
+    )
+
+    version = db_session.query(Version).where(Version.resource_id == 3).first()
+    create_embeddings(version, "works", vector_client)
+
+    get_response = client.get(f"/works/{sample_work_uuid}/embeddings")
+    payload = get_response.json()
+
+    assert len(payload["embedding"]) == len(sample_work_graph)
+
+
+def test_new_work_embedding(client, db_session, vector_client):
+    sample_work_graph = init_graph()
+    sample_work_uuid = "a32ccd94-0c4f-415f-ba05-432ea4176f4e"
+    sample_work_uri = rdflib.URIRef(f"https://bcld.info/works/{sample_work_uuid}")
+    sample_work_graph.add((sample_work_uri, rdflib.RDF.type, BF.Work))
+    title_bnode = rdflib.BNode()
+    sample_work_graph.add((sample_work_uri, BF.title, title_bnode))
+    sample_work_graph.add(
+        (title_bnode, BF.mainTitle, rdflib.Literal("A Great Work", lang="en"))
+    )
+    db_session.add(
+        Work(
+            id=4,
+            uuid=sample_work_uuid,
+            uri=str(sample_work_uri),
+            data=json.loads(sample_work_graph.serialize(format="json-ld")),
+        )
+    )
+    post_result = client.post(
+        f"/works/{sample_work_uuid}/embeddings", headers={"X-User": "cataloger"}
+    )
+    payload = post_result.json()
+    assert len(payload["embedding"]) == len(sample_work_graph)
 
 
 if __name__ == "__main__":
