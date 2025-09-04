@@ -53,6 +53,12 @@ async def scope_mapper(claim_auth: list) -> list:
 """Auth or dev mode config"""
 if os.getenv("DEVELOPER_MODE") == "true":
     enable_developer_mode(base_app)
+    base_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allows for any local client to connect
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     application = base_app
 else:
     keycloak_config = KeycloakConfiguration(
