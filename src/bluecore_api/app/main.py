@@ -85,6 +85,7 @@ base_app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @base_app.get("/")
 async def index():
     """Public route for API root."""
