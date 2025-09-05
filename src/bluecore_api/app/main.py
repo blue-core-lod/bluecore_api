@@ -76,13 +76,14 @@ else:
         app=base_app, keycloak_middleware=keycloak_middleware
     )
     application = CompatibleFastAPI(app=middleware_wrapped_app)
-    base_app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Allows for any local client to connect
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
     base_app.add_middleware(RedirectLocationMiddleware)
+
+base_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows for any local client to connect
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @base_app.get("/")
