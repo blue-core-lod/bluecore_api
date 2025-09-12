@@ -46,6 +46,8 @@ class BypassKeycloakForGet:
     PREFIX_PATHS = {
         "/instances/",
         "/works/",
+        "/resources/",
+        "/api/resources/",
         "/api/instances/",
         "/api/works/",
         "/change_documents/",

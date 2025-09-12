@@ -49,6 +49,7 @@ class InstanceUpdateSchema(BaseModel):
 
 
 class OtherResourceSchema(BaseModel):
+    id: int
     data: Dict[str, Any] | List[Any]
     uri: Optional[str] = None
     is_profile: bool
