@@ -6,8 +6,8 @@ from bluecore_api.schemas.schemas import (
 )
 from bluecore_models.models import OtherResource, ResourceBase
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import Selectable, TextClause, select, text
+from sqlalchemy.orm import FromStatement, noload, Session
 from sqlalchemy import func
 from typing import Dict, List
 import os
@@ -79,6 +79,21 @@ def generate_links(
     return ret
 
 
+# Borrowed from https://github.com/uriyyo/fastapi-pagination/blob/main/fastapi_pagination/ext/sqlalchemy.py
+def create_count_query(query: Selectable) -> Selectable:
+    if isinstance(query, TextClause):
+        return text(create_count_query_from_text(query.text))
+    if isinstance(query, FromStatement):
+        return create_count_query(query.element)  # type: ignore[arg-type]
+
+    query = query.order_by(None).options(noload("*"))
+
+    return query.with_only_columns(  # type: ignore[union-attr]
+        func.count(),
+        maintain_column_froms=True,
+    )
+
+
 @endpoints.get(
     "/search/", response_model=SearchResultSchema, response_model_exclude_none=True
 )
@@ -98,7 +113,9 @@ async def search(
         )
         links_query: str = f"&q={q}&type={type}"
     else:
-        links_query = ""
+        links_query = f"&type={type}"
+    count_query = create_count_query(stmt)
+    total = db.scalar(count_query)
     stmt = stmt.offset(offset).limit(limit)
     results = db.execute(stmt).scalars().all()
     links = generate_links(
@@ -111,6 +128,7 @@ async def search(
     return {
         "results": results,
         "links": links,
+        "total": total,
     }
 
 
@@ -129,7 +147,6 @@ async def search_profile(
     Search for profiles in the resource base.
     """
     stmt = select(OtherResource).where(OtherResource.is_profile.is_(True))
-    stmt.offset(offset).limit(limit)
 
     q = format_query(q)
     if q:
@@ -139,7 +156,10 @@ async def search_profile(
         links_query: str = f"&q={q}"
     else:
         links_query = ""
+    count_query = create_count_query(stmt)
+    total = db.scalar(count_query)
 
+    stmt.offset(offset).limit(limit)
     results = db.execute(stmt).scalars().all()
     links = generate_links(
         verb="search/profile",
@@ -151,4 +171,5 @@ async def search_profile(
     return {
         "results": results,
         "links": links,
+        "total": total,
     }
