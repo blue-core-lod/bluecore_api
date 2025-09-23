@@ -1,9 +1,8 @@
 from bluecore_api.database import get_db
 from bluecore_api.constants import BibframeType
-from bluecore_models.models import Instance, Work
+from bluecore_models.models import Instance
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 from typing import Any, Dict
 import json
