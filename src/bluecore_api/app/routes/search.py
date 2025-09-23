@@ -6,8 +6,8 @@ from bluecore_api.schemas.schemas import (
 )
 from bluecore_models.models import OtherResource, ResourceBase
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import Selectable, TextClause, select, text
-from sqlalchemy.orm import FromStatement, noload, Session
+from sqlalchemy import Selectable, select
+from sqlalchemy.orm import noload, Session
 from sqlalchemy import func
 from typing import Dict, List
 import os
