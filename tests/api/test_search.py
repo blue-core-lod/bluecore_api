@@ -47,13 +47,21 @@ def add_data(db_session: Session):
 
 
 def add_other_resources(db_session: Session):
-    json_data = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
+    eng = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
+    kor = json.load(pathlib.Path("tests/blue-core-other-resources2.json").open())
     db_session.add(
         OtherResource(
             uri="https://api.sinopia.io/profiles/test-profile",
-            data=json_data,
+            data=eng,
             is_profile=True,
-        )
+        ),
+    )
+    db_session.add(
+        OtherResource(
+            uri="https://api.sinopia.io/profiles/test-profile2",
+            data=kor,
+            is_profile=True,
+        ),
     )
     db_session.commit()
 
@@ -65,6 +73,7 @@ def test_search(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_or_search(client: TestClient, db_session: Session):
@@ -74,6 +83,7 @@ def test_or_search(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_phrase_search(client: TestClient, db_session: Session):
@@ -83,6 +93,7 @@ def test_phrase_search(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_wildcard_search(client: TestClient, db_session: Session):
@@ -92,6 +103,7 @@ def test_wildcard_search(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_search_incomplete_word(client: TestClient, db_session: Session):
@@ -100,6 +112,7 @@ def test_search_incomplete_word(client: TestClient, db_session: Session):
     response = client.get("/search/", params={"q": "kumae chedo mi"})
     result = response.json()
     assert len(result["results"]) == 0
+    assert result["total"] == 0
 
 
 def test_search_works(client: TestClient, db_session: Session):
@@ -109,6 +122,7 @@ def test_search_works(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_search_instances(client: TestClient, db_session: Session):
@@ -121,6 +135,7 @@ def test_search_instances(client: TestClient, db_session: Session):
     assert (
         len(result["results"]) == 0
     )  # We didn't add any instances, so should return 0
+    assert result["total"] == 0
 
 
 def test_search_keyword_and_phrase(client: TestClient, db_session: Session):
@@ -132,14 +147,14 @@ def test_search_keyword_and_phrase(client: TestClient, db_session: Session):
     result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
+    assert result["total"] == 1
 
 
 def test_search_profile_no_match(client: TestClient, db_session: Session):
-    add_data(db_session)
-
     response = client.get("/search/profile", params={})
     result = response.json()
     assert len(result["results"]) == 0  # No profiles added, should return 0
+    assert result["total"] == 0
 
 
 def test_search_profile(client: TestClient, db_session: Session):
@@ -149,8 +164,22 @@ def test_search_profile(client: TestClient, db_session: Session):
         "/search/profile", params={"q": "id.loc.gov/ontologies/bibframe/language"}
     )
     result = response.json()
+    assert len(result["results"]) == 2
+    assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
+    assert result["total"] == 2
+
+
+def test_search_profile_limit(client: TestClient, db_session: Session):
+    add_other_resources(db_session)
+
+    response = client.get(
+        "/search/profile",
+        params={"q": "id.loc.gov/ontologies/bibframe/language", "limit": 1},
+    )
+    result = response.json()
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
+    assert result["total"] == 2
 
 
 if __name__ == "__main__":

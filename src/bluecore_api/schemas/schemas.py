@@ -104,8 +104,10 @@ class LinksSchema(BaseModel):
 class SearchResultSchema(BaseModel):
     results: Sequence[ResourceBaseSchema]
     links: LinksSchema
+    total: int
 
 
 class SearchProfileResultSchema(BaseModel):
     results: Sequence[OtherResourceSchema]
     links: LinksSchema
+    total: int
