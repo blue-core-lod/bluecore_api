@@ -81,11 +81,6 @@ def generate_links(
 
 # Borrowed from https://github.com/uriyyo/fastapi-pagination/blob/main/fastapi_pagination/ext/sqlalchemy.py
 def create_count_query(query: Selectable) -> Selectable:
-    if isinstance(query, TextClause):
-        return text(create_count_query_from_text(query.text))
-    if isinstance(query, FromStatement):
-        return create_count_query(query.element)  # type: ignore[arg-type]
-
     query = query.order_by(None).options(noload("*"))
 
     return query.with_only_columns(  # type: ignore[union-attr]
