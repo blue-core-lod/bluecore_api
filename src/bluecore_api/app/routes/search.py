@@ -159,7 +159,7 @@ async def search_profile(
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
 
-    stmt.offset(offset).limit(limit)
+    stmt = stmt.offset(offset).limit(limit)
     results = db.execute(stmt).scalars().all()
     links = generate_links(
         verb="search/profile",
