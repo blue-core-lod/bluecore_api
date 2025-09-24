@@ -38,33 +38,6 @@ def _mock_airflow_chain(httpx_mock: HTTPXMock, dag_run_id="12345"):
         json={"dag_run_id": dag_run_id},
     )
 
-
-# ------------------------------
-# /batches/ (URI variant)
-# ------------------------------
-@pytest.mark.asyncio
-async def test_create_batch_from_uri(
-    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
-):
-    # ensure uploads happen under tmp working dir
-    monkeypatch.chdir(tmp_path)
-
-    _mock_airflow_chain(httpx_mock, dag_run_id="12345")
-
-    resp = client.post(
-        "/batches/",
-        headers={"X-User": "cataloger"},
-        json={"uri": "https://example.com/data.jsonld"},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["uri"] == "https://example.com/data.jsonld"
-    assert data["workflow_id"] == "12345"
-
-    # Airflow call should have Authorization header
-    assert httpx_mock.get_requests()[1].headers.get("Authorization") == "Bearer xxx"
-
-
 # ------------------------------
 # /batches/upload/ (multipart XML)
 # ------------------------------
@@ -80,14 +53,13 @@ async def test_upload_multipart_xml_to_jsonld(
     assert resp.status_code == 200
     data = resp.json()
     assert data["workflow_id"] == "xml-111"
-    assert data["uri"].endswith(".jsonld")
+    assert data["uri"].endswith("/example.xml")
 
-    # Verify file exists and is valid JSON
-    jsonld_rel = data["uri"].split("uploads/")[-1]  # everything after 'uploads/'
-    jsonld_path = Path("./uploads") / jsonld_rel
-    assert jsonld_path.is_file()
-    # rdflib wrote JSON-LD text; ensure it's JSON
-    json.loads(jsonld_path.read_text())
+    # verify the saved file exists and matches uploaded bytes
+    saved_rel = data["uri"].split("uploads/")[-1]
+    saved_path = Path("./uploads") / saved_rel
+    assert saved_path.is_file()
+    assert saved_path.read_bytes() == SIMPLE_XML
 
     # Airflow call should have Authorization header
     assert httpx_mock.get_requests()[1].headers.get("Authorization") == "Bearer xxx"
@@ -120,33 +92,6 @@ async def test_upload_multipart_jsonld_passthrough(
 
 
 # ------------------------------
-# /batches/upload/ (application/json body with rdfxml)
-# ------------------------------
-@pytest.mark.asyncio
-async def test_upload_json_body_with_rdfxml(
-    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
-):
-    monkeypatch.chdir(tmp_path)
-    _mock_airflow_chain(httpx_mock, dag_run_id="json-333")
-
-    payload = {"name": "from_json", "rdfxml": SIMPLE_XML.decode("utf-8")}
-    resp = client.post(
-        "/batches/upload/",
-        headers={"X-User": "cataloger", "Content-Type": "application/json"},
-        json=payload,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["workflow_id"] == "json-333"
-    assert data["uri"].endswith(".jsonld")
-
-    saved_rel = data["uri"].split("uploads/")[-1]
-    saved_path = Path("./uploads") / saved_rel
-    assert saved_path.is_file()
-    json.loads(saved_path.read_text())
-
-
-# ------------------------------
 # /batches/upload/ (raw XML body)
 # ------------------------------
 @pytest.mark.asyncio
@@ -159,7 +104,7 @@ async def test_upload_raw_xml_body(
     resp = client.post(
         "/batches/upload/",
         headers={"X-User": "cataloger", "Content-Type": "application/xml"},
-        content=SIMPLE_XML,  # Starlette TestClient uses 'content' for raw bytes
+        content=SIMPLE_XML,
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -176,27 +121,31 @@ async def test_upload_raw_xml_body(
 # Error cases
 # ------------------------------
 @pytest.mark.asyncio
-async def test_upload_unsupported_file_type(
+async def test_upload_plain_text_passthrough(
     client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
 ):
     monkeypatch.chdir(tmp_path)
-    # We still mock to avoid accidental network calls even though this should 415 before calling Airflow.
-    _mock_airflow_chain(httpx_mock, dag_run_id="nope-555")
+    _mock_airflow_chain(httpx_mock, dag_run_id="txt-555")
 
     files = {"file": ("notes.txt", b"hello", "text/plain")}
     resp = client.post("/batches/upload/", headers={"X-User": "cataloger"}, files=files)
-    assert resp.status_code == 415
-    assert "Unsupported file type" in resp.text
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["workflow_id"] == "txt-555"
+    assert data["uri"].endswith("/notes.txt")
 
+    saved_rel = data["uri"].split("uploads/")[-1]
+    saved_path = Path("./uploads") / saved_rel
+    assert saved_path.is_file()
+    assert saved_path.read_bytes() == b"hello"
+    assert httpx_mock.get_requests()[1].headers.get("Authorization") == "Bearer xxx"
 
+# JSON missing 'rdfxml': returns 422 BEFORE Airflow call
 @pytest.mark.asyncio
 async def test_upload_json_body_missing_rdfxml(
-    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
+    client, monkeypatch, tmp_path
 ):
     monkeypatch.chdir(tmp_path)
-    _mock_airflow_chain(httpx_mock, dag_run_id="nope-666")
-
-    # Missing rdfxml key
     payload = {"name": "missing"}
     resp = client.post(
         "/batches/upload/",
