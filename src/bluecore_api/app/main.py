@@ -16,7 +16,6 @@ from bluecore_api.middleware.keycloak_auth import (
     enable_developer_mode,
 )
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
-from bluecore_api import workflow
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.cbd import endpoints as cbd_endpoints
 from bluecore_api.app.routes.instances import endpoints as instance_routes

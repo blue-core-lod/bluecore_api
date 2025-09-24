@@ -62,13 +62,23 @@ async def create_batch_file(
                 out_path = batch_dir / f"{name}.jsonld"
                 out_path.write_text(jsonld_text)
 
-            elif fct in ("application/json", "application/ld+json") or fname_lower.endswith((".json", ".jsonld")):
-                text = raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else str(raw)
+            elif fct in (
+                "application/json",
+                "application/ld+json",
+            ) or fname_lower.endswith((".json", ".jsonld")):
+                text = (
+                    raw.decode("utf-8")
+                    if isinstance(raw, (bytes, bytearray))
+                    else str(raw)
+                )
                 out_path = batch_dir / f"{name}.jsonld"
                 out_path.write_text(text)
 
             else:
-                raise HTTPException(status_code=415, detail="Unsupported file type. Send .xml, .json, or .jsonld.")
+                raise HTTPException(
+                    status_code=415,
+                    detail="Unsupported file type. Send .xml, .json, or .jsonld.",
+                )
 
         # ---- Case B: JSON body with rdfxml OR JSON-LD passthrough ----
         elif ct.startswith("application/json"):
@@ -84,6 +94,7 @@ async def create_batch_file(
                 out_path.write_text(jsonld_text)
             else:
                 import json as _json
+
                 out_path = batch_dir / f"{name}.jsonld"
                 out_path.write_text(_json.dumps(data))
 
