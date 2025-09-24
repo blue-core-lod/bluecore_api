@@ -38,6 +38,7 @@ def _mock_airflow_chain(httpx_mock: HTTPXMock, dag_run_id="12345"):
         json={"dag_run_id": dag_run_id},
     )
 
+
 # ------------------------------
 # /batches/upload/ (multipart XML)
 # ------------------------------
@@ -140,11 +141,10 @@ async def test_upload_plain_text_passthrough(
     assert saved_path.read_bytes() == b"hello"
     assert httpx_mock.get_requests()[1].headers.get("Authorization") == "Bearer xxx"
 
+
 # JSON missing 'rdfxml': returns 422 BEFORE Airflow call
 @pytest.mark.asyncio
-async def test_upload_json_body_missing_rdfxml(
-    client, monkeypatch, tmp_path
-):
+async def test_upload_json_body_missing_rdfxml(client, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     payload = {"name": "missing"}
     resp = client.post(
