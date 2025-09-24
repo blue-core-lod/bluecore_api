@@ -1,5 +1,6 @@
 from pathlib import Path
 from uuid import uuid4
+from typing import Optional
 
 import rdflib
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -9,6 +10,28 @@ from bluecore_api import workflow
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
 endpoints = APIRouter()
+
+
+def _xml_to_jsonld_and_save(
+    upload_root: Path, xml_data: bytes | str, name: Optional[str] = None
+) -> str:
+    """
+    Convert RDF/XML (bytes or str) to JSON-LD, save under ./uploads/<uuid>/<name>.jsonld,
+    and return the /opt/airflow/uploads/... file_location string.
+    """
+    g = rdflib.Graph()
+    g.parse(data=xml_data, format="xml")
+    jsonld_text = g.serialize(format="json-ld")
+
+    safe_name = (name or "batch").rsplit(".", 1)[0]
+    batch_file = f"{uuid4()}/{safe_name}.jsonld"
+
+    batch_path = upload_root / batch_file
+    batch_path.parent.mkdir(parents=True, exist_ok=True)
+    batch_path.write_text(jsonld_text)
+
+    file_location = f"/opt/airflow/uploads/{batch_file}"
+    return file_location
 
 
 @endpoints.post(
@@ -70,18 +93,9 @@ async def create_batch_file(
                 raise HTTPException(
                     status_code=422, detail="Provide 'rdfxml' in the JSON body."
                 )
-            name = (data.get("name") or "batch").rsplit(".", 1)[0]
+            name = data.get("name") or "batch"
 
-            g = rdflib.Graph()
-            g.parse(data=rdfxml, format="xml")
-            jsonld_text = g.serialize(format="json-ld")
-
-            batch_file = f"{uuid4()}/{name}.jsonld"
-            batch_path = upload_root / batch_file
-            batch_path.parent.mkdir(parents=True, exist_ok=True)
-            batch_path.write_text(jsonld_text)
-
-            file_location = f"/opt/airflow/uploads/{batch_file}"
+            file_location = _xml_to_jsonld_and_save(upload_root, rdfxml, name=name)
             workflow_id = await workflow.create_batch_from_uri(file_location)
             return {"uri": file_location, "workflow_id": workflow_id}
 
@@ -91,16 +105,7 @@ async def create_batch_file(
             if not xml_bytes:
                 raise HTTPException(status_code=422, detail="Empty XML body.")
 
-            g = rdflib.Graph()
-            g.parse(data=xml_bytes, format="xml")
-            jsonld_text = g.serialize(format="json-ld")
-
-            batch_file = f"{uuid4()}/batch.jsonld"
-            batch_path = upload_root / batch_file
-            batch_path.parent.mkdir(parents=True, exist_ok=True)
-            batch_path.write_text(jsonld_text)
-
-            file_location = f"/opt/airflow/uploads/{batch_file}"
+            file_location = _xml_to_jsonld_and_save(upload_root, xml_bytes)
             workflow_id = await workflow.create_batch_from_uri(file_location)
             return {"uri": file_location, "workflow_id": workflow_id}
 
