@@ -3,46 +3,12 @@ from bluecore_api.constants import BibframeType
 from bluecore_models.models import Instance
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Response
+from rdflib import Namespace
 from sqlalchemy.orm import Session
 from typing import Any, Dict
 import json
-import xml.etree.ElementTree as ET
 
 endpoints = APIRouter()
-
-
-def rename_namespace(root: ET.Element) -> ET.Element:
-    nsmap = {
-        "http://id.loc.gov/ontologies/bibframe/": "bf",
-        "http://id.loc.gov/ontologies/bflc/": "bflc",
-        "http://www.loc.gov/mads/rdf/v1#": "mads",
-        "http://www.w3.org/2000/01/rdf-schema#": "rdfs",
-    }
-
-    def update_tag(tag: str, nsmap: Dict[str, str]) -> str:
-        if tag[0] == "{":
-            uri, local = tag[1:].split("}", 1)
-            prefix = nsmap.get(uri)
-            if prefix:
-                return f"{prefix}:{local}"
-        return tag
-
-    for elem in root.iter():
-        elem.tag = update_tag(elem.tag, nsmap)
-        # Optionally update attributes with namespaces
-        new_attrib: Dict[str, str] = {}
-        for k, v in elem.attrib.items():
-            new_k = update_tag(k, nsmap)
-            new_attrib[new_k] = v
-        elem.attrib.clear()
-        elem.attrib.update(new_attrib)
-
-    # Add correct namespaces
-    root.set("xmlns:bf", "http://id.loc.gov/ontologies/bibframe/")
-    root.set("xmlns:bflc", "http://id.loc.gov/ontologies/bflc/")
-    root.set("xmlns:mads", "http://www.loc.gov/mads/rdf/v1#")
-    root.set("xmlns:rdfs", "http://www.w3.org/2000/01/rdf-schema#")
-    return root
 
 
 def reorder_work_types(work_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -62,8 +28,8 @@ def reorder_instance_types(instance_data: Dict[str, Any]) -> Dict[str, Any]:
 @endpoints.get("/cbd/{instance_uuid}")
 async def cbd(instance_uuid: str, response: Response, db: Session = Depends(get_db)):
     # Marva editor expects the request url to end with .rdf
-    instance_uuid = instance_uuid.strip().replace(".rdf", "")
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
+    effective_uuid = instance_uuid.strip().replace(".rdf", "").replace(".jsonld", "")
+    db_instance = db.query(Instance).filter(Instance.uuid == effective_uuid).first()
 
     if db_instance is None:
         raise HTTPException(status_code=404, detail="Instance not found")
@@ -79,18 +45,25 @@ async def cbd(instance_uuid: str, response: Response, db: Session = Depends(get_
 
     # If the work has multiple instances, include them in the graph
     for related_instance in work.instances:
-        if str(related_instance.uuid) != instance_uuid:
+        if str(related_instance.uuid) != effective_uuid:
             related_instance_data = reorder_instance_types(related_instance.data)
             graph.parse(data=json.dumps(related_instance_data), format="json-ld")
 
+    if instance_uuid.endswith(".jsonld"):
+        jsonld_content = graph.serialize(format="json-ld", indent=2)
+        return Response(
+            content=jsonld_content,
+            media_type="application/json",
+        )
+
     # For Marva editor, the response cannot contain xml declaration
-    xml_content = graph.serialize(format="pretty-xml", max_depth=1, indent=2)
-    root = ET.fromstring(xml_content)
-    # The xml serialization uses generic namespaces such as ns1, ns2, etc.
-    # The Marva editor requires bf namespace.
-    root = rename_namespace(root)
+    bf_namespace = Namespace("http://id.loc.gov/ontologies/bibframe/")
+    graph.bind("bf", bf_namespace, override=True, replace=True)
+    xml_content = graph.serialize(
+        format="pretty-xml", max_depth=1, indent=2, xml_declaration=False
+    )
 
     return Response(
-        content=ET.tostring(root, encoding="utf-8").decode("utf-8"),
+        content=xml_content,
         media_type="application/rdf+xml",
     )
