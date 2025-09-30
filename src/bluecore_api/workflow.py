@@ -1,6 +1,7 @@
 import datetime
 import os
 import logging
+from typing import Optional
 
 import httpx
 
@@ -9,10 +10,12 @@ AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_WWW_USER_PASSWORD")
 AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL").rstrip("/")
 
 
-async def create_batch_from_uri(uri: str) -> str:
+async def create_batch_from_uri(uri: str, user_uid: Optional[str] = None) -> str:
     """
-    Start an Airflow DAG run to process data at a given URI. Returns the ID for the created DAG Run.
-    A URI can have https, http, s3 or file protocol.
+    uri: Start an Airflow DAG run to process data at a given URI. Returns the ID
+         for the created DAG Run. A URI can have https, http, s3 or file protocol.
+    user_uid: Keycloak subject/UID of the caller (optional). When provided, it will
+              be available to the DAG as dag_run.conf["user_uid"].
     """
 
     token = await get_token()
@@ -20,12 +23,15 @@ async def create_batch_from_uri(uri: str) -> str:
     url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/resource_loader/dagRuns"
     now = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
+    # Put the UID into the DAG run's conf so tasks can read it
+    conf = {"file": uri, "user_uid": user_uid}
+
     async with httpx.AsyncClient() as client:
         try:
             resp = await client.post(
                 url,
                 headers={"Authorization": f"Bearer {token}"},
-                json={"logical_date": now, "conf": {"file": uri}},
+                json={"logical_date": now, "conf": conf},
             )
             resp.raise_for_status()
             job_id = resp.json().get("dag_run_id")
