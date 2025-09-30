@@ -112,10 +112,6 @@ def _decode_bearer_claims(auth_header: Optional[str]) -> dict:
         return {}
 
 
-# ==============================================================================
-# Pull user-identifying fields *only* from the JWT claims we decoded above.
-# Returns: (uid, username, email, given_name, family_name)
-# ------------------------------------------------------------------------------
 def _extract_identity_from_request(
     request: Request,
 ) -> tuple[str, Optional[str], Optional[str], Optional[str], Optional[str]]:
@@ -140,11 +136,6 @@ def _extract_identity_from_request(
     return uid, username, email, given_name, family_name
 
 
-# ==============================================================================
-# Store the current user's UID in CURRENT_USER_ID for Version.before_insert and
-# print a concise line with uid, username, email, first/last name for debugging.
-# Only reads the Bearer token (no middleware state).
-# ------------------------------------------------------------------------------
 async def set_user_context(request: Request):
     """
     Store the current user's UID in CURRENT_USER_ID for Version.before_insert and
