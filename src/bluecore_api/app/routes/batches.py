@@ -9,6 +9,8 @@ from fastapi_keycloak_middleware import CheckPermissions
 from bluecore_api import workflow
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
+from bluecore_models.models.version import CURRENT_USER_ID
+
 endpoints = APIRouter()
 
 
@@ -41,8 +43,12 @@ def _xml_to_jsonld_and_save(
 )
 async def create_batch(batch: BatchCreateSchema):
     """Create a batch from a URI (unchanged behavior)."""
+    user_uid = CURRENT_USER_ID.get()  # => "anonymous" if no token
     try:
-        workflow_id = await workflow.create_batch_from_uri(batch.uri)
+        workflow_id = await workflow.create_batch_from_uri(
+            batch.uri,
+            user_uid=user_uid,
+        )
     except workflow.WorkflowError as e:
         raise HTTPException(status_code=503, detail=str(e))
     return {"uri": batch.uri, "workflow_id": workflow_id}
@@ -64,6 +70,8 @@ async def create_batch_file(
       - application/xml or text/xml raw body -> XML -> JSON-LD
     Then trigger the Airflow DAG using the saved path.
     """
+    user_uid = CURRENT_USER_ID.get()
+
     try:
         upload_root = Path("./uploads")
         upload_root.mkdir(parents=True, exist_ok=True)
@@ -79,7 +87,9 @@ async def create_batch_file(
                     fh.write(chunk)
 
             file_location = f"/opt/airflow/uploads/{batch_file}"
-            workflow_id = await workflow.create_batch_from_uri(file_location)
+            workflow_id = await workflow.create_batch_from_uri(
+                file_location, user_uid=user_uid
+            )
             return {"uri": file_location, "workflow_id": workflow_id}
 
         # No multipart file: inspect content-type
@@ -96,7 +106,9 @@ async def create_batch_file(
             name = data.get("name") or "batch"
 
             file_location = _xml_to_jsonld_and_save(upload_root, rdfxml, name=name)
-            workflow_id = await workflow.create_batch_from_uri(file_location)
+            workflow_id = await workflow.create_batch_from_uri(
+                file_location, user_uid=user_uid
+            )
             return {"uri": file_location, "workflow_id": workflow_id}
 
         # Case C: raw XML body -> convert to JSON-LD
@@ -106,7 +118,9 @@ async def create_batch_file(
                 raise HTTPException(status_code=422, detail="Empty XML body.")
 
             file_location = _xml_to_jsonld_and_save(upload_root, xml_bytes)
-            workflow_id = await workflow.create_batch_from_uri(file_location)
+            workflow_id = await workflow.create_batch_from_uri(
+                file_location, user_uid=user_uid
+            )
             return {"uri": file_location, "workflow_id": workflow_id}
 
         # Otherwise: unsupported
