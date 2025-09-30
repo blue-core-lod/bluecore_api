@@ -26,5 +26,8 @@ jobs:
       - name: Lint
         run: uv run ruff check
 
+      - name: Install test dependencies (Milvus Lite)
+        run: uv pip install "pymilvus[milvus_lite]>=2.4,<3.0"
+
       - name: Run tests
         run: uv run pytest
