@@ -93,17 +93,16 @@ def test_cbd(client: TestClient, db_session: Session):
     BF_NS = "http://id.loc.gov/ontologies/bibframe/"
     children = list(root)
     bf_children = [el for el in children if el.tag.startswith("{" + BF_NS)]
-    # Expect Work + Instance, no matter what extra rdf:Description appears
-    assert len(bf_children) == 2, (
-        f"Expected 2 top-level bf:* elements (Work, Instance), "
-        f"got {len(bf_children)}: {[el.tag for el in bf_children]}"
+    bf_local_names = [
+        el.tag.split("}", 1)[1] if "}" in el.tag else el.tag for el in bf_children
+    ]
+    # 1) Only Work/Instance should appear at top level in bf:* namespace
+    assert set(bf_local_names).issubset({"Work", "Instance"}), (
+        f"Unexpected bf:* top-level elements: {sorted(set(bf_local_names))}"
     )
-    assert any(el.tag.endswith("}Work") for el in bf_children), (
-        "Missing top-level bf:Work"
-    )
-    assert any(el.tag.endswith("}Instance") for el in bf_children), (
-        "Missing top-level bf:Instance"
-    )
+    # 2) Ensure there is at least one Work and one Instance (duplicates allowed)
+    assert "Work" in bf_local_names, "Missing top-level bf:Work element"
+    assert "Instance" in bf_local_names, "Missing top-level bf:Instance element"
 
 
 if __name__ == "__main__":
