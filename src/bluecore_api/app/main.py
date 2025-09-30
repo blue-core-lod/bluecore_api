@@ -1,6 +1,6 @@
 import os
 import sys
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
@@ -14,7 +14,9 @@ from bluecore_api.middleware.keycloak_auth import (
     BypassKeycloakForGet,
     CompatibleFastAPI,
     enable_developer_mode,
+    set_user_context,
 )
+
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.cbd import endpoints as cbd_endpoints
@@ -25,8 +27,7 @@ from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
 
 """Init base app"""
-base_app = FastAPI()
-base_app = FastAPI(root_path="/api")
+base_app = FastAPI(root_path="/api", dependencies=[Depends(set_user_context)])
 base_app.include_router(change_documents)
 base_app.include_router(cbd_endpoints)
 base_app.include_router(instance_routes)
