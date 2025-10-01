@@ -1,5 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi_keycloak_middleware import get_auth, get_user
+from bluecore_models.models.version import CURRENT_USER_ID
+from bluecore_api.middleware.helpers.keycloak_utils import (
+    get_keycloak_user_info,
+    log_user_info,
+)
 
 
 def enable_developer_mode(app):
@@ -40,6 +45,8 @@ class BypassKeycloakForGet:
         "/api/docs",
         "/openapi.json",
         "/api/openapi.json",
+        "/api/favicon.ico",
+        "/favicon.ico",
     }
 
     """Add GET path prefixes (e.g., /instances/, /works/)"""
@@ -75,3 +82,13 @@ class BypassKeycloakForGet:
             await self.inner_app(scope, receive, send)
         else:
             await self.keycloak_middleware(scope, receive, send)
+
+
+async def set_user_context(request: Request):
+    """
+    Store the current user's UID in CURRENT_USER_ID for Version.before_insert and
+    log uid, username, email, first/last name for console log.
+    """
+    uid, username, email, given_name, family_name = get_keycloak_user_info(request)
+    CURRENT_USER_ID.set(uid)
+    log_user_info(uid, username, email, given_name, family_name, request)

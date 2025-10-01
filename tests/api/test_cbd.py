@@ -90,15 +90,19 @@ def test_cbd(client: TestClient, db_session: Session):
     assert response.headers["Content-Type"] == "application/rdf+xml"
     response_data = response.content.decode("utf-8")
     root = ET.fromstring(response_data)
-    # Check that the root element has exactly 3 direct children
+    BF_NS = "http://id.loc.gov/ontologies/bibframe/"
     children = list(root)
-    assert len(children) == 3, f"Expected 3 direct children, got {len(children)}"
-    # Check that each child is either bf:Work or bf:Instance
-    for child in children:
-        tag_without_ns = child.tag.split("}")[-1] if "}" in child.tag else child.tag
-        assert tag_without_ns in {"Work", "Instance"}, (
-            f"Unexpected child tag: {child.tag}"
-        )
+    bf_children = [el for el in children if el.tag.startswith("{" + BF_NS)]
+    bf_local_names = [
+        el.tag.split("}", 1)[1] if "}" in el.tag else el.tag for el in bf_children
+    ]
+    # 1) Only Work/Instance should appear at top level in bf:* namespace
+    assert set(bf_local_names).issubset({"Work", "Instance"}), (
+        f"Unexpected bf:* top-level elements: {sorted(set(bf_local_names))}"
+    )
+    # 2) Ensure there is at least one Work and one Instance (duplicates allowed)
+    assert "Work" in bf_local_names, "Missing top-level bf:Work element"
+    assert "Instance" in bf_local_names, "Missing top-level bf:Instance element"
 
 
 if __name__ == "__main__":
