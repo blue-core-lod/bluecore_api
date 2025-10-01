@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request
-from typing import Optional
-import base64
-import json
 from fastapi_keycloak_middleware import get_auth, get_user
 from bluecore_models.models.version import CURRENT_USER_ID
+from bluecore_api.middleware.helpers.keycloak_utils import (
+    get_keycloak_user_info,
+    log_user_info,
+)
 
 
 def enable_developer_mode(app):
@@ -81,83 +82,11 @@ class BypassKeycloakForGet:
             await self.keycloak_middleware(scope, receive, send)
 
 
-def _decode_bearer_claims(auth_header: Optional[str]) -> dict:
-    """
-    Extract standard OIDC fields (sub, username, email, given/family name) from a
-    Bearer JWT *without verification* (just to log who is calling). Returns a
-    dict of claims or {} if the header is missing/invalid.
-    """
-    if not auth_header or not auth_header.lower().startswith("bearer "):
-        return {}
-    token = auth_header.split(None, 1)[1]
-    parts = token.split(".")
-    if len(parts) != 3:
-        return {}
-    payload_b64 = parts[1]
-    pad = "=" * (-len(payload_b64) % 4)
-    try:
-        raw = base64.urlsafe_b64decode(payload_b64 + pad)
-        payload = json.loads(raw.decode("utf-8"))
-        keep = (
-            "sub",
-            "preferred_username",
-            "username",
-            "email",
-            "given_name",
-            "family_name",
-            "name",
-        )
-        return {k: payload.get(k) for k in keep if k in payload}
-    except Exception:
-        return {}
-
-
-def _extract_identity_from_request(
-    request: Request,
-) -> tuple[str, Optional[str], Optional[str], Optional[str], Optional[str]]:
-    """
-    Pull user-identifying fields from the JWT decoded above.
-    Returns: (uid, username, email, given_name, family_name)
-    """
-
-    claims = _decode_bearer_claims(request.headers.get("authorization"))
-
-    uid = (
-        claims.get("sub")
-        or claims.get("username")
-        or claims.get("preferred_username")
-        or claims.get("email")
-        or "anonymous"
-    )
-    username = claims.get("preferred_username") or claims.get("username")
-    email = claims.get("email")
-    given_name = claims.get("given_name")
-    family_name = claims.get("family_name")
-    return uid, username, email, given_name, family_name
-
-
 async def set_user_context(request: Request):
     """
     Store the current user's UID in CURRENT_USER_ID for Version.before_insert and
     log uid, username, email, first/last name for console log.
     """
-    uid, username, email, given_name, family_name = _extract_identity_from_request(
-        request
-    )
+    uid, username, email, given_name, family_name = get_keycloak_user_info(request)
     CURRENT_USER_ID.set(uid)
-
-    # Debug lines (no tokens printed)
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-    MAGENTA = "\033[95m"
-    print()
-    print(f"{MAGENTA}{'#' * 71}{RESET}")
-    print(f"{BOLD}{MAGENTA}User Info (from Bearer):{RESET}")
-    print(f"{BOLD}{MAGENTA}UID:{RESET} {uid}")
-    print(f"{BOLD}{MAGENTA}Username:{RESET} {username or '-'}")
-    print(f"{BOLD}{MAGENTA}Email:{RESET} {email or '-'}")
-    print(f"{BOLD}{MAGENTA}First Name:{RESET} {given_name or '-'}")
-    print(f"{BOLD}{MAGENTA}Last Name:{RESET} {family_name or '-'}")
-    print(f"{BOLD}{MAGENTA}API Path Called:{RESET} {request.url.path}")
-    print(f"{MAGENTA}{'#' * 71}{RESET}")
-    print()
+    log_user_info(uid, username, email, given_name, family_name, request)

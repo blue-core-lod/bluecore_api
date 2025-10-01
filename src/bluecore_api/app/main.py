@@ -2,6 +2,7 @@ import os
 import sys
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from config.logging_setup import setup_logging
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     KeycloakConfiguration,
