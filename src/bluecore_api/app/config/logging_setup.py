@@ -52,7 +52,6 @@ def setup_logging():
                 "level": os.getenv("ACCESS_LOG_LEVEL", "INFO").upper(),
                 "propagate": False,
             },
-            # "keycloak_auth": {"handlers": [], "level": level, "propagate": True},
         },
         "root": {"level": level, "handlers": ["default"]},
     }
