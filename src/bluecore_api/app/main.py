@@ -1,6 +1,6 @@
 import os
 import sys
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from config.logging_setup import setup_logging
 from fastapi_keycloak_middleware import (
@@ -26,6 +26,9 @@ from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
+
+"""Initialize logging config"""
+setup_logging()
 
 """Init base app"""
 base_app = FastAPI(root_path="/api", dependencies=[Depends(set_user_context)])
@@ -86,3 +89,12 @@ base_app.add_middleware(
 async def index():
     """Public route for API root."""
     return {"message": "Blue Core API"}
+
+
+@base_app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    """
+    Prevents '404 Not Found' when using API in browser;
+    204 = no content; cache it so the browser won't ask again soon
+    """
+    return Response(status_code=204, headers={"Cache-Control": "public, max-age=86400"})

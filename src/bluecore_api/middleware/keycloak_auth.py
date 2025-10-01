@@ -45,6 +45,8 @@ class BypassKeycloakForGet:
         "/api/docs",
         "/openapi.json",
         "/api/openapi.json",
+        "/api/favicon.ico",
+        "/favicon.ico",
     }
 
     """Add GET path prefixes (e.g., /instances/, /works/)"""
