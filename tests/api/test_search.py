@@ -74,6 +74,10 @@ def test_search(client: TestClient, db_session: Session):
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
+    assert (
+        result["links"]["first"]
+        == "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mit&type=all"
+    )
 
 
 def test_or_search(client: TestClient, db_session: Session):
@@ -84,6 +88,9 @@ def test_or_search(client: TestClient, db_session: Session):
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
+    assert result["links"]["first"] == (
+        "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mi+%7C+mit&type=all"
+    )
 
 
 def test_phrase_search(client: TestClient, db_session: Session):
@@ -104,6 +111,9 @@ def test_wildcard_search(client: TestClient, db_session: Session):
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
+    assert result["links"]["first"] == (
+        "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mi%2A&type=all"
+    )
 
 
 def test_search_incomplete_word(client: TestClient, db_session: Session):
@@ -123,6 +133,10 @@ def test_search_works(client: TestClient, db_session: Session):
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
+    assert (
+        result["links"]["first"]
+        == "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mit&type=works"
+    )
 
 
 def test_search_instances(client: TestClient, db_session: Session):
@@ -167,6 +181,10 @@ def test_search_profile(client: TestClient, db_session: Session):
     assert len(result["results"]) == 2
     assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
     assert result["total"] == 2
+    assert (
+        result["links"]["first"]
+        == "https://bcld.info/api/search/profile/?limit=10&offset=0&q=id.loc.gov%2Fontologies%2Fbibframe%2Flanguage"
+    )
 
 
 def test_search_profile_limit(client: TestClient, db_session: Session):
