@@ -21,6 +21,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 COPY --chown=airflow:root src ./src
 COPY --chown=airflow:root pyproject.toml uv.lock README.md ./
 
-RUN uv sync && uv build && uv pip install dist/*.whl
+ENV UV_CACHE_DIR=${AIRFLOW_USER_HOME_DIR}/.cache/uv
+RUN mkdir -p ${UV_CACHE_DIR} && uv sync && uv build && uv pip install dist/*.whl
 
-CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"] 
+CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"]
