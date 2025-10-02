@@ -1,3 +1,5 @@
+import os
+import re
 from bluecore_api.database import get_db
 from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH, SearchType
 from bluecore_api.schemas.schemas import (
@@ -10,8 +12,7 @@ from sqlalchemy import Selectable, select
 from sqlalchemy.orm import noload, Session
 from sqlalchemy import func
 from typing import Dict, List
-import os
-import re
+from urllib.parse import urlencode
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -101,12 +102,13 @@ async def search(
 ):
     stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
     # select * from resource_base where type in ('works', 'instances') and data_vector @@ to_tsquery('english', 'Emma');
-    q = format_query(q)
-    if q:
+    formatted = format_query(q)
+    if formatted:
         stmt = stmt.where(
-            func.to_tsquery("english", q).op("@@")(ResourceBase.data_vector)
+            func.to_tsquery("english", formatted).op("@@")(ResourceBase.data_vector)
         )
-        links_query: str = f"&q={q}&type={type}"
+        params: Dict[str, str] = {"q": q, "type": type}
+        links_query = f"&{urlencode(params)}"
     else:
         links_query = f"&type={type}"
     count_query = create_count_query(stmt)
@@ -143,12 +145,13 @@ async def search_profile(
     """
     stmt = select(OtherResource).where(OtherResource.is_profile.is_(True))
 
-    q = format_query(q)
-    if q:
+    formatted = format_query(q)
+    if formatted:
         stmt = stmt.where(
-            func.to_tsquery("english", q).op("@@")(OtherResource.data_vector)
+            func.to_tsquery("english", formatted).op("@@")(OtherResource.data_vector)
         )
-        links_query: str = f"&q={q}"
+        params: Dict[str, str] = {"q": q}
+        links_query = f"&{urlencode(params)}"
     else:
         links_query = ""
     count_query = create_count_query(stmt)
