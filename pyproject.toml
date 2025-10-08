@@ -16,6 +16,7 @@ dependencies = [
   "typer>=0.15.4",
   "python-dotenv>=1.1.0",
   "pymilvus>=2.5.14",
+  "fastapi-mcp>=0.4.0",
 ]
 
 [project.scripts]
