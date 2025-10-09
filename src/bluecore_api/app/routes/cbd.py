@@ -25,7 +25,7 @@ def reorder_instance_types(instance_data: Dict[str, Any]) -> Dict[str, Any]:
     return instance_data
 
 
-@endpoints.get("/cbd/{instance_uuid}")
+@endpoints.get("/cbd/{instance_uuid}", operation_id="get_cbd")
 async def cbd(instance_uuid: str, response: Response, db: Session = Depends(get_db)):
     # Marva editor expects the request url to end with .rdf
     effective_uuid = instance_uuid.strip().replace(".rdf", "").replace(".jsonld", "")
