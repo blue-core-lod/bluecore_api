@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 
 import pathlib
 import os
@@ -10,6 +11,7 @@ from pytest_mock_resources import PostgresConfig, create_postgres_fixture
 from fastapi import Request
 from fastapi.testclient import TestClient
 from fastapi_keycloak_middleware import get_auth, get_user
+from httpx import ASGITransport, AsyncClient
 
 from pymilvus import MilvusClient
 
@@ -81,6 +83,47 @@ def app(session_mocker):
     test_app.dependency_overrides[get_auth] = mocked_get_auth
 
     yield test_app
+
+
+@pytest_asyncio.fixture
+async def mcp_client(app):
+    """
+    Fixture that provides an initialized MCP AsyncClient.
+    """
+    headers = {
+        "Accept": "application/json, text/event-stream",
+        "X-User": "cataloger",
+    }
+
+    async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as ac:
+        # Initialize the MCP connection
+        init_payload = {
+            "jsonrpc": "2.0",
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "test-client", "version": "1.0.0"},
+            },
+            "id": 1,
+        }
+
+        init_response = await ac.post("/mcp", json=init_payload, headers=headers)
+
+        # Extract session ID from response headers
+        session_id = init_response.headers.get("mcp-session-id")
+        if session_id:
+            headers["mcp-session-id"] = session_id
+
+        # Send 'initialized' notification to complete the handshake
+        # MCP protocol requires this after receiving the initialize response
+        initialized_notification = {
+            "jsonrpc": "2.0",
+            "method": "notifications/initialized",
+        }
+        await ac.post("/mcp", json=initialized_notification, headers=headers)
+
+        yield ac, headers
 
 
 @pytest.fixture
