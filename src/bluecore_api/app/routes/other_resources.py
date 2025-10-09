@@ -39,7 +39,7 @@ def _generate_links(slice_size: int, limit: int, offset: int) -> dict:
     return links
 
 
-@endpoints.get("/resources/")
+@endpoints.get("/resources/", operation_id="get_other_resources")
 async def read_other_resources(
     uri: str | None = None,
     limit: int = 10,
@@ -66,7 +66,7 @@ async def read_other_resources(
     return payload
 
 
-@endpoints.get("/resources/{resource_id}", response_model=OtherResourceSchema)
+@endpoints.get("/resources/{resource_id}", response_model=OtherResourceSchema, operation_id="get_resource")
 async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
     db_other_resource = (
         db.query(OtherResource).filter(OtherResource.id == resource_id).first()
@@ -83,6 +83,7 @@ async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
     response_model=OtherResourceSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
+    operation_id="new_other_resource"
 )
 async def create_other_resource(
     resource: OtherResourceCreateSchema, db: Session = Depends(get_db)
@@ -105,6 +106,7 @@ async def create_other_resource(
     "/resources/{resource_id}",
     response_model=OtherResourceSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
+    operation_id="update_other_resource"
 )
 async def update_other_resource(
     resource_id: str,

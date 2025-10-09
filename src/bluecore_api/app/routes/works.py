@@ -27,7 +27,7 @@ endpoints = APIRouter()
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
-@endpoints.get("/works/{work_uuid}", response_model=WorkSchema)
+@endpoints.get("/works/{work_uuid}", response_model=WorkSchema, operation_id="get_work")
 async def read_work(work_uuid: str, db: Session = Depends(get_db)):
     db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
     if db_work is None:
@@ -35,7 +35,7 @@ async def read_work(work_uuid: str, db: Session = Depends(get_db)):
     return db_work
 
 
-@endpoints.get("/works/{work_uuid}/embeddings", response_model=WorkEmbeddingSchema)
+@endpoints.get("/works/{work_uuid}/embeddings", response_model=WorkEmbeddingSchema, operation_id="get_work_embedding")
 async def get_embedding(
     work_uuid: str,
     db: Session = Depends(get_db),
@@ -63,6 +63,7 @@ async def get_embedding(
     response_model=WorkSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
+    operation_id="get_works"
 )
 async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     time_now = datetime.now(UTC)
@@ -86,6 +87,7 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     "/works/{work_uuid}",
     response_model=WorkSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
+    operation_id="get_work"
 )
 async def update_work(
     work_uuid: str, work: WorkUpdateSchema, db: Session = Depends(get_db)
@@ -109,6 +111,7 @@ async def update_work(
     response_model=WorkEmbeddingSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
+    operation_id="new_work_embedding"
 )
 async def create_work_embedding(
     work_uuid: str,
