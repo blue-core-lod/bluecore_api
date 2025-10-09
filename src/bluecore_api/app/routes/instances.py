@@ -24,7 +24,11 @@ endpoints = APIRouter()
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
-@endpoints.get("/instances/{instance_uuid}", response_model=InstanceSchema, operation_id="get_instance")
+@endpoints.get(
+    "/instances/{instance_uuid}",
+    response_model=InstanceSchema,
+    operation_id="get_instance",
+)
 async def read_instance(instance_uuid: str, db: Session = Depends(get_db)):
     db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
 
@@ -34,7 +38,9 @@ async def read_instance(instance_uuid: str, db: Session = Depends(get_db)):
 
 
 @endpoints.get(
-    "/instances/{instance_uuid}/embeddings", response_model=InstanceEmbeddingSchema, operation_id="get_instance_embedding"
+    "/instances/{instance_uuid}/embeddings",
+    response_model=InstanceEmbeddingSchema,
+    operation_id="get_instance_embedding",
 )
 async def get_embedding(
     instance_uuid: str,
@@ -63,7 +69,7 @@ async def get_embedding(
     response_model=InstanceSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
-    operation_id="new_instance"
+    operation_id="new_instance",
 )
 async def create_instance(
     instance: InstanceCreateSchema, db: Session = Depends(get_db)
@@ -90,7 +96,7 @@ async def create_instance(
     "/instances/{instance_uuid}",
     response_model=InstanceSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
-    operation_id="update_instance"
+    operation_id="update_instance",
 )
 async def update_instance(
     instance_uuid: str, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
@@ -118,7 +124,7 @@ async def update_instance(
     response_model=InstanceEmbeddingSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
-    operation_id="new_instance_embedding"
+    operation_id="new_instance_embedding",
 )
 async def create_instance_embedding(
     instance_uuid: str,

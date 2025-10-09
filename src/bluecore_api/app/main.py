@@ -90,12 +90,14 @@ base_app.add_middleware(
 mcp = FastApiMCP(
     base_app,
     auth_config=AuthConfig(
-        dependencies=[Depends(CheckPermissions(["create", "update"], 
-                                               match_strategy=MatchStrategy.OR))]
-    )
+        dependencies=[
+            Depends(
+                CheckPermissions(["create", "update"], match_strategy=MatchStrategy.OR)
+            )
+        ]
+    ),
 )
 
-    
 
 @base_app.get("/")
 async def index():
@@ -110,5 +112,6 @@ async def favicon():
     204 = no content; cache it so the browser won't ask again soon
     """
     return Response(status_code=204, headers={"Cache-Control": "public, max-age=86400"})
+
 
 mcp.mount_http()

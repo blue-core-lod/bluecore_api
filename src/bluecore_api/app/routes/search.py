@@ -91,7 +91,10 @@ def create_count_query(query: Selectable) -> Selectable:
 
 
 @endpoints.get(
-    "/search/", response_model=SearchResultSchema, response_model_exclude_none=True , operation_id="search"
+    "/search/",
+    response_model=SearchResultSchema,
+    response_model_exclude_none=True,
+    operation_id="search",
 )
 async def search(
     db: Session = Depends(get_db),
@@ -133,7 +136,7 @@ async def search(
     "/search/profile",
     response_model=SearchProfileResultSchema,
     response_model_exclude_none=True,
-    operation_id="search_profile"
+    operation_id="search_profile",
 )
 async def search_profile(
     db: Session = Depends(get_db),
