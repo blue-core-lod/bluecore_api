@@ -2,12 +2,15 @@ import os
 import sys
 from fastapi import FastAPI, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_mcp import FastApiMCP, AuthConfig
 from bluecore_api.app.config.logging_setup import setup_logging
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
+    CheckPermissions,
     KeycloakConfiguration,
     KeycloakMiddleware,
 )
+from fastapi_keycloak_middleware.schemas.match_strategy import MatchStrategy
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
@@ -84,6 +87,15 @@ base_app.add_middleware(
     allow_headers=["*"],
 )
 
+mcp = FastApiMCP(
+    base_app,
+    auth_config=AuthConfig(
+        dependencies=[Depends(CheckPermissions(["create", "update"], 
+                                               match_strategy=MatchStrategy.OR))]
+    )
+)
+
+    
 
 @base_app.get("/")
 async def index():
@@ -98,3 +110,5 @@ async def favicon():
     204 = no content; cache it so the browser won't ask again soon
     """
     return Response(status_code=204, headers={"Cache-Control": "public, max-age=86400"})
+
+mcp.mount_http()
