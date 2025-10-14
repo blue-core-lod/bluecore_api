@@ -40,6 +40,7 @@ def _xml_to_jsonld_and_save(
     "/batches/",
     response_model=BatchSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
+    operation_id="create_batch",
 )
 async def create_batch(batch: BatchCreateSchema):
     """Create a batch from a URI (unchanged behavior)."""
@@ -58,6 +59,7 @@ async def create_batch(batch: BatchCreateSchema):
     "/batches/upload/",
     response_model=BatchSchema,
     dependencies=[Depends(CheckPermissions(["create"]))],
+    operation_id="batch_upload",
 )
 async def create_batch_file(
     request: Request,
