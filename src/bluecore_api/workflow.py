@@ -45,6 +45,44 @@ async def create_batch_from_uri(uri: str, user_uid: Optional[str] = None) -> str
         return job_id
 
 
+async def export_instance(instance_uri: str, user_uid: str) -> str:
+    """
+    Triggers the monitor_export_api DAG run that exports the Instance and Work to
+    institution's LSP based on the user's group.
+
+    instance_uri: Blue Core Instance URI
+    user_uid: Keycloak subject/UID
+    """
+    token = await get_token()
+
+    url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/monitor_institutions_exports/dagRuns"
+    now = datetime.datetime.now(tz=datetime.UTC).isoformat()
+
+    conf = {"resource": instance_uri, "user": user_uid}
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(
+                url,
+                headers={"Authorization": f"Bearer {token}"},
+                json={"logical_date": now, "conf": conf},
+            )
+            resp.raise_for_status()
+            job_id = resp.json().get("dag_run_id")
+        except httpx.HTTPError as e:
+            logging.error(e)
+            match resp.response_code:
+                case 401:
+                    raise WorkflowError("Invalid credentials for Bluecore Workflow API")
+
+                case _:
+                    raise WorkflowError(
+                        "Bluecore Workflow API at {url} is unavailable."
+                    )
+
+        return job_id
+
+
 async def get_token() -> str:
     """
     Get an Access Token from Keycloak for the user we need to speak to Airflow as.
