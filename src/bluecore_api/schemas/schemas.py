@@ -111,3 +111,12 @@ class SearchProfileResultSchema(BaseModel):
     results: Sequence[OtherResourceSchema]
     links: LinksSchema
     total: int
+
+
+class ExportSchema(BaseModel):
+    instance_uri: str
+
+
+class ExportResponseSchema(BaseModel):
+    instance_uri: str
+    workflow_id: str

@@ -24,6 +24,7 @@ from bluecore_api.middleware.keycloak_auth import (
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.app.routes.cbd import endpoints as cbd_endpoints
+from bluecore_api.app.routes.export import endpoints as export_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
@@ -42,6 +43,7 @@ base_app.include_router(resource_routes)
 base_app.include_router(search_routes)
 base_app.include_router(work_routes)
 base_app.include_router(batch_endpoints)
+base_app.include_router(export_routes)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
