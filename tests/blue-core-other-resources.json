@@ -1,4 +1,3 @@
-[
     {
         "@id": "http://id.loc.gov/vocabulary/languages/eng",
         "@type": [
@@ -17,4 +16,3 @@
             }
         ]
     }
-]
