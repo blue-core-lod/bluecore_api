@@ -94,9 +94,9 @@ async def create_other_resource(
 ):
     time_now = datetime.now(UTC)
     db_other_resource = OtherResource(
-        data=json.loads(resource.data),
         uri=resource.uri,
         is_profile=resource.is_profile,
+        data=json.loads(resource.data),
         created_at=time_now,
         updated_at=time_now,
     )
@@ -124,11 +124,11 @@ async def update_other_resource(
         raise HTTPException(
             status_code=404, detail=f"Other Resource {resource_id} not found"
         )
+    if other_resource.uri:
+        db_other_resource.uri = other_resource.uri
     if other_resource.data:
         # bluecore_api #126
         db_other_resource.data = json.loads(other_resource.data)
-    if other_resource.uri:
-        db_other_resource.uri = other_resource.uri
     if other_resource.is_profile is not None:
         db_other_resource.is_profile = other_resource.is_profile
 

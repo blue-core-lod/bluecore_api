@@ -51,16 +51,16 @@ def add_other_resources(db_session: Session):
     kor = json.load(pathlib.Path("tests/blue-core-other-resources2.json").open())
     db_session.add(
         OtherResource(
+            is_profile=True,
             uri="https://api.sinopia.io/profiles/test-profile",
             data=eng,
-            is_profile=True,
         ),
     )
     db_session.add(
         OtherResource(
+            is_profile=True,
             uri="https://api.sinopia.io/profiles/test-profile2",
             data=kor,
-            is_profile=True,
         ),
     )
     db_session.commit()

@@ -22,8 +22,8 @@ def test_read_other_resource(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=json.loads(other_graph.serialize(format="json-ld")),
             uri="http://id.loc.gov/vocabulary/mstatus/u",
+            data=json.loads(other_graph.serialize(format="json-ld")),
         )
     )
     response = client.get("/resources/3")
@@ -35,7 +35,10 @@ def test_create_other_resource(client, other_graph):
     create_resource_response = client.post(
         "/resources/",
         headers={"X-User": "cataloger"},
-        json={"data": other_graph.serialize(format="json-ld"), "uri": None},
+        json={
+            "data": other_graph.serialize(format="json-ld"),
+            "uri": "http://id.loc.gov/vocabulary/mstatus/u",
+        },
     )
 
     assert create_resource_response.status_code == 201
@@ -51,8 +54,8 @@ def test_update_other_resource(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=json.loads(other_graph.serialize(format="json-ld")),
             uri=str(unknown_uri),
+            data=json.loads(other_graph.serialize(format="json-ld")),
         )
     )
 
@@ -67,7 +70,10 @@ def test_update_other_resource(client, db_session, other_graph):
     update_response = client.put(
         "/resources/3",
         headers={"X-User": "cataloger"},
-        json={"data": other_graph.serialize(format="json-ld")},
+        json={
+            "data": other_graph.serialize(format="json-ld"),
+            "uri": "http://id.loc.gov/vocabulary/mstatus/u",
+        },
     )
 
     assert update_response.status_code == 200
@@ -88,7 +94,7 @@ def test_json_other_resource(client):
     create_response = client.post(
         "/resources/",
         headers={"X-User": "cataloger"},
-        json={"data": json.dumps(document), "is_profile": True},
+        json={"is_profile": True, "data": json.dumps(document)},
     )
 
     assert create_response.status_code == 201
@@ -109,8 +115,8 @@ def test_read_other_resource_by_uri(client, db_session, other_graph):
     db_session.add(
         OtherResource(
             id=3,
-            data=json.loads(other_graph.serialize(format="json-ld")),
             uri=external_uri,
+            data=json.loads(other_graph.serialize(format="json-ld")),
         )
     )
 
@@ -124,6 +130,7 @@ def test_read_slice_other_resources(client, db_session):
         db_session.add(
             OtherResource(
                 id=i + 1,
+                uri=f"https://example.com/{i + 1}",
                 data={"id": i + 1, "label": f"A label for {i + 1}"},
             )
         )
@@ -138,19 +145,26 @@ def test_read_slice_other_resources(client, db_session):
 
 
 def test_read_slice_offset(client, db_session):
+    # create 8 OtherResources
     for i in range(8):
+        uri = f"https://example.com/{i + 1}"
         db_session.add(
             OtherResource(
-                id=i + 1,
-                data={"id": i + 1, "label": f"A label for {i + 1}"},
+                uri=uri,
+                data={
+                    "@id": uri,
+                    "@context": {"rdfs": str(rdflib.RDFS)},
+                    "rdfs:label": "A label for " + str(i + 1),
+                },
             )
         )
-    second_slice = client.get("/resources/?limit=5&offset=5")
 
+    # check that offset works, and returns expected data
+    second_slice = client.get("/resources/?limit=5&offset=5")
     returned_payload = second_slice.json()
     assert len(returned_payload["resources"]) == 3
     assert returned_payload["total"] == 8
     assert returned_payload["links"]["prev"].endswith("?limit=5&offset=0")
     assert "next" not in returned_payload["links"]
     first_document = returned_payload["resources"][0]["data"]
-    assert first_document["id"] == 6
+    assert first_document["rdfs:label"] == "A label for 6"
