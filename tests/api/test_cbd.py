@@ -1,13 +1,18 @@
-from bluecore_api.app.routes.cbd import reorder_work_types, reorder_instance_types
+import pathlib
+import xml.etree.ElementTree as ET
+from typing import Any, Dict, Sequence
+
+import pytest
+from bluecore_models.bluecore_graph import BluecoreGraph
 from bluecore_models.models import Instance, Work
+from bluecore_models.namespaces import BF
 from bluecore_models.utils.graph import init_graph
 from fastapi.testclient import TestClient
+from rdflib import Graph, RDF, URIRef
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from typing import Any, Dict, Sequence
-import pathlib
-import pytest
-import xml.etree.ElementTree as ET
+
+from bluecore_api.app.routes.cbd import reorder_instance_types, reorder_work_types
 
 
 def add_work(client: TestClient, db_session: Session) -> Work:
@@ -103,6 +108,49 @@ def test_cbd(client: TestClient, db_session: Session):
     # 2) Ensure there is at least one Work and one Instance (duplicates allowed)
     assert "Work" in bf_local_names, "Missing top-level bf:Work element"
     assert "Instance" in bf_local_names, "Missing top-level bf:Instance element"
+
+
+def test_cbd_other_resources(client: TestClient, db_session: Session):
+    # save_graph wants a sessionmaker rather than a Session, so we make a fake one
+    def sessionmaker(*args, **kwargs):
+        return db_session
+
+    # parse a CBD json-ld file
+    graph = Graph()
+    graph.parse("tests/23807141.jsonld")
+
+    # persist the graph to the database
+    bc_graph = BluecoreGraph(graph)
+    bc_graph.save(sessionmaker)
+
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in bc_graph.graph.subjects()
+    )
+
+    # get one of the instance URIs that was created
+    assert len(bc_graph.instances()) == 2
+    instance_graph = bc_graph.instances()[1]
+
+    # determine its local path
+    instance_uri = next(instance_graph.subjects(RDF.type, BF.Instance))
+    uuid = instance_uri.split("/")[-1]
+
+    response = client.get(f"/cbd/{uuid}.rdf")
+    response_graph = Graph()
+    response_graph.parse(data=response.content, format=response.headers["Content-Type"])
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in response_graph.subjects()
+    )
+
+    response = client.get(f"/cbd/{uuid}.jsonld")
+    response_graph = Graph()
+    response_graph.parse(data=response.content, format="json-ld")
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in response_graph.subjects()
+    )
 
 
 if __name__ == "__main__":
