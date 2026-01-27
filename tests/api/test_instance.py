@@ -3,7 +3,12 @@ import pathlib
 
 import pytest
 import rdflib
-from bluecore_models.models import Instance, Version
+from bluecore_models.models import (
+    BibframeOtherResources,
+    OtherResource,
+    Instance,
+    Version,
+)
 from bluecore_models.utils.graph import BF, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 
@@ -30,6 +35,56 @@ def test_get_instance(client, db_session):
 
     fetched_graph = load_jsonld(response.json()["data"])
     assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
+
+
+def test_get_expanded_instance(client, db_session):
+    test_instance_uuid = "1e09c839-474d-4ab5-8b44-479e08927045"
+    test_instance_uri = rdflib.URIRef(
+        f"https://bcld.info/instances/{test_instance_uuid}"
+    )
+    kor_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/kor")
+    test_instance_graph = init_graph()
+    test_instance_graph.add((test_instance_uri, rdflib.RDF.type, BF.Instance))
+    test_instance_graph.add((test_instance_uri, BF.language, kor_uri))
+
+    with pathlib.Path("tests/blue-core-other-resources2.json").open() as fo:
+        kor_data = json.load(fo)
+
+    instance = Instance(
+        id=1,
+        uuid=test_instance_uuid,
+        uri=str(test_instance_uri),
+        data=json.loads(test_instance_graph.serialize(format="json-ld")),
+    )
+
+    db_session.add(instance)
+    other_resource = OtherResource(id=2, uri=str(kor_uri), data=kor_data)
+    db_session.add(other_resource)
+    bf_other_resource = BibframeOtherResources(
+        id=1, other_resource=other_resource, bibframe_resource=instance
+    )
+    db_session.add(bf_other_resource)
+    db_session.commit()
+
+    # Regular Get Call for Instance
+    regular_instance_result = client.get(f"/instances/{test_instance_uuid}")
+    regular_instance_graph = load_jsonld(regular_instance_result.json()["data"])
+
+    assert len(regular_instance_graph) == 2
+
+    # Test GET with expand = True
+    expanded_instance_result = client.get(
+        f"/instances/{test_instance_uuid}?expand=true"
+    )
+    expanded_instance_graph = load_jsonld(expanded_instance_result.json()["data"])
+
+    assert len(expanded_instance_graph) == 5
+
+    # Test GET with expand = False
+    expand_false_result = client.get(f"/instances/{test_instance_uuid}?expand=false")
+    expand_false_graph = load_jsonld(expand_false_result.json()["data"])
+
+    assert len(expand_false_graph) == len(regular_instance_graph)
 
 
 def test_create_instance(client):

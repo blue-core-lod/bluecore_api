@@ -21,6 +21,7 @@ from bluecore_api.schemas.schemas import (
     WorkSchema,
     WorkUpdateSchema,
 )
+from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -28,10 +29,16 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
 @endpoints.get("/works/{work_uuid}", response_model=WorkSchema, operation_id="get_work")
-async def read_work(work_uuid: str, db: Session = Depends(get_db)):
+async def read_work(
+    work_uuid: str, expand: bool = False, db: Session = Depends(get_db)
+):
     db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
     if db_work is None:
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
+    if expand:
+        # Retrieves all related resources for work and adds to work's data
+        db_work.data = expand_resource_graph(db_work)
+    setattr(db_work, "is_expanded", expand)
     return db_work
 
 
@@ -91,7 +98,7 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     "/works/{work_uuid}",
     response_model=WorkSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
-    operation_id="get_work",
+    operation_id="update_work",
 )
 async def update_work(
     work_uuid: str, work: WorkUpdateSchema, db: Session = Depends(get_db)

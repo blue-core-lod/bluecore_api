@@ -41,6 +41,7 @@ class InstanceEmbeddingSchema(BaseModel):
 class InstanceSchema(ResourceBaseSchema):
     type: str = BluecoreType.INSTANCES
     work_id: Optional[int]
+    is_expanded: bool = False
 
 
 class InstanceUpdateSchema(BaseModel):
@@ -77,6 +78,7 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
+    is_expanded: bool = False
 
 
 class WorkEmbeddingSchema(BaseModel):

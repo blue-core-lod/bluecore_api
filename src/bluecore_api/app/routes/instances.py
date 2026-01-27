@@ -18,6 +18,7 @@ from bluecore_api.schemas.schemas import (
     InstanceSchema,
     InstanceUpdateSchema,
 )
+from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -29,11 +30,16 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
     response_model=InstanceSchema,
     operation_id="get_instance",
 )
-async def read_instance(instance_uuid: str, db: Session = Depends(get_db)):
+async def read_instance(
+    instance_uuid: str, expand: bool = False, db: Session = Depends(get_db)
+):
     db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
 
     if db_instance is None:
         raise HTTPException(status_code=404, detail="Instance not found")
+    if expand:
+        db_instance.data = expand_resource_graph(db_instance)
+    setattr(db_instance, "is_expanded", expand)
     return db_instance
 
 
