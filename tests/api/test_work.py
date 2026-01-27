@@ -3,7 +3,7 @@ import pathlib
 import pytest
 import rdflib
 
-from bluecore_models.models import Version, Work
+from bluecore_models.models import BibframeOtherResources, OtherResource, Version, Work
 from bluecore_models.utils.graph import init_graph, load_jsonld, BF
 from bluecore_models.utils.vector_db import create_embeddings
 
@@ -34,6 +34,48 @@ def test_get_work(client, db_session):
 
     fetched_graph = load_jsonld(data["data"])
     assert len(fetched_graph) == len(orig_graph)
+
+
+def test_get_expanded_work(client, db_session):
+    bluecore_work_uuid = "7b7ed475-9126-4368-925a-8b8c5520250e"
+    bluecore_work_uri = rdflib.URIRef(f"https://bcld.info/works/{bluecore_work_uuid}")
+    eng_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/eng")
+    work_graph = init_graph()
+    work_graph.add((bluecore_work_uri, rdflib.RDF.type, BF.Work))
+    work_graph.add((bluecore_work_uri, BF.language, eng_uri))
+
+    with pathlib.Path("tests/blue-core-other-resources.json").open() as fo:
+        eng_data = json.load(fo)
+
+    work = Work(
+        id=1,
+        uuid=bluecore_work_uuid,
+        uri=str(bluecore_work_uri),
+        data=json.loads(work_graph.serialize(format="json-ld")),
+    )
+    db_session.add(work)
+
+    other_resource = OtherResource(id=2, uri=str(eng_uri), data=eng_data)
+    db_session.add(other_resource)
+    bf_other_resource = BibframeOtherResources(
+        id=1,
+        other_resource=other_resource,
+        bibframe_resource=work,
+    )
+    db_session.add(bf_other_resource)
+    db_session.commit()
+
+    # Test regular GET response without expand parameter
+    regular_work_response = client.get(f"/works/{bluecore_work_uuid}")
+    regular_work_graph = load_jsonld(regular_work_response.json()["data"])
+
+    assert len(regular_work_graph) == 2
+
+    # Test GET with expand = True
+    expanded_work_response = client.get(f"/works/{bluecore_work_uuid}?expand=true")
+    expanded_work_graph = load_jsonld(expanded_work_response.json()["data"])
+
+    assert len(expanded_work_graph) == 5
 
 
 def test_create_work(client, mocker):

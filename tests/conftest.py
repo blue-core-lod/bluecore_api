@@ -18,6 +18,7 @@ from pymilvus import MilvusClient
 from bluecore_models.models import (
     Base,
     BibframeClass,
+    BibframeOtherResources,
     Instance,
     OtherResource,
     ResourceBase,
@@ -133,6 +134,7 @@ def client(mocker, db_session, app):
         tables=[
             ResourceBase.__table__,
             BibframeClass.__table__,
+            BibframeOtherResources.__table__,
             Instance.__table__,
             OtherResource.__table__,
             ResourceBibframeClass.__table__,
