@@ -1,0 +1,1523 @@
+[
+  {
+    "@id": "http://id.loc.gov/resources/works/24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-work-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-work-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:contrib-work-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/24042045"
+      },
+      {
+        "@id": "http://id.loc.gov/resources/instances/24043001"
+      },
+      {
+        "@id": "http://id.loc.gov/resources/instances/24043002"
+      },
+      {
+        "@id": "http://id.loc.gov/resources/instances/24043003"
+      },
+      {
+        "@id": "http://id.loc.gov/resources/instances/24043004"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-work-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-work-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:contrib-work-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/24042046"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-work-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-work-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:contrib-work-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/24042047"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-work-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-work-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:contrib-work-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/24042048"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-work-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-work-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:contrib-work-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/24042049"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24043001",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24043001"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24043001"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24043001"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24043001"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24043002",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24043002"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24043002"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24043002"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24043002"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24043003",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24043003"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24043003"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24043003"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24043003"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24043004",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24043004"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24043004"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24043004"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24043004"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:title-instance-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:id-instance-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works/24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+      {
+        "@id": "_:prov-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/extent": [
+      {
+        "@id": "_:extent-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/media": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/carrier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/issuance": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-work-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-work-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "River Cities and Rail Lines",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "River Cities and Rail Lines",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-work-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Cataloging in Practice",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Cataloging in Practice",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-work-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Modern Data Stewardship",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Modern Data Stewardship",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-work-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Digital Preservation Handbook",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Digital Preservation Handbook",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24043001",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive - Library Edition",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive - Library Edition",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24043002",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive - Pocket Edition",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive - Pocket Edition",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24043003",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive - Annotated Edition",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive - Annotated Edition",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24043004",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "The Silent Archive - Student Edition",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "The Silent Archive - Student Edition",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "River Cities and Rail Lines",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "River Cities and Rail Lines",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Cataloging in Practice",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Cataloging in Practice",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Modern Data Stewardship",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Modern Data Stewardship",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:title-instance-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Digital Preservation Handbook",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Digital Preservation Handbook",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-work-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042045"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-work-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042046"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-work-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042047"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-work-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042048"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-work-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042049"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042045"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24043001",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24043001"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24043002",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24043002"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24043003",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24043003"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24043004",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24043004"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042046"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042047"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042048"
+      }
+    ]
+  },
+  {
+    "@id": "_:id-instance-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "24042049"
+      }
+    ]
+  },
+  {
+    "@id": "_:contrib-work-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "_:agent-work-24042045"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:contrib-work-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "_:agent-work-24042046"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:contrib-work-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "_:agent-work-24042047"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:contrib-work-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "_:agent-work-24042048"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:contrib-work-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "_:agent-work-24042049"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:agent-work-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Martha Lane",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:agent-work-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Jonah Pierce",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:agent-work-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Elena Brooks",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:agent-work-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "David Kim",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:agent-work-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Priya Shah",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "New York",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Granite House",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2024"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24043001",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "New York",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Granite House",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2024"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24043002",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Boston",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "North Harbor Press",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2025"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24043003",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Chicago",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Lakeview Academic",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2025"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24043004",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Seattle",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Rainline Books",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2026"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Philadelphia",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Keystone Review",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2023"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Washington",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Capitol Academic",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2022"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "San Francisco",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Pacific Ledger",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2024"
+      }
+    ]
+  },
+  {
+    "@id": "_:prov-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+      "http://id.loc.gov/ontologies/bibframe/Publication"
+    ],
+    "http://id.loc.gov/ontologies/bflc/simplePlace": [
+      {
+        "@value": "Austin",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+      {
+        "@value": "Hill Country Press",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/simpleDate": [
+      {
+        "@value": "2021"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24042045",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "384 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24043001",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "402 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24043002",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "320 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24043003",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "448 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24043004",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "272 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24042046",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "298 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24042047",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "351 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24042048",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "267 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "_:extent-24042049",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Extent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "412 pages",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/eng",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "English",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "eng"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/issuance/mono",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Issuance"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "single unit",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mediaTypes/n",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Media"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "unmediated",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/carriers/nc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Carrier"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "volume",
+        "@language": "en"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/aut",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "author",
+        "@language": "en"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aut"
+      }
+    ]
+  }
+]
