@@ -1,1551 +1,1744 @@
 [
-  {
-    "@id": "http://id.loc.gov/authorities/genreForms/gf2014026339",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/GenreForm"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@language": "en",
-        "@value": "Fiction"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/marcKey": [
-      {
-        "@value": "155  $aFiction"
-      }
-    ]
-  },
-  {
-    "@id": "_:b61iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Extent"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "409 pages"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/countries/fr",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Place"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@language": "en",
-        "@value": "France"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#string",
-        "@value": "fr"
-      }
-    ]
-  },
-  {
-    "@id": "_:b268iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#date",
-        "@value": "2024-07-04"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "_:b278iddOtlocdOtgovresourcesworks24042045"
-      }
-    ]
-  },
-  {
-    "@id": "_:b10iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
-      "http://id.loc.gov/ontologies/bibframe/Publication"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://id.loc.gov/datatypes/edtf",
-        "@value": "2024"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/place": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/countries/fr"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simplePlace": [
-      {
-        "@value": "Paris"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
-      {
-        "@value": "Albin Michel"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simpleDate": [
-      {
-        "@value": "[2024]"
-      }
-    ]
-  },
-  {
-    "@id": "_:b115iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/generationProcess": [
-      {
-        "@id": "https://github.com/lcnetdev/marc2bibframe2/releases/tag/v2.9.0-dev"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
-        "@value": "2025-03-13T01:59:54.73343-04:00"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/mstatus/uba",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Status"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "used by assigner"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "uba"
-      }
-    ]
-  },
-  {
-    "@id": "_:b95iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
-        "@value": "2025-03-12T08:27:48"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/relators/aut",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Role"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "author"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "aut"
-      }
-    ]
-  },
-  {
-    "@id": "_:b29iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Lccn"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "  2024384167"
-      }
-    ]
-  },
-  {
-    "@id": "_:b339iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Local"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/assigner": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ]
-  },
-  {
-    "@id": "_:b152iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Local"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/assigner": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/resources/works/24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Work",
-      "http://id.loc.gov/ontologies/bibframe/Text",
-      "http://id.loc.gov/ontologies/bibframe/Monograph"
-    ],
-    "http://id.loc.gov/ontologies/bflc/aap": [
-      {
-        "@value": "Becker, Emma, 1988-. Le mal joli"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
-      {
-        "@value": "beckeremma1988lemaljoli"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/language": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/languages/fre"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/genreForm": [
-      {
-        "@id": "http://id.loc.gov/authorities/genreForms/gf2014026339"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/classification": [
-      {
-        "@id": "_:b216iddOtlocdOtgovresourcesworks24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/contribution": [
-      {
-        "@id": "_:b238iddOtlocdOtgovresourcesworks24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/title": [
-      {
-        "@id": "_:b254iddOtlocdOtgovresourcesworks24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/content": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
-      }
-    ],
-    "http://purl.org/dc/terms/isPartOf": [
-      {
-        "@id": "http://id.loc.gov/resources/works"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
-      {
-        "@id": "http://id.loc.gov/resources/instances/24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
-      {
-        "@id": "_:b268iddOtlocdOtgovresourcesworks24042045"
-      },
-      {
-        "@id": "_:b282iddOtlocdOtgovresourcesworks24042045"
-      },
-      {
-        "@id": "_:b302iddOtlocdOtgovresourcesworks24042045"
-      },
-      {
-        "@id": "_:b324iddOtlocdOtgovresourcesworks24042045"
-      }
-    ]
-  },
-  {
-    "@id": "_:b39iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Local"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "AAL08388212-0001"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/assigner": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/frpaama"
-      }
-    ]
-  },
-  {
-    "@id": "_:b282iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
-        "@value": "2025-03-12T08:27:48"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions",
-      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "Resource description and access"
-      },
-      {
-        "@value": "Resource description and access"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "rda"
-      },
-      {
-        "@value": "rda"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Organization",
-      "http://id.loc.gov/ontologies/bibframe/Organization",
-      "http://id.loc.gov/ontologies/bibframe/Organization",
-      "http://id.loc.gov/ontologies/bibframe/Organization",
-      "http://id.loc.gov/ontologies/bibframe/Organization"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "United States, Library of Congress"
-      },
-      {
-        "@value": "United States, Library of Congress"
-      },
-      {
-        "@value": "United States, Library of Congress"
-      },
-      {
-        "@value": "United States, Library of Congress"
-      },
-      {
-        "@value": "United States, Library of Congress"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlc"
-      }
-    ]
-  },
-  {
-    "@id": "_:b324iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
-      {
-        "@id": "http://id.loc.gov/ontologies/bibframe-2-4-0/"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/encodingLevel": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/menclvl/f"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
-      },
-      {
-        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
-      {
-        "@id": "_:b339iddOtlocdOtgovresourcesworks24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d906": [
-      {
-        "@value": "=906     $a 7 $b cbc $c copycat $d 3 $e ncip $f 20 $g y-gencatlg"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d925": [
-      {
-        "@value": "=925  0  $a acquire $b 1 shelf copy $x policy default"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d955": [
-      {
-        "@value": "=955     $a am00 2025-02-25 item has been shipped $a bd25 2025-03-12 item received; to PresSrvs"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/languages/eng"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/note": [
-      {
-        "@id": "_:b371iddOtlocdOtgovresourcesworks24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionAuthentication": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d985": [
-      {
-        "@value": "=985     $a shelf ready $e AM-FY25"
-      }
-    ]
-  },
-  {
-    "@id": "_:b33iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Isbn"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "9782226489784"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/qualifier": [
-      {
-        "@value": "paperback"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/DescriptionAuthentication",
-      "http://id.loc.gov/ontologies/bibframe/DescriptionAuthentication"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "LC Copy Cataloging"
-      },
-      {
-        "@value": "LC Copy Cataloging"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "lccopycat"
-      },
-      {
-        "@value": "lccopycat"
-      }
-    ]
-  },
-  {
-    "@id": "_:b137iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
-      {
-        "@id": "http://id.loc.gov/ontologies/bibframe-2-4-0/"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/encodingLevel": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/menclvl/f"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
-      },
-      {
-        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
-      {
-        "@id": "_:b152iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d906": [
-      {
-        "@value": "=906     $a 7 $b cbc $c copycat $d 3 $e ncip $f 20 $g y-gencatlg"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d925": [
-      {
-        "@value": "=925  0  $a acquire $b 1 shelf copy $x policy default"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d955": [
-      {
-        "@value": "=955     $a am00 2025-02-25 item has been shipped $a bd25 2025-03-12 item received; to PresSrvs"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/languages/eng"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/note": [
-      {
-        "@id": "_:b184iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/descriptionAuthentication": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat"
-      }
-    ],
-    "http://id.loc.gov/ontologies/lclocal/d985": [
-      {
-        "@value": "=985     $a shelf ready $e AM-FY25"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/menclvl/f",
-    "@type": [
-      "http://id.loc.gov/ontologies/bflc/EncodingLevel",
-      "http://id.loc.gov/ontologies/bflc/EncodingLevel"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "full"
-      },
-      {
-        "@value": "full"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "f"
-      },
-      {
-        "@value": "f"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/organizations/frpaama",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Organization"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "AMALIVRE"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "FR-PaAMA"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "frpaama"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions",
-      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "ISBD: International standard bibliographic description"
-      },
-      {
-        "@value": "ISBD: International standard bibliographic description"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "isbd"
-      },
-      {
-        "@value": "isbd"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/mediaTypes/n",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Media"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "unmediated"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "n"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Agent",
-      "http://id.loc.gov/ontologies/bibframe/Organization",
-      "http://id.loc.gov/ontologies/bibframe/Agent",
-      "http://id.loc.gov/ontologies/bibframe/Organization"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
-      },
-      {
-        "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC-MRC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlcmrc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlcmrc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/code",
-        "@value": "DLC-MRC"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
-        "@value": "dlcmrc"
-      },
-      {
-        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
-        "@value": "US-dlcmrc"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/languages/eng",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Language",
-      "http://id.loc.gov/ontologies/bibframe/Language"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@language": "en",
-        "@value": "English"
-      },
-      {
-        "@language": "en",
-        "@value": "English"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#string",
-        "@value": "eng"
-      },
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#string",
-        "@value": "eng"
-      }
-    ]
-  },
-  {
-    "@id": "_:b238iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Contribution",
-      "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "http://id.loc.gov/rwo/agents/no2012149645"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/role": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/relators/aut"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/rwo/agents/no2012149645",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Agent",
-      "http://id.loc.gov/ontologies/bibframe/Person"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "Becker, Emma, 1988-"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/marcKey": [
-      {
-        "@value": "1001 $aBecker, Emma,$d1988-"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/carriers/nc",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Carrier"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "volume"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "nc"
-      }
-    ]
-  },
-  {
-    "@id": "_:b254iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Title"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
-      {
-        "@value": "Le mal joli"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/nonSortNum": [
-      {
-        "@value": "3"
-      }
-    ]
-  },
-  {
-    "@id": "_:b278iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Agent"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "Fr-PaAMA"
-      }
-    ]
-  },
-  {
-    "@id": "_:b53iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Title"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
-      {
-        "@value": "Le mal joli"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/subtitle": [
-      {
-        "@value": "roman"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/nonSortNum": [
-      {
-        "@value": "3"
-      }
-    ]
-  },
-  {
-    "@id": "_:b302iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/generationProcess": [
-      {
-        "@id": "https://github.com/lcnetdev/marc2bibframe2/releases/tag/v2.9.0-dev"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
-        "@value": "2025-03-13T01:59:54.73343-04:00"
-      }
-    ]
-  },
-  {
-    "@id": "_:b81iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#date",
-        "@value": "2024-07-04"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "_:b91iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ]
-  },
-  {
-    "@id": "_:b216iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/ClassificationLcc"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/classificationPortion": [
-      {
-        "@value": "PQ2702.E298"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/itemPortion": [
-      {
-        "@value": "M36 2024"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/assigner": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/uba"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/issuance/mono",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Issuance"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "single unit"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "mono"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/mstatus/c",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Status",
-      "http://id.loc.gov/ontologies/bibframe/Status",
-      "http://id.loc.gov/ontologies/bibframe/Status",
-      "http://id.loc.gov/ontologies/bibframe/Status"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "changed"
-      },
-      {
-        "@value": "changed"
-      },
-      {
-        "@value": "changed"
-      },
-      {
-        "@value": "changed"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "c"
-      },
-      {
-        "@value": "c"
-      },
-      {
-        "@value": "c"
-      },
-      {
-        "@value": "c"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/resources/instances/24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Instance"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/issuance": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
-      {
-        "@id": "_:b10iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
-      {
-        "@value": "Paris: Albin Michel, [2024]"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
-      {
-        "@id": "_:b29iddOtlocdOtgovresourcesinstances24042045"
-      },
-      {
-        "@id": "_:b33iddOtlocdOtgovresourcesinstances24042045"
-      },
-      {
-        "@id": "_:b39iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/responsibilityStatement": [
-      {
-        "@value": "Emma Becker"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/title": [
-      {
-        "@id": "_:b53iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/extent": [
-      {
-        "@id": "_:b61iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/dimensions": [
-      {
-        "@value": "21 cm"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/media": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/carrier": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
-      }
-    ],
-    "http://purl.org/dc/terms/isPartOf": [
-      {
-        "@id": "http://id.loc.gov/resources/instances"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
-      {
-        "@id": "http://id.loc.gov/resources/works/24042045"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
-      {
-        "@id": "_:b81iddOtlocdOtgovresourcesinstances24042045"
-      },
-      {
-        "@id": "_:b95iddOtlocdOtgovresourcesinstances24042045"
-      },
-      {
-        "@id": "_:b115iddOtlocdOtgovresourcesinstances24042045"
-      },
-      {
-        "@id": "_:b137iddOtlocdOtgovresourcesinstances24042045"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/contentTypes/txt",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Content"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "text"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "txt"
-      }
-    ]
-  },
-  {
-    "@id": "_:b371iddOtlocdOtgovresourcesworks24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Note",
-      "http://id.loc.gov/vocabulary/mnotetype/internal"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "040  $aFr-PaAMA$beng$erda$cFr-PaAMA$dDLC"
-      }
-    ]
-  },
-  {
-    "@id": "_:b91iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Agent"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "Fr-PaAMA"
-      }
-    ]
-  },
-  {
-    "@id": "_:b184iddOtlocdOtgovresourcesinstances24042045",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Note",
-      "http://id.loc.gov/vocabulary/mnotetype/internal"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "040  $aFr-PaAMA$beng$erda$cFr-PaAMA$dDLC"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/mstatus/n",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Status",
-      "http://id.loc.gov/ontologies/bibframe/Status"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "new"
-      },
-      {
-        "@value": "new"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "n"
-      },
-      {
-        "@value": "n"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/languages/fre",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Language"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@language": "en",
-        "@value": "French"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#string",
-        "@value": "fre"
-      }
-    ]
-  },
-  {
-    "@id": "_:b51iddOtlocdOtgovresourcesinstances24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Title"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
-      {
-        "@value": "In the Senate of the United States. January 18, 1892. -- Referred to the Committee on Coast Defenses and ordered to be printed. Mr. Allen presented the following memorial of the Port Townsend Chamber of Commerce on the subject of coast defenses .."
-      }
-    ]
-  },
-  {
-    "@id": "_:b411iddOtlocdOtgovresourcesworks24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Contribution"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "_:b413iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/role": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
-      }
-    ]
-  },
-  {
-    "@id": "_:b10iddOtlocdOtgovresourcesinstances24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
-      "http://id.loc.gov/ontologies/bibframe/Publication"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://id.loc.gov/datatypes/edtf",
-        "@value": "1892"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/place": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/countries/dcu"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simplePlace": [
-      {
-        "@value": "[Washington, D.C.]"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simpleAgent": [
-      {
-        "@value": "U.S. Government Printing Office"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/simpleDate": [
-      {
-        "@value": "1892"
-      }
-    ]
-  },
-  {
-    "@id": "_:b466iddOtlocdOtgovresourcesworks24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Series",
-      "http://id.loc.gov/ontologies/bflc/Uncontrolled"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/t"
-      },
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/tr"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/title": [
-      {
-        "@id": "_:b481iddOtlocdOtgovresourcesworks24113259"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/f",
-    "@type": [
-      "http://id.loc.gov/ontologies/bflc/GovernmentPubType"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "federal or national"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "f"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/vocabulary/relators/aut",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Role",
-      "http://id.loc.gov/ontologies/bibframe/Role"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "author"
-      },
-      {
-        "@value": "author"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/code": [
-      {
-        "@value": "aut"
-      },
-      {
-        "@value": "aut"
-      }
-    ]
-  },
-  {
-    "@id": "_:b82iddOtlocdOtgovresourcesinstances24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/status": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/date": [
-      {
-        "@type": "http://www.w3.org/2001/XMLSchema#date",
-        "@value": "2025-01-17"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/agent": [
-      {
-        "@id": "_:b92iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/resources/works/24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Work",
-      "http://id.loc.gov/ontologies/bibframe/Text",
-      "http://id.loc.gov/ontologies/bibframe/Monograph"
-    ],
-    "http://id.loc.gov/ontologies/bflc/aap": [
-      {
-        "@value": "United States Congress. Senate. In the Senate of the United States. January 18, 1892. -- Referred to the Committee on Coast Defenses and ordered to be printed. Mr. Allen presented the following memorial of the Port Townsend Chamber of Commerce on the subject of coast defenses ."
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
-      {
-        "@value": "unitedstatescongresssenateinthesenateoftheunitedstatesjanuary181892referredtothecommitteeoncoastdefensesandorderedtobeprintedmrallenpresentedthefollowingmemorialoftheporttownsendchamberofcommerceonthesubjectofcoastdefenses"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/language": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/languages/eng"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bflc/governmentPubType": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/f"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/classification": [
-      {
-        "@id": "_:b185iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b205iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b215iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/contribution": [
-      {
-        "@id": "_:b225iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b360iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b375iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b396iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b411iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/title": [
-      {
-        "@id": "_:b241iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b245iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/content": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/subject": [
-      {
-        "@id": "http://id.loc.gov/authorities/subjects/sh85027424"
-      },
-      {
-        "@id": "http://id.loc.gov/authorities/subjects/sh85085159"
-      },
-      {
-        "@id": "_:b271iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "http://id.loc.gov/authorities/subjects/sh85119483"
-      },
-      {
-        "@id": "_:b294iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "http://id.loc.gov/authorities/subjects/sh85108969"
-      },
-      {
-        "@id": "_:b317iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/genreForm": [
-      {
-        "@id": "_:b334iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b347iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "http://id.loc.gov/authorities/genreForms/gf2011026362"
-      }
-    ],
-    "http://purl.org/dc/terms/isPartOf": [
-      {
-        "@id": "http://id.loc.gov/resources/works"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/relation": [
-      {
-        "@id": "_:b427iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b456iddOtlocdOtgovresourcesworks24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
-      {
-        "@id": "http://id.loc.gov/resources/instances/24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
-      {
-        "@id": "_:b486iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b500iddOtlocdOtgovresourcesworks24113259"
-      },
-      {
-        "@id": "_:b522iddOtlocdOtgovresourcesworks24113259"
-      }
-    ]
-  },
-  {
-    "@id": "_:b121iddOtlocdOtgovresourcesinstances24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Local"
-    ],
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
-      {
-        "@value": "24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/assigner": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
-      }
-    ]
-  },
-  {
-    "@id": "_:b55iddOtlocdOtgovresourcesinstances24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Extent"
-    ],
-    "http://www.w3.org/2000/01/rdf-schema#label": [
-      {
-        "@value": "1 online resource (5 pages)."
-      }
-    ]
-  },
-  {
-    "@id": "http://id.loc.gov/resources/instances/24113259",
-    "@type": [
-      "http://id.loc.gov/ontologies/bibframe/Instance"
-    ],
-    "http://id.loc.gov/ontologies/bibframe/issuance": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
-      {
-        "@id": "_:b10iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
-      {
-        "@value": "[Washington, D.C.]: U.S. Government Printing Office, 1892"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
-      {
-        "@id": "_:b29iddOtlocdOtgovresourcesinstances24113259"
-      },
-      {
-        "@id": "_:b33iddOtlocdOtgovresourcesinstances24113259"
-      },
-      {
-        "@id": "_:b47iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/title": [
-      {
-        "@id": "_:b51iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/extent": [
-      {
-        "@id": "_:b55iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/note": [
-      {
-        "@id": "_:b59iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/media": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/mediaTypes/c"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/carrier": [
-      {
-        "@id": "http://id.loc.gov/vocabulary/carriers/cr"
-      }
-    ],
-    "http://purl.org/dc/terms/isPartOf": [
-      {
-        "@id": "http://id.loc.gov/resources/instances"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/instanceOf": [
-      {
-        "@id": "http://id.loc.gov/resources/works/24113259"
-      }
-    ],
-    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
-      {
-        "@id": "_:b82iddOtlocdOtgovresourcesinstances24113259"
-      },
-      {
-        "@id": "_:b96iddOtlocdOtgovresourcesinstances24113259"
-      },
-      {
-        "@id": "_:b118iddOtlocdOtgovresourcesinstances24113259"
-      }
-    ]
-  }
+   {
+      "@id": "http://id.loc.gov/vocabulary/geographicAreas/n-us-md",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/GeographicCoverage"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@type": "http://id.loc.gov/datatypes/codes/gac",
+            "@value": "n-us-md"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "Maryland"
+         }
+      ]
+   },
+   {
+      "@id": "_:b90iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "2015 Audit Reports"
+         }
+      ]
+   },
+   {
+      "@id": "_:b87iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/SupplementaryContent"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/electronicLocator": [
+         {
+            "@id": "http://www.ola.state.md.us/Reports/Fiscal%20Compliance/MHBE15.pdf"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/note": [
+         {
+            "@id": "_:b90iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ]
+   },
+   {
+      "@id": "_:b486iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "906  $a7$bibc$cserials$d3$encip$f20$gn-oclcserc"
+         },
+         {
+            "@value": "9250 $aundetermined$xpolicy default"
+         },
+         {
+            "@value": "955  $bhk03 2025-03-27 to Selection Officer"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
+         },
+         {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/languages/eng"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+         {
+            "@id": "http://id.loc.gov/ontologies/bibframe-2-6-0/"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+         {
+            "@id": "_:b501iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/note": [
+         {
+            "@id": "_:b515iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b544iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d906": [
+         {
+            "@value": "=906     $a 7 $b ibc $c serials $d 3 $e ncip $f 20 $g n-oclcserc"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d925": [
+         {
+            "@value": "=925  0  $a undetermined $x policy default"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d955": [
+         {
+            "@value": "=955     $b hk03 2025-03-27 to Selection Officer"
+         }
+      ]
+   },
+   {
+      "@id": "_:b161iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Local"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/assigner": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+         }
+      ],
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+         {
+            "@value": "24128505"
+         }
+      ]
+   },
+   {
+      "@id": "_:b72iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/addphys"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Also issued on the Office of Legislative Audits web site."
+         }
+      ]
+   },
+   {
+      "@id": "_:b446iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "MSI"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/DescriptionConventions",
+         "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "rda"
+         },
+         {
+            "@value": "rda"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Resource description and access"
+         },
+         {
+            "@value": "Resource description and access"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Organization",
+         "http://id.loc.gov/ontologies/bibframe/Organization"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/code",
+            "@value": "DLC"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+            "@value": "dlc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+            "@value": "US-dlc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/code",
+            "@value": "DLC"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+            "@value": "dlc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+            "@value": "US-dlc"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "United States, Library of Congress"
+         },
+         {
+            "@value": "United States, Library of Congress"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/authorities/subjects/sh85075806",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#Topic"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "150 0$aLegislative auditing"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "Legislative auditing"
+         }
+      ]
+   },
+   {
+      "@id": "_:b413iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Title"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+         {
+            "@value": "Audit report"
+         }
+      ]
+   },
+   {
+      "@id": "_:b96iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/agent": [
+         {
+            "@id": "_:b106iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#date",
+            "@value": "2015-11-20"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/relators/isb",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Role"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "isb"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "issuing body"
+         }
+      ]
+   },
+   {
+      "@id": "_:b337iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#Topic"
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Contrôle parlementaire"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/menclvl/f",
+      "@type": [
+         "http://id.loc.gov/ontologies/bflc/EncodingLevel",
+         "http://id.loc.gov/ontologies/bflc/EncodingLevel"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "f"
+         },
+         {
+            "@value": "f"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "full"
+         },
+         {
+            "@value": "full"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mediaTypes/n",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Media"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "n"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "unmediated"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/DescriptionConventions",
+         "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "isbd"
+         },
+         {
+            "@value": "isbd"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "ISBD: International standard bibliographic description"
+         },
+         {
+            "@value": "ISBD: International standard bibliographic description"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/languages/eng",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Language",
+         "http://id.loc.gov/ontologies/bibframe/Language",
+         "http://id.loc.gov/ontologies/bibframe/Language"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "eng"
+         },
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "eng"
+         },
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "eng"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "English"
+         },
+         {
+            "@language": "en",
+            "@value": "English"
+         },
+         {
+            "@language": "en",
+            "@value": "English"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/countries/mdu",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Place"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#string",
+            "@value": "mdu"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "Maryland"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent",
+         "http://id.loc.gov/ontologies/bibframe/Organization",
+         "http://id.loc.gov/ontologies/bibframe/Agent",
+         "http://id.loc.gov/ontologies/bibframe/Organization"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/code",
+            "@value": "DLC-MRC"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+            "@value": "dlcmrc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+            "@value": "US-dlcmrc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/code",
+            "@value": "DLC-MRC"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+            "@value": "dlcmrc"
+         },
+         {
+            "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+            "@value": "US-dlcmrc"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+         },
+         {
+            "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+         }
+      ]
+   },
+   {
+      "@id": "_:b204iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/internal"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "040  $aMSI$beng$erda$cMSI$dOCLCF$dOCLCO$dOCLCA$dOCLCQ$dOCLCO$dOCLCL$dOCLCO"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/authorities/subjects/sh99002413",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#Topic"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "180  $xAuditing"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "Auditing"
+         }
+      ]
+   },
+   {
+      "@id": "_:b460iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "OCLCO"
+         }
+      ]
+   },
+   {
+      "@id": "_:b120iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "OCLCO"
+         }
+      ]
+   },
+   {
+      "@id": "_:b260iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Topic",
+         "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+      ],
+      "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+         {
+            "@value": "marylandhealthbenefitexchangeauditing"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/authorities/subjects"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Maryland Health Benefit Exchange--Auditing."
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#componentList": [
+         {
+            "@list": [
+               {
+                  "@id": "http://id.loc.gov/rwo/agents/n2016035787"
+               },
+               {
+                  "@id": "http://id.loc.gov/authorities/subjects/sh99002413"
+               }
+            ]
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+         {
+            "@id": "http://id.loc.gov/authorities/subjects"
+         }
+      ]
+   },
+   {
+      "@id": "_:b436iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/agent": [
+         {
+            "@id": "_:b446iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#date",
+            "@value": "2015-11-20"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+         }
+      ]
+   },
+   {
+      "@id": "_:b450iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-03-27T09:48:17"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+         {
+            "@id": "_:b460iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+         }
+      ]
+   },
+   {
+      "@id": "_:b175iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/metaentry"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "0 - successive"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mstatus/c",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Status",
+         "http://id.loc.gov/ontologies/bibframe/Status",
+         "http://id.loc.gov/ontologies/bibframe/Status",
+         "http://id.loc.gov/ontologies/bibframe/Status"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "c"
+         },
+         {
+            "@value": "c"
+         },
+         {
+            "@value": "c"
+         },
+         {
+            "@value": "c"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "changed"
+         },
+         {
+            "@value": "changed"
+         },
+         {
+            "@value": "changed"
+         },
+         {
+            "@value": "changed"
+         }
+      ]
+   },
+   {
+      "@id": "_:b146iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "906  $a7$bibc$cserials$d3$encip$f20$gn-oclcserc"
+         },
+         {
+            "@value": "9250 $aundetermined$xpolicy default"
+         },
+         {
+            "@value": "955  $bhk03 2025-03-27 to Selection Officer"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
+         },
+         {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/languages/eng"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+         {
+            "@id": "http://id.loc.gov/ontologies/bibframe-2-6-0/"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+         {
+            "@id": "_:b161iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/note": [
+         {
+            "@id": "_:b175iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b204iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d906": [
+         {
+            "@value": "=906     $a 7 $b ibc $c serials $d 3 $e ncip $f 20 $g n-oclcserc"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d925": [
+         {
+            "@value": "=925  0  $a undetermined $x policy default"
+         }
+      ],
+      "http://id.loc.gov/ontologies/lclocal/d955": [
+         {
+            "@value": "=955     $b hk03 2025-03-27 to Selection Officer"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/frequencies/irr",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Frequency"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "irr"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "irregular"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/contentTypes/txt",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Content"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "txt"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "text"
+         }
+      ]
+   },
+   {
+      "@id": "_:b45iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Title"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+         {
+            "@value": "Maryland Health Benefit Exchange"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/s",
+      "@type": [
+         "http://id.loc.gov/ontologies/bflc/GovernmentPubType"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "s"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "state"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mstatus/tr",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Status"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "tr"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "traced"
+         }
+      ]
+   },
+   {
+      "@id": "_:b464iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/agent": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-09-12T15:27:05.329109-04:00"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+         {
+            "@id": "https://github.com/lcnetdev/marc2bibframe2/tree/v3.0-dev"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+         }
+      ]
+   },
+   {
+      "@id": "_:b41iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/OclcNumber"
+      ],
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+         {
+            "@value": "ocn930034625"
+         }
+      ]
+   },
+   {
+      "@id": "_:b49iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Extent"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "volumes"
+         }
+      ]
+   },
+   {
+      "@id": "_:b298iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Topic",
+         "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+      ],
+      "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+         {
+            "@value": "legislativeauditingmaryland"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/authorities/subjects"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Legislative auditing--Maryland"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#componentList": [
+         {
+            "@list": [
+               {
+                  "@id": "http://id.loc.gov/authorities/subjects/sh85075806"
+               },
+               {
+                  "@id": "http://id.loc.gov/rwo/agents/n79029831-781"
+               }
+            ]
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+         {
+            "@id": "http://id.loc.gov/authorities/subjects"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Legislative auditing--Maryland"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mstatus/n",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Status",
+         "http://id.loc.gov/ontologies/bibframe/Status"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "n"
+         },
+         {
+            "@value": "n"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "new"
+         },
+         {
+            "@value": "new"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/authorities/subjects",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+         "http://id.loc.gov/ontologies/bibframe/Source",
+         "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+         "http://id.loc.gov/ontologies/bibframe/Source"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@language": "en",
+            "@value": "Library of Congress Subject Headings"
+         },
+         {
+            "@language": "en",
+            "@value": "Library of Congress Subject Headings"
+         },
+         {
+            "@language": "en",
+            "@value": "Library of Congress Subject Headings"
+         },
+         {
+            "@language": "en",
+            "@value": "Library of Congress Subject Headings"
+         }
+      ]
+   },
+   {
+      "@id": "_:b110iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-03-27T09:48:17"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+         {
+            "@id": "_:b120iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+         }
+      ]
+   },
+   {
+      "@id": "_:b124iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/agent": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-09-12T15:27:05.329109-04:00"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+         {
+            "@id": "https://github.com/lcnetdev/marc2bibframe2/tree/v3.0-dev"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+         }
+      ]
+   },
+   {
+      "@id": "_:b82iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/descsource"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Latest issue consulted: October 2015"
+         }
+      ]
+   },
+   {
+      "@id": "_:b250iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Title"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+         {
+            "@value": "Maryland Health Benefit Exchange"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.worldcat.org/fast/995687",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Topic"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "150  $aLegislative auditing"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/subjectSchemes/fast"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Legislative auditing"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/subjectSchemes/rvm",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Source"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "rvm"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Répertoire de vedettes-matière"
+         }
+      ]
+   },
+   {
+      "@id": "_:b417iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Relation"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/associatedResource": [
+         {
+            "@id": "http://id.loc.gov/resources/hubs/a236c001-0842-6042-db6a-4c56796093fe"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/relationship": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/relationship/series"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/resources/hubs/a236c001-0842-6042-db6a-4c56796093fe",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Hub"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "1300 $aAudit report (Maryland. General Assembly. Department of Legislative Services. Office of Legislative Audits)"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/title": [
+         {
+            "@id": "_:b431iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Audit report (Maryland. General Assembly. Department of Legislative Services. Office of Legislative Audits)"
+         }
+      ]
+   },
+   {
+      "@id": "_:b10iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/ProvisionActivity",
+         "http://id.loc.gov/ontologies/bibframe/Publication"
+      ],
+      "http://id.loc.gov/ontologies/bflc/simpleAgent": [
+         {
+            "@value": "Office of Legislative Audits, Department of Legislative Services, Maryland General Assembly"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/simpleDate": [
+         {
+            "@value": "2015-"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/simplePlace": [
+         {
+            "@value": "Baltimore, Maryland"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/date": [
+         {
+            "@type": "http://id.loc.gov/datatypes/edtf",
+            "@value": "2015/.."
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/place": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/countries/mdu"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/current"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.worldcat.org/fast/821166",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Topic"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "150  $aAuditing"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/subjectSchemes/fast"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Auditing"
+         }
+      ]
+   },
+   {
+      "@id": "_:b431iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Title"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+         {
+            "@value": "Audit report (Maryland. General Assembly. Department of Legislative Services. Office of Legislative Audits)"
+         }
+      ]
+   },
+   {
+      "@id": "_:b390iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Relation"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/associatedResource": [
+         {
+            "@id": "_:b398iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/relationship": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/relationship/series"
+         }
+      ]
+   },
+   {
+      "@id": "_:b501iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Local"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/assigner": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+         }
+      ],
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+         {
+            "@value": "24128505"
+         }
+      ]
+   },
+   {
+      "@id": "_:b515iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/metaentry"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "0 - successive"
+         }
+      ]
+   },
+   {
+      "@id": "_:b77iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/descsource"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Description based on: October 2015; title from cover."
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/resources/instances/24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Instance"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+         {
+            "@id": "_:b96iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b110iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b124iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b146iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/carrier": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/dimensions": [
+         {
+            "@value": "28 cm"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/extent": [
+         {
+            "@id": "_:b49iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/frequency": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/frequencies/irr"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+         {
+            "@id": "_:b41iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/instanceOf": [
+         {
+            "@id": "http://id.loc.gov/resources/works/24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/issuance": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/issuance/serl"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/media": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/note": [
+         {
+            "@id": "_:b67iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b72iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b77iddOtlocdOtgovresourcesinstances24128505"
+         },
+         {
+            "@id": "_:b82iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/provisionActivity": [
+         {
+            "@id": "_:b10iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
+         {
+            "@value": "Baltimore, Maryland: Office of Legislative Audits, Department of Legislative Services, Maryland General Assembly, 2015-"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/supplementaryContent": [
+         {
+            "@id": "_:b87iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/title": [
+         {
+            "@id": "_:b45iddOtlocdOtgovresourcesinstances24128505"
+         }
+      ],
+      "http://purl.org/dc/terms/isPartOf": [
+         {
+            "@id": "http://id.loc.gov/resources/instances"
+         }
+      ]
+   },
+   {
+      "@id": "_:b106iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "MSI"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/resources/works/24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Work",
+         "http://id.loc.gov/ontologies/bibframe/Text",
+         "http://id.loc.gov/ontologies/bibframe/Serial"
+      ],
+      "http://id.loc.gov/ontologies/bflc/aap": [
+         {
+            "@value": "Maryland. General Assembly. Department of Legislative Services. Office of Legislative Audits. Maryland Health Benefit Exchange"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+         {
+            "@value": "marylandgeneralassemblydepartmentoflegislativeservicesofficeoflegislativeauditsmarylandhealthbenefitexchange"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bflc/governmentPubType": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/s"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+         {
+            "@id": "_:b436iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b450iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b464iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b486iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/content": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/contribution": [
+         {
+            "@id": "_:b234iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/geographicCoverage": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/geographicAreas/n-us-md"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+         {
+            "@id": "http://id.loc.gov/resources/instances/24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/language": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/languages/eng"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/relation": [
+         {
+            "@id": "_:b390iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b417iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/subject": [
+         {
+            "@id": "_:b260iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "http://id.worldcat.org/fast/1974258"
+         },
+         {
+            "@id": "_:b298iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "_:b326iddOtlocdOtgovresourcesworks24128505"
+         },
+         {
+            "@id": "http://id.worldcat.org/fast/821166"
+         },
+         {
+            "@id": "http://id.worldcat.org/fast/995687"
+         },
+         {
+            "@id": "http://id.worldcat.org/fast/1204739"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/title": [
+         {
+            "@id": "_:b250iddOtlocdOtgovresourcesworks24128505"
+         }
+      ],
+      "http://purl.org/dc/terms/isPartOf": [
+         {
+            "@id": "http://id.loc.gov/resources/works"
+         }
+      ]
+   },
+   {
+      "@id": "_:b398iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Series",
+         "http://id.loc.gov/ontologies/bflc/Uncontrolled"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/status": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/t"
+         },
+         {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/tr"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/title": [
+         {
+            "@id": "_:b413iddOtlocdOtgovresourcesworks24128505"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/rwo/agents/no2004046025",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Agent",
+         "http://id.loc.gov/ontologies/bibframe/Organization"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "1101 $aMaryland.$bGeneral Assembly.$bDepartment of Legislative Services.$bOffice of Legislative Audits"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Maryland. General Assembly. Department of Legislative Services. Office of Legislative Audits"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/rwo/agents/n79029831-781",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#Geographic",
+         "http://www.loc.gov/mads/rdf/v1#Geographic"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "181  $zMaryland"
+         },
+         {
+            "@value": "181  $zMaryland"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Maryland"
+         },
+         {
+            "@value": "Maryland"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.worldcat.org/fast/1974258",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Organization"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "1102 $aMaryland Health Benefit Exchange"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/subjectSchemes/fast"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Maryland Health Benefit Exchange"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/subjectSchemes/fast",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Source",
+         "http://id.loc.gov/ontologies/bibframe/Source",
+         "http://id.loc.gov/ontologies/bibframe/Source",
+         "http://id.loc.gov/ontologies/bibframe/Source"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "fast"
+         },
+         {
+            "@value": "fast"
+         },
+         {
+            "@value": "fast"
+         },
+         {
+            "@value": "fast"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Faceted application of subject terminology"
+         },
+         {
+            "@value": "Faceted application of subject terminology"
+         },
+         {
+            "@value": "Faceted application of subject terminology"
+         },
+         {
+            "@value": "Faceted application of subject terminology"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/issuance/serl",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Issuance"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "serl"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "serial"
+         }
+      ]
+   },
+   {
+      "@id": "_:b334iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#Topic"
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Finances publiques"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mstatus/t",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Status"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "t"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "transcribed"
+         }
+      ]
+   },
+   {
+      "@id": "_:b234iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Contribution",
+         "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/agent": [
+         {
+            "@id": "http://id.loc.gov/rwo/agents/no2004046025"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/role": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/relators/isb"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/relationship/series",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Relationship",
+         "http://id.loc.gov/ontologies/bibframe/Relationship"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "series"
+         },
+         {
+            "@value": "series"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "series"
+         },
+         {
+            "@value": "series"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/mstatus/current",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Status"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "current"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "current"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/vocabulary/carriers/nc",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Carrier"
+      ],
+      "http://id.loc.gov/ontologies/bibframe/code": [
+         {
+            "@value": "nc"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "volume"
+         }
+      ]
+   },
+   {
+      "@id": "_:b67iddOtlocdOtgovresourcesinstances24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/number"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Began with October 2015"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.loc.gov/rwo/agents/n2016035787",
+      "@type": [
+         "http://www.loc.gov/mads/rdf/v1#CorporateName"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "1102 $aMaryland Health Benefit Exchange"
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Maryland Health Benefit Exchange"
+         }
+      ]
+   },
+   {
+      "@id": "http://id.worldcat.org/fast/1204739",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Place"
+      ],
+      "http://id.loc.gov/ontologies/bflc/marcKey": [
+         {
+            "@value": "151  $aMaryland"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/subjectSchemes/fast"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Maryland"
+         }
+      ]
+   },
+   {
+      "@id": "_:b544iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Note",
+         "http://id.loc.gov/vocabulary/mnotetype/internal"
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "040  $aMSI$beng$erda$cMSI$dOCLCF$dOCLCO$dOCLCA$dOCLCQ$dOCLCO$dOCLCL$dOCLCO"
+         }
+      ]
+   },
+   {
+      "@id": "_:b326iddOtlocdOtgovresourcesworks24128505",
+      "@type": [
+         "http://id.loc.gov/ontologies/bibframe/Topic",
+         "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+      ],
+      "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+         {
+            "@value": "financespubliquescontrôleparlementairemaryland"
+         }
+      ],
+      "http://id.loc.gov/ontologies/bibframe/source": [
+         {
+            "@id": "http://id.loc.gov/vocabulary/subjectSchemes/rvm"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+         {
+            "@value": "Finances publiques--Contrôle parlementaire--Maryland"
+         }
+      ],
+      "http://www.loc.gov/mads/rdf/v1#componentList": [
+         {
+            "@list": [
+               {
+                  "@id": "_:b334iddOtlocdOtgovresourcesworks24128505"
+               },
+               {
+                  "@id": "_:b337iddOtlocdOtgovresourcesworks24128505"
+               },
+               {
+                  "@id": "http://id.loc.gov/rwo/agents/n79029831-781"
+               }
+            ]
+         }
+      ],
+      "http://www.w3.org/2000/01/rdf-schema#label": [
+         {
+            "@value": "Finances publiques--Contrôle parlementaire--Maryland"
+         }
+      ]
+   }
 ]
