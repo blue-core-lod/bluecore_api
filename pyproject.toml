@@ -1,6 +1,6 @@
 [project]
 name = "bluecore-api"
-version = "0.12.0"
+version = "0.12.1"
 description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,6 +17,7 @@ dependencies = [
   "python-dotenv>=1.1.0",
   "pymilvus>=2.5.14",
   "fastapi-mcp>=0.4.0",
+  "lxml>=6.0.2",
 ]
 
 [project.scripts]
@@ -31,6 +32,8 @@ dev = [
   "pytest-httpx>=0.35.0",
   "pytest-asyncio>=0.26.0",
   "pymilvus[milvus-lite]>=2.6.2",
+  "lxml-stubs>=0.5.1",
+  "types-lxml>=2026.2.16",
 ]
 
 [build-system]
