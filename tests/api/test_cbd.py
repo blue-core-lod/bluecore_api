@@ -1,13 +1,26 @@
-from bluecore_api.app.routes.cbd import reorder_work_types, reorder_instance_types
-from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import init_graph
-from fastapi.testclient import TestClient
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from typing import Any, Dict, Sequence
 import pathlib
 import pytest
 import xml.etree.ElementTree as ET
+
+from fastapi.testclient import TestClient
+from lxml import etree
+from rdflib import Graph, RDF, URIRef
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from typing import Any
+
+from bluecore_api.app.routes.cbd import (
+    XPATH_NAMESPACES,
+    generate_cbd_graph,
+    generate_cbd_xml,
+    reorder_instance_types,
+    reorder_work_types,
+)
+from bluecore_api.constants import BibframeType
+from bluecore_models.bluecore_graph import BluecoreGraph
+from bluecore_models.models import Instance, Work
+from bluecore_models.namespaces import BF
+from bluecore_models.utils.graph import init_graph
 
 
 def add_work(client: TestClient, db_session: Session) -> Work:
@@ -34,7 +47,7 @@ def _add_instance(
         work_derived_from,
     )
     original_graph.parse(data=instance_str, format="json-ld")
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "data": original_graph.serialize(format="json-ld"),
         "work_id": work_id,
     }
@@ -43,7 +56,7 @@ def _add_instance(
 
 def add_instances(
     client: TestClient, db_session: Session, work_id: int, work_derived_from: str
-) -> Sequence[Instance]:
+):
     for file in ["tests/cbd-instance.jsonld", "tests/cbd-instance2.jsonld"]:
         _add_instance(client, file, work_id, work_derived_from)
     stmt = select(Instance)
@@ -103,6 +116,70 @@ def test_cbd(client: TestClient, db_session: Session):
     # 2) Ensure there is at least one Work and one Instance (duplicates allowed)
     assert "Work" in bf_local_names, "Missing top-level bf:Work element"
     assert "Instance" in bf_local_names, "Missing top-level bf:Instance element"
+
+
+def test_cbd_other_resources(client: TestClient, db_session: Session):
+    # save_graph wants a sessionmaker rather than a Session, so we make a fake one
+    def sessionmaker(*args, **kwargs):
+        return db_session
+
+    # parse a CBD json-ld file
+    graph = Graph()
+    graph.parse("tests/23807141.jsonld")
+
+    # persist the graph to the database
+    bc_graph = BluecoreGraph(graph)
+    bc_graph.save(sessionmaker)
+
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in bc_graph.graph.subjects()
+    )
+
+    # get one of the instance URIs that was created
+    assert len(bc_graph.instances()) == 2
+    instance_graph = bc_graph.instances()[1]
+
+    # determine its local path
+    instance_uri = next(instance_graph.subjects(RDF.type, BF.Instance))
+    uuid = instance_uri.split("/")[-1]
+
+    response = client.get(f"/cbd/{uuid}.rdf")
+    response_graph = Graph()
+    response_graph.parse(data=response.content, format=response.headers["Content-Type"])
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in response_graph.subjects()
+    )
+
+    response = client.get(f"/cbd/{uuid}.jsonld")
+    response_graph = Graph()
+    response_graph.parse(data=response.content, format="json-ld")
+    assert (
+        URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
+        in response_graph.subjects()
+    )
+
+    instance = db_session.query(Instance).filter(Instance.uuid == uuid).first()
+    cbd_graph = generate_cbd_graph(instance)
+    cbd_xml = generate_cbd_xml(cbd_graph)
+    assert len(cbd_xml) == 2, "Expected 2 top-level elements in CBD XML"
+    top_level_tags: list[BibframeType] = [BibframeType.WORK, BibframeType.INSTANCE]
+    for elem in cbd_xml:
+        local_name = etree.QName(elem).localname
+        assert local_name in top_level_tags, (
+            f"Unexpected top-level element: {local_name}"
+        )
+    xpath = "bf:Work/bf:contribution/bf:Contribution/bf:agent/bf:Agent[@rdf:about='http://id.loc.gov/rwo/agents/n2024040883']"
+    match = cbd_xml.xpath(xpath, namespaces=XPATH_NAMESPACES)
+    assert len(match) == 1, (
+        "Expected to find exactly one matching Agent element for http://id.loc.gov/rwo/agents/n2024040883"
+    )
+    label = match[0].find("{http://www.w3.org/2000/01/rdf-schema#}label")
+    assert label is not None, "Expected to find rdfs:label element for the Agent"
+    assert label.text == "Farri, Elisa", (
+        f"Expected Agent label to be 'Farri, Elisa' but got '{label.text}'"
+    )
 
 
 if __name__ == "__main__":
