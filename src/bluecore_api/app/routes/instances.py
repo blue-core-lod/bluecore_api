@@ -2,7 +2,6 @@ import json
 import os
 from datetime import UTC, datetime
 
-
 from pymilvus import MilvusClient
 
 from bluecore_models.models import Instance
