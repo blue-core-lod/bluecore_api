@@ -2,15 +2,19 @@ import json
 import os
 from datetime import UTC, datetime
 
+
 from pymilvus import MilvusClient
 
 from bluecore_models.models import Instance
 from bluecore_models.utils.graph import handle_external_subject
 from bluecore_models.utils.vector_db import create_embeddings
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.serializer.instance_serializer import (
+    serialize_instance,
+)
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
@@ -31,12 +35,21 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
     operation_id="get_instance",
 )
 async def read_instance(
-    instance_uuid: str, expand: bool = False, db: Session = Depends(get_db)
-):
+    instance_uuid: str,
+    request: Request,
+    expand: bool = False,
+    format: str | None = None,
+    db: Session = Depends(get_db),
+) -> Response | Instance:
     db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
 
     if db_instance is None:
         raise HTTPException(status_code=404, detail="Instance not found")
+
+    resp: Response | None = serialize_instance(db_instance, format, request)
+    if resp:
+        return resp
+
     if expand:
         db_instance.data = expand_resource_graph(db_instance)
     setattr(db_instance, "is_expanded", expand)
