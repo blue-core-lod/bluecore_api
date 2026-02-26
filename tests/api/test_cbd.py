@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from typing import Any
 
-from bluecore_api.app.routes.cbd import (
+from bluecore_api.app.utils.serializer.cbd import (
     XPATH_NAMESPACES,
     generate_cbd_graph,
     generate_cbd_xml,
@@ -98,7 +98,8 @@ def test_cbd(client: TestClient, db_session: Session):
     work_derived_from: str = work.data["derivedFrom"]["@id"]
     instances = add_instances(client, db_session, work_id, work_derived_from)
 
-    response = client.get(f"/cbd/{str(instances[0].uuid)}.rdf")
+    headers = {"Accept": "application/cbd+xml"}
+    response = client.get(f"/instances/{str(instances[0].uuid)}", headers=headers)
     assert response.status_code == 200
     assert response.headers["Content-Type"] == "application/rdf+xml"
     response_data = response.content.decode("utf-8")
@@ -144,7 +145,8 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
     instance_uri = next(instance_graph.subjects(RDF.type, BF.Instance))
     uuid = instance_uri.split("/")[-1]
 
-    response = client.get(f"/cbd/{uuid}.rdf")
+    query_params = {"format": "cbdjsonld"}
+    response = client.get(f"/instances/{uuid}", params=query_params)
     response_graph = Graph()
     response_graph.parse(data=response.content, format=response.headers["Content-Type"])
     assert (
