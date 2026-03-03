@@ -18,16 +18,6 @@ cd bluecore-workflows
 docker compose up 
 ```
 
-## Database Models
-
-The Blue Core API depends on database models in the [Blue Core Data Models] to be present and up to date.
-
-```shell
-git clone https://github.com/blue-core-lod/bluecore-models
-cd bluecore-models
-uv run alembic upgrade head
-```
- 
 ## 🔧 Environment
 
 Next you will want to clone bluecore_api repository and create a `.env` file that will bring up the application using services that were brought up in the previous step. You should be able to use the following:
@@ -49,6 +39,14 @@ API_KEYCLOAK_PASSWORD="123456"
 # credentials so bluecore_api can talk to airflow
 AIRFLOW_WWW_USER_USERNAME="airflow"
 AIRFLOW_WWW_USER_PASSWORD="airflow"
+```
+
+## Run Migrations
+
+The Docker file will automatically run database migrations from the bluecore-models package for you. But if you are running bluecore_api outside of Docker you will need to apply the migrations:
+
+```shell
+uv run alembic upgrade head
 ```
 
 ## 💾 Uploads Directory
