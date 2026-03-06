@@ -19,12 +19,9 @@ WORKDIR /bluecore_api
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 COPY --chown=airflow:root src ./src
-COPY --chown=airflow:root pyproject.toml uv.lock README.md ./
+COPY --chown=airflow:root pyproject.toml uv.lock README.md alembic.ini start.sh ./
 
 ENV UV_CACHE_DIR=${AIRFLOW_USER_HOME_DIR}/.cache/uv
 RUN mkdir -p ${UV_CACHE_DIR} && uv sync && uv build && uv pip install dist/*.whl
 
-# run alembic migrations from bluecore-models
-RUN uv run alembic upgrade head
-
-CMD ["uv", "run", "fastapi", "run", "src/bluecore_api/app/main.py", "--port", "8100", "--root-path", "/api"]
+CMD ["./start.sh"]

@@ -61,11 +61,13 @@ ln -s ../bluecore-workflows/uploads/ uploads
 
 ## 🚀 Running the application
 
-Now you are ready to start the application using your new environment file and the fastapi development server, which will auto-load any changes you make to the code:
+Now you are ready to start the application using your new environment file and the fastapi development server, which will run migrations and auto-load any changes you make to the code:
 
 ```shell
-uv run dotenv run fastapi dev src/bluecore_api/app/main.py --port 3000
+./start.sh
 ```
+
+The application should be available at http://localhost:8100
 
 ## Load Data
 
