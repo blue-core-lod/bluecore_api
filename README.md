@@ -18,16 +18,6 @@ cd bluecore-workflows
 docker compose up 
 ```
 
-## Database Models
-
-The Blue Core API depends on database models in the [Blue Core Data Models] to be present and up to date.
-
-```shell
-git clone https://github.com/blue-core-lod/bluecore-models
-cd bluecore-models
-uv run alembic upgrade head
-```
- 
 ## 🔧 Environment
 
 Next you will want to clone bluecore_api repository and create a `.env` file that will bring up the application using services that were brought up in the previous step. You should be able to use the following:
@@ -51,6 +41,14 @@ AIRFLOW_WWW_USER_USERNAME="airflow"
 AIRFLOW_WWW_USER_PASSWORD="airflow"
 ```
 
+## Run Migrations
+
+The Docker file will automatically run database migrations from the bluecore-models package for you. But if you are running bluecore_api outside of Docker you will need to apply the migrations:
+
+```shell
+uv run alembic upgrade head
+```
+
 ## 💾 Uploads Directory
 
 The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to the Airflow environment.
@@ -63,11 +61,13 @@ ln -s ../bluecore-workflows/uploads/ uploads
 
 ## 🚀 Running the application
 
-Now you are ready to start the application using your new environment file and the fastapi development server, which will auto-load any changes you make to the code:
+Now you are ready to start the application using your new environment file and the fastapi development server, which will run migrations and auto-load any changes you make to the code:
 
 ```shell
-uv run dotenv run fastapi dev src/bluecore_api/app/main.py --port 3000
+./start.sh
 ```
+
+The application should be available at http://localhost:8100
 
 ## Load Data
 
