@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 
 [[package]]
@@ -114,7 +114,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models" },
+    { name = "bluecore-models", specifier = ">=0.11.1" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -144,18 +144,19 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.10.1"
+version = "0.11.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
     { name = "psycopg2-binary" },
     { name = "pyld" },
-    { name = "pymilvus", extra = ["model"] },
+    { name = "pymilvus", extra = ["milvus-lite", "model"] },
     { name = "rdflib" },
+    { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ca/86/8f363acf7d4a6e6294a3d132258a63c466841df269db60fd46a97d0a88f1/bluecore_models-0.10.1.tar.gz", hash = "sha256:05845155ad4076486a203f3825799c6013ae00d80bcc925ef53440b8039a711f", size = 102579, upload-time = "2025-10-23T15:49:29.294Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/77/b5/7638d873fba824c5b2b1047c1cf74615a54b1ed1442ce20da70c402f4673/bluecore_models-0.11.1.tar.gz", hash = "sha256:cc0920891a49ab385ac98ff181d15ccdcaec8aaf76a97e28bffd9b9cfc392ae0", size = 44369, upload-time = "2026-03-05T15:33:35.195Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/a8/87c27a8e15940160fdb45a92c28cd259bfeb429890bae3c8414f3240c675/bluecore_models-0.10.1-py3-none-any.whl", hash = "sha256:c7af88647b77e5527da3d12323e3131273452c678e047fef879425369335d5b0", size = 18130, upload-time = "2025-10-23T15:49:28.156Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/2f/0e26fc8827b8b312b22adc90ba46721c4d2a69d0906c3f3a67f600280635/bluecore_models-0.11.1-py3-none-any.whl", hash = "sha256:57e1dc894c2e651273473160b0b58bd8bffc40c7c094421c81b9031c701eebee", size = 25841, upload-time = "2026-03-05T15:33:33.976Z" },
 ]
 
 [[package]]
@@ -2283,7 +2284,7 @@ wheels = [
 
 [[package]]
 name = "transformers"
-version = "4.57.1"
+version = "4.57.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
@@ -2297,9 +2298,9 @@ dependencies = [
     { name = "tokenizers" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/68/a39307bcc4116a30b2106f2e689130a48de8bd8a1e635b5e1030e46fcd9e/transformers-4.57.1.tar.gz", hash = "sha256:f06c837959196c75039809636cd964b959f6604b75b8eeec6fdfc0440b89cc55", size = 10142511, upload-time = "2025-10-14T15:39:26.18Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/35/3a/7c90ee739871495f1a5cb9bdb074b42fe69357d7ccc1a8818af858d8e63b/transformers-4.57.5.tar.gz", hash = "sha256:d631faea6bd32fc51962e482744afeaa70170c70e5e991cf8e355d7275631524", size = 10138171, upload-time = "2026-01-13T13:28:24.19Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/d3/c16c3b3cf7655a67db1144da94b021c200ac1303f82428f2beef6c2e72bb/transformers-4.57.1-py3-none-any.whl", hash = "sha256:b10d05da8fa67dc41644dbbf9bc45a44cb86ae33da6f9295f5fbf5b7890bd267", size = 11990925, upload-time = "2025-10-14T15:39:23.085Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/de/4f95d22d9764659d2bd35065f383f3fe099699a9e6e89fa4728dbcd7244a/transformers-4.57.5-py3-none-any.whl", hash = "sha256:5a1e0deb989cd0b8f141b6d8c9b7c956fc029cd288d68844f57dc0acbaf2fe39", size = 11993481, upload-time = "2026-01-13T13:28:16.542Z" },
 ]
 
 [[package]]
