@@ -3,7 +3,11 @@ import pytest_asyncio
 
 import os
 
-from pytest_mock_resources import PostgresConfig, create_postgres_fixture
+from pytest_mock_resources import (
+    PostgresConfig,
+    StaticStatements,
+    create_postgres_fixture,
+)
 
 from fastapi import Request
 from fastapi.testclient import TestClient
@@ -23,8 +27,10 @@ from bluecore_models.models import (
     Version,
     Work,
 )
+from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
 
 from bluecore_models.utils.vector_db import init_collections
+from sqlalchemy import text
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
@@ -47,7 +53,7 @@ def pmr_postgres_config():
     return PostgresConfig(image="postgres:16-alpine")
 
 
-db_session = create_postgres_fixture(session=True)
+db_session = create_postgres_fixture(StaticStatements(*PG_EXT_FUNC), session=True)
 
 
 async def mocked_get_auth(request: Request):
@@ -139,6 +145,7 @@ def client(mocker, db_session, app):
             Work.__table__,
         ],
     )
+    db_session.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent"))
 
     from bluecore_api.database import get_db
 

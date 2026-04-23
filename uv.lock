@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 
 [[package]]
@@ -81,7 +81,7 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.14.0"
+version = "0.15.0"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
@@ -114,7 +114,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.11.1" },
+    { name = "bluecore-models", specifier = ">=0.12.0" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -144,7 +144,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.11.1"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -154,9 +154,9 @@ dependencies = [
     { name = "rdflib" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/77/b5/7638d873fba824c5b2b1047c1cf74615a54b1ed1442ce20da70c402f4673/bluecore_models-0.11.1.tar.gz", hash = "sha256:cc0920891a49ab385ac98ff181d15ccdcaec8aaf76a97e28bffd9b9cfc392ae0", size = 44369, upload-time = "2026-03-05T15:33:35.195Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/19/9367f71d314ea6aeaae58723ab8273de52555658e8d884e093273f233ecf/bluecore_models-0.12.0.tar.gz", hash = "sha256:38aa6b7118353b8efe323d901fb883d90715ab01b2b2773722d6f2081e53ed74", size = 48380, upload-time = "2026-04-23T15:39:20.111Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/2f/0e26fc8827b8b312b22adc90ba46721c4d2a69d0906c3f3a67f600280635/bluecore_models-0.11.1-py3-none-any.whl", hash = "sha256:57e1dc894c2e651273473160b0b58bd8bffc40c7c094421c81b9031c701eebee", size = 25841, upload-time = "2026-03-05T15:33:33.976Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/1b/19360436d5ae3cb96b054de55ba995f3a2eede17e2263df39e20fc21f87d/bluecore_models-0.12.0-py3-none-any.whl", hash = "sha256:5732113cfff3438a80029802e0e3eef5c6477c5458259b4eb5cf47c824a4a20c", size = 29046, upload-time = "2026-04-23T15:39:19.211Z" },
 ]
 
 [[package]]
