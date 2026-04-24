@@ -30,7 +30,6 @@ from bluecore_models.models import (
 from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
 
 from bluecore_models.utils.vector_db import init_collections
-from sqlalchemy import text
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
