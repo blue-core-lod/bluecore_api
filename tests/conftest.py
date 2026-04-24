@@ -145,7 +145,6 @@ def client(mocker, db_session, app):
             Work.__table__,
         ],
     )
-    db_session.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent"))
 
     from bluecore_api.database import get_db
 
