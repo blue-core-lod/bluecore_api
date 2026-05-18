@@ -41,15 +41,27 @@ AIRFLOW_WWW_USER_USERNAME="airflow"
 AIRFLOW_WWW_USER_PASSWORD="airflow"
 ```
 
-## Run Migrations
+## 💽 Running Migrations
 
-The Docker file will automatically run database migrations from the bluecore-models package for you. But if you are running bluecore_api outside of Docker you will need to apply the migrations:
+Database migrations live in the separate [Blue Core Data Models] (`bluecore-models`) package. They are applied automatically for you by both start scripts before the server boots:
 
-```shell
-uv run alembic upgrade head
+- `./start.sh` (Production) runs `uv run alembic upgrade head`, which uses the `[alembic]` section of `alembic.ini` (the `postgres` Docker database host).
+- `./start-dev.sh` (Development) runs `uv run alembic --name dev upgrade head`, which uses the `[dev]` section (the `localhost` database host).
+
+
+### Testing a migration from a local bluecore-models checkout
+
+By default Alembic uses the migrations bundled with the installed `bluecore-models` package. To write and test a new migration against a local clone of [Blue Core Data Models] checked out next to this repo (`../bluecore-models`), point the `[dev]` section's `script_location` at that checkout in `alembic.ini`:
+
+```ini
+[dev]
+script_location = ../bluecore-models/src/bluecore_models/migrations
+prepend_sys_path = .
+version_path_separator = os
+sqlalchemy.url = postgresql+psycopg2://airflow:airflow@localhost/bluecore
 ```
 
-## 💾 Uploads Directory
+## 📂 Uploads Directory
 
 The bluecore-workflows application has a `uploads` directory in it. You will need to create a symlink to it in your bluecore_api directory. This will allow files uploaded to the API to be available to the Airflow environment.
 
@@ -61,15 +73,20 @@ ln -s ../bluecore-workflows/uploads/ uploads
 
 ## 🚀 Running the application
 
-Now you are ready to start the application using your new environment file and the fastapi development server, which will run migrations and auto-load any changes you make to the code:
+Two start scripts are provided. Both apply database migrations (see [Run Migrations](#run-migrations)) before launching the server:
+
+- **`./start-dev.sh`** — local development. Runs the FastAPI dev server with autoreload on port `3000`, loads your `.env`, and migrates the `localhost` database. Use this for development.
+- **`./start.sh`** — runs the app the way it runs in the container: FastAPI on port `8100` under the `/api` root path, migrating the `postgres` database host.
+
+For local development with the environment file created above:
 
 ```shell
-./start.sh
+./start-dev.sh
 ```
 
-The application should be available at http://localhost:8100
+The application should then be available at http://localhost:3000
 
-## Load Data
+## 💾 Load Data
 
 If you want to try loading some data you can use the `bluecore` utility:
 
@@ -79,7 +96,7 @@ uv run bluecore --verbose load-url https://raw.githubusercontent.com/blue-core-l
 
 This will tell the Blue Core API to load the data at that URL into the database.
 
-## HTTP Requests
+## 📡 HTTP Requests
 
 To talk directly to the API you will need to pass along a Keycloak access token. During development you can get one by using the included `bluecore` command line tool:
 
