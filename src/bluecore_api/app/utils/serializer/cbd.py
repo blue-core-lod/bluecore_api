@@ -14,6 +14,7 @@ from bluecore_models.utils.graph import load_jsonld
 
 BF_NAMESPACE = Namespace("http://id.loc.gov/ontologies/bibframe/")
 RDF_NAMESPACE = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+MADSRDF_NAMESPACE = Namespace("http://www.loc.gov/mads/rdf/v1#")
 XPATH_NAMESPACES = {
     "bf": str(BF_NAMESPACE),
     "rdf": str(RDF_NAMESPACE),
@@ -67,6 +68,7 @@ def generate_cbd_graph(instance: Instance) -> Graph:
             instance_graph = expand_resource_as_graph(related_instance, instance_graph)
 
     instance_graph.bind("bf", BF_NAMESPACE, override=True, replace=True)
+    instance_graph.bind("madsrdf", MADSRDF_NAMESPACE, override=True, replace=True)
     return instance_graph
 
 
