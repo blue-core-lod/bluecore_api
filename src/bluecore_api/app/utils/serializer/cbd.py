@@ -20,6 +20,16 @@ XPATH_NAMESPACES = {
     "rdf": str(RDF_NAMESPACE),
 }
 
+# Resource types kept as top-level siblings in the CBD XML instead of being
+# nested inside the elements that reference them. Marva expects Works,
+# Instances, and Items to stay at the top level, linked only by rdf:resource.
+TOP_LEVEL_TYPES = (BibframeType.WORK, BibframeType.INSTANCE, BibframeType.ITEM)
+
+
+def top_level_resource(elem) -> bool:
+    """Whether an element is a Work/Instance/Item that should not be nested."""
+    return any(elem.tag.endswith(bf_type) for bf_type in TOP_LEVEL_TYPES)
+
 
 def reorder_work_types(work_data: dict[str, Any]) -> dict[str, Any]:
     """Reorder work types to ensure 'Work' is first"""
@@ -89,9 +99,7 @@ def generate_cbd_xml(graph: Graph):
         graph.serialize(format="pretty-xml", indent=2, max_depth=1).encode("utf-8")
     )
     for elem in root:
-        if elem.tag.endswith(BibframeType.WORK) or elem.tag.endswith(
-            BibframeType.INSTANCE
-        ):
+        if top_level_resource(elem):
             continue
 
         about = elem.xpath("@rdf:about", namespaces=XPATH_NAMESPACES)
@@ -106,9 +114,7 @@ def generate_cbd_xml(graph: Graph):
             match.append(copy.deepcopy(elem))
 
     for elem in root:
-        if elem.tag.endswith(BibframeType.WORK) or elem.tag.endswith(
-            BibframeType.INSTANCE
-        ):
+        if top_level_resource(elem):
             continue
         root.remove(elem)
 

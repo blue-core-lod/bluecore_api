@@ -20,6 +20,7 @@ class BibframeType(StringEnum):
 
     WORK = "Work"
     INSTANCE = "Instance"
+    ITEM = "Item"
 
 
 class SearchType(StringEnum):
