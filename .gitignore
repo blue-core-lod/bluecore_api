@@ -4,3 +4,4 @@
 .cognitoToken
 __pycache__*
 uploads
+/.idea

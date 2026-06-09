@@ -88,13 +88,44 @@ The application should then be available at http://localhost:3000
 
 ## 💾 Load Data
 
-If you want to try loading some data you can use the `bluecore` utility:
+If you want to try loading some data you can use the `bluecore` utility.
+
+### Load from a URL
 
 ```shell
 uv run bluecore --verbose load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
 ```
 
 This will tell the Blue Core API to load the data at that URL into the database.
+
+### Load from a local file
+To batch load a file from your local filesystem (the local equivalent of the
+URL load above), use `load-file` and point it at a JSON-LD document — for
+example one of the samples in `sample/`:
+
+```shell
+uv run bluecore --verbose load-file sample/batch-small.jsonld
+```
+
+## 🔄 Converting a Library of Congress CBD to JSON-LD
+LC publishes resources as `*.cbd.xml` (RDF/XML). The
+`scripts/cbd_to_jsonld.py` helper downloads one and converts it to JSON-LD so
+it can be batch loaded like any other sample.
+
+Pass the `.cbd.xml` URL; the instance id is taken from the URL and the result
+is written to `sample/<INSTANCE_ID>.jsonld`:
+
+```shell
+uv run python scripts/cbd_to_jsonld.py https://id.loc.gov/resources/instances/22442890.cbd.xml
+# → writes sample/22442890.jsonld
+```
+
+Use `--out-dir` to write somewhere else. Once converted, load it locally with
+`load-file`:
+
+```shell
+uv run bluecore --verbose load-file sample/22442890.jsonld
+```
 
 ## 📡 HTTP Requests
 
