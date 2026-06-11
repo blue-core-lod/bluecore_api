@@ -34,16 +34,51 @@ from bluecore_api.app.routes.batches import endpoints as batch_endpoints
 """Initialize logging config"""
 setup_logging()
 
+"""
+OpenAPI tag metadata. The order here is the order sections appear in the /docs and /redoc pages.
+"""
+openapi_tags = [
+    {"name": "Works", "description": "BIBFRAME Works."},
+    {"name": "Instances", "description": "BIBFRAME Instances belonging to a Work."},
+    {
+        "name": "Resources",
+        "description": "JSON or JSON-LD resources used to support Work and Instances.",
+    },
+    {
+        "name": "Search",
+        "description": "Full-text and vector search for Works, Instances, Resources.",
+    },
+    {
+        "name": "CBD",
+        "description": "Concise Bounded Description serialization consumed by the Marva editor.",
+    },
+    {
+        "name": "Change Documents",
+        "description": "Activity Streams change feeds for downstream consumers.",
+    },
+    {"name": "Batches", "description": "Bulk ingestion via Airflow."},
+    {"name": "Export", "description": "Resource export."},
+]
+
 """Init base app"""
-base_app = FastAPI(root_path="/api", dependencies=[Depends(set_user_context)])
-base_app.include_router(change_documents)
-base_app.include_router(cbd_endpoints)
-base_app.include_router(instance_routes)
-base_app.include_router(resource_routes)
-base_app.include_router(search_routes)
-base_app.include_router(work_routes)
-base_app.include_router(batch_endpoints)
-base_app.include_router(export_routes)
+base_app = FastAPI(
+    root_path="/api",
+    dependencies=[Depends(set_user_context)],
+    openapi_tags=openapi_tags,
+    swagger_ui_parameters={
+        "displayRequestDuration": True,  # Show response time on each call
+        "filter": True,  # Add a search box to filter operations by name
+        "defaultModelsExpandDepth": 0,  # Start the "Schemas" section collapsed
+    },
+)
+base_app.include_router(work_routes, tags=["Works"])
+base_app.include_router(instance_routes, tags=["Instances"])
+base_app.include_router(resource_routes, tags=["Resources"])
+base_app.include_router(search_routes, tags=["Search"])
+base_app.include_router(cbd_endpoints, tags=["CBD"])
+base_app.include_router(change_documents, tags=["Change Documents"])
+base_app.include_router(batch_endpoints, tags=["Batches"])
+base_app.include_router(export_routes, tags=["Export"])
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
