@@ -1,15 +1,19 @@
 import pathlib
-import pytest
 import xml.etree.ElementTree as ET
-
-from fastapi.testclient import TestClient
-from lxml import etree
-from rdflib import Graph, RDF, URIRef
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 from typing import Any
 
-from bluecore_api.app.utils.serializer.cbd import (
+import pytest
+from bluecore_models.bluecore_graph import BluecoreGraph
+from bluecore_models.models import Instance, Work
+from bluecore_models.namespaces import BF
+from bluecore_models.utils.graph import init_graph
+from fastapi.testclient import TestClient
+from lxml import etree
+from rdflib import RDF, Graph, URIRef
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from bluecore_api.app.utils.serialize.cbd import (
     XPATH_NAMESPACES,
     generate_cbd_graph,
     generate_cbd_xml,
@@ -17,10 +21,6 @@ from bluecore_api.app.utils.serializer.cbd import (
     reorder_work_types,
 )
 from bluecore_api.constants import BibframeType
-from bluecore_models.bluecore_graph import BluecoreGraph
-from bluecore_models.models import Instance, Work
-from bluecore_models.namespaces import BF
-from bluecore_models.utils.graph import init_graph
 
 
 def add_work(client: TestClient, db_session: Session) -> Work:
@@ -145,8 +145,7 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
     instance_uri = next(instance_graph.subjects(RDF.type, BF.Instance))
     uuid = instance_uri.split("/")[-1]
 
-    query_params = {"format": "cbdjsonld"}
-    response = client.get(f"/instances/{uuid}", params=query_params)
+    response = client.get(f"/instances/{uuid}.cbd.jsonld")
     response_graph = Graph()
     response_graph.parse(data=response.content, format=response.headers["Content-Type"])
     assert (
@@ -154,7 +153,7 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
         in response_graph.subjects()
     )
 
-    response = client.get(f"/cbd/{uuid}.jsonld")
+    response = client.get(f"/instances/{uuid}.cbd.jsonld")
     response_graph = Graph()
     response_graph.parse(data=response.content, format="json-ld")
     assert (
