@@ -40,10 +40,22 @@ OpenAPI tag metadata. The order here is the order sections appear in the /docs a
 openapi_tags = [
     {"name": "Works", "description": "BIBFRAME Works."},
     {"name": "Instances", "description": "BIBFRAME Instances belonging to a Work."},
-    {"name": "Resources", "description": "JSON or JSON-LD resources used to support Work and Instances.",},
-    {"name": "Search","description": "Full-text and vector search for Works, Instances, Resources.",},
-    {"name": "CBD","description": "Concise Bounded Description serialization consumed by the Marva editor.",},
-    {"name": "Change Documents","description": "Activity Streams change feeds for downstream consumers.",},
+    {
+        "name": "Resources",
+        "description": "JSON or JSON-LD resources used to support Work and Instances.",
+    },
+    {
+        "name": "Search",
+        "description": "Full-text and vector search for Works, Instances, Resources.",
+    },
+    {
+        "name": "CBD",
+        "description": "Concise Bounded Description serialization consumed by the Marva editor.",
+    },
+    {
+        "name": "Change Documents",
+        "description": "Activity Streams change feeds for downstream consumers.",
+    },
     {"name": "Batches", "description": "Bulk ingestion via Airflow."},
     {"name": "Export", "description": "Resource export."},
 ]
