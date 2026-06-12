@@ -11,6 +11,7 @@ class StringEnum(str, Enum):
 class BluecoreType(StringEnum):
     """Bluecore type enum."""
 
+    HUBS = "hubs"
     WORKS = "works"
     INSTANCES = "instances"
 
@@ -18,6 +19,7 @@ class BluecoreType(StringEnum):
 class BibframeType(StringEnum):
     """Bibframe type enum."""
 
+    HUB = "Hub"
     WORK = "Work"
     INSTANCE = "Instance"
     ITEM = "Item"
@@ -26,10 +28,11 @@ class BibframeType(StringEnum):
 class SearchType(StringEnum):
     """Search type enum."""
 
+    HUBS = "hubs"
     WORKS = "works"
     INSTANCES = "instances"
     ALL = "all"
 
 
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
-DEFAULT_SEARCH_PAGE_LENGTH = 10
+DEFAULT_SEARCH_PAGE_LENGTH = 20

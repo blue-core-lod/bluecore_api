@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from bluecore_api.constants import BluecoreType
 from typing import Any, Dict, List, Sequence
@@ -22,8 +22,7 @@ class ResourceBaseSchema(BaseModel):
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InstanceCreateSchema(BaseModel):
@@ -68,16 +67,39 @@ class OtherResourceUpdateSchema(BaseModel):
     is_profile: Optional[bool] = None
 
 
+class HubCreateSchema(BaseModel):
+    data: str
+
+
+class HubEmbeddingSchema(BaseModel):
+    hub_id: int
+    hub_uri: str
+    version_id: int
+    embedding: list
+
+
+class HubSchema(ResourceBaseSchema):
+    type: str = BluecoreType.HUBS
+    is_expanded: bool = False
+
+
+class HubUpdateSchema(BaseModel):
+    data: Optional[str] = None
+
+
 class WorkCreateSchema(BaseModel):
+    hub_id: Optional[int] = None
     data: str
 
 
 class WorkUpdateSchema(BaseModel):
     data: Optional[str] = None
+    hub_id: Optional[int] = None
 
 
 class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
+    hub_id: Optional[int]
     is_expanded: bool = False
 
 

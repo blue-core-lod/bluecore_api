@@ -18,7 +18,6 @@ type SerializerFn = Callable[[Instance | Work, bool], Response | None]
 serializer_format_registry: dict[str, SerializerFn] = {
     "cbd.jsonld": as_cbd_jsonld,
     "cbd.xml": as_cbd_xml,
-    "html": as_html,
     "jsonld": as_jsonld,
     "nt": as_ntriples,
     "rdf": as_rdfxml,
@@ -44,7 +43,11 @@ def serialize(
         return serializer_format_registry[format](doc, expand)
     accept_header = request.headers.get("accept", "")
     for accept in accept_header.split(","):
-        accept = accept.strip()
+        accept = accept.split(";")[0].strip()
+        if (
+            accept == "text/html"
+        ):  # HTML is reached by content negotiation "Accept: text/html"
+            return as_html(doc, request)
         if accept in serializer_accept_registry:
             return serializer_accept_registry[accept](doc, expand)
     return None

@@ -2,11 +2,15 @@ import json
 
 from bluecore_models.models import Instance, Work
 from bluecore_models.utils.graph import load_jsonld
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Request, Response
 
 from bluecore_api.app.utils.serialize.cbd import (
     cbd_jsonld,
     cbd_xml,
+)
+from bluecore_api.app.utils.serialize.html import (
+    render_instance_html,
+    render_work_html,
 )
 from bluecore_api.expansion import expand_resource_as_graph, expand_resource_graph
 from bluecore_api.schemas.schemas import InstanceSchema, WorkSchema
@@ -49,11 +53,11 @@ def as_cbd_xml(doc: Instance | Work, expand: bool) -> Response:
     )
 
 
-def as_html(doc: Instance | Work, expand: bool) -> Response:
-    return Response(
-        content="<html><body><h1>HTML serialization not yet implemented</h1></body></html>",
-        media_type="text/html",
-    )
+# Render Work or Instance as HTML view
+def as_html(doc: Instance | Work, request: Request) -> Response:
+    if isinstance(doc, Instance):
+        return render_instance_html(doc, request)
+    return render_work_html(doc, request)
 
 
 def as_jsonld(doc: Instance | Work, expand: bool) -> Response:

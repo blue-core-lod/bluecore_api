@@ -39,6 +39,10 @@ API_KEYCLOAK_PASSWORD="123456"
 # credentials so bluecore_api can talk to airflow
 AIRFLOW_WWW_USER_USERNAME="airflow"
 AIRFLOW_WWW_USER_PASSWORD="airflow"
+
+# Editor Redirect URLs for HTML template views
+MARVA_BASE_URL="http://localhost:4444/"
+SINOPIA_BASE_URL="http://localhost:8888/"
 ```
 
 ## 💽 Running Migrations
