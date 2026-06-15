@@ -6,6 +6,7 @@ the UI/UX mockups. Referenced Blue Core Works/Instances link to their own URL (t
 
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import Request, Response
 from rdflib import Graph, URIRef
@@ -287,6 +288,33 @@ def _dedupe(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return unique
 
 
+def _label_sources(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Append a source tag (LC, FAST, …) to each referenced value.
+
+    Subjects draw from several vocabularies; tagging every value by the
+    authority it links to keeps the list consistent and distinguishes
+    same-named headings ("Vampires (LC)" vs "Vampires (FAST)").
+    """
+    for v in values:
+        href = v["href"]
+        if not href:
+            continue
+        host = urlparse(href).netloc.lower()
+        if "loc.gov" in host:
+            source = "LC"
+        elif "worldcat.org" in host:
+            source = "FAST" if "/fast/" in href else "WorldCat"
+        else:
+            source = host.removeprefix("www.").removeprefix("id.")
+        if source:
+            v["text"] = f"{v['text']} ({source})"
+    return values
+
+
+# Fields whose values carry their source tag (see _label_sources). Add more as
+SOURCE_LABELED_KEYS = {"subject"} # Add more as we discover more fields we want to add tags to
+
+
 def _field(
     label: str, key: str, data: dict[str, Any], label_map: dict[str, str]
 ) -> dict[str, Any] | None:
@@ -303,6 +331,8 @@ def _field(
     else:
         values = _node_values(data[key], label_map)
     values = _dedupe(values)
+    if key in SOURCE_LABELED_KEYS:
+        values = _label_sources(values)
     return {"label": label, "values": values} if values else None
 
 
