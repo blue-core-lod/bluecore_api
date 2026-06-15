@@ -1,0 +1,466 @@
+/*############################################################################*/
+/*#######  Bluecore Template Colors  #######*/
+/*##########################################*/
+:root {
+  --bc-orient: #00548f;
+  --bc-blue: #005eb8;
+  --bc-link: #005eb8;
+  --bc-header-bg: #d7eafd;
+  --bc-page-bg: #f6f8fc;
+  --bc-sidebar-bg: #d9effc;
+  --bc-text: #111;
+  --bc-muted: #677084;
+  --bc-muted-bg: rgb(213 213 216 / 0.7);
+  --bc-border: #b9c8e8;
+  --bc-control-border: #5d6470;
+}
+
+
+
+/*############################################################################*/
+/*#######  Main Template Styles Section  #######*/
+/*##############################################*/
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  color: var(--bc-text);
+  background: var(--bc-page-bg);
+  line-height: 1.2;
+  font-size: 16px;
+}
+
+/* Links inside the document body / sidebar are underlined like the mockups. */
+.bc-main a,
+.bc-sidebar a {
+  color: var(--bc-link);
+  text-decoration: underline;
+}
+
+.bc-main a:hover,
+.bc-sidebar a:hover {
+  color: var(--bc-orient);
+}
+
+.bc-page {
+  width: min(100%, 1200px);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #fff;
+  border-left: 1px solid var(--bc-border);
+  border-right: 1px solid var(--bc-border);
+}
+
+/* Header */
+.bc-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 55px;
+  padding: 0 32px;
+  background: var(--bc-header-bg);
+  border-bottom: 1px solid var(--bc-border);
+}
+
+.bc-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bc-blue);
+  text-decoration: none;
+}
+
+.top-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: 1em;
+}
+
+.bc-brand img {
+  height: 22px;
+  width: auto;
+}
+
+.bc-nav {
+  display: flex;
+  gap: 20px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bc-nav a {
+  color: var(--bc-blue);
+  text-decoration: none;
+}
+
+/* Hamburger menu — hidden on desktop, revealed in the Responsive Section.
+   Driven by the #bc-menu-toggle checkbox; the checkbox itself is never shown. */
+.bc-menu-toggle {
+  display: none;
+}
+
+.bc-hamburger {
+  display: none; /* shown < 760px */
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.bc-hamburger-bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--bc-blue);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+
+.bc-hero {
+  min-height: 29px;
+  position: relative;
+  background:
+    radial-gradient(circle at 8% -12px, transparent 34px, rgba(217, 239, 252, 0.75) 35px, rgba(217, 239, 252, 0.75) 37px, transparent 38px),
+    radial-gradient(circle at 19% -30px, rgba(217, 239, 252, 0.45) 0 34px, transparent 35px),
+    radial-gradient(circle at 35% -24px, rgba(217, 239, 252, 0.35) 0 30px, transparent 31px),
+    linear-gradient(180deg, #fff 0, #f7fcff 100%);
+}
+
+/* Search sits over the patterned strip in the upper-right, matching the mockups. */
+.bc-search {
+  display: flex;
+  position: absolute;
+  top: 7px;
+  right: 28px;
+  justify-content: flex-end;
+  gap: 0;
+  padding: 0;
+  align-items: stretch;
+  height: 23px;
+}
+
+.bc-search select,
+.bc-search input[type="search"] {
+  padding: 2px 8px;
+  border: 1px solid var(--bc-control-border);
+  border-radius: 0;
+  font-size: 12px;
+  background: #fff;
+  height: 23px;
+}
+
+.bc-search select {
+  width: 165px;
+}
+
+.bc-search input[type="search"] {
+  width: 275px;
+  border-left: 0;
+}
+
+.bc-search button {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+/* Layout: main column + right sidebar */
+.bc-layout {
+  display: flex;
+  /*flex-direction: column;*/
+  gap: 40px;
+  padding: 34px 20px 70px 34px;
+  align-items: flex-start;
+}
+
+.bc-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.bc-sidebar {
+  min-width: auto;
+  max-width: 550px;
+  min-height: auto;
+  flex-shrink: 0;
+  background: var(--bc-sidebar-bg);
+  padding: 32px 10px 18px;
+  border-radius: 0;
+  margin-top: 58px;
+}
+
+.bc-doctype {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 28px;
+}
+
+/* Field blocks (indented under the heading, like the mockups) */
+.bc-field {
+  margin: 0 0 22px 31px;
+  margin-left: 24px;
+}
+
+
+.bc-field h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.bc-field .bc-value {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.bc-field .bc-list-value {
+  word-wrap: break-word;
+}
+
+.bc-field ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bc-field li {
+  margin: 0;
+}
+
+/* Sidebar */
+.bc-sidebar h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.bc-sidebar ul {
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+/* Alternative Formats */
+.bc-formats ul {
+  list-style: none;
+}
+
+.bc-formats li {
+  margin-bottom: 0.15rem;
+}
+
+.bc-dl {
+  vertical-align: -2px;
+  margin-left: 0.3rem;
+  color: var(--bc-muted);
+}
+
+.bc-link-disabled {
+  color: var(--bc-muted);
+  cursor: not-allowed;
+  border: solid 2px var(--bc-muted-bg);
+  border-radius: 4px;
+  padding: 1px;
+  background-color: var(--bc-muted-bg);
+}
+
+.bc-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--bc-muted);
+}
+
+.bc-muted {
+  color: var(--bc-muted);
+}
+
+/* Search results: flat list + grouped (All) sections */
+.bc-results {
+  margin: 0 0 18px;
+  padding: 0 0 0 18px;
+}
+
+.bc-results li {
+  margin-bottom: 0.2rem;
+}
+
+.bc-results-group {
+  margin: 0 0 26px;
+}
+
+.bc-results-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bc-blue);
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--bc-border);
+}
+
+/* Pagination controls */
+.bc-pager {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 8px 0 24px;
+}
+
+.bc-pager-status {
+  color: var(--bc-muted);
+  font-size: 0.9rem;
+}
+
+.bc-pager-disabled {
+  color: var(--bc-muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+
+
+/*############################################################################*/
+/*#######  Responsive Section  #######*/
+/*####################################*/
+@media (max-width: 760px) {
+  .bc-page {
+    border: 0;
+  }
+
+  /* ---- Layout: single column, full-width sidebar ---- */
+  .bc-layout {
+    flex-direction: column;
+  }
+  .bc-sidebar {
+    max-width: 100%;
+    width: 100%;
+    min-height: auto;
+  }
+  .bc-field {
+    margin-left: 24px;
+  }
+
+  /* ---- Header: brand on the left, hamburger on the right ---- */
+  .bc-header {
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 8px 18px;
+  }
+  .bc-hamburger {
+    display: flex;
+  }
+
+  /* Hamburger morphs into an X while the menu is open. */
+  .bc-menu-toggle:checked ~ .bc-header .bc-hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .bc-menu-toggle:checked ~ .bc-header .bc-hamburger-bar:nth-child(2) {
+    opacity: 0;
+  }
+  .bc-menu-toggle:checked ~ .bc-header .bc-hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+
+  .top-pagination {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .bc-result-num {
+    margin-top: 0px;
+    margin-bottom: 4px;
+  }
+
+
+  /* ---- Collapsed menu: nav + search hidden until the hamburger is tapped ---- */
+  .bc-nav {
+    display: none;
+    order: 3;          /* drop below the brand/hamburger row */
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 0;
+    margin: 8px 0 0;
+    font-size: 14px;
+  }
+  .bc-nav a {
+    padding: 12px 2px;
+    border-top: 1px solid var(--bc-border);
+  }
+  .bc-hero {
+    display: none;
+    min-height: 0;
+  }
+
+  /* Open state (checkbox checked) reveals both panels. */
+  .bc-menu-toggle:checked ~ .bc-header .bc-nav {
+    display: flex;
+  }
+  .bc-menu-toggle:checked ~ .bc-hero {
+    display: block;
+  }
+
+  /* ---- Search: a full-width stacked form with a visible submit button ---- */
+  .bc-search {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    height: auto;
+    padding: 14px 18px;
+  }
+  .bc-search select,
+  .bc-search input[type="search"] {
+    width: 100%;
+    height: 36px;
+    font-size: 14px;
+    border-left: 1px solid var(--bc-control-border); /* restore: controls are stacked now */
+  }
+  /* The submit button is visually hidden on desktop; bring it back on mobile. */
+  .bc-search button {
+    position: static;
+    width: 100%;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    clip: auto;
+    border: 1px solid var(--bc-blue);
+    background: var(--bc-blue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /*Mobile View*/
+  /* Long unbroken strings (URIs, identifiers) have no natural break point on a
+     narrow screen, so allow the browser to break inside a word when it must. */
+  .bc-field .bc-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .bc-field .bc-list-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+}
