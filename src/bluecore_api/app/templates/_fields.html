@@ -1,0 +1,66 @@
+{##############################################################################}
+{##  Fields partial with display helper methods loaded into resource.html  ####}
+{##############################################################################}
+
+{####  Render Values Section  ####}
+{% macro render_value(v) -%}
+    {%- if v.href -%}<a href="{{ v.href }}">{{ v.text }}</a>{%- else -%}{{ v.text }}{%- endif -%}
+{%- endmacro %}
+
+{####  Redner Field Section  ####}
+{% macro render_field(field) -%}
+    <div class="bc-field">
+        <h2>{{ field.label }}</h2>
+        {% if field['values']|length == 1 and not field['values'][0].href %}
+            <p class="bc-value">{{ field['values'][0].text }}</p>
+        {% else %}
+            <ul>
+                {% for v in field['values'] %}
+                    <li class="bc-list-value" >{{ render_value(v) }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{####  Download Icon  ####}
+{% macro _dl_icon() -%}
+    <svg class="bc-dl" width="13" height="13" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round"
+         stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/>
+    </svg>
+{%- endmacro %}
+
+{####  Resource Format and Editor Section  ####}
+{% macro alt_formats(resource_uri, is_work=False) -%}
+    <div class="bc-field bc-formats">
+        {####  Works/Instances File Format Download Section  ####}
+        <h2>Alternative Formats</h2>
+        <ul>
+            <li><a href="{{ resource_uri }}.ttl">Turtle</a>{{ _dl_icon() }}</li>
+            <li><a href="{{ resource_uri }}.rdf">RDF/XML</a>{{ _dl_icon() }}</li>
+            <li><a href="{{ resource_uri }}.jsonld">JSON-LD</a>{{ _dl_icon() }}</li>
+            <li><a href="{{ resource_uri }}.nt">N-Triples</a>{{ _dl_icon() }}</li>
+            <br/>
+        </ul>
+
+        {####  Editors (Marva/Sinopia Redirect) Section  ####}
+        <h2>Bluecore Editors</h2>
+        <ul>
+            {#### DISABLE Marva and notifies user if Work is rendered; ELSE enable Marva link ####}
+            {% if is_work %}
+                <li style="display: flex; gap: 8px;">
+                    <span class="bc-link-disabled" aria-disabled="true">Load to Marva</span>
+                    <p class="bc-note">⚠️ Marva loads Instances, not Works.</p>
+                </li>
+            {% else %}
+                {####  Redirect to Marva Editor with Resource  ####}
+                <li><a href="{{ MARVA_BASE_URL }}?resource={{ resource_uri|urlencode }}" target="_blank">Load to
+                    Marva</a></li>
+            {% endif %}
+            {####  Redirect to Sinopia Editor with Resource  ####}
+            <li><a href="{{ SINOPIA_BASE_URL }}?resource={{ resource_uri|urlencode }}">Load to Sinopia</a></li>
+        </ul>
+    </div>
+{%- endmacro %}
