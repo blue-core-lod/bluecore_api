@@ -11,6 +11,7 @@ from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.serialize.response_generator import as_jsonld
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
@@ -31,7 +32,7 @@ async def read_work(
     request: Request,
     expand: bool = False,
     db: Session = Depends(get_db),
-):
+) -> Response:
     uuid, format = (
         Path(work_uuid).name.split(".", 1) if "." in work_uuid else (work_uuid, None)
     )
@@ -45,9 +46,7 @@ async def read_work(
         return resp
 
     # No recognized format, return default serialization
-    return serialize(
-        db_work, expand, "jsonld", request
-    )  # change default to html when implemented
+    return as_jsonld(db_work, expand)  # change default to html when implemented
 
 
 @endpoints.get(

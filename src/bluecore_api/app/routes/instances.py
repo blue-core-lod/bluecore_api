@@ -11,6 +11,7 @@ from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.serialize.response_generator import as_jsonld
 from bluecore_api.app.utils.serializer import (
     serialize,
 )
@@ -37,7 +38,7 @@ async def read_instance(
     request: Request,
     expand: bool = False,
     db: Session = Depends(get_db),
-):
+) -> Response:
     uuid, format = (
         Path(instance_uuid).name.split(".", 1)
         if "." in instance_uuid
@@ -53,9 +54,7 @@ async def read_instance(
         return resp
 
     # No recognized format, return default serialization
-    return serialize(
-        db_instance, expand, "jsonld", request
-    )  # change default to html when implemented
+    return as_jsonld(db_instance, expand)  # change default to html when implemented
 
 
 @endpoints.get(
