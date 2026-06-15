@@ -4,7 +4,6 @@ from typing import Any
 from bluecore_api.database import get_db
 from bluecore_api.constants import (
     DEFAULT_SEARCH_PAGE_LENGTH,
-    DEFAULT_VIEW_PAGE_LENGTH,
     SearchType,
 )
 from bluecore_api.schemas.schemas import (
@@ -187,7 +186,7 @@ async def search(
 async def search_html(
     request: Request,
     db: Session = Depends(get_db),
-    limit: int = Query(DEFAULT_VIEW_PAGE_LENGTH, ge=0, le=100),
+    limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
     q: str = "",
     type: SearchType = SearchType.ALL,
