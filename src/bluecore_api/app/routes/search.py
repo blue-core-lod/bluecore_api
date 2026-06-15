@@ -2,16 +2,29 @@ import os
 import re
 from typing import Any
 from bluecore_api.database import get_db
-from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH, SearchType
+from bluecore_api.constants import (
+    DEFAULT_SEARCH_PAGE_LENGTH,
+    DEFAULT_VIEW_PAGE_LENGTH,
+    SearchType,
+)
 from bluecore_api.schemas.schemas import (
     SearchProfileResultSchema,
     SearchResultSchema,
 )
-from bluecore_models.models import OtherResource, ResourceBase
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select, Select
+from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import HTMLResponse
+from sqlalchemy import func, or_, select, Select
 from sqlalchemy.orm import noload, Session
 from urllib.parse import urlencode
+
+from bluecore_api.app.templating import templates
+from bluecore_api.app.utils.serialize.html import (
+    OTHER_SECTION_ORDER,
+    resource_section,
+    resource_title,
+)
+from bluecore_api.app.utils.urls import to_public_bluecore_uri
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -169,6 +182,106 @@ async def search(
         "links": links,
         "total": total,
     }
+
+
+@endpoints.get("/search", response_class=HTMLResponse, include_in_schema=False)
+async def search_html(
+    request: Request,
+    db: Session = Depends(get_db),
+    limit: int = Query(DEFAULT_VIEW_PAGE_LENGTH, ge=0, le=100),
+    offset: int = 0,
+    q: str = "",
+    type: SearchType = SearchType.ALL,
+) -> HTMLResponse:
+    """Public, HTML search for BIBFRAME Works, Instances, OtherResources.
+
+    Backs the header search box (the form posts here, distinct from the
+    JSON `GET /search/`) and renders the ``search_results.html`` template.
+
+    Unlike the JSON ``/search/`` API, an "all" search here also returns
+    OtherResources (authorities, agents, subjects)
+    """
+    if type == SearchType.ALL:
+        # Include non-profile OtherResources alongside Works and Instances.
+        non_profile_others = select(OtherResource.id).where(
+            OtherResource.is_profile.is_(False)
+        )
+        stmt = select(ResourceBase).where(
+            or_(
+                ResourceBase.type.in_([SearchType.WORKS, SearchType.INSTANCES]),
+                ResourceBase.id.in_(non_profile_others),
+            )
+        )
+    else:
+        stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
+    formatted = format_query(q)
+    if formatted:
+        lang = "simple" if "<->" in formatted else "english"
+        search_query = func.to_tsquery(lang, func.unaccent(formatted))
+        stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
+            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+        )
+    total = db.scalar(create_count_query(stmt)) or 0
+    results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
+
+    def item(resource: ResourceBase) -> dict[str, str]:
+        return {
+            "uri": to_public_bluecore_uri(resource.uri, BLUECORE_URL) or resource.uri,
+            "title": resource_title(resource),
+        }
+
+    # Results are always grouped under a labeled heading. For an "all" search,
+    # Works and Instances are pinned to the top, then OtherResources split into
+    # their own sections (Name Authorities, Subjects, Hubs, ...). A single-type
+    # search shows just that one labeled group ("Works" / "Instances").
+    groups: list[dict] = []
+    if type == SearchType.ALL:
+        works = [item(r) for r in results if isinstance(r, Work)]
+        instances = [item(r) for r in results if isinstance(r, Instance)]
+        if works:
+            groups.append({"label": "Works", "results": works})
+        if instances:
+            groups.append({"label": "Instances", "results": instances})
+
+        # Bucket OtherResources by their derived section, preserving rank order.
+        sections: dict[str, list[dict[str, str]]] = {}
+        for r in results:
+            if isinstance(r, OtherResource):
+                sections.setdefault(resource_section(r), []).append(item(r))
+        ordered = [s for s in OTHER_SECTION_ORDER if s in sections] + sorted(
+            s for s in sections if s not in OTHER_SECTION_ORDER
+        )
+        groups.extend({"label": s, "results": sections[s]} for s in ordered)
+    elif results:
+        label = "Works" if type == SearchType.WORKS else "Instances"
+        groups = [{"label": label, "results": [item(r) for r in results]}]
+
+    base = f"{BLUECORE_URL.rstrip('/')}/search"
+
+    def page_url(new_offset: int) -> str:
+        params = {"q": q, "type": str(type), "limit": limit, "offset": new_offset}
+        return f"{base}?{urlencode(params)}"
+
+    pagination = {
+        "start": offset + 1 if total else 0,
+        "end": offset + len(results),
+        "total": total,
+        "prev_url": page_url(max(offset - limit, 0)) if offset > 0 else None,
+        "next_url": page_url(offset + limit) if offset + len(results) < total else None,
+    }
+
+    return templates.TemplateResponse(
+        request,
+        "search_results.html",
+        {
+            "search_q": q,
+            "search_type": str(type),
+            "total": total,
+            "groups": groups,
+            "results": None,
+            "pagination": pagination,
+        },
+    )
 
 
 @endpoints.get(
