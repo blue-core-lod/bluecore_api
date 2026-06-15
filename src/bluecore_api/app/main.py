@@ -83,9 +83,8 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 @base_app.get("/static/{path:path}", include_in_schema=False)
 async def static_files(path: str) -> FileResponse:
     full_path = os.path.normpath(os.path.join(STATIC_DIR, path))
-    if (
-        os.path.commonpath([full_path, STATIC_DIR]) != STATIC_DIR
-        or not os.path.isfile(full_path)
+    if os.path.commonpath([full_path, STATIC_DIR]) != STATIC_DIR or not os.path.isfile(
+        full_path
     ):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(full_path)

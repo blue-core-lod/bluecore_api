@@ -52,6 +52,7 @@ def as_cbd_xml(doc: Instance | Work, expand: bool) -> Response:
         media_type="application/rdf+xml",
     )
 
+
 # Render Work or Instance as HTML view
 def as_html(doc: Instance | Work, request: Request) -> Response:
     if isinstance(doc, Instance):
