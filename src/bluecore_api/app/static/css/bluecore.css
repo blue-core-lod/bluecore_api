@@ -404,6 +404,7 @@ body {
   /* ---- Layout: single column, full-width sidebar ---- */
   .bc-layout {
     flex-direction: column;
+    padding-left: 20px;
   }
   .bc-sidebar {
     max-width: 100%;
