@@ -311,9 +311,7 @@ def _label_sources(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 # Fields whose values carry their source tag (see _label_sources).
 # Add more as we discover more fields we want to add tags to
-SOURCE_LABELED_KEYS = {
-    "subject"
-}
+SOURCE_LABELED_KEYS = {"subject"}
 
 
 def _field(
