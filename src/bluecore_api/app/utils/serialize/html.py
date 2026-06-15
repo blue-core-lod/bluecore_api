@@ -115,7 +115,7 @@ def _value(text: str, href: str | None = None) -> dict[str, Any]:
 def _build_label_map(resource: Instance | Work) -> dict[str, str]:
     """Map vocabulary URIs to their labels from the resource's OtherResources.
 
-    Bare references like ``"media": {"@id": ".../mediaTypes/n"}`` carry no label
+    Bare references like "media": {"@id": ".../mediaTypes/n"} carry no label
     in the resource's own data, but the referenced term (with its rdfs:label /
     authoritativeLabel) is stored as an attached OtherResource. This lets the view
     show "unmediated" instead of the code "n".
@@ -171,6 +171,57 @@ def _identifier_values(node: Any) -> list[dict[str, Any]]:
     return values
 
 
+def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+    """Each Contribution renders as its agent, optionally with the role.
+    The contribution node itself carries no label — the data is in the nested
+    "agent" and "role" nodes.
+    """
+    values: list[dict[str, Any]] = []
+    for item in _as_list(node):
+        if not isinstance(item, dict):
+            values.append(_value(_label_text(item)))
+            continue
+        agent = item.get("agent")
+        agent_href = agent.get("@id") if isinstance(agent, dict) else None
+        agent_text = _resolve_label(
+            agent_href, _label_text(agent) if agent else "", label_map
+        )
+        role = item.get("role")
+        role_href = role.get("@id") if isinstance(role, dict) else None
+        role_text = _resolve_label(
+            role_href, _label_text(role) if role else "", label_map
+        )
+        text = f"{agent_text} ({role_text})" if role_text else agent_text
+        values.append(_value(text or (agent_href or ""), agent_href))
+    return values
+
+
+def _classification_values(node: Any) -> list[dict[str, Any]]:
+    """Each Classification renders as its call number, optionally prefixed by kind.
+    The value lives in "classificationPortion" (+ "itemPortion");
+    """
+    values: list[dict[str, Any]] = []
+    for item in _as_list(node):
+        if not isinstance(item, dict):
+            values.append(_value(_label_text(item)))
+            continue
+        types = [
+            t for t in _as_list(item.get("@type")) if _id_tail(t) != "Classification"
+        ]
+        kind = _id_tail(types[0]) if types else ""
+        portion = " ".join(
+            p
+            for p in (
+                _scalar(item.get("classificationPortion", "")),
+                _scalar(item.get("itemPortion", "")),
+            )
+            if p
+        )
+        text = f"{kind}: {portion}".strip(": ").strip() if kind else portion
+        values.append(_value(text))
+    return values
+
+
 def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     values: list[dict[str, Any]] = []
     for item in _as_list(node):
@@ -218,6 +269,24 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
     return fields
 
 
+def _dedupe(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Drop values that display identically, preserving order.
+
+    Source records often carry duplicate triples (e.g. the same title or
+    contribution repeated). They render to the same (text, href), so collapse
+    them for the HTML view rather than showing the same line several times.
+    """
+    seen: set[tuple[str, str | None]] = set()
+    unique: list[dict[str, Any]] = []
+    for v in values:
+        key = (v["text"], v["href"])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(v)
+    return unique
+
+
 def _field(
     label: str, key: str, data: dict[str, Any], label_map: dict[str, str]
 ) -> dict[str, Any] | None:
@@ -225,10 +294,15 @@ def _field(
         return None
     if key == "identifiedBy":
         values = _identifier_values(data[key])
+    elif key == "contribution":
+        values = _contribution_values(data[key], label_map)
+    elif key == "classification":
+        values = _classification_values(data[key])
     elif key == "provisionActivity":
         values = _provision_values(data[key], label_map)
     else:
         values = _node_values(data[key], label_map)
+    values = _dedupe(values)
     return {"label": label, "values": values} if values else None
 
 
