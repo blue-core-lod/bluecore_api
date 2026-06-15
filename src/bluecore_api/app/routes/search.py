@@ -24,7 +24,6 @@ from bluecore_api.app.utils.serialize.html import (
     resource_section,
     resource_title,
 )
-from bluecore_api.app.utils.urls import to_public_bluecore_uri
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -226,7 +225,7 @@ async def search_html(
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
-            "uri": to_public_bluecore_uri(resource.uri, BLUECORE_URL) or resource.uri,
+            "uri": resource.uri,
             "title": resource_title(resource),
         }
 

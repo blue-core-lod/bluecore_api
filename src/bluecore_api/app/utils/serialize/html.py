@@ -17,7 +17,6 @@ from bluecore_models.namespaces import MADS
 from bluecore_models.utils.graph import load_jsonld
 
 from bluecore_api.app.templating import BLUECORE_URL, templates
-from bluecore_api.app.utils.urls import to_public_bluecore_uri
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 
@@ -109,8 +108,7 @@ def _is_bluecore(uri: str | None) -> bool:
 
 
 def _value(text: str, href: str | None = None) -> dict[str, Any]:
-    public_href = to_public_bluecore_uri(href, BLUECORE_URL)
-    return {"text": text, "href": public_href, "internal": _is_bluecore(public_href)}
+    return {"text": text, "href": href, "internal": _is_bluecore(href)}
 
 
 def _build_label_map(resource: Instance | Work) -> dict[str, str]:
@@ -484,7 +482,7 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
             "title": _title_of(data),
             "fields": fields,
             "sidebar": sidebar,
-            "resource_uri": to_public_bluecore_uri(instance.uri, BLUECORE_URL),
+            "resource_uri": instance.uri,
             "is_work": False,
         },
     )
@@ -520,7 +518,7 @@ def render_work_html(work: Work, request: Request) -> Response:
             "title": _title_of(data),
             "fields": fields,
             "sidebar": sidebar,
-            "resource_uri": to_public_bluecore_uri(work.uri, BLUECORE_URL),
+            "resource_uri": work.uri,
             "is_work": True,
         },
     )
