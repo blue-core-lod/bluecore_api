@@ -1,22 +1,28 @@
 import json
 import pathlib
+
 import pytest
 import rdflib
-
 from bluecore_models.models import BibframeOtherResources, OtherResource, Version, Work
-from bluecore_models.utils.graph import init_graph, load_jsonld, BF
+from bluecore_models.utils.graph import BF, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 
+test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
+test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
+jsonld_data = json.load(pathlib.Path("tests/blue-core-work.jsonld").open())
+orig_graph = load_jsonld(jsonld_data)
 
-def test_get_work(client, db_session):
-    # Note: since we are setting the JSON-LD data directly here on the Work model the
-    # URI needs to match whats in the JSON-LD file or else the JSON-LD
-    # framing will result in an empty graph.
-    test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
-    test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
-    jsonld_data = json.load(pathlib.Path("tests/blue-core-work.jsonld").open())
-    orig_graph = load_jsonld(jsonld_data)
+expanded_work_uuid = "7b7ed475-9126-4368-925a-8b8c5520250e"
+expanded_work_uri = rdflib.URIRef(f"https://bcld.info/works/{expanded_work_uuid}")
+eng_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/eng")
+expanded_work_graph = init_graph()
+expanded_work_graph.add((expanded_work_uri, rdflib.RDF.type, BF.Work))
+expanded_work_graph.add((expanded_work_uri, BF.language, eng_uri))
+with pathlib.Path("tests/blue-core-other-resources.json").open() as fo:
+    eng_data = json.load(fo)
 
+
+def add_test_work(db_session):
     db_session.add(
         Work(
             id=1,
@@ -25,33 +31,15 @@ def test_get_work(client, db_session):
             data=jsonld_data,
         ),
     )
-    response = client.get(f"/works/{test_work_uuid}")
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["uri"].startswith(test_work_bluecore_uri)
-
-    fetched_graph = load_jsonld(data["data"])
-    assert len(fetched_graph) == len(orig_graph)
+    db_session.commit()
 
 
-def test_get_expanded_work(client, db_session):
-    bluecore_work_uuid = "7b7ed475-9126-4368-925a-8b8c5520250e"
-    bluecore_work_uri = rdflib.URIRef(f"https://bcld.info/works/{bluecore_work_uuid}")
-    eng_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/eng")
-    work_graph = init_graph()
-    work_graph.add((bluecore_work_uri, rdflib.RDF.type, BF.Work))
-    work_graph.add((bluecore_work_uri, BF.language, eng_uri))
-
-    with pathlib.Path("tests/blue-core-other-resources.json").open() as fo:
-        eng_data = json.load(fo)
-
+def add_test_expanded_work(db_session):
     work = Work(
         id=1,
-        uuid=bluecore_work_uuid,
-        uri=str(bluecore_work_uri),
-        data=json.loads(work_graph.serialize(format="json-ld")),
+        uuid=expanded_work_uuid,
+        uri=str(expanded_work_uri),
+        data=json.loads(expanded_work_graph.serialize(format="json-ld")),
     )
     db_session.add(work)
 
@@ -65,17 +53,100 @@ def test_get_expanded_work(client, db_session):
     db_session.add(bf_other_resource)
     db_session.commit()
 
+
+def test_get_work_vnd_sinopia_json(client, db_session):
+    # Note: since we are setting the JSON-LD data directly here on the Work model the
+    # URI needs to match whats in the JSON-LD file or else the JSON-LD
+    # framing will result in an empty graph.
+    add_test_work(db_session)
+
+    response = client.get(
+        f"/works/{test_work_uuid}", headers={"Accept": "application/vnd.sinopia+json"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["uri"].startswith(test_work_bluecore_uri)
+
+    fetched_graph = load_jsonld(data["data"])
+    assert len(fetched_graph) == len(orig_graph)
+
+
+def test_get_expanded_work(client, db_session):
+    add_test_expanded_work(db_session)
+
     # Test regular GET response without expand parameter
-    regular_work_response = client.get(f"/works/{bluecore_work_uuid}")
+    regular_work_response = client.get(f"/works/{expanded_work_uuid}.vnd.sinopia.json")
     regular_work_graph = load_jsonld(regular_work_response.json()["data"])
 
     assert len(regular_work_graph) == 2
 
     # Test GET with expand = True
-    expanded_work_response = client.get(f"/works/{bluecore_work_uuid}?expand=true")
+    expanded_work_response = client.get(
+        f"/works/{expanded_work_uuid}?expand=true",
+        headers={"Accept": "application/vnd.sinopia+json"},
+    )
     expanded_work_graph = load_jsonld(expanded_work_response.json()["data"])
 
     assert len(expanded_work_graph) == 5
+
+
+def test_get_work_jsonld(client, db_session):
+    add_test_work(db_session)
+
+    response = client.get(
+        f"/works/{test_work_uuid}", headers={"Accept": "application/ld+json"}
+    )
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_work_bluecore_uri
+
+    response = client.get(f"/works/{test_work_uuid}.jsonld")
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_work_bluecore_uri
+
+
+def test_get_work_rdf_xml(client, db_session):
+    add_test_work(db_session)
+
+    response = client.get(
+        f"/works/{test_work_uuid}", headers={"Accept": "application/rdf+xml"}
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/rdf+xml")
+
+    response = client.get(f"/works/{test_work_uuid}.rdf")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/rdf+xml")
+
+
+def test_get_work_ntriples(client, db_session):
+    add_test_work(db_session)
+
+    response = client.get(
+        f"/works/{test_work_uuid}", headers={"Accept": "application/n-triples"}
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/n-triples")
+
+    response = client.get(f"/works/{test_work_uuid}.nt")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/n-triples")
+
+
+def test_get_work_turtle(client, db_session):
+    add_test_work(db_session)
+
+    response = client.get(f"/works/{test_work_uuid}", headers={"Accept": "text/turtle"})
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/turtle")
+
+    response = client.get(f"/works/{test_work_uuid}.ttl")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/turtle")
+
+
+# cbd requires work & instance and will be tested in test_cbd.py
 
 
 def test_create_work(client, mocker):
@@ -145,7 +216,7 @@ def test_update_work(client, db_session):
 
     assert update_response.status_code == 200
 
-    get_response = client.get(f"/works/{work_uuid}")
+    get_response = client.get(f"/works/{work_uuid}.vnd.sinopia.json")
     assert get_response.status_code == 200
     data = get_response.json()
 

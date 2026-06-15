@@ -1,19 +1,18 @@
-import os
 import json
-
-from datetime import datetime, UTC
-
-from pymilvus import MilvusClient
-
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi_keycloak_middleware import CheckPermissions
-
-from sqlalchemy.orm import Session
+import os
+from datetime import UTC, datetime
+from pathlib import Path
 
 from bluecore_models.models import Work
 from bluecore_models.utils.graph import handle_external_subject
 from bluecore_models.utils.vector_db import create_embeddings
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi_keycloak_middleware import CheckPermissions
+from pymilvus import MilvusClient
+from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.serialize.response_generator import as_jsonld
+from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
@@ -21,7 +20,6 @@ from bluecore_api.schemas.schemas import (
     WorkSchema,
     WorkUpdateSchema,
 )
-from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -30,16 +28,25 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 @endpoints.get("/works/{work_uuid}", response_model=WorkSchema, operation_id="get_work")
 async def read_work(
-    work_uuid: str, expand: bool = False, db: Session = Depends(get_db)
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
+    work_uuid: str,
+    request: Request,
+    expand: bool = False,
+    db: Session = Depends(get_db),
+) -> Response:
+    uuid, format = (
+        Path(work_uuid).name.split(".", 1) if "." in work_uuid else (work_uuid, None)
+    )
+
+    db_work = db.query(Work).filter(Work.uuid == uuid).first()
     if db_work is None:
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-    if expand:
-        # Retrieves all related resources for work and adds to work's data
-        db_work.data = expand_resource_graph(db_work)
-    setattr(db_work, "is_expanded", expand)
-    return db_work
+
+    resp: Response | None = serialize(db_work, expand, format, request)
+    if resp:
+        return resp
+
+    # No recognized format, return default serialization
+    return as_jsonld(db_work, expand)  # change default to html when implemented
 
 
 @endpoints.get(

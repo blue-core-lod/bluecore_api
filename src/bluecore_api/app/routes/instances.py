@@ -1,18 +1,19 @@
 import json
 import os
 from datetime import UTC, datetime
-
-from pymilvus import MilvusClient
+from pathlib import Path
 
 from bluecore_models.models import Instance
 from bluecore_models.utils.graph import handle_external_subject
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
+from pymilvus import MilvusClient
 from sqlalchemy.orm import Session
 
-from bluecore_api.app.utils.serializer.instance_serializer import (
-    serialize_instance,
+from bluecore_api.app.utils.serialize.response_generator import as_jsonld
+from bluecore_api.app.utils.serializer import (
+    serialize,
 )
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
@@ -21,7 +22,6 @@ from bluecore_api.schemas.schemas import (
     InstanceSchema,
     InstanceUpdateSchema,
 )
-from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -37,22 +37,24 @@ async def read_instance(
     instance_uuid: str,
     request: Request,
     expand: bool = False,
-    format: str | None = None,
     db: Session = Depends(get_db),
-) -> Response | Instance:
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
+) -> Response:
+    uuid, format = (
+        Path(instance_uuid).name.split(".", 1)
+        if "." in instance_uuid
+        else (instance_uuid, None)
+    )
+    db_instance = db.query(Instance).filter(Instance.uuid == uuid).first()
 
     if db_instance is None:
         raise HTTPException(status_code=404, detail="Instance not found")
 
-    resp: Response | None = serialize_instance(db_instance, format, request)
+    resp: Response | None = serialize(db_instance, expand, format, request)
     if resp:
         return resp
 
-    if expand:
-        db_instance.data = expand_resource_graph(db_instance)
-    setattr(db_instance, "is_expanded", expand)
-    return db_instance
+    # No recognized format, return default serialization
+    return as_jsonld(db_instance, expand)  # change default to html when implemented
 
 
 @endpoints.get(

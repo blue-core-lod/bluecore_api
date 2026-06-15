@@ -1,16 +1,15 @@
 import copy
 import json
+from typing import Any
 
-from fastapi import Response
+from bluecore_models.models import Instance, Work
+from bluecore_models.utils.graph import load_jsonld
+from fastapi import HTTPException
 from lxml import etree
 from rdflib import Graph, Namespace
-from typing import Any
 
 from bluecore_api.constants import BibframeType
 from bluecore_api.expansion import expand_resource_as_graph
-from bluecore_models.models import Instance
-from bluecore_models.utils.graph import load_jsonld
-
 
 BF_NAMESPACE = Namespace("http://id.loc.gov/ontologies/bibframe/")
 RDF_NAMESPACE = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
@@ -121,20 +120,22 @@ def generate_cbd_xml(graph: Graph):
     return root
 
 
-def generate_cbd_jsonld_response(instance: Instance) -> Response:
+def cbd_jsonld(instance: Instance) -> str:
+    if isinstance(instance, Work):
+        raise HTTPException(
+            status_code=400, detail="CBD serialization is only supported for Instances"
+        )
+
     instance_graph = generate_cbd_graph(instance)
-    jsonld_content = instance_graph.serialize(format="json-ld", indent=2)
-    return Response(
-        content=jsonld_content,
-        media_type="application/ld+json",
-    )
+    return instance_graph.serialize(format="json-ld", indent=2)
 
 
-def generate_cbd_xml_response(instance: Instance) -> Response:
+def cbd_xml(instance: Instance) -> str:
+    if isinstance(instance, Work):
+        raise HTTPException(
+            status_code=400, detail="CBD serialization is only supported for Instances"
+        )
+
     instance_graph = generate_cbd_graph(instance)
     instance_root = generate_cbd_xml(instance_graph)
-    xml_content = etree.tostring(instance_root, encoding="utf-8").decode("utf-8")
-    return Response(
-        content=xml_content,
-        media_type="application/rdf+xml",
-    )
+    return etree.tostring(instance_root, encoding="utf-8").decode("utf-8")

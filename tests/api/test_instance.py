@@ -5,56 +5,50 @@ import pytest
 import rdflib
 from bluecore_models.models import (
     BibframeOtherResources,
-    OtherResource,
     Instance,
+    OtherResource,
     Version,
 )
 from bluecore_models.utils.graph import BF, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 
+test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
+test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
+jsonld_data = json.load(pathlib.Path("tests/blue-core-instance.jsonld").open())
+orig_graph = load_jsonld(jsonld_data)
 
-def test_get_instance(client, db_session):
-    test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
-    jsonld_data = json.load(pathlib.Path("tests/blue-core-instance.jsonld").open())
-    orig_graph = load_jsonld(jsonld_data)
+test_expanded_instance_uuid = "1e09c839-474d-4ab5-8b44-479e08927045"
+test_expanded_instance_uri = rdflib.URIRef(
+    f"https://bcld.info/instances/{test_instance_uuid}"
+)
+kor_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/kor")
+test_expanded_instance_graph = init_graph()
+test_expanded_instance_graph.add(
+    (test_expanded_instance_uri, rdflib.RDF.type, BF.Instance)
+)
+test_expanded_instance_graph.add((test_expanded_instance_uri, BF.language, kor_uri))
+with pathlib.Path("tests/blue-core-other-resources2.json").open() as fo:
+    kor_data = json.load(fo)
 
+
+def add_test_instance(db_session):
     db_session.add(
         Instance(
-            id=2,
+            id=1,
             uuid=test_instance_uuid,
-            uri=test_instance_bluecore_uri,
-            data=jsonld_data,
+            uri=str(test_instance_bluecore_uri),
+            data=json.loads(orig_graph.serialize(format="json-ld")),
         )
     )
-
-    response = client.get(f"/instances/{test_instance_uuid}")
-    assert response.status_code == 200
-
-    assert response.json()["uri"].startswith(test_instance_bluecore_uri)
-
-    fetched_graph = load_jsonld(response.json()["data"])
-    assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
+    db_session.commit()
 
 
-def test_get_expanded_instance(client, db_session):
-    test_instance_uuid = "1e09c839-474d-4ab5-8b44-479e08927045"
-    test_instance_uri = rdflib.URIRef(
-        f"https://bcld.info/instances/{test_instance_uuid}"
-    )
-    kor_uri = rdflib.URIRef("http://id.loc.gov/vocabulary/languages/kor")
-    test_instance_graph = init_graph()
-    test_instance_graph.add((test_instance_uri, rdflib.RDF.type, BF.Instance))
-    test_instance_graph.add((test_instance_uri, BF.language, kor_uri))
-
-    with pathlib.Path("tests/blue-core-other-resources2.json").open() as fo:
-        kor_data = json.load(fo)
-
+def add_test_expanded_instance(db_session):
     instance = Instance(
         id=1,
-        uuid=test_instance_uuid,
-        uri=str(test_instance_uri),
-        data=json.loads(test_instance_graph.serialize(format="json-ld")),
+        uuid=test_expanded_instance_uuid,
+        uri=str(test_expanded_instance_uri),
+        data=json.loads(test_expanded_instance_graph.serialize(format="json-ld")),
     )
 
     db_session.add(instance)
@@ -66,25 +60,106 @@ def test_get_expanded_instance(client, db_session):
     db_session.add(bf_other_resource)
     db_session.commit()
 
-    # Regular Get Call for Instance
-    regular_instance_result = client.get(f"/instances/{test_instance_uuid}")
+
+def test_get_instance_sinopia_json(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(f"/instances/{test_instance_uuid}.vnd.sinopia.json")
+    assert response.status_code == 200
+
+    assert response.json()["uri"].startswith(test_instance_bluecore_uri)
+
+    fetched_graph = load_jsonld(response.json()["data"])
+    assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
+
+
+def test_get_expanded_instance_sinopia_json(client, db_session):
+    add_test_expanded_instance(db_session)
+
+    # Regular Get Call for Instance and application/vnd.sinopia+json format
+    regular_instance_result = client.get(
+        f"/instances/{test_expanded_instance_uuid}",
+        headers={"Accept": "application/vnd.sinopia+json"},
+    )
     regular_instance_graph = load_jsonld(regular_instance_result.json()["data"])
 
     assert len(regular_instance_graph) == 2
 
     # Test GET with expand = True
     expanded_instance_result = client.get(
-        f"/instances/{test_instance_uuid}?expand=true"
+        f"/instances/{test_expanded_instance_uuid}?expand=true",
+        headers={"Accept": "application/vnd.sinopia+json"},
     )
     expanded_instance_graph = load_jsonld(expanded_instance_result.json()["data"])
 
     assert len(expanded_instance_graph) == 5
 
-    # Test GET with expand = False
-    expand_false_result = client.get(f"/instances/{test_instance_uuid}?expand=false")
+    # Test GET with expand = False and .vnd.sinopia.json format
+    expand_false_result = client.get(
+        f"/instances/{test_expanded_instance_uuid}.vnd.sinopia.json?expand=false",
+    )
     expand_false_graph = load_jsonld(expand_false_result.json()["data"])
 
     assert len(expand_false_graph) == len(regular_instance_graph)
+
+
+def test_get_instance_jsonld(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "application/ld+json"}
+    )
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_instance_bluecore_uri
+
+    response = client.get(f"/instances/{test_instance_uuid}.jsonld")
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_instance_bluecore_uri
+
+
+def test_get_instance_rdf_xml(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "application/rdf+xml"}
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/rdf+xml")
+
+    response = client.get(f"/instances/{test_instance_uuid}.rdf")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/rdf+xml")
+
+
+def test_get_instance_ntriples(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "application/n-triples"}
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/n-triples")
+
+    response = client.get(f"/instances/{test_instance_uuid}.nt")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("application/n-triples")
+
+
+def test_get_instance_turtle(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "text/turtle"}
+    )
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/turtle")
+
+    response = client.get(f"/instances/{test_instance_uuid}.ttl")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/turtle")
+
+
+# cbd requires work & instance and will be tested in test_cbd.py
 
 
 def test_create_instance(client):
@@ -158,7 +233,9 @@ def test_update_instance(client, db_session):
     assert put_response.status_code == 200
 
     # Retrieve Instance
-    get_response = client.get("/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a")
+    get_response = client.get(
+        "/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a.vnd.sinopia.json"
+    )
     payload = get_response.json()
     new_instance_graph = init_graph()
     new_instance_graph.parse(data=payload["data"], format="json-ld")
