@@ -288,6 +288,63 @@ body {
   color: var(--bc-muted);
 }
 
+/* Disabled "Load to Marva" row: label + alert-icon tooltip */
+.bc-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bc-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #b45309; /* amber: an advisory, not an error */
+  cursor: help;
+}
+
+.bc-alert {
+  vertical-align: -3px;
+}
+
+.bc-tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 240px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  background: var(--bc-text);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: left;
+  z-index: 10;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.bc-tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--bc-text);
+}
+
+.bc-tooltip:hover .bc-tooltip-text,
+.bc-tooltip:focus .bc-tooltip-text,
+.bc-tooltip:focus-visible .bc-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 .bc-muted {
   color: var(--bc-muted);
 }
