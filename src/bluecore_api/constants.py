@@ -33,3 +33,5 @@ class SearchType(StringEnum):
 
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
 DEFAULT_SEARCH_PAGE_LENGTH = 10
+# HTML search view shows more results per page than the JSON API.
+DEFAULT_VIEW_PAGE_LENGTH = 20
