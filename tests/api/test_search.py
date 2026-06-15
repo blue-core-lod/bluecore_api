@@ -168,6 +168,19 @@ def test_search(client: TestClient, db_session: Session):
     )
 
 
+def test_search_html(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    # The public, human-facing search (GET /search, distinct from JSON /search/).
+    response = client.get("/search", params={"q": "kumae chedo mit"})
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
+    assert "Search results" in response.text
+    # The single matching Work is grouped and linked to its dereferenceable URL.
+    assert "1 result" in response.text
+    assert test_work_bluecore_uri in response.text
+
+
 def test_or_search(client: TestClient, db_session: Session):
     add_data(db_session)
 
