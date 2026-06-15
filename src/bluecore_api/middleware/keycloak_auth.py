@@ -62,6 +62,8 @@ class BypassKeycloakForGet:
         "/search",
         "/api/search",
         "/api/cbd",
+        "/api/static/",
+        "/static/",
     }
 
     def __init__(self, app, keycloak_middleware):
