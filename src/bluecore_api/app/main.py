@@ -1,8 +1,9 @@
 import os
 import sys
 
-from fastapi import Depends, FastAPI, Response
+from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
@@ -74,6 +75,21 @@ base_app.include_router(search_routes, tags=["Search"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])
 base_app.include_router(export_routes, tags=["Export"])
+
+# Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/templating.py).
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
+
+@base_app.get("/static/{path:path}", include_in_schema=False)
+async def static_files(path: str) -> FileResponse:
+    full_path = os.path.normpath(os.path.join(STATIC_DIR, path))
+    if (
+        os.path.commonpath([full_path, STATIC_DIR]) != STATIC_DIR
+        or not os.path.isfile(full_path)
+    ):
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(full_path)
+
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
