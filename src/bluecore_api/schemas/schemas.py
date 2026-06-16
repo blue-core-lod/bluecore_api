@@ -67,7 +67,29 @@ class OtherResourceUpdateSchema(BaseModel):
     is_profile: Optional[bool] = None
 
 
+class HubCreateSchema(BaseModel):
+    data: str
+
+
+class HubEmbeddingSchema(BaseModel):
+    hub_id: int
+    hub_uri: str
+    version_id: int
+    embedding: list
+
+
+class HubSchema(ResourceBaseSchema):
+    type: str = BluecoreType.HUBS
+    is_expanded: bool = False
+
+
+class HubUpdateSchema(BaseModel):
+    data: Optional[str] = None
+    hub_id: Optional[int] = None
+
+
 class WorkCreateSchema(BaseModel):
+    hub_id: Optional[int] = None
     data: str
 
 
@@ -77,6 +99,7 @@ class WorkUpdateSchema(BaseModel):
 
 class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
+    hub_id: Optional[int]
     is_expanded: bool = False
 
 
