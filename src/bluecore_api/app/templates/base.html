@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block page_title %}{{ title }}{% endblock %} · Blue Core</title>
-    <link rel="stylesheet" href="{{ BLUECORE_URL }}static/css/bluecore.css">
+    <link rel="stylesheet" href="{{ request.url_for('static_files', path='css/bluecore.css') }}">
 </head>
 <body>
 <div class="bc-page">
@@ -21,7 +21,7 @@
 
     <header class="bc-header">
         <a class="bc-brand" href="{{ BLUECORE_URL }}">
-            <img src="{{ BLUECORE_URL }}static/img/blue-core-logo.png" alt="">
+            <img src="{{ request.url_for('static_files', path='img/blue-core-logo.png') }}" alt="">
         </a>
         {#### Hamburger button: hidden on desktop, shown < 760px (see Responsive Section). ####}
         <label for="bc-menu-toggle" class="bc-hamburger" aria-label="Toggle menu">
@@ -38,7 +38,7 @@
 
     {####  Search Option Dropdown Section  ####}
     <div class="bc-hero">
-        <form class="bc-search" action="{{ BLUECORE_URL }}search" method="get" role="search">
+        <form class="bc-search" action="{{ request.url_for('search_html') }}" method="get" role="search">
             <select name="type" aria-label="Resource type">
                 {####  Search BIBFRAME All Resources  ####}
                 <option value="all"{% if not search_type or search_type == 'all' %} selected{% endif %}>

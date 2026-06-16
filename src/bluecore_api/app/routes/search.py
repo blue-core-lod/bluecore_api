@@ -254,7 +254,10 @@ async def search_html(
         label = "Works" if type == SearchType.WORKS else "Instances"
         groups = [{"label": label, "results": [item(r) for r in results]}]
 
-    base = f"{BLUECORE_URL.rstrip('/')}/search"
+    # Build pagination URLs from the request's root_path-aware route URL so they
+    # resolve correctly behind the reverse proxy (e.g. /api/search) and when the
+    # API is served standalone at the root.
+    base = str(request.url_for("search_html"))
 
     def page_url(new_offset: int) -> str:
         params = {"q": q, "type": str(type), "limit": limit, "offset": new_offset}
