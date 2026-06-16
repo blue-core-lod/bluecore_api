@@ -117,6 +117,20 @@ def test_get_instance_jsonld(client, db_session):
     assert response.json()["@id"] == test_instance_bluecore_uri
 
 
+def test_get_instance_json(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "application/json"}
+    )
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_instance_bluecore_uri
+
+    response = client.get(f"/instances/{test_instance_uuid}.jsonld")
+    assert response.status_code == 200
+    assert response.json()["@id"] == test_instance_bluecore_uri
+
+
 def test_get_instance_rdf_xml(client, db_session):
     add_test_instance(db_session)
 

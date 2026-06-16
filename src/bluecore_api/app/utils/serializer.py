@@ -18,6 +18,7 @@ type SerializerFn = Callable[[Instance | Work, bool], Response | None]
 serializer_format_registry: dict[str, SerializerFn] = {
     "cbd.jsonld": as_cbd_jsonld,
     "cbd.xml": as_cbd_xml,
+    "json": as_jsonld,
     "jsonld": as_jsonld,
     "nt": as_ntriples,
     "rdf": as_rdfxml,
@@ -28,6 +29,7 @@ serializer_format_registry: dict[str, SerializerFn] = {
 serializer_accept_registry: dict[str, SerializerFn] = {
     "application/cbd+jsonld": as_cbd_jsonld,
     "application/cbd+xml": as_cbd_xml,
+    "application/json": as_jsonld,
     "application/ld+json": as_jsonld,
     "application/n-triples": as_ntriples,
     "application/rdf+xml": as_rdfxml,

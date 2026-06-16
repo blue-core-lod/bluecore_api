@@ -144,7 +144,7 @@ async def search(
     type: SearchType = SearchType.ALL,
 ) -> dict[str, Any]:
     """
-    Search for Works ans Instances.
+    Search for Works and Instances.
     It transforms the query string to be compatible with PostgreSQL full-text search.
     It supports phrase search using double quotes.
     If the query contains a phrase in double quotes, it will use "simple" language for
