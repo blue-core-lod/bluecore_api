@@ -172,10 +172,11 @@ def test_get_instance_html(client, db_session):
     # The view links to the alternative RDF serializations.
     assert f"{test_instance_bluecore_uri}.ttl" in response.text
 
-    # There is no `.html` extension — it is not a recognized format and so does
-    # not return the HTML view.
+    # An unrecognized format (e.g. `.html`, `.xml`) falls through to the default
+    # serialization, which is the HTML view.
     response = client.get(f"/instances/{test_instance_uuid}.html")
-    assert not response.headers["Content-Type"].startswith("text/html")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
 
 
 # cbd requires work & instance and will be tested in test_cbd.py

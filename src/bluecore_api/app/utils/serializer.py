@@ -42,8 +42,6 @@ def serialize(
     if format in serializer_format_registry:
         return serializer_format_registry[format](doc, expand)
     accept_header = request.headers.get("accept", "")
-    if accept_header is None:
-        return as_html(doc, request)  # Absent Accept header goes to the HTML view
     for accept in accept_header.split(","):
         accept = accept.split(";")[0].strip()
         if (
