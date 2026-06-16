@@ -11,7 +11,7 @@ from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
 from sqlalchemy.orm import Session
 
-from bluecore_api.app.utils.serialize.response_generator import as_jsonld
+from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.database import filter_vector_result, get_db, get_vector_client
 from bluecore_api.schemas.schemas import (
@@ -45,8 +45,8 @@ async def read_work(
     if resp:
         return resp
 
-    # No recognized format, return default serialization
-    return as_jsonld(db_work, expand)  # change default to html when implemented
+    # No recognized format, return the default HTML serialization
+    return as_html(db_work, request)
 
 
 @endpoints.get(

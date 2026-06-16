@@ -164,8 +164,21 @@ def test_search(client: TestClient, db_session: Session):
     assert result["total"] == 1
     assert (
         result["links"]["first"]
-        == "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mit&type=all"
+        == "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mit&type=all"
     )
+
+
+def test_search_html(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    # The public, human-facing search (GET /search, distinct from JSON /search/).
+    response = client.get("/search", params={"q": "kumae chedo mit"})
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
+    assert "Search results" in response.text
+    # The single matching Work is grouped and linked to its dereferenceable URL.
+    assert "1 result" in response.text
+    assert test_work_bluecore_uri in response.text
 
 
 def test_or_search(client: TestClient, db_session: Session):
@@ -177,7 +190,7 @@ def test_or_search(client: TestClient, db_session: Session):
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
     assert result["links"]["first"] == (
-        "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mi+%7C+mit&type=all"
+        "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mi+%7C+mit&type=all"
     )
 
 
@@ -200,7 +213,7 @@ def test_wildcard_search(client: TestClient, db_session: Session):
     assert result["results"][0]["uri"].startswith(test_work_bluecore_uri)
     assert result["total"] == 1
     assert result["links"]["first"] == (
-        "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mi%2A&type=all"
+        "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mi%2A&type=all"
     )
 
 
@@ -223,7 +236,7 @@ def test_search_works(client: TestClient, db_session: Session):
     assert result["total"] == 1
     assert (
         result["links"]["first"]
-        == "https://bcld.info/api/search/?limit=10&offset=0&q=kumae+chedo+mit&type=works"
+        == "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mit&type=works"
     )
 
 
@@ -313,7 +326,7 @@ def test_search_profile(client: TestClient, db_session: Session):
     assert result["total"] == 2
     assert (
         result["links"]["first"]
-        == "https://bcld.info/api/search/profile/?limit=10&offset=0&q=id.loc.gov%2Fontologies%2Fbibframe%2Flanguage"
+        == "https://bcld.info/api/search/profile/?limit=20&offset=0&q=id.loc.gov%2Fontologies%2Fbibframe%2Flanguage"
     )
 
 

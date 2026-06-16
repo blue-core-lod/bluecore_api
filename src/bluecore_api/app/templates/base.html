@@ -1,0 +1,74 @@
+{##############################################################################}
+{##  Base template where all views build from  ####}
+{##################################################}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block page_title %}{{ title }}{% endblock %} · Blue Core</title>
+    <link rel="stylesheet" href="{{ request.url_for('static_files', path='css/bluecore.css') }}">
+</head>
+<body>
+<div class="bc-page">
+    <!--
+      Mobile menu state lives in this checkbox (pure-CSS hamburger, no JS).
+      It precedes the header and hero so the :checked state can reveal both the
+      nav and the search on small screens.
+    -->
+    <input type="checkbox" id="bc-menu-toggle" class="bc-menu-toggle">
+
+    <header class="bc-header">
+        <a class="bc-brand" href="{{ BLUECORE_URL }}">
+            <img src="{{ request.url_for('static_files', path='img/blue-core-logo.png') }}" alt="">
+        </a>
+        {#### Hamburger button: hidden on desktop, shown < 760px (see Responsive Section). ####}
+        <label for="bc-menu-toggle" class="bc-hamburger" aria-label="Toggle menu">
+            <span class="bc-hamburger-bar"></span>
+            <span class="bc-hamburger-bar"></span>
+            <span class="bc-hamburger-bar"></span>
+        </label>
+        <nav class="bc-nav" aria-label="Primary">
+            <a href="https://bluecore.info/" target="_blank">About</a>
+            {####   <a href="#" target="_blank">Community</a> TODO: ⚠️ not implemented yet; Placeholder awaiting further info at a later date   ####}
+            <a href="https://dev.bcld.info/" target="_blank">Tools</a>
+        </nav>
+    </header>
+
+    {####  Search Option Dropdown Section  ####}
+    <div class="bc-hero">
+        <form class="bc-search" action="{{ request.url_for('search_html') }}" method="get" role="search">
+            <select name="type" aria-label="Resource type">
+                {####  Search BIBFRAME All Resources  ####}
+                <option value="all"{% if not search_type or search_type == 'all' %} selected{% endif %}>
+                    BIBFRAME All
+                </option>
+                {####  Search BIBFRAME Works Resources  ####}
+                <option value="works"{% if search_type == 'works' %} selected{% endif %}>
+                    BIBFRAME Works
+                </option>
+                {####  Search BIBFRAME Instances Resources  ####}
+                <option value="instances"{% if search_type == 'instances' %} selected{% endif %}>
+                    BIBFRAME Instances
+                </option>
+            </select>
+            <input type="search" name="q" value="{{ search_q|default('', true) }}" placeholder="Start typing…">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+
+    {####  Render Blocks from templates/resource.html && templates/search_results.html  ####}
+    <main class="bc-layout">
+        <div class="bc-main">
+            {####  Render Content Section from `resource` OR `search_results` ####}
+            {% block content %}{% endblock %}
+        </div>
+        {####  Render Sidebar Section from `resource` ####}
+        {% block sidebar %}{% endblock %}
+    </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{##############################################################################}
+{##  Resource template where `Show` view renders Works or Instances  ####}
+{########################################################################}
+
+{% extends "base.html" %}
+{% import "_fields.html" as f %}
+
+{####  Content Block Section  ####}
+{% block content %}
+    <h1 class="bc-doctype">{{ doc_type }}</h1>
+    {% for field in fields %}
+        {{ f.render_field(field) }}
+    {% endfor %}
+    {{ f.alt_formats(resource_uri, is_work) }}
+{% endblock %}
+
+{####  Sidebar Block Section  ####}
+{% block sidebar %}
+    {% if sidebar %}
+        <aside class="bc-sidebar">
+            {% for field in sidebar %}
+                <h2>{{ field.label }}</h2>
+                <ul>
+                    {% for v in field['values'] %}
+                        <li>{{ f.render_value(v) }}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        </aside>
+    {% endif %}
+{% endblock %}

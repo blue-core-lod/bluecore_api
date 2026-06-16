@@ -81,13 +81,14 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.17.0"
+version = "0.17.1"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-keycloak-middleware" },
     { name = "fastapi-mcp" },
+    { name = "jinja2" },
     { name = "lxml" },
     { name = "pgvector" },
     { name = "psycopg2-binary" },
@@ -118,6 +119,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
+    { name = "jinja2", specifier = ">=3.1.6" },
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },

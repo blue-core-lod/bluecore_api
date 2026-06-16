@@ -146,6 +146,24 @@ def test_get_work_turtle(client, db_session):
     assert response.headers["Content-Type"].startswith("text/turtle")
 
 
+def test_get_work_html(client, db_session):
+    add_test_work(db_session)
+
+    # Only a browser (Accept: text/html) on the clean URL gets the HTML view.
+    response = client.get(f"/works/{test_work_uuid}", headers={"Accept": "text/html"})
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
+    assert "BIBFRAME Work" in response.text
+    # The view links to the alternative RDF serializations.
+    assert f"{test_work_bluecore_uri}.ttl" in response.text
+
+    # An unrecognized format (e.g. `.html`, `.xml`) falls through to the default
+    # serialization, which is the HTML view.
+    response = client.get(f"/works/{test_work_uuid}.html")
+    assert response.status_code == 200
+    assert response.headers["Content-Type"].startswith("text/html")
+
+
 # cbd requires work & instance and will be tested in test_cbd.py
 
 
