@@ -73,6 +73,23 @@ def test_get_work_vnd_sinopia_json(client, db_session):
     assert len(fetched_graph) == len(orig_graph)
 
 
+def test_get_work_json(client, db_session):
+    # Note: since we are setting the JSON-LD data directly here on the Work model the
+    # URI needs to match whats in the JSON-LD file or else the JSON-LD
+    # framing will result in an empty graph.
+    add_test_work(db_session)
+
+    response = client.get(
+        f"/works/{test_work_uuid}", headers={"Accept": "application/json"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    fetched_graph = load_jsonld(data)
+    assert len(fetched_graph) == len(orig_graph)
+
+
 def test_get_expanded_work(client, db_session):
     add_test_expanded_work(db_session)
 
