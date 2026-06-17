@@ -20,6 +20,7 @@ from bluecore_models.models import (
     Base,
     BibframeClass,
     BibframeOtherResources,
+    Hub,
     Instance,
     OtherResource,
     ResourceBase,
@@ -137,6 +138,7 @@ def client(mocker, db_session, app):
             ResourceBase.__table__,
             BibframeClass.__table__,
             BibframeOtherResources.__table__,
+            Hub.__table__,
             Instance.__table__,
             OtherResource.__table__,
             ResourceBibframeClass.__table__,
@@ -173,5 +175,6 @@ def vector_client():
     yield client
 
     # on tear down empty collections for the next tests
+    client.delete(collection_name="hubs", filter="version == 1")
     client.delete(collection_name="instances", filter="version == 1")
     client.delete(collection_name="works", filter="version == 1")

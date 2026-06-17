@@ -31,6 +31,7 @@ from bluecore_api.middleware.keycloak_auth import (
     set_user_context,
 )
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
+from bluecore_api.app.routes.hubs import endpoints as hub_routes
 
 """Initialize logging config"""
 setup_logging()
@@ -68,6 +69,7 @@ base_app = FastAPI(
         "defaultModelsExpandDepth": 0,  # Start the "Schemas" section collapsed
     },
 )
+base_app.include_router(hub_routes, tags=["Hubs"])
 base_app.include_router(work_routes, tags=["Works"])
 base_app.include_router(instance_routes, tags=["Instances"])
 base_app.include_router(resource_routes, tags=["Resources"])
