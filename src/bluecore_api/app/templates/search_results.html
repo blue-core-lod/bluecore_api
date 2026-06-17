@@ -18,6 +18,10 @@
 {####  Content Block Section  ####}
 {% block content %}
     <h1 class="bc-doctype">Search results</h1>
+    {% if not searched %}
+        {####  Initial/empty-query landing: prompt the user to search ####}
+        <p class="bc-muted bc-search-prompt">Enter a search above to see results.</p>
+    {% else %}
     <div class="top-pagination">
         {####  Number of results ####}
         <p class="bc-muted bc-result-num">
@@ -73,5 +77,6 @@
                 <span class="bc-pager-link bc-pager-disabled">Next &rarr;</span>
             {% endif %}
         </nav>
+    {% endif %}
     {% endif %}
 {% endblock %}
