@@ -281,7 +281,8 @@ async def search_html(
         {
             "search_q": q,
             "search_type": str(type),
-            "searched": bool(formatted), # the initial landing view renders a prompt instead of a "0 results"
+            # the initial landing view renders a prompt instead of a "0 results"
+            "searched": bool(formatted),
             "total": total,
             "groups": groups,
             "results": None,
