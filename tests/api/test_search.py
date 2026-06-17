@@ -181,6 +181,21 @@ def test_search_html(client: TestClient, db_session: Session):
     assert test_work_bluecore_uri in response.text
 
 
+def test_search_html_empty_query(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    # A blank query must not match/scan the entire database (which hangs in
+    # production); it short-circuits without touching the DB and renders the
+    # initial prompt rather than a "0 results" / "No results" message.
+    for params in ({"type": "all", "q": ""}, {"type": "works"}, {"type": "instances"}):
+        response = client.get("/search", params=params)
+        assert response.status_code == 200
+        assert response.headers["Content-Type"].startswith("text/html")
+        assert "Enter a search above to see results." in response.text
+        assert "No results." not in response.text
+        assert "result for" not in response.text
+
+
 def test_or_search(client: TestClient, db_session: Session):
     add_data(db_session)
 
