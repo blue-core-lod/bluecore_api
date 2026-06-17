@@ -199,28 +199,32 @@ async def search_html(
     Unlike the JSON ``/search/`` API, an "all" search here also returns
     OtherResources (authorities, agents, subjects)
     """
-    if type == SearchType.ALL:
-        # Include non-profile OtherResources alongside Works and Instances.
-        non_profile_others = select(OtherResource.id).where(
-            OtherResource.is_profile.is_(False)
-        )
-        stmt = select(ResourceBase).where(
-            or_(
-                ResourceBase.type.in_([SearchType.WORKS, SearchType.INSTANCES]),
-                ResourceBase.id.in_(non_profile_others),
-            )
-        )
-    else:
-        stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
     formatted = format_query(q)
-    if formatted:
+    if not formatted:
+        # A blank query has no terms to match, forcing a full scan that hangs the request.
+        results: list[ResourceBase] = []
+        total = 0
+    else:
+        if type == SearchType.ALL:
+            # Include non-profile OtherResources alongside Works and Instances.
+            non_profile_others = select(OtherResource.id).where(
+                OtherResource.is_profile.is_(False)
+            )
+            stmt = select(ResourceBase).where(
+                or_(
+                    ResourceBase.type.in_([SearchType.WORKS, SearchType.INSTANCES]),
+                    ResourceBase.id.in_(non_profile_others),
+                )
+            )
+        else:
+            stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
         lang = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
             func.ts_rank(ResourceBase.data_vector, search_query).desc()
         )
-    total = db.scalar(create_count_query(stmt)) or 0
-    results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
+        total = db.scalar(create_count_query(stmt)) or 0
+        results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
@@ -277,6 +281,7 @@ async def search_html(
         {
             "search_q": q,
             "search_type": str(type),
+            "searched": bool(formatted), # the initial landing view renders a prompt instead of a "0 results"
             "total": total,
             "groups": groups,
             "results": None,
