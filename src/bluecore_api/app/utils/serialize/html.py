@@ -465,7 +465,9 @@ def resource_section(resource: Instance | Work) -> str:
     Used by the search view to group authorities, vocabularies, classifications,
     hubs, etc. into their own headings. See [[_SECTION_BY_TYPE]].
     """
-    types = [_type_localname(t) for t in _as_list(_primary_node(resource.data).get("@type"))]
+    types = [
+        _type_localname(t) for t in _as_list(_primary_node(resource.data).get("@type"))
+    ]
     for local in types:
         if local in _SECTION_BY_TYPE:
             return _SECTION_BY_TYPE[local]
