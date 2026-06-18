@@ -1,10 +1,37 @@
 from bluecore_api.app.routes.search import format_query
+from bluecore_api.app.utils.serialize.html import resource_section, resource_title
 from bluecore_models.models import OtherResource, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from types import SimpleNamespace
 import json
 import pathlib
 import pytest
+
+
+def test_search_helpers_tolerate_list_shaped_jsonld():
+    # Some OtherResources store JSON-LD as a top-level array of nodes (or an
+    # {"@graph": [...]} wrapper) rather than a single object. The HTML search
+    # helpers must derive a section/title from these without raising
+    # AttributeError: 'list' object has no attribute 'get'.
+    array_data = [
+        {
+            "@id": "https://example.org/hub/1",
+            "@type": ["http://id.loc.gov/ontologies/bibframe/Hub"],
+            "rdfs:label": "Stephen King hub",
+        },
+        {"@id": "https://example.org/concept/2", "@type": ["skos:Concept"]},
+    ]
+    graph_data = {"@graph": array_data}
+
+    for data in (array_data, graph_data):
+        resource = SimpleNamespace(data=data, uri="https://example.org/hub/1")
+        assert resource_section(resource) == "Hubs"
+        assert resource_title(resource) == "Stephen King hub"
+
+    # A plain object is unchanged by the normalization.
+    obj = SimpleNamespace(data={"title": {"mainTitle": "It"}}, uri="https://ex/it")
+    assert resource_title(obj) == "It"
 
 
 def test_format_query():

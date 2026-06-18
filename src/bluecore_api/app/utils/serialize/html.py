@@ -56,6 +56,27 @@ def _as_list(value: Any) -> list:
     return value if isinstance(value, list) else [value]
 
 
+def _primary_node(data: Any) -> dict[str, Any]:
+    """Return the main JSON-LD node as a dict.
+
+    Resource "data" may be a single node object, a top-level array of nodes,
+    or a "{"@graph": [...]}" wrapper. The HTML helpers expect a dict, so
+    normalize to the primary node (the first node carrying an ``@type``, else
+    the first dict) instead of letting ".get(...)" blow up on a list.
+    """
+    if isinstance(data, dict):
+        graph = data.get("@graph")
+        return _primary_node(graph) if isinstance(graph, list) else data
+    if isinstance(data, list):
+        for node in data:
+            if isinstance(node, dict) and node.get("@type"):
+                return node
+        for node in data:
+            if isinstance(node, dict):
+                return node
+    return {}
+
+
 def _scalar(value: Any) -> str:
     """Flatten a label-ish value (str, {@value}, or list) to plain text."""
     if isinstance(value, str):
@@ -349,13 +370,14 @@ def _build_fields(
     return fields
 
 
-def _title_of(data: dict[str, Any]) -> str:
+def _title_of(data: Any) -> str:
+    node = _primary_node(data)
     return (
-        _label_text(data.get("title"))
-        or _scalar(data.get("bflc:aap", ""))
+        _label_text(node.get("title"))
+        or _scalar(node.get("bflc:aap", ""))
         # Other Resources (authorities/agents/subjects) carry no title; fall back
         # to their rdfs:label / authoritative label before the bare URI tail.
-        or _label_text(data)
+        or _label_text(node)
     )
 
 
@@ -443,7 +465,7 @@ def resource_section(resource: Instance | Work) -> str:
     Used by the search view to group authorities, vocabularies, classifications,
     hubs, etc. into their own headings. See [[_SECTION_BY_TYPE]].
     """
-    types = [_type_localname(t) for t in _as_list(resource.data.get("@type"))]
+    types = [_type_localname(t) for t in _as_list(_primary_node(resource.data).get("@type"))]
     for local in types:
         if local in _SECTION_BY_TYPE:
             return _SECTION_BY_TYPE[local]
