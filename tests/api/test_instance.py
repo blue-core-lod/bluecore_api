@@ -234,21 +234,21 @@ def test_create_instance(client):
 
 
 def test_update_instance(client, db_session):
+    create_response = client.post(
+        "/instances/",
+        headers={"X-User": "cataloger"},
+        json={
+            "data": pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
+            "work_id": None,
+        },
+    )
+    assert create_response.status_code == 201
+
+    instance_uri = rdflib.URIRef(create_response.json()["uri"])
+    instance_uuid = create_response.json()["uri"].split("/")[-1]
     instance_graph = init_graph()
     instance_graph.parse(
-        data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
-        format="json-ld",
-    )
-    instance_uri = rdflib.URIRef(
-        "https://bcld.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    )
-    db_session.add(
-        Instance(
-            id=2,
-            uuid="75d831b9-e0d6-40f0-abb3-e9130622eb8a",
-            uri=str(instance_uri),
-            data=json.loads(instance_graph.serialize(format="json-ld")),
-        )
+        data=json.dumps(create_response.json()["data"]), format="json-ld"
     )
 
     # Updates Graph
@@ -260,19 +260,17 @@ def test_update_instance(client, db_session):
     )
 
     put_response = client.put(
-        "/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a",
+        f"/instances/{instance_uuid}",
         headers={"X-User": "cataloger"},
         json={"data": instance_graph.serialize(format="json-ld")},
     )
     assert put_response.status_code == 200
 
     # Retrieve Instance
-    get_response = client.get(
-        "/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a.vnd.sinopia.json"
-    )
+    get_response = client.get(f"/instances/{instance_uuid}.vnd.sinopia.json")
     payload = get_response.json()
     new_instance_graph = init_graph()
-    new_instance_graph.parse(data=payload["data"], format="json-ld")
+    new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")
     oclc_number = new_instance_graph.value(
         predicate=rdflib.RDF.type, object=BF.OclcNumber
     )

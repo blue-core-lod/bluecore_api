@@ -14,6 +14,8 @@ from fastapi.testclient import TestClient
 from fastapi_keycloak_middleware import get_auth, get_user
 from httpx import ASGITransport, AsyncClient
 
+from contextlib import contextmanager
+
 from pymilvus import MilvusClient
 
 from bluecore_models.models import (
@@ -147,7 +149,7 @@ def client(mocker, db_session, app):
         ],
     )
 
-    from bluecore_api.database import get_db
+    from bluecore_api.database import get_db, get_session_maker
 
     def override_get_db():
         db = db_session
@@ -156,7 +158,20 @@ def client(mocker, db_session, app):
         finally:
             db.close()
 
+    # save_graph() manages its own session via session_maker(). We override it
+    # here to use the existing db_session instead of opening a second connection,
+    # which would deadlock when db_session holds uncommitted rows that
+    # save_graph() tries to write. @contextmanager wraps db_session so it can
+    # be used as a context manager by save_graph().
+    def override_get_session_maker():
+        @contextmanager
+        def use_existing_session():
+            yield db_session
+
+        return use_existing_session
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_session_maker] = override_get_session_maker
 
     with TestClient(app) as c:
         yield c

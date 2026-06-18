@@ -1,10 +1,12 @@
-import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 
+import rdflib
+from rdflib import RDF
+
+from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import handle_external_subject
+from bluecore_models.utils.graph import BF
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
@@ -13,7 +15,12 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
-from bluecore_api.database import filter_vector_result, get_db, get_vector_client
+from bluecore_api.database import (
+    filter_vector_result,
+    get_db,
+    get_session_maker,
+    get_vector_client,
+)
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
     WorkEmbeddingSchema,
@@ -83,22 +90,16 @@ async def get_embedding(
     status_code=201,
     operation_id="get_works",
 )
-async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
-    time_now = datetime.now(UTC)
-    updated_payload = handle_external_subject(
-        data=work.data, type="works", bluecore_base_url=BLUECORE_URL
-    )
-    db_work = Work(
-        uri=updated_payload.get("uri"),
-        data=updated_payload.get("data"),
-        uuid=updated_payload.get("uuid"),
-        created_at=time_now,
-        updated_at=time_now,
-    )
-    db.add(db_work)
-    db.commit()
-    db.refresh(db_work)
-    return db_work
+async def create_work(
+    work: WorkCreateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
+):
+    graph = rdflib.Graph()
+    graph.parse(data=work.data, format="json-ld")
+    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
+    return db.query(Work).filter(Work.uri == work_uri).first()
 
 
 @endpoints.put(
@@ -108,19 +109,21 @@ async def create_work(work: WorkCreateSchema, db: Session = Depends(get_db)):
     operation_id="update_work",
 )
 async def update_work(
-    work_uuid: str, work: WorkUpdateSchema, db: Session = Depends(get_db)
+    work_uuid: str,
+    work: WorkUpdateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
 ):
     db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
     if db_work is None:
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
 
-    # Update data if it is provided
     if work.data is not None:
-        # TODO: some day it would be nice to not have to parse work.data as JSON
-        db_work.data = json.loads(work.data)
+        graph = rdflib.Graph()
+        graph.parse(data=work.data, format="json-ld")
+        save_graph(session_maker, graph, BLUECORE_URL)
+        db.refresh(db_work)
 
-    db.commit()
-    db.refresh(db_work)
     return db_work
 
 

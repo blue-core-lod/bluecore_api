@@ -20,6 +20,10 @@ def get_db():
         db.close()
 
 
+def get_session_maker():
+    return Session
+
+
 def get_vector_client():
     if not milvus_url:
         client = MilvusClient("test-vector.db")  # For testing

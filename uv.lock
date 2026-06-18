@@ -115,7 +115,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.14.0" },
+    { name = "bluecore-models", specifier = ">=0.14.1" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -146,7 +146,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.14.0"
+version = "0.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -157,9 +157,9 @@ dependencies = [
     { name = "tenacity" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/1d/786aa70b5641667d5edfe40d339b4823a35f1dd5d0b9ca1e406775ce9739/bluecore_models-0.14.0.tar.gz", hash = "sha256:98aa52425c175560a4fbb09ed506e29564355d0ecef14e38db339ca85a93a9d5", size = 165055, upload-time = "2026-06-16T19:36:41.07Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/6b/1f339b0e63ddc53eb549f454cad9ae5aa3f1856ce6f24090700d0163ac2a/bluecore_models-0.15.0.tar.gz", hash = "sha256:97d79e3402966d1707a4a96f9a16d9179b1d89532f6b0a2df13f0c03159f3c47", size = 164747, upload-time = "2026-06-17T20:43:14.651Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/66/dfad066ada7924dc8536adacd18736c2bf45f54a1dfbc6c78759fcd26e19/bluecore_models-0.14.0-py3-none-any.whl", hash = "sha256:94b7ee501e2d6c73185d30626ba8db5988806d27a7240d4b1d6c20d2947fa746", size = 31013, upload-time = "2026-06-16T19:36:40.109Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/59/9a3565f626e36d77ca4712292ad5cdf09419009b1efd43d3f909bd155268/bluecore_models-0.15.0-py3-none-any.whl", hash = "sha256:aa13f9dafc305a350fe668e44f3ce0650ed75729929220a876db361a1925039e", size = 32052, upload-time = "2026-06-17T20:43:15.522Z" },
 ]
 
 [[package]]
