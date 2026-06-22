@@ -1,21 +1,27 @@
 import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 
-from bluecore_models.models import Instance
-from bluecore_models.utils.graph import handle_external_subject
+from bluecore_models.bluecore_graph import save_graph
+from bluecore_models.models import Instance, Work
+from bluecore_models.utils.graph import BF, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
+from rdflib import RDF, URIRef
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import (
     serialize,
 )
-from bluecore_api.database import filter_vector_result, get_db, get_vector_client
+from bluecore_api.database import (
+    filter_vector_result,
+    get_db,
+    get_session_maker,
+    get_vector_client,
+)
 from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
     InstanceEmbeddingSchema,
@@ -92,24 +98,23 @@ async def get_embedding(
     operation_id="new_instance",
 )
 async def create_instance(
-    instance: InstanceCreateSchema, db: Session = Depends(get_db)
+    instance: InstanceCreateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
 ):
-    time_now = datetime.now(UTC)
-    updated_payload = handle_external_subject(
-        data=instance.data, type="instances", bluecore_base_url=BLUECORE_URL
-    )
-    db_instance = Instance(
-        uri=updated_payload.get("uri"),
-        data=updated_payload.get("data"),
-        work_id=instance.work_id,
-        uuid=updated_payload.get("uuid"),
-        created_at=time_now,
-        updated_at=time_now,
-    )
-    db.add(db_instance)
-    db.commit()
-    db.refresh(db_instance)
-    return db_instance
+    graph = load_jsonld(json.loads(instance.data))
+    if instance.work_id is not None:
+        db_work = db.query(Work).filter(Work.id == instance.work_id).first()
+        if db_work is None:
+            raise HTTPException(
+                status_code=404, detail=f"Work {instance.work_id} not found"
+            )
+        graph += load_jsonld(db_work.data)
+        instance_subject = next(graph.subjects(RDF.type, BF.Instance))
+        graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
+    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    instance_uri = str(next(result_graph.subjects(RDF.type, BF.Instance)))
+    return db.query(Instance).filter(Instance.uri == instance_uri).first()
 
 
 @endpoints.put(
@@ -119,7 +124,10 @@ async def create_instance(
     operation_id="update_instance",
 )
 async def update_instance(
-    instance_uuid: str, instance: InstanceUpdateSchema, db: Session = Depends(get_db)
+    instance_uuid: str,
+    instance: InstanceUpdateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
 ):
     db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
     if db_instance is None:
@@ -127,15 +135,20 @@ async def update_instance(
             status_code=404, detail=f"Instance {instance_uuid} not found"
         )
 
-    # Update fields if they are provided
     if instance.data is not None:
-        # TODO: should instance.data be a dict instead of a JSON str?
-        db_instance.data = json.loads(instance.data)
-    if instance.work_id is not None:
-        db_instance.work_id = instance.work_id
+        graph = load_jsonld(json.loads(instance.data))
+        if instance.work_id is not None:
+            db_work = db.query(Work).filter(Work.id == instance.work_id).first()
+            if db_work is None:
+                raise HTTPException(
+                    status_code=404, detail=f"Work {instance.work_id} not found"
+                )
+            graph += load_jsonld(db_work.data)
+            instance_subject = next(graph.subjects(RDF.type, BF.Instance))
+            graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
+        save_graph(session_maker, graph, BLUECORE_URL)
+        db.refresh(db_instance)
 
-    db.commit()
-    db.refresh(db_instance)
     return db_instance
 
 
