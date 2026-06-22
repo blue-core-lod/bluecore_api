@@ -11,9 +11,10 @@ from bluecore_api.schemas.schemas import (
     SearchResultSchema,
 )
 from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import func, or_, select, Select
+from sqlalchemy import func, or_, select, Select, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import noload, Session
 from urllib.parse import urlencode
 
@@ -26,7 +27,25 @@ from bluecore_api.app.utils.serialize.html import (
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
+# Hard ceiling (ms) on how long a single search query may run. A very broad query
+# (e.g. the wildcard "c*")
+SEARCH_STATEMENT_TIMEOUT_MS: int = int(
+    os.environ.get("SEARCH_STATEMENT_TIMEOUT_MS", "15000")
+)
+
 endpoints = APIRouter()
+
+
+def _apply_search_timeout(db: Session) -> None:
+    """Bound the runtime of the search queries in the current transaction.
+
+    ``SET LOCAL`` applies only to this request's transaction; when the budget is
+    exceeded Postgres raises a ``QueryCanceled`` (surfaced as ``OperationalError``)
+    that the caller catches to return a "search too broad" response.
+    """
+    if SEARCH_STATEMENT_TIMEOUT_MS > 0:
+        db.execute(text(f"SET LOCAL statement_timeout = {SEARCH_STATEMENT_TIMEOUT_MS}"))
+
 
 SPACE_CONDENSER = re.compile(r"\s+")
 PHRASE_MAPPER = re.compile(r'"([^"]+)"')
@@ -164,10 +183,18 @@ async def search(
         links_query = f"&{urlencode(params)}"
     else:
         links_query = f"&type={type}"
-    count_query = create_count_query(stmt)
-    total = db.scalar(count_query)
-    stmt = stmt.offset(offset).limit(limit)
-    results = db.execute(stmt).scalars().all()
+    try:
+        _apply_search_timeout(db)
+        count_query = create_count_query(stmt)
+        total = db.scalar(count_query)
+        stmt = stmt.offset(offset).limit(limit)
+        results = db.execute(stmt).scalars().all()
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail="Search too broad to complete — please use a more specific query.",
+        )
     links = generate_links(
         verb="search",
         slice_size=len(results),
@@ -200,6 +227,7 @@ async def search_html(
     OtherResources (authorities, agents, subjects)
     """
     formatted = format_query(q)
+    too_broad = False
     if not formatted:
         # A blank query has no terms to match, forcing a full scan that hangs the request.
         results: list[ResourceBase] = []
@@ -223,8 +251,28 @@ async def search_html(
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
             func.ts_rank(ResourceBase.data_vector, search_query).desc()
         )
-        total = db.scalar(create_count_query(stmt)) or 0
-        results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
+        try:
+            _apply_search_timeout(db)
+            # Fetch the page and the total in a single scan. A separate COUNT(*)
+            # would re-run the same full-text scan a second time; ``count(*) OVER ()``
+            # reports the total over the whole matched set (before LIMIT/OFFSET)
+            # alongside each returned row.
+            rows = db.execute(
+                stmt.add_columns(func.count().over().label("total"))
+                .offset(offset)
+                .limit(limit)
+            ).all()
+            results = [row[0] for row in rows]
+            # An out-of-range page returns no rows (and so no window count); the
+            # first and most common page always carries the total.
+            total = rows[0][-1] if rows else 0
+        except OperationalError:
+            # The query exceeded its time budget; abandon it and tell the user the
+            # search was too broad rather than hanging the request.
+            db.rollback()
+            too_broad = True
+            results = []
+            total = 0
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
@@ -283,6 +331,9 @@ async def search_html(
             "search_type": str(type),
             # the initial landing view renders a prompt instead of a "0 results"
             "searched": bool(formatted),
+            # True when the query was cancelled for exceeding its time budget; the
+            # template shows a "search too broad" prompt instead of results.
+            "too_broad": too_broad,
             "total": total,
             "groups": groups,
             "results": None,

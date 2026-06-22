@@ -208,6 +208,60 @@ def test_search_html(client: TestClient, db_session: Session):
     assert test_work_bluecore_uri in response.text
 
 
+def _timeout_error():
+    from sqlalchemy.exc import OperationalError
+
+    return OperationalError(
+        "SELECT ...",
+        {},
+        Exception("canceling statement due to statement timeout"),
+    )
+
+
+def test_search_html_too_broad(client: TestClient, db_session: Session, monkeypatch):
+    add_data(db_session)
+    # Commit so the timeout handler's rollback doesn't drop the test data. In
+    # production search only reads, so the rollback has nothing to lose.
+    db_session.commit()
+
+    # Simulate a query that exceeds its statement_timeout: the full-text search is
+    # cancelled by Postgres. The HTML view must return 200 with a "too broad"
+    # message instead of hanging or 500-ing.
+    real_execute = db_session.execute
+
+    def flaky_execute(statement, *args, **kwargs):
+        if "ts_rank" in str(statement) or "count(*)" in str(statement):
+            raise _timeout_error()
+        return real_execute(statement, *args, **kwargs)
+
+    monkeypatch.setattr(db_session, "execute", flaky_execute)
+
+    response = client.get("/search", params={"q": "c*", "type": "all"})
+    assert response.status_code == 200
+    assert "too broad" in response.text
+    # No results / no crash.
+    assert test_work_bluecore_uri not in response.text
+
+
+def test_search_json_too_broad(client: TestClient, db_session: Session, monkeypatch):
+    add_data(db_session)
+    db_session.commit()
+
+    # The JSON API returns a 422 (rather than hanging) when a search is too broad.
+    real_execute = db_session.execute
+
+    def flaky_execute(statement, *args, **kwargs):
+        if "ts_rank" in str(statement) or "count(*)" in str(statement):
+            raise _timeout_error()
+        return real_execute(statement, *args, **kwargs)
+
+    monkeypatch.setattr(db_session, "execute", flaky_execute)
+
+    response = client.get("/search/", params={"q": "c*", "type": "all"})
+    assert response.status_code == 422
+    assert "too broad" in response.json()["detail"]
+
+
 def test_search_html_empty_query(client: TestClient, db_session: Session):
     add_data(db_session)
 

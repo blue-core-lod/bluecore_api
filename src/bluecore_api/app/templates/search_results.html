@@ -18,7 +18,12 @@
 {####  Content Block Section  ####}
 {% block content %}
     <h1 class="bc-doctype">Search results</h1>
-    {% if not searched %}
+    {% if too_broad %}
+        {####  Query exceeded its time budget and was cancelled ####}
+        <p class="bc-muted bc-search-prompt">
+            Your search{% if search_q %} for &ldquo;{{ search_q }}&rdquo;{% endif %} was too broad to complete. Please use a more specific query.
+        </p>
+    {% elif not searched %}
         {####  Initial/empty-query landing: prompt the user to search ####}
         <p class="bc-muted bc-search-prompt">Enter a search above to see results.</p>
     {% else %}
