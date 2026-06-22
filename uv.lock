@@ -81,7 +81,7 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.18.2"
+version = "0.18.4"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
@@ -115,7 +115,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.14.1" },
+    { name = "bluecore-models", specifier = ">=0.15.1" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -146,7 +146,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.15.0"
+version = "0.15.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -157,9 +157,9 @@ dependencies = [
     { name = "tenacity" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/6b/1f339b0e63ddc53eb549f454cad9ae5aa3f1856ce6f24090700d0163ac2a/bluecore_models-0.15.0.tar.gz", hash = "sha256:97d79e3402966d1707a4a96f9a16d9179b1d89532f6b0a2df13f0c03159f3c47", size = 164747, upload-time = "2026-06-17T20:43:14.651Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/95/6f04bbe9f4546b2f9896667f75c94aaab7871bf1dbae043f7752146698bf/bluecore_models-0.15.1.tar.gz", hash = "sha256:d2e4d78629db135ab9100a7cd236916aea7798ab6f75e00f38371dbe6d442ee8", size = 162435, upload-time = "2026-06-22T15:54:00.201Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/59/9a3565f626e36d77ca4712292ad5cdf09419009b1efd43d3f909bd155268/bluecore_models-0.15.0-py3-none-any.whl", hash = "sha256:aa13f9dafc305a350fe668e44f3ce0650ed75729929220a876db361a1925039e", size = 32052, upload-time = "2026-06-17T20:43:15.522Z" },
+    { url = "https://files.pythonhosted.org/packages/02/a4/9d40d1634c721744e58be95977a0c50f0633b41a6d372160a72d01c801a8/bluecore_models-0.15.1-py3-none-any.whl", hash = "sha256:caabcd9d20dec2b6d7be925e32166e568b1e2a49dad21815646aa992733d9f4f", size = 32059, upload-time = "2026-06-22T15:53:59.125Z" },
 ]
 
 [[package]]
