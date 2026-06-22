@@ -2,16 +2,14 @@ import json
 import os
 from pathlib import Path
 
-import rdflib
-from rdflib import RDF, URIRef
-
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import BF
+from bluecore_models.utils.graph import BF, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
+from rdflib import RDF, URIRef
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.response_generator import as_html
@@ -104,17 +102,14 @@ async def create_instance(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = rdflib.Graph()
-    graph.parse(data=instance.data, format="json-ld")
+    graph = load_jsonld(json.loads(instance.data))
     if instance.work_id is not None:
         db_work = db.query(Work).filter(Work.id == instance.work_id).first()
         if db_work is None:
             raise HTTPException(
                 status_code=404, detail=f"Work {instance.work_id} not found"
             )
-        work_graph = rdflib.Graph()
-        work_graph.parse(data=json.dumps(db_work.data), format="json-ld")
-        graph += work_graph
+        graph += load_jsonld(db_work.data)
         instance_subject = next(graph.subjects(RDF.type, BF.Instance))
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
     result_graph = save_graph(session_maker, graph, BLUECORE_URL)
@@ -141,17 +136,14 @@ async def update_instance(
         )
 
     if instance.data is not None:
-        graph = rdflib.Graph()
-        graph.parse(data=instance.data, format="json-ld")
+        graph = load_jsonld(json.loads(instance.data))
         if instance.work_id is not None:
             db_work = db.query(Work).filter(Work.id == instance.work_id).first()
             if db_work is None:
                 raise HTTPException(
                     status_code=404, detail=f"Work {instance.work_id} not found"
                 )
-            work_graph = rdflib.Graph()
-            work_graph.parse(data=json.dumps(db_work.data), format="json-ld")
-            graph += work_graph
+            graph += load_jsonld(db_work.data)
             instance_subject = next(graph.subjects(RDF.type, BF.Instance))
             graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
         save_graph(session_maker, graph, BLUECORE_URL)

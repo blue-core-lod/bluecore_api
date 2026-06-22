@@ -1,18 +1,14 @@
+import json
 import os
-
-import rdflib
-from rdflib import RDF
 
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Hub
-from bluecore_models.utils.graph import BF
+from bluecore_models.utils.graph import BF, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
-
-from pymilvus import MilvusClient
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_keycloak_middleware import CheckPermissions
-
+from pymilvus import MilvusClient
+from rdflib import RDF
 from sqlalchemy.orm import Session
 
 from bluecore_api.database import (
@@ -21,13 +17,13 @@ from bluecore_api.database import (
     get_session_maker,
     get_vector_client,
 )
+from bluecore_api.expansion import expand_resource_graph
 from bluecore_api.schemas.schemas import (
     HubCreateSchema,
     HubEmbeddingSchema,
     HubSchema,
     HubUpdateSchema,
 )
-from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -84,8 +80,7 @@ async def create_hub(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = rdflib.Graph()
-    graph.parse(data=hub.data, format="json-ld")
+    graph = load_jsonld(json.loads(hub.data))
     result_graph = save_graph(session_maker, graph, BLUECORE_URL)
     hub_uri = str(next(result_graph.subjects(RDF.type, BF.Hub)))
     return db.query(Hub).filter(Hub.uri == hub_uri).first()
@@ -108,8 +103,7 @@ async def update_hub(
         raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
 
     if hub.data is not None:
-        graph = rdflib.Graph()
-        graph.parse(data=hub.data, format="json-ld")
+        graph = load_jsonld(json.loads(hub.data))
         save_graph(session_maker, graph, BLUECORE_URL)
         db.refresh(db_hub)
 

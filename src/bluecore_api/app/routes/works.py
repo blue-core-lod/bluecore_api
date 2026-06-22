@@ -1,16 +1,15 @@
+import json
 import os
 from pathlib import Path
 
-import rdflib
-from rdflib import RDF
-
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Work
-from bluecore_models.utils.graph import BF
+from bluecore_models.utils.graph import BF, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
+from rdflib import RDF
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.response_generator import as_html
@@ -95,8 +94,7 @@ async def create_work(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = rdflib.Graph()
-    graph.parse(data=work.data, format="json-ld")
+    graph = load_jsonld(json.loads(work.data))
     result_graph = save_graph(session_maker, graph, BLUECORE_URL)
     work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
     return db.query(Work).filter(Work.uri == work_uri).first()
@@ -119,8 +117,7 @@ async def update_work(
         raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
 
     if work.data is not None:
-        graph = rdflib.Graph()
-        graph.parse(data=work.data, format="json-ld")
+        graph = load_jsonld(json.loads(work.data))
         save_graph(session_maker, graph, BLUECORE_URL)
         db.refresh(db_work)
 
