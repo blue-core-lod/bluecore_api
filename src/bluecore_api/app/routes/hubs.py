@@ -1,27 +1,29 @@
-import os
 import json
+import os
 
-from datetime import datetime, UTC
-
-from pymilvus import MilvusClient
-
+from bluecore_models.bluecore_graph import save_graph
+from bluecore_models.models import Hub
+from bluecore_models.utils.graph import BF, load_jsonld
+from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_keycloak_middleware import CheckPermissions
-
+from pymilvus import MilvusClient
+from rdflib import RDF
 from sqlalchemy.orm import Session
 
-from bluecore_models.models import Hub
-from bluecore_models.utils.graph import handle_external_subject
-from bluecore_models.utils.vector_db import create_embeddings
-
-from bluecore_api.database import filter_vector_result, get_db, get_vector_client
+from bluecore_api.database import (
+    filter_vector_result,
+    get_db,
+    get_session_maker,
+    get_vector_client,
+)
+from bluecore_api.expansion import expand_resource_graph
 from bluecore_api.schemas.schemas import (
     HubCreateSchema,
     HubEmbeddingSchema,
     HubSchema,
     HubUpdateSchema,
 )
-from bluecore_api.expansion import expand_resource_graph
 
 endpoints = APIRouter()
 
@@ -73,22 +75,15 @@ async def get_embedding(
     status_code=201,
     operation_id="create_hub",
 )
-async def create_hub(hub: HubCreateSchema, db: Session = Depends(get_db)):
-    time_now = datetime.now(UTC)
-    updated_payload = handle_external_subject(
-        data=hub.data, type="hubs", bluecore_base_url=BLUECORE_URL
-    )
-    db_hub = Hub(
-        uri=updated_payload.get("uri"),
-        data=updated_payload.get("data"),
-        uuid=updated_payload.get("uuid"),
-        created_at=time_now,
-        updated_at=time_now,
-    )
-    db.add(db_hub)
-    db.commit()
-    db.refresh(db_hub)
-    return db_hub
+async def create_hub(
+    hub: HubCreateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
+):
+    graph = load_jsonld(json.loads(hub.data))
+    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    hub_uri = str(next(result_graph.subjects(RDF.type, BF.Hub)))
+    return db.query(Hub).filter(Hub.uri == hub_uri).first()
 
 
 @endpoints.put(
@@ -98,17 +93,20 @@ async def create_hub(hub: HubCreateSchema, db: Session = Depends(get_db)):
     operation_id="update_hub",
 )
 async def update_hub(
-    hub_uuid: str, hub: HubUpdateSchema, db: Session = Depends(get_db)
+    hub_uuid: str,
+    hub: HubUpdateSchema,
+    db: Session = Depends(get_db),
+    session_maker=Depends(get_session_maker),
 ):
     db_hub = db.query(Hub).filter(Hub.uuid == hub_uuid).first()
     if db_hub is None:
         raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
 
     if hub.data is not None:
-        db_hub.data = json.loads(hub.data)
+        graph = load_jsonld(json.loads(hub.data))
+        save_graph(session_maker, graph, BLUECORE_URL)
+        db.refresh(db_hub)
 
-    db.commit()
-    db.refresh(db_hub)
     return db_hub
 
 
