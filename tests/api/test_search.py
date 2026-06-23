@@ -34,6 +34,37 @@ def test_search_helpers_tolerate_list_shaped_jsonld():
     assert resource_title(obj) == "It"
 
 
+def test_resource_title_resolves_labels_across_namespaces():
+    # Standalone authority records (from id.loc.gov) carry their label under varied
+    # predicates: madsrdf:, skos:, or fully-expanded URIs — not just the bibframe
+    # `mads:`/`rdfs:` prefixes. All must resolve to the readable label instead of
+    # falling back to the bare @id tail (e.g. "n2010185030").
+    cases = {
+        "madsrdf:authoritativeLabel": "Smith, John, 1970-",
+        "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": "Doe, Jane",
+        "skos:prefLabel": "Cats",
+        "http://www.w3.org/2004/02/skos/core#prefLabel": "Dogs",
+        "rdfs:label": "Plain Label",
+    }
+    for key, value in cases.items():
+        resource = SimpleNamespace(
+            data={
+                "@id": "https://id.loc.gov/authorities/names/n2010185030",
+                "@type": ["http://www.loc.gov/mads/rdf/v1#PersonalName"],
+                key: value,
+            },
+            uri="https://id.loc.gov/authorities/names/n2010185030",
+        )
+        assert resource_title(resource) == value
+
+    # With no label predicate at all it still falls back to the @id tail.
+    bare = SimpleNamespace(
+        data={"@id": "https://id.loc.gov/authorities/names/n2010185030"},
+        uri="https://id.loc.gov/authorities/names/n2010185030",
+    )
+    assert resource_title(bare) == "n2010185030"
+
+
 def test_format_query():
     assert format_query("") == ""
     assert format_query("hello world") == "hello & world"
@@ -437,6 +468,200 @@ def test_search_profile_limit(client: TestClient, db_session: Session):
     assert len(result["results"]) == 1
     assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/test-profile"
     assert result["total"] == 2
+
+
+_BF = "http://id.loc.gov/ontologies/bibframe/"
+_RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
+
+
+def _node(uri: str, bf_type: str, label: str) -> list[dict]:
+    return [
+        {
+            "@id": uri,
+            "@type": [f"{_BF}{bf_type}"],
+            _RDFS_LABEL: [{"@value": label}],
+        }
+    ]
+
+
+def test_search_json_other_resources_excludes_profiles(
+    client: TestClient, db_session: Session
+):
+    # The new `other_resources` search type returns non-profile OtherResources
+    # (authorities, agents, subjects) and excludes profiles.
+    term = "otherresourcetoken"
+    topic_uri = "https://id.loc.gov/x/topic-1"
+    db_session.add(
+        OtherResource(
+            is_profile=False, uri=topic_uri, data=_node(topic_uri, "Topic", f"{term} a")
+        )
+    )
+    db_session.add(
+        OtherResource(
+            is_profile=True,
+            uri="https://api.sinopia.io/profiles/excluded",
+            data={"title": f"{term} profile"},
+        )
+    )
+    db_session.commit()
+
+    response = client.get("/search/", params={"q": term, "type": "other_resources"})
+    result = response.json()
+    assert response.status_code == 200
+    assert result["total"] == 1
+    assert result["results"][0]["uri"] == topic_uri
+
+
+def test_search_json_other_resources_list_shaped_data(
+    client: TestClient, db_session: Session
+):
+    # OtherResources store JSON-LD as a top-level array (graph), not a dict. The
+    # JSON /search/ response model must accept that shape rather than 500 with a
+    # ResponseValidationError ("Input should be a valid dictionary").
+    term = "listshapedtoken"
+    uri = "https://id.loc.gov/x/hub-list"
+    db_session.add(
+        OtherResource(
+            is_profile=False,
+            uri=uri,
+            data=_node(uri, "Hub", f"{term} a"),  # _node returns a list
+        )
+    )
+    db_session.commit()
+
+    response = client.get("/search/", params={"q": term, "type": "other_resources"})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["total"] == 1
+    assert result["results"][0]["uri"] == uri
+
+
+def test_search_html_other_resources_type(client: TestClient, db_session: Session):
+    term = "otherresourcehtml"
+    topic_uri = "https://id.loc.gov/x/topic-html"
+    db_session.add(
+        OtherResource(
+            is_profile=False, uri=topic_uri, data=_node(topic_uri, "Topic", f"{term} a")
+        )
+    )
+    db_session.commit()
+
+    response = client.get("/search", params={"q": term, "type": "other_resources"})
+    assert response.status_code == 200
+    assert topic_uri in response.text
+    # A single-type search renders one panel (no "Works & Instances" panel title).
+    assert "Works &amp; Instances" not in response.text
+
+
+def test_search_html_all_paginates_panels_independently(
+    client: TestClient, db_session: Session
+):
+    # An "all" search runs two separately-paginated searches. With a page size of 1
+    # and two matches in each scope, each panel must offer its own "next" link that
+    # pages only that scope (wi_offset / or_offset) while preserving the other's.
+    term = "alltoken"
+    for i in (2, 3):
+        uri = f"https://bcld.info/works/work-{i}"
+        db_session.add(
+            Work(
+                id=i,
+                uuid=f"00000000-0000-0000-0000-00000000000{i}",
+                uri=uri,
+                data=_node(uri, "Work", f"{term} work {i}"),
+            )
+        )
+    for i in (4, 5):
+        uri = f"https://id.loc.gov/x/topic-{i}"
+        db_session.add(
+            OtherResource(
+                id=i,
+                is_profile=False,
+                uri=uri,
+                data=_node(uri, "Topic", f"{term} topic {i}"),
+            )
+        )
+    db_session.commit()
+
+    response = client.get("/search", params={"q": term, "type": "all", "limit": 1})
+    assert response.status_code == 200
+    body = response.text
+    # Two independently-titled panels.
+    assert ">Works &amp; Instances</h2>" in body
+    assert ">Other Resources</h2>" in body
+    # Each panel pages on its own offset param.
+    assert "wi_offset=1" in body
+    assert "or_offset=1" in body
+
+
+def test_search_html_partial_returns_single_panel_fragment(
+    client: TestClient, db_session: Session
+):
+    # The per-panel pagination JS requests one panel with `partial=<key>`. The
+    # response is just that panel's <section> fragment (no full page / base layout),
+    # so it can be swapped in place without reloading.
+    term = "partialtoken"
+    work_uri = "https://bcld.info/works/work-partial"
+    db_session.add(
+        Work(
+            id=42,
+            uuid="00000000-0000-0000-0000-000000000042",
+            uri=work_uri,
+            data=_node(work_uri, "Work", f"{term} a"),
+        )
+    )
+    topic_uri = "https://id.loc.gov/x/topic-partial"
+    db_session.add(
+        OtherResource(
+            id=43,
+            is_profile=False,
+            uri=topic_uri,
+            data=_node(topic_uri, "Topic", f"{term} b"),
+        )
+    )
+    db_session.commit()
+
+    response = client.get("/search", params={"q": term, "type": "all", "partial": "wi"})
+    assert response.status_code == 200
+    body = response.text
+    # Just the Works/Instances panel fragment...
+    assert 'data-panel="wi"' in body
+    assert work_uri in body
+    # ...not the full page, and not the other panel.
+    assert "<html" not in body
+    assert 'data-panel="other"' not in body
+    assert topic_uri not in body
+
+
+def test_search_pagination_is_stable_and_disjoint(
+    client: TestClient, db_session: Session
+):
+    # Equal-ranked results must order deterministically (id tiebreaker) so paging
+    # doesn't reshuffle or repeat rows from page to page.
+    term = "stableordertoken"
+    for i in range(5):
+        uri = f"https://dev.bcld.info/works/stable-{i}"
+        db_session.add(
+            Work(
+                id=8000 + i,
+                uuid=f"00000000-0000-0000-0000-0000000080{i:02d}",
+                uri=uri,
+                data=_node(uri, "Work", f"{term} item"),
+            )
+        )
+    db_session.commit()
+
+    def page_uris(offset: int) -> list[str]:
+        resp = client.get(
+            "/search/",
+            params={"q": term, "type": "works", "limit": 2, "offset": offset},
+        )
+        return [r["uri"] for r in resp.json()["results"]]
+
+    pages = page_uris(0) + page_uris(2) + page_uris(4)
+    assert len(pages) == 5  # full coverage, nothing skipped
+    assert len(set(pages)) == 5  # no row repeats across pages
+    # Re-fetching a page returns the same rows in the same order.
+    assert page_uris(0) == pages[:2]
 
 
 if __name__ == "__main__":

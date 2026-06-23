@@ -43,7 +43,9 @@ def test_other_resources_grouped_into_sections(client, db_session):
     assert resp.status_code == 200
     body = resp.text
 
-    # Each kind landed in its own section heading.
+    # All OtherResources live in the "Other Resources" panel...
+    assert ">Other Resources</h2>" in body
+    # ...each kind under its own section heading (now <h3> within the panel).
     for heading in [
         "Name Authorities",
         "Subjects",
@@ -51,7 +53,7 @@ def test_other_resources_grouped_into_sections(client, db_session):
         "LC Classifications",
         "Vocabularies",
     ]:
-        assert f">{heading}</h2>" in body, heading
+        assert f">{heading}</h3>" in body, heading
 
     # Links present for the non-profile authorities, absent for the profile.
     for uri in (person, topic, hub, classif, lang):
@@ -80,4 +82,4 @@ def test_single_type_search_shows_heading(client, db_session):
     db_session.commit()
     resp = client.get("/search", params={"q": TOKEN, "type": "works"})
     assert resp.status_code == 200
-    assert ">Works</h2>" in resp.text
+    assert ">Works</h3>" in resp.text
