@@ -72,6 +72,83 @@ def load_url(url: Annotated[str, Argument()]):
         raise Exit(1)
 
 
+@app.command()
+def load_profiles(
+    host: Annotated[
+        str,
+        Argument(help="Remote bluecore host to pull profiles from"),
+    ] = "https://dev.bcld.info",
+    page_size: Annotated[int, Option(help="Page size for paginating the remote")] = 50,
+    dry_run: Annotated[
+        bool, Option(help="Fetch and report without writing to the local DB")
+    ] = False,
+):
+    """
+    Fetch profiles from a remote bluecore /api/search/profile and upsert
+    them directly into the local database, bypassing the local API.
+    """
+    from bluecore_api.database import Session
+    from bluecore_models.models import OtherResource
+
+    source = f"{host.rstrip('/')}/api/search/profile"
+    offset = 0
+    loaded = 0
+    updated = 0
+
+    db = Session()
+    try:
+        while True:
+            resp = httpx.get(
+                source,
+                params={"limit": page_size, "offset": offset},
+                follow_redirects=True,
+            )
+            resp.raise_for_status()
+            results = resp.json().get("results", [])
+            if not results:
+                break
+
+            for r in results:
+                uri = r.get("uri")
+                data = r.get("data")
+
+                existing = (
+                    db.query(OtherResource).filter(OtherResource.uri == uri).first()
+                    if uri
+                    else None
+                )
+                if existing:
+                    existing.is_profile = True
+                    existing.data = data
+                    updated += 1
+                else:
+                    db.add(OtherResource(uri=uri, is_profile=True, data=data))
+                    loaded += 1
+
+                if state.get("verbose"):
+                    printr(f"  {'update' if existing else 'insert'} {uri}")
+
+            offset += page_size
+            if len(results) < page_size:
+                break
+
+        if dry_run:
+            db.rollback()
+            printr(
+                f"[yellow]Dry run:[/yellow] {loaded} new, {updated} updated "
+                f"(no changes written)"
+            )
+        else:
+            db.commit()
+            printr(f"[green]Loaded {loaded} new profiles, updated {updated}[/green]")
+    except httpx.HTTPError as e:
+        db.rollback()
+        printr(f"[red]{e}[/red]")
+        raise Exit(1)
+    finally:
+        db.close()
+
+
 @app.callback()
 def main(
     bluecore_url: Annotated[str, Option(help="Bluecore URL")] = None,
