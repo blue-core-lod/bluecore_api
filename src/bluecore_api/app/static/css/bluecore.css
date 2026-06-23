@@ -11,7 +11,7 @@
   --bc-text: #111;
   --bc-muted: #677084;
   --bc-muted-bg: rgb(213 213 216 / 0.7);
-  --bc-border: #b9c8e8;
+  --bc-border: rgb(185 200 232 / 0.32);
   --bc-control-border: #5d6470;
 }
 
@@ -28,7 +28,8 @@ body {
   margin: 0;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   color: var(--bc-text);
-  background: var(--bc-page-bg);
+  /*background: var(--bc-page-bg);*/
+  background: white;
   line-height: 1.2;
   font-size: 16px;
 }
@@ -49,7 +50,7 @@ body {
   width: min(100%, 1200px);
   min-height: 100vh;
   margin: 0 auto;
-  background: #fff;
+  background: #f9fcff;
   border-left: 1px solid var(--bc-border);
   border-right: 1px solid var(--bc-border);
 }
@@ -184,8 +185,9 @@ body {
   display: flex;
   /*flex-direction: column;*/
   gap: 40px;
-  padding: 34px 20px 70px 34px;
+  padding: 20px 10px 70px 10px;
   align-items: flex-start;
+  background-color: #f9fcff;
 }
 
 .bc-main {
@@ -349,7 +351,29 @@ body {
   color: var(--bc-muted);
 }
 
-/* Search results: flat list + grouped (All) sections */
+/* Search results: each scope (Works/Instances, Other Resources, ...) is its own
+   bounded card, so the two lists — and their pagination — never blur together. */
+.bc-results-panel {
+  border: 2px solid var(--bc-border);
+  border-radius: 8px;
+  background: #ffffff;
+
+  padding: 16px 20px 20px;
+  margin: 0 0 28px;
+}
+
+.bc-panel-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bc-orient);
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--bc-border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Result lists + grouped (All) sections */
 .bc-results {
   margin: 0 0 18px;
   padding: 0 0 0 18px;
@@ -363,6 +387,10 @@ body {
   margin: 0 0 26px;
 }
 
+.bc-results-group:last-of-type {
+  margin-bottom: 0;
+}
+
 .bc-results-heading {
   font-size: 16px;
   font-weight: 700;
@@ -372,21 +400,48 @@ body {
   border-bottom: 1px solid var(--bc-border);
 }
 
-/* Pagination controls */
+/* Pagination: a compact button group that clearly belongs to its panel. */
 .bc-pager {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin: 8px 0 24px;
+  gap: 12px;
+  margin: 0;
+}
+
+/* The footer pager is divided from the list so it reads as the end of the panel. */
+.bc-pager-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bc-border);
+}
+
+.bc-pager-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--bc-border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration:  none !important;
+  color: var(--bc-link);
+  background: #fff;
+}
+
+a.bc-pager-link:hover {
+  background: var(--bc-header-bg);
+  border-color: var(--bc-blue);
 }
 
 .bc-pager-status {
   color: var(--bc-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .bc-pager-disabled {
   color: var(--bc-muted);
+  background: var(--bc-page-bg);
   cursor: not-allowed;
   text-decoration: none;
 }
@@ -404,7 +459,7 @@ body {
   /* ---- Layout: single column, full-width sidebar ---- */
   .bc-layout {
     flex-direction: column;
-    padding-left: 20px;
+    padding: 4px;
   }
   .bc-sidebar {
     max-width: 100%;
@@ -437,9 +492,24 @@ body {
   }
 
 
+  /* Pagination: a compact button group that clearly belongs to its panel. */
+  .bc-pager {
+    margin-bottom: 16px;
+  }
+
+  .bc-pager-link {
+    padding: 8px;
+    border: 1px solid var(--bc-border);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
   .top-pagination {
     flex-direction: column;
-    align-items: start;
+    justify-content: center;
+    gap: 12px;
+    margin-right: 0px;
   }
 
   .bc-result-num {
