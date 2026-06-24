@@ -100,6 +100,28 @@ uv run bluecore --verbose load-url https://raw.githubusercontent.com/blue-core-l
 
 This will tell the Blue Core API to load the data at that URL into the database.
 
+## 📇 Load Profiles
+
+Sinopia profiles can be pulled from another bluecore instance and written
+directly into your local database (bypassing the API). By default the
+command pulls from `https://dev.bcld.info`:
+
+```shell
+uv run bluecore load-profiles
+```
+
+To pull from a different instance, pass its host as an argument — the
+`/api/search/profile` path is appended automatically:
+
+```shell
+uv run bluecore load-profiles https://stage.bcld.info
+```
+
+Profiles are upserted by URI, so the command is safe to re-run. Use
+`--dry-run` to preview what would change without writing. This requires
+`DATABASE_URL` to point at your local Blue Core database (the same value
+used to run the API).
+
 ## 📡 HTTP Requests
 
 To talk directly to the API you will need to pass along a Keycloak access token. During development you can get one by using the included `bluecore` command line tool:
