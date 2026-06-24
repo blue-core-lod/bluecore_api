@@ -90,6 +90,24 @@ def _scalar(value: Any) -> str:
     return str(value) if value is not None else ""
 
 
+def _label_by_predicate(node: dict[str, Any]) -> str:
+    """First non-empty label on "node" whose predicate is in LABEL_PREDICATES.
+
+    Predicates are matched by local name (namespace/prefix stripped), in the
+    priority order of LABEL_PREDICATES. Returns "" if none are present.
+    """
+    by_local: dict[str, Any] = {}
+    for key, value in node.items():
+        if not key.startswith("@"):
+            by_local.setdefault(_type_localname(key), value)
+    for name in LABEL_PREDICATES:
+        if name in by_local:
+            text = _scalar(by_local[name])
+            if text:
+                return text
+    return ""
+
+
 def _label_text(node: Any) -> str:
     """Best human-readable label for a JSON-LD node."""
     if isinstance(node, str):
@@ -98,15 +116,9 @@ def _label_text(node: Any) -> str:
         return ", ".join(filter(None, (_label_text(n) for n in node)))
     if not isinstance(node, dict):
         return str(node) if node is not None else ""
-    for key in (
-        "mainTitle",
-        "rdfs:label",
-        "mads:authoritativeLabel",
-        "bflc:authoritativeLabel",
-        "label",
-    ):
-        if key in node:
-            return _scalar(node[key])
+    label = _label_by_predicate(node)
+    if label:
+        return label
     if RDF_VALUE in node:
         return _scalar(node[RDF_VALUE]).strip()
     if "code" in node:
