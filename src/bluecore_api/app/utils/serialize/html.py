@@ -20,6 +20,17 @@ from bluecore_api.app.templating import BLUECORE_URL, templates
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 
+# Predicates that carry a human-readable label, by *local name* (namespace/prefix
+# stripped), in priority order. Matching on local name means a label resolves
+# whether the data uses prefixed keys (rdfs:label, mads:authoritativeLabel), an
+# alternate prefix (madsrdf:, skos:), or fully-expanded URIs.
+LABEL_PREDICATES: tuple[str, ...] = (
+    "mainTitle",
+    "authoritativeLabel",
+    "prefLabel",
+    "label",
+)
+
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
     ("title", "Title"),
@@ -56,6 +67,27 @@ def _as_list(value: Any) -> list:
     return value if isinstance(value, list) else [value]
 
 
+def _primary_node(data: Any) -> dict[str, Any]:
+    """Return the main JSON-LD node as a dict.
+
+    Resource "data" may be a single node object, a top-level array of nodes,
+    or a "{"@graph": [...]}" wrapper. The HTML helpers expect a dict, so
+    normalize to the primary node (the first node carrying an ``@type``, else
+    the first dict) instead of letting ".get(...)" blow up on a list.
+    """
+    if isinstance(data, dict):
+        graph = data.get("@graph")
+        return _primary_node(graph) if isinstance(graph, list) else data
+    if isinstance(data, list):
+        for node in data:
+            if isinstance(node, dict) and node.get("@type"):
+                return node
+        for node in data:
+            if isinstance(node, dict):
+                return node
+    return {}
+
+
 def _scalar(value: Any) -> str:
     """Flatten a label-ish value (str, {@value}, or list) to plain text."""
     if isinstance(value, str):
@@ -69,6 +101,24 @@ def _scalar(value: Any) -> str:
     return str(value) if value is not None else ""
 
 
+def _label_by_predicate(node: dict[str, Any]) -> str:
+    """First non-empty label on "node" whose predicate is in LABEL_PREDICATES.
+
+    Predicates are matched by local name (namespace/prefix stripped), in the
+    priority order of LABEL_PREDICATES. Returns "" if none are present.
+    """
+    by_local: dict[str, Any] = {}
+    for key, value in node.items():
+        if not key.startswith("@"):
+            by_local.setdefault(_type_localname(key), value)
+    for name in LABEL_PREDICATES:
+        if name in by_local:
+            text = _scalar(by_local[name])
+            if text:
+                return text
+    return ""
+
+
 def _label_text(node: Any) -> str:
     """Best human-readable label for a JSON-LD node."""
     if isinstance(node, str):
@@ -77,15 +127,9 @@ def _label_text(node: Any) -> str:
         return ", ".join(filter(None, (_label_text(n) for n in node)))
     if not isinstance(node, dict):
         return str(node) if node is not None else ""
-    for key in (
-        "mainTitle",
-        "rdfs:label",
-        "mads:authoritativeLabel",
-        "bflc:authoritativeLabel",
-        "label",
-    ):
-        if key in node:
-            return _scalar(node[key])
+    label = _label_by_predicate(node)
+    if label:
+        return label
     if RDF_VALUE in node:
         return _scalar(node[RDF_VALUE]).strip()
     if "code" in node:
@@ -349,13 +393,14 @@ def _build_fields(
     return fields
 
 
-def _title_of(data: dict[str, Any]) -> str:
+def _title_of(data: Any) -> str:
+    node = _primary_node(data)
     return (
-        _label_text(data.get("title"))
-        or _scalar(data.get("bflc:aap", ""))
+        _label_text(node.get("title"))
+        or _scalar(node.get("bflc:aap", ""))
         # Other Resources (authorities/agents/subjects) carry no title; fall back
         # to their rdfs:label / authoritative label before the bare URI tail.
-        or _label_text(data)
+        or _label_text(node)
     )
 
 
@@ -443,7 +488,9 @@ def resource_section(resource: Instance | Work) -> str:
     Used by the search view to group authorities, vocabularies, classifications,
     hubs, etc. into their own headings. See [[_SECTION_BY_TYPE]].
     """
-    types = [_type_localname(t) for t in _as_list(resource.data.get("@type"))]
+    types = [
+        _type_localname(t) for t in _as_list(_primary_node(resource.data).get("@type"))
+    ]
     for local in types:
         if local in _SECTION_BY_TYPE:
             return _SECTION_BY_TYPE[local]

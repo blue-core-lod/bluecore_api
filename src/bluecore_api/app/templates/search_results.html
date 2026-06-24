@@ -6,72 +6,18 @@
 
 {% block page_title %}Search results{% endblock %}
 
-{####  Result List Section  ####}
-{% macro result_list(items) -%}
-    <ul class="bc-results">
-        {% for r in items %}
-            <li><a href="{{ r.uri }}">{{ r.title }}</a></li>
-        {% endfor %}
-    </ul>
-{%- endmacro %}
-
 {####  Content Block Section  ####}
 {% block content %}
     <h1 class="bc-doctype">Search results</h1>
-    <div class="top-pagination">
-        {####  Number of results ####}
-        <p class="bc-muted bc-result-num">
-            {{ total }} result{{ '' if total == 1 else 's' }}{% if search_q %} for &ldquo;{{ search_q }}&rdquo;{% endif %}
-        </p>
-
-        {####  Pagination buttons ####}
-        {% if pagination.prev_url or pagination.next_url %}
-            <nav class="bc-pager" aria-label="Search results pages">
-                {% if pagination.prev_url %}
-                    <a class="bc-pager-link" href="{{ pagination.prev_url }}">&larr; Previous</a>
-                {% else %}
-                    <span class="bc-pager-link bc-pager-disabled">&larr; Previous</span>
-                {% endif %}
-                <span class="bc-pager-status">{{ pagination.start }}&ndash;{{ pagination.end }} of {{ pagination.total }}</span>
-                {% if pagination.next_url %}
-                    <a class="bc-pager-link" href="{{ pagination.next_url }}">Next &rarr;</a>
-                {% else %}
-                    <span class="bc-pager-link bc-pager-disabled">Next &rarr;</span>
-                {% endif %}
-            </nav>
-        {% endif %}
-    </div>
-
-    {####  Search Results in list ####}
-    {% if groups is not none %}
-        {% for g in groups %}
-            <section class="bc-results-group">
-                <h2 class="bc-results-heading">{{ g.label }}</h2>
-                {{ result_list(g.results) }}
-            </section>
-        {% else %}
-            <p class="bc-muted">No results.</p>
-        {% endfor %}
-    {% elif results %}
-        {{ result_list(results) }}
+    {% if not searched %}
+        {####  Initial/empty-query landing: prompt the user to search ####}
+        <p class="bc-muted bc-search-prompt">Enter a search above to see results.</p>
     {% else %}
-        <p class="bc-muted">No results.</p>
-    {% endif %}
-
-    {####  Bottom Pagination buttons ####}
-    {% if pagination.prev_url or pagination.next_url %}
-        <nav class="bc-pager" aria-label="Search results pages">
-            {% if pagination.prev_url %}
-                <a class="bc-pager-link" href="{{ pagination.prev_url }}">&larr; Previous</a>
-            {% else %}
-                <span class="bc-pager-link bc-pager-disabled">&larr; Previous</span>
-            {% endif %}
-            <span class="bc-pager-status">{{ pagination.start }}&ndash;{{ pagination.end }} of {{ pagination.total }}</span>
-            {% if pagination.next_url %}
-                <a class="bc-pager-link" href="{{ pagination.next_url }}">Next &rarr;</a>
-            {% else %}
-                <span class="bc-pager-link bc-pager-disabled">Next &rarr;</span>
-            {% endif %}
-        </nav>
+            {###  Each search result is its own panel with independent pagination.   ###}
+            {###  Each panel is rendered by search_panel.html, which is also         ###}
+            {###  returned on its own fragment when a panel pages via JS.            ###}
+        {% for panel in panels %}
+            {% include "search_panel.html" %}
+        {% endfor %}
     {% endif %}
 {% endblock %}

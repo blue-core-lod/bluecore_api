@@ -52,6 +52,10 @@
                 <option value="instances"{% if search_type == 'instances' %} selected{% endif %}>
                     BIBFRAME Instances
                 </option>
+                {####  Search supporting Other Resources (authorities, agents, subjects)  ####}
+                <option value="other_resources"{% if search_type == 'other_resources' %} selected{% endif %}>
+                    Other Resources
+                </option>
             </select>
             <input type="search" name="q" value="{{ search_q|default('', true) }}" placeholder="Start typing…">
             <button type="submit">Search</button>
@@ -70,5 +74,7 @@
     </main>
 
 </div>
+{#### Hot-load pagination rendering for search result panels ####}
+<script defer src="{{ request.url_for('static_files', path='js/search.js') }}"></script>
 </body>
 </html>
