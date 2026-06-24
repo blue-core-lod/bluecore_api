@@ -39,6 +39,7 @@
 
     const key = section.getAttribute("data-panel");
     event.preventDefault();
+    if (section.getAttribute("aria-busy") === "true") return;
 
     const offsetParam = offsetParamFor(key);
     const linkUrl = new URL(link.getAttribute("href"), window.location.href);
