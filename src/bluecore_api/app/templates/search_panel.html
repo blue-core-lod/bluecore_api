@@ -1,0 +1,66 @@
+{################################################################################}
+{##  One search results panel (Works & Instances, Other Resources, or a        ##}
+{##  single type). Rendered both inside search_results.html and on its own as  ##}
+{##  an HTML fragment for in-place pagination updates (no full page reload).   ##}
+{################################################################################}
+
+{% macro result_list(items) -%}
+    <ul class="bc-results">
+        {% for r in items %}
+            <li><a href="{{ r.uri }}">{{ r.title }}</a></li>
+        {% endfor %}
+    </ul>
+{%- endmacro %}
+
+{####  Pagination nav for a single panel  ####}
+{% macro pager(pagination, extra_class="") -%}
+    {% if pagination.prev_url or pagination.next_url %}
+        <nav class="bc-pager {{ extra_class }}" aria-label="Search results pages">
+            {% if pagination.prev_url %}
+                <a class="bc-pager-link" href="{{ pagination.prev_url }}">&larr; Previous</a>
+            {% else %}
+                <span class="bc-pager-link bc-pager-disabled">&larr; Previous</span>
+            {% endif %}
+            <span class="bc-pager-status">{{ pagination.start }}&ndash;{{ pagination.end }} of {{ pagination.total }}</span>
+            {% if pagination.next_url %}
+                <a class="bc-pager-link" href="{{ pagination.next_url }}">Next &rarr;</a>
+            {% else %}
+                <span class="bc-pager-link bc-pager-disabled">Next &rarr;</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+{%- endmacro %}
+
+{% if panel %}
+{####  data-panel marks this as an independently-pageable region; the pagination JS swaps this whole <section> in place. ####}
+<section class="bc-results-panel" id="panel-{{ panel.key }}" data-panel="{{ panel.key }}">
+    {% if panel.title %}
+        <h2 class="bc-panel-title">{{ panel.title }}</h2>
+    {% endif %}
+
+    {% if panel.too_broad %}
+        {####  When Search exceeded its time and cancels ####}
+        <p class="bc-muted">
+            This part of your search{% if search_q %} for &ldquo;{{ search_q }}&rdquo;{% endif %} was too broad to complete. Please use a more specific query.
+        </p>
+    {% else %}
+        <div class="top-pagination">
+            <p class="bc-muted bc-result-num">
+                {{ panel.total }} result{{ '' if panel.total == 1 else 's' }}{% if search_q %} for &ldquo;{{ search_q }}&rdquo;{% endif %}
+            </p>
+            {{ pager(panel.pagination) }}
+        </div>
+
+        {% if panel.groups %}
+            {% for g in panel.groups %}
+                <section class="bc-results-group">
+                    <h3 class="bc-results-heading">{{ g.label }}</h3>
+                    {{ result_list(g.results) }}
+                </section>
+            {% endfor %}
+        {% else %}
+            <p class="bc-muted">No results.</p>
+        {% endif %}
+    {% endif %}
+</section>
+{% endif %}

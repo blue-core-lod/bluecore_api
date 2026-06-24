@@ -1,133 +1,33 @@
-import os
-import re
 from typing import Any
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse
+from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
+
+from bluecore_models.models import OtherResource, ResourceBase
+
 from bluecore_api.database import get_db
-from bluecore_api.constants import (
-    DEFAULT_SEARCH_PAGE_LENGTH,
-    SearchType,
-)
+from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH, SearchType
 from bluecore_api.schemas.schemas import (
     SearchProfileResultSchema,
     SearchResultSchema,
 )
-from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse
-from sqlalchemy import func, or_, select, Select
-from sqlalchemy.orm import noload, Session
-from urllib.parse import urlencode
-
 from bluecore_api.app.templating import templates
-from bluecore_api.app.utils.serialize.html import (
-    OTHER_SECTION_ORDER,
-    resource_section,
-    resource_title,
+from bluecore_api.app.services.search import (
+    PanelBuildSpec,
+    Panel,
+    apply_search_timeout,
+    base_select,
+    build_panel,
+    create_count_query,
+    format_query,
+    generate_links,
 )
 
-BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
-
 endpoints = APIRouter()
-
-SPACE_CONDENSER = re.compile(r"\s+")
-PHRASE_MAPPER = re.compile(r'"([^"]+)"')
-OR_MAPPER = re.compile(r"\s*\|\s*")
-COLLON_MAPPER = re.compile(r"\s*:\s*")
-INVALID_WILDCARD_MAPPER = re.compile(r"(\*\s*)+")
-PHRASE_LEADING_WILDCARD_MAPPER = re.compile(r"^(\*(__PH__)*)+")
-TRAILING_OPERATOR_MAPPER = re.compile(r"\s*(&|\|)\s*$")
-
-
-def format_query(query: str) -> str:
-    """
-    Format query
-        - Remove leading and trailing spaces.
-        - Remove invalid wildcards (e.g. "hello * world *" -> "hello world ").
-        - Combine consecutive spaces into a single space.
-        - Replace spaces inside double quotes with <-> for phrase search.
-        - Reserved characters like ':' in the phrase can cause issues with the full-text search parser.
-          Currently &, |, : characters inside quotes are escaped. Add more special characters when reported.
-        - Leave '|' sequences outside a phrase intact for OR operations.
-        - Replace spaces outside a phrase with ' & ' for AND operations.
-        - Replace '*' with ':*' for wildcard search.
-
-    Known limitations:
-        - The asterisk (*) character cannot be used as literal value of a query string.
-    """
-
-    formatted = query.strip()
-    if not formatted or formatted == "*":
-        return ""
-
-    formatted = TRAILING_OPERATOR_MAPPER.sub("", formatted)
-    formatted = INVALID_WILDCARD_MAPPER.sub("* ", formatted).replace(" * ", " ")
-    formatted = SPACE_CONDENSER.sub(" ", formatted)
-    formatted = PHRASE_MAPPER.sub(
-        lambda m: m.group(1)
-        .strip()
-        .replace("&", "\\&")
-        .replace("|", "__OR_ESCAPE__")
-        .replace(":", "__COLON_ESCAPE__")
-        .replace(" ", "__PH__"),
-        formatted,
-    )
-    formatted = PHRASE_LEADING_WILDCARD_MAPPER.sub("", formatted)
-    formatted = (
-        OR_MAPPER.sub("__OR__", formatted)
-        .replace("__OR_ESCAPE__", "\\|")
-        .replace("://", "__PROTOCOL_ESCAPE__")
-    )
-    return (
-        (
-            COLLON_MAPPER.sub(" ", formatted)
-            .replace("__PROTOCOL_ESCAPE__", "\\://")
-            .replace("__COLON_ESCAPE__", "\\:")
-        )
-        .strip()
-        .replace(" ", " & ")
-        .replace("__OR__", " | ")
-        .replace("__PH__", " <-> ")
-        .replace("*", ":*")
-    )
-
-
-def get_types(type: SearchType) -> list[SearchType]:
-    """Return a list of types based on the input type."""
-    if type == SearchType.ALL:
-        return [SearchType.WORKS, SearchType.INSTANCES]
-    else:
-        # fastapi should throw an error if the type is not recognized SearchType before getting here
-        return [type]
-
-
-def generate_links(
-    verb: str, slice_size: int, limit: int, offset: int, query: str = ""
-) -> dict[str, str | None]:
-    """
-    NOTE: Current Paging strategy used by Sinopia
-    """
-    bluecore_url = BLUECORE_URL.rstrip("/")
-    ret: dict[str, str | None] = {
-        "first": f"{bluecore_url}/api/{verb}/?limit={limit}&offset=0{query}"
-    }
-    if offset > 0:
-        ret["prev"] = (
-            f"{bluecore_url}/api/{verb}/?limit={limit}&offset={max([offset - limit, 0])}{query}"
-        )
-    if not slice_size < limit:
-        ret["next"] = (
-            f"{bluecore_url}/api/{verb}/?limit={limit}&offset={limit + offset}{query}"
-        )
-    return ret
-
-
-# Borrowed from https://github.com/uriyyo/fastapi-pagination/blob/main/fastapi_pagination/ext/sqlalchemy.py
-def create_count_query(query: Select[tuple[ResourceBase | OtherResource]]):
-    query = query.order_by(None).options(noload("*"))
-
-    return query.with_only_columns(  # type: ignore[union-attr]
-        func.count(),
-        maintain_column_froms=True,
-    )
 
 
 @endpoints.get(
@@ -152,22 +52,33 @@ async def search(
         Stop words will not be ignored and stemming will not be applied in this mode.
     Otherwise, it will use "english" language for the full-text search.
     """
-    stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
+    stmt = base_select(type)
     formatted = format_query(q)
     if formatted:
         lang: str = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
-        stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+        stmt = stmt.where(
+            search_query.op("@@")(ResourceBase.data_vector)
+        ).order_by(
+            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
+            ResourceBase.id.asc(),  # => tiebreaker so equal-ranked rows order deterministically
         )
         params: dict[str, str] = {"q": q, "type": type}
         links_query = f"&{urlencode(params)}"
     else:
         links_query = f"&type={type}"
-    count_query = create_count_query(stmt)
-    total = db.scalar(count_query)
-    stmt = stmt.offset(offset).limit(limit)
-    results = db.execute(stmt).scalars().all()
+    try:
+        apply_search_timeout(db)
+        count_query = create_count_query(stmt)
+        total = db.scalar(count_query)
+        stmt = stmt.offset(offset).limit(limit)
+        results = db.execute(stmt).scalars().all()
+    except OperationalError:
+        db.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail="Search too broad to complete. Please use a more specific query.",
+        )
     links = generate_links(
         verb="search",
         slice_size=len(results),
@@ -188,92 +99,81 @@ async def search_html(
     db: Session = Depends(get_db),
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
+    primary_offset: int = 0,
+    secondary_offset: int = 0,
     q: str = "",
     type: SearchType = SearchType.ALL,
+    partial: str = "",
 ) -> HTMLResponse:
     """Public, HTML search for BIBFRAME Works, Instances, OtherResources.
 
-    Backs the header search box (the form posts here, distinct from the
-    JSON `GET /search/`) and renders the ``search_results.html`` template.
+    Backs the header search box (the form posts here, distinct from the JSON
+    "GET /search/") and renders "search_results.html".
 
-    Unlike the JSON ``/search/`` API, an "all" search here also returns
-    OtherResources (authorities, agents, subjects)
+    An "all" search runs two independent, separately-paginated searches: a primary
+    one for Works/Instances (paged via "primary_offset") and a secondary one for
+    OtherResources (authorities, agents, subjects, etc) (paged via
+    "secondary_offset"). Splitting them avoids the expensive combined "OR" query
+    and lets each list page on its own.
+
+    "partial" (a panel "key") is set by the per-panel pagination JS to re-render
+    just that one panel as an HTML fragment, so paging one list swaps in place
+    without reloading the page or re-running the other panel's query.
     """
     formatted = format_query(q)
-    if not formatted:
-        # A blank query has no terms to match, forcing a full scan that hangs the request.
-        results: list[ResourceBase] = []
-        total = 0
-    else:
-        if type == SearchType.ALL:
-            # Include non-profile OtherResources alongside Works and Instances.
-            non_profile_others = select(OtherResource.id).where(
-                OtherResource.is_profile.is_(False)
-            )
-            stmt = select(ResourceBase).where(
-                or_(
-                    ResourceBase.type.in_([SearchType.WORKS, SearchType.INSTANCES]),
-                    ResourceBase.id.in_(non_profile_others),
-                )
-            )
-        else:
-            stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
-        lang = "simple" if "<->" in formatted else "english"
-        search_query = func.to_tsquery(lang, func.unaccent(formatted))
-        stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
-        )
-        total = db.scalar(create_count_query(stmt)) or 0
-        results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
-
-    def item(resource: ResourceBase) -> dict[str, str]:
-        return {
-            "uri": resource.uri,
-            "title": resource_title(resource),
-        }
-
-    # Results are always grouped under a labeled heading. For an "all" search,
-    # Works and Instances are pinned to the top, then OtherResources split into
-    # their own sections (Name Authorities, Subjects, Hubs, ...). A single-type
-    # search shows just that one labeled group ("Works" / "Instances").
-    groups: list[dict] = []
-    if type == SearchType.ALL:
-        works = [item(r) for r in results if isinstance(r, Work)]
-        instances = [item(r) for r in results if isinstance(r, Instance)]
-        if works:
-            groups.append({"label": "Works", "results": works})
-        if instances:
-            groups.append({"label": "Instances", "results": instances})
-
-        # Bucket OtherResources by their derived section, preserving rank order.
-        sections: dict[str, list[dict[str, str]]] = {}
-        for r in results:
-            if isinstance(r, OtherResource):
-                sections.setdefault(resource_section(r), []).append(item(r))
-        ordered = [s for s in OTHER_SECTION_ORDER if s in sections] + sorted(
-            s for s in sections if s not in OTHER_SECTION_ORDER
-        )
-        groups.extend({"label": s, "results": sections[s]} for s in ordered)
-    elif results:
-        label = "Works" if type == SearchType.WORKS else "Instances"
-        groups = [{"label": label, "results": [item(r) for r in results]}]
-
-    # Build pagination URLs from the request's root_path-aware route URL so they
-    # resolve correctly behind the reverse proxy (e.g. /api/search) and when the
-    # API is served standalone at the root.
+    # root_path-aware route URL so pagination links resolve behind the reverse
+    # proxy (e.g. /api/search) and when the API is served standalone at the root.
     base = str(request.url_for("search_html"))
+    common: dict[str, object] = {"q": q, "type": str(type), "limit": limit}
 
-    def page_url(new_offset: int) -> str:
-        params = {"q": q, "type": str(type), "limit": limit, "offset": new_offset}
-        return f"{base}?{urlencode(params)}"
+    if type == SearchType.ALL:
+        specs = [
+            PanelBuildSpec(
+                key="primary",
+                title="Works & Instances",
+                scope_type=SearchType.ALL,
+                offset_param="primary_offset",
+                offset=primary_offset,
+                sibling_offsets={"secondary_offset": secondary_offset},
+            ),
+            PanelBuildSpec(
+                key="secondary",
+                title="Other Resources",
+                scope_type=SearchType.OTHER_RESOURCES,
+                offset_param="secondary_offset",
+                offset=secondary_offset,
+                sibling_offsets={"primary_offset": primary_offset},
+            ),
+        ]
+    else:
+        specs = [
+            PanelBuildSpec(
+                key="single",
+                title=None,
+                scope_type=type,
+                offset_param="offset",
+                offset=offset,
+                sibling_offsets={},
+            )
+        ]
 
-    pagination = {
-        "start": offset + 1 if total else 0,
-        "end": offset + len(results),
-        "total": total,
-        "prev_url": page_url(max(offset - limit, 0)) if offset > 0 else None,
-        "next_url": page_url(offset + limit) if offset + len(results) < total else None,
-    }
+    # A partial request re-renders only the requested panel (and runs only its query).
+    if partial:
+        specs = [s for s in specs if s.key == partial]
+
+    panels: list[Panel] = (
+        [build_panel(db, base, common, formatted, limit, spec) for spec in specs]
+        if formatted
+        else []
+    )
+
+    if partial:
+        # Return just the panel fragment.
+        return templates.TemplateResponse(
+            request,
+            "search_panel.html",
+            {"panel": panels[0] if panels else None, "search_q": q},
+        )
 
     return templates.TemplateResponse(
         request,
@@ -283,10 +183,7 @@ async def search_html(
             "search_type": str(type),
             # the initial landing view renders a prompt instead of a "0 results"
             "searched": bool(formatted),
-            "total": total,
-            "groups": groups,
-            "results": None,
-            "pagination": pagination,
+            "panels": panels,
         },
     )
 

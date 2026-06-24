@@ -31,6 +31,7 @@ class SearchType(StringEnum):
     HUBS = "hubs"
     WORKS = "works"
     INSTANCES = "instances"
+    OTHER_RESOURCES = "other_resources"  # (authorities, agents, subjects, ...)
     ALL = "all"
 
 
