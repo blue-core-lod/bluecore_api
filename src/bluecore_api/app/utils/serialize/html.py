@@ -20,6 +20,12 @@ from bluecore_api.app.templating import BLUECORE_URL, templates
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 
+# Predicates that carry a human-readable label, by *local name* (namespace/prefix
+# stripped), in priority order. Matching on local name means a label resolves
+# whether the data uses prefixed keys (rdfs:label, mads:authoritativeLabel), an
+# alternate prefix (madsrdf:, skos:), or fully-expanded URIs.
+LABEL_PREDICATES = ("mainTitle", "authoritativeLabel", "prefLabel", "label")
+
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
     ("title", "Title"),
