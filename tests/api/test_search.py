@@ -1,4 +1,4 @@
-from bluecore_api.app.routes.search import format_query
+from bluecore_api.app.services.search import format_query
 from bluecore_api.app.utils.serialize.html import resource_section, resource_title
 from bluecore_models.models import OtherResource, Work
 from fastapi.testclient import TestClient
@@ -36,7 +36,7 @@ def test_search_helpers_tolerate_list_shaped_jsonld():
 
 def test_resource_title_resolves_labels_across_namespaces():
     # Standalone authority records (from id.loc.gov) carry their label under varied
-    # predicates: madsrdf:, skos:, or fully-expanded URIs — not just the bibframe
+    # predicates: madsrdf:, skos:, or fully-expanded URIs, not just the bibframe
     # `mads:`/`rdfs:` prefixes. All must resolve to the readable label instead of
     # falling back to the bare @id tail (e.g. "n2010185030").
     cases = {
@@ -173,6 +173,13 @@ def test_format_query():
     assert (
         format_query("trailing or operator test|") == "trailing & or & operator & test"
     )
+    # A bare "&" outside a phrase is treated as a separator (AND), not emitted as a
+    # stray operator that would make an invalid tsquery ("cat & & & mouse").
+    assert format_query("cat & mouse") == "cat & mouse"
+    assert format_query("cat&mouse") == "cat & mouse"
+    assert format_query("cat && mouse") == "cat & mouse"
+    # Escaped ampersands inside a phrase are still preserved.
+    assert format_query('"cat & mouse"') == "cat <-> \\& <-> mouse"
 
 
 test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
@@ -224,6 +231,18 @@ def test_search(client: TestClient, db_session: Session):
         result["links"]["first"]
         == "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mit&type=all"
     )
+
+
+def test_search_with_ampersand_does_not_error(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    # A literal "&" in the query used to build invalid tsquery ("cat & & & mouse")
+    # and 500. It should now be treated as a separator and run cleanly.
+    json_resp = client.get("/search/", params={"q": "cat & mouse", "type": "instances"})
+    assert json_resp.status_code == 200
+
+    html_resp = client.get("/search", params={"q": "cat & mouse", "type": "all"})
+    assert html_resp.status_code == 200
 
 
 def test_search_html(client: TestClient, db_session: Session):
@@ -558,7 +577,7 @@ def test_search_html_all_paginates_panels_independently(
 ):
     # An "all" search runs two separately-paginated searches. With a page size of 1
     # and two matches in each scope, each panel must offer its own "next" link that
-    # pages only that scope (wi_offset / or_offset) while preserving the other's.
+    # pages only that scope (primary_offset / secondary_offset), preserving the other.
     term = "alltoken"
     for i in (2, 3):
         uri = f"https://bcld.info/works/work-{i}"
@@ -589,8 +608,8 @@ def test_search_html_all_paginates_panels_independently(
     assert ">Works &amp; Instances</h2>" in body
     assert ">Other Resources</h2>" in body
     # Each panel pages on its own offset param.
-    assert "wi_offset=1" in body
-    assert "or_offset=1" in body
+    assert "primary_offset=1" in body
+    assert "secondary_offset=1" in body
 
 
 def test_search_html_partial_returns_single_panel_fragment(
@@ -620,15 +639,17 @@ def test_search_html_partial_returns_single_panel_fragment(
     )
     db_session.commit()
 
-    response = client.get("/search", params={"q": term, "type": "all", "partial": "wi"})
+    response = client.get(
+        "/search", params={"q": term, "type": "all", "partial": "primary"}
+    )
     assert response.status_code == 200
     body = response.text
     # Just the Works/Instances panel fragment...
-    assert 'data-panel="wi"' in body
+    assert 'data-panel="primary"' in body
     assert work_uri in body
     # ...not the full page, and not the other panel.
     assert "<html" not in body
-    assert 'data-panel="other"' not in body
+    assert 'data-panel="secondary"' not in body
     assert topic_uri not in body
 
 
