@@ -24,7 +24,12 @@ RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 # stripped), in priority order. Matching on local name means a label resolves
 # whether the data uses prefixed keys (rdfs:label, mads:authoritativeLabel), an
 # alternate prefix (madsrdf:, skos:), or fully-expanded URIs.
-LABEL_PREDICATES = ("mainTitle", "authoritativeLabel", "prefLabel", "label")
+LABEL_PREDICATES: tuple[str, ...] = (
+    "mainTitle",
+    "authoritativeLabel",
+    "prefLabel",
+    "label",
+)
 
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
