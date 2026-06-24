@@ -13,7 +13,7 @@ from bluecore_api.schemas.schemas import (
 from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import func, or_, select, Select, text
+from sqlalchemy import func, select, Select, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import noload, Session
 from urllib.parse import urlencode
@@ -27,24 +27,12 @@ from bluecore_api.app.utils.serialize.html import (
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
-# Hard ceiling (ms) on how long a single search query may run. A very broad query
-# (e.g. the wildcard "c*")
-SEARCH_STATEMENT_TIMEOUT_MS: int = int(
-    os.environ.get("SEARCH_STATEMENT_TIMEOUT_MS", "15000")
-)
-
 endpoints = APIRouter()
 
 
 def _apply_search_timeout(db: Session) -> None:
-    """Bound the runtime of the search queries in the current transaction.
-
-    ``SET LOCAL`` applies only to this request's transaction; when the budget is
-    exceeded Postgres raises a ``QueryCanceled`` (surfaced as ``OperationalError``)
-    that the caller catches to return a "search too broad" response.
-    """
-    if SEARCH_STATEMENT_TIMEOUT_MS > 0:
-        db.execute(text(f"SET LOCAL statement_timeout = {SEARCH_STATEMENT_TIMEOUT_MS}"))
+    """Bind the runtime of the search queries to set timeout."""
+    db.execute(text("SET LOCAL statement_timeout = 20000"))
 
 
 SPACE_CONDENSER = re.compile(r"\s+")
