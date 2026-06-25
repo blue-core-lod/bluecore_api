@@ -1,6 +1,6 @@
 import json
 
-from bluecore_models.models import Instance, Work
+from bluecore_models.models import Hub, Instance, ResourceBase, Work
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import HTTPException, Request, Response
 
@@ -12,12 +12,13 @@ from bluecore_api.app.utils.serialize.html import (
     render_instance_html,
     render_work_html,
 )
+from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.expansion import expand_resource_as_graph, expand_resource_graph
-from bluecore_api.schemas.schemas import InstanceSchema, WorkSchema
+from bluecore_api.schemas.schemas import HubSchema, InstanceSchema, WorkSchema
 
 
 def create_response(
-    doc: Instance | Work, expand: bool, format: str, return_type: str
+    doc: ResourceBase, expand: bool, format: str, return_type: str
 ) -> Response:
     graph = load_jsonld(doc.data)
     if expand:
@@ -31,8 +32,8 @@ def create_response(
 # For CBD, we always expand the full graph and don't use expand parameter
 
 
-def as_cbd_jsonld(doc: Instance | Work, expand: bool) -> Response:
-    if isinstance(doc, Work):
+def as_cbd_jsonld(doc: ResourceBase, expand: bool) -> Response:
+    if not isinstance(doc, Instance):
         raise HTTPException(
             status_code=400, detail="CBD serialization is only supported for Instances"
         )
@@ -42,8 +43,8 @@ def as_cbd_jsonld(doc: Instance | Work, expand: bool) -> Response:
     )
 
 
-def as_cbd_xml(doc: Instance | Work, expand: bool) -> Response:
-    if isinstance(doc, Work):
+def as_cbd_xml(doc: ResourceBase, expand: bool) -> Response:
+    if not isinstance(doc, Instance):
         raise HTTPException(
             status_code=400, detail="CBD serialization is only supported for Instances"
         )
@@ -60,7 +61,7 @@ def as_html(doc: Instance | Work, request: Request) -> Response:
     return render_work_html(doc, request)
 
 
-def as_jsonld(doc: Instance | Work, expand: bool) -> Response:
+def as_jsonld(doc: ResourceBase, expand: bool) -> Response:
     jsonld_content = jsonld(doc, expand)
     return Response(
         content=json.dumps(jsonld_content.data),
@@ -68,29 +69,38 @@ def as_jsonld(doc: Instance | Work, expand: bool) -> Response:
     )
 
 
-def as_ntriples(doc: Instance | Work, expand: bool) -> Response:
+def as_ntriples(doc: ResourceBase, expand: bool) -> Response:
     return create_response(doc, expand, "nt", "application/n-triples")
 
 
-def as_rdfxml(doc: Instance | Work, expand: bool) -> Response:
+def as_rdfxml(doc: ResourceBase, expand: bool) -> Response:
     return create_response(doc, expand, "xml", "application/rdf+xml")
 
 
-def as_turtle(doc: Instance | Work, expand: bool) -> Response:
+def as_turtle(doc: ResourceBase, expand: bool) -> Response:
     return create_response(doc, expand, "turtle", "text/turtle")
 
 
-def as_vnd_sinopia_json(doc: Instance | Work, expand: bool) -> Response:
+def as_vnd_sinopia_json(doc: ResourceBase, expand: bool) -> Response:
     return Response(
         content=jsonld(doc, expand).model_dump_json(),
         media_type="application/ld+json",
     )
 
 
-def jsonld(doc: Instance | Work, expand: bool) -> InstanceSchema | WorkSchema:
+def jsonld(doc: ResourceBase, expand: bool) -> HubSchema | InstanceSchema | WorkSchema:
     if expand:
         doc.data = expand_resource_graph(doc)
+    doc.data["@context"] = CONTEXT_URL
+
     if isinstance(doc, Instance):
         return InstanceSchema.model_validate(doc)
-    else:
+    elif isinstance(doc, Work):
         return WorkSchema.model_validate(doc)
+    elif isinstance(doc, Hub):
+        return HubSchema.model_validate(doc)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="JSON-LD serialization is only supported for Hubs, Works, and Instances",
+        )

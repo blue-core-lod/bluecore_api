@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 
 
@@ -34,5 +35,9 @@ class SearchType(StringEnum):
     ALL = "all"
 
 
+CONTEXT_URL = (
+    os.environ.get("BLUECORE_URL", "https://bcld.info/").rstrip("/")
+    + "/api/context.jsonld"
+)
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
 DEFAULT_SEARCH_PAGE_LENGTH = 20

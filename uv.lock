@@ -81,7 +81,7 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.18.3"
+version = "0.20.0"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
@@ -146,7 +146,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.15.0"
+version = "0.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -157,9 +157,9 @@ dependencies = [
     { name = "tenacity" },
     { name = "transformers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/19/6b/1f339b0e63ddc53eb549f454cad9ae5aa3f1856ce6f24090700d0163ac2a/bluecore_models-0.15.0.tar.gz", hash = "sha256:97d79e3402966d1707a4a96f9a16d9179b1d89532f6b0a2df13f0c03159f3c47", size = 164747, upload-time = "2026-06-17T20:43:14.651Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/4f/731c9b0f369c945b567ff9b659d8e9107a7f0c7a2889da4d4f56a41af832/bluecore_models-0.17.0.tar.gz", hash = "sha256:5ea08a434ed3925ceb61dc210b97cdd95daa69b60a390f4f73b9a90b70059377", size = 166330, upload-time = "2026-06-24T19:08:38.156Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/59/9a3565f626e36d77ca4712292ad5cdf09419009b1efd43d3f909bd155268/bluecore_models-0.15.0-py3-none-any.whl", hash = "sha256:aa13f9dafc305a350fe668e44f3ce0650ed75729929220a876db361a1925039e", size = 32052, upload-time = "2026-06-17T20:43:15.522Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/d8/dea6a14d296abe8521b6047bedb157f3f1d94676abbd27e7c0ecc61915fd/bluecore_models-0.17.0-py3-none-any.whl", hash = "sha256:ce3505dbb8194dc31de3b59b4c4eda492a53f8ebb9dc527e4426f72abfb8f395", size = 31107, upload-time = "2026-06-24T19:08:37.107Z" },
 ]
 
 [[package]]

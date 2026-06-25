@@ -1,6 +1,7 @@
+from bluecore_models.models.version import CURRENT_USER_ID
 from fastapi import FastAPI, Request
 from fastapi_keycloak_middleware import get_auth, get_user
-from bluecore_models.models.version import CURRENT_USER_ID
+
 from bluecore_api.middleware.helpers.keycloak_utils import (
     get_keycloak_user_info,
     log_user_info,
@@ -43,8 +44,10 @@ class BypassKeycloakForGet:
         "/api/",
         "/docs",
         "/api/docs",
+        "/context.jsonld",
         "/openapi.json",
         "/api/openapi.json",
+        "/api/context.jsonld",
         "/api/favicon.ico",
         "/favicon.ico",
     }

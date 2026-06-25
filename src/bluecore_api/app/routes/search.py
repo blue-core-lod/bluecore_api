@@ -1,27 +1,29 @@
 import os
 import re
 from typing import Any
-from bluecore_api.database import get_db
-from bluecore_api.constants import (
-    DEFAULT_SEARCH_PAGE_LENGTH,
-    SearchType,
-)
-from bluecore_api.schemas.schemas import (
-    SearchProfileResultSchema,
-    SearchResultSchema,
-)
+from urllib.parse import urlencode
+
 from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import func, or_, select, Select
-from sqlalchemy.orm import noload, Session
-from urllib.parse import urlencode
+from sqlalchemy import Select, func, or_, select
+from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.templating import templates
 from bluecore_api.app.utils.serialize.html import (
     OTHER_SECTION_ORDER,
     resource_section,
     resource_title,
+)
+from bluecore_api.constants import (
+    CONTEXT_URL,
+    DEFAULT_SEARCH_PAGE_LENGTH,
+    SearchType,
+)
+from bluecore_api.database import get_db
+from bluecore_api.schemas.schemas import (
+    SearchProfileResultSchema,
+    SearchResultSchema,
 )
 
 BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
@@ -168,6 +170,8 @@ async def search(
     total = db.scalar(count_query)
     stmt = stmt.offset(offset).limit(limit)
     results = db.execute(stmt).scalars().all()
+    for result in results:
+        result.data["@context"] = CONTEXT_URL
     links = generate_links(
         verb="search",
         slice_size=len(results),
@@ -221,6 +225,8 @@ async def search_html(
         )
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
+    for result in results:
+        result.data["@context"] = CONTEXT_URL
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {

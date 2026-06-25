@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
+from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import (
     filter_vector_result,
     get_db,
@@ -97,7 +98,10 @@ async def create_work(
     graph = load_jsonld(json.loads(work.data))
     result_graph = save_graph(session_maker, graph, BLUECORE_URL)
     work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
-    return db.query(Work).filter(Work.uri == work_uri).first()
+    doc = db.query(Work).filter(Work.uri == work_uri).first()
+    if doc:
+        doc.data["@context"] = CONTEXT_URL
+    return doc
 
 
 @endpoints.put(
@@ -120,6 +124,7 @@ async def update_work(
         graph = load_jsonld(json.loads(work.data))
         save_graph(session_maker, graph, BLUECORE_URL)
         db.refresh(db_work)
+        db_work.data["@context"] = CONTEXT_URL
 
     return db_work
 

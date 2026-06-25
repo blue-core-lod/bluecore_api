@@ -17,8 +17,11 @@ from bluecore_api.app.config.logging_setup import setup_logging
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
+from bluecore_models.utils.graph import CONTEXT
+
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
 from bluecore_api.app.routes.export import endpoints as export_routes
+from bluecore_api.app.routes.hubs import endpoints as hub_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
@@ -31,7 +34,6 @@ from bluecore_api.middleware.keycloak_auth import (
     set_user_context,
 )
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
-from bluecore_api.app.routes.hubs import endpoints as hub_routes
 
 """Initialize logging config"""
 setup_logging()
@@ -161,6 +163,11 @@ async def favicon():
     204 = no content; cache it so the browser won't ask again soon
     """
     return Response(status_code=204, headers={"Cache-Control": "public, max-age=86400"})
+
+
+@base_app.get("/context.jsonld")
+async def context_jsonld():
+    return CONTEXT
 
 
 mcp.mount_http()
