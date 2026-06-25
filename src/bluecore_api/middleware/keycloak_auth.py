@@ -35,38 +35,42 @@ class CompatibleFastAPI(FastAPI):
         await self._asgi_app(scope, receive, send)
 
 
+
+def _with_api_root(paths: set[str]) -> set[str]:
+    """
+    The app is served both at the root and behind NGINX's "/api" root path, so
+    every public GET path needs both forms. List each once below and let this
+    expand it to {"/docs", "/api/docs"}
+    """
+    return {form for p in paths for form in (p, f"/api{p}")}
+
+
 class BypassKeycloakForGet:
     """Add specific GET paths to bypass keycloak authentication"""
 
-    EXACT_PATHS = {
-        "/",
-        "/api/",
-        "/docs",
-        "/api/docs",
-        "/openapi.json",
-        "/api/openapi.json",
-        "/api/favicon.ico",
-        "/favicon.ico",
-    }
+    EXACT_PATHS = _with_api_root(
+        {
+            "/",
+            "/docs",
+            "/openapi.json",
+            "/favicon.ico",
+        }
+    )
 
     """Add GET path prefixes (e.g., /instances/, /works/)"""
-    PREFIX_PATHS = {
-        "/instances/",
-        "/works/",
-        "/hubs/",
-        "/resources/",
-        "/api/instances/",
-        "/api/works/",
-        "/api/hubs/",
-        "/api/resources/",
-        "/change_documents/",
-        "/api/change_documents/",
-        "/search",
-        "/api/search",
-        "/api/cbd",
-        "/api/static/",
-        "/static/",
-    }
+    PREFIX_PATHS = _with_api_root(
+        {
+            "/instances/",
+            "/works/",
+            "/hubs/",
+            "/resources/",
+            "/change_documents/",
+            "/search",
+            "/cbd",
+            "/static/",
+            "/mcp"
+        }
+    )
 
     def __init__(self, app, keycloak_middleware):
         self.inner_app = app
