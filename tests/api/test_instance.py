@@ -1,5 +1,6 @@
 import json
 import pathlib
+from typing import Any
 
 import pytest
 import rdflib
@@ -9,8 +10,10 @@ from bluecore_models.models import (
     OtherResource,
     Version,
 )
-from bluecore_models.utils.graph import BF, init_graph, load_jsonld
+from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
+
+from bluecore_api.app.utils.serialize.response_generator import CONTEXT_URL
 
 test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
 test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
@@ -69,7 +72,10 @@ def test_get_instance_sinopia_json(client, db_session):
 
     assert response.json()["uri"].startswith(test_instance_bluecore_uri)
 
-    fetched_graph = load_jsonld(response.json()["data"])
+    assert response.json()["data"]["@context"] == CONTEXT_URL
+    data = response.json()["data"]
+    data["@context"] = CONTEXT
+    fetched_graph = load_jsonld(data)
     assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
 
 
@@ -81,7 +87,10 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
         f"/instances/{test_expanded_instance_uuid}",
         headers={"Accept": "application/vnd.sinopia+json"},
     )
-    regular_instance_graph = load_jsonld(regular_instance_result.json()["data"])
+    assert regular_instance_result.json()["data"]["@context"] == CONTEXT_URL
+    data: dict[str, Any] = regular_instance_result.json()["data"]
+    data["@context"] = CONTEXT
+    regular_instance_graph = load_jsonld(data)
 
     assert len(regular_instance_graph) == 2
 
@@ -90,7 +99,9 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
         f"/instances/{test_expanded_instance_uuid}?expand=true",
         headers={"Accept": "application/vnd.sinopia+json"},
     )
-    expanded_instance_graph = load_jsonld(expanded_instance_result.json()["data"])
+    data = expanded_instance_result.json()["data"]
+    data["@context"] = CONTEXT
+    expanded_instance_graph = load_jsonld(data)
 
     assert len(expanded_instance_graph) == 5
 
@@ -98,7 +109,9 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
     expand_false_result = client.get(
         f"/instances/{test_expanded_instance_uuid}.vnd.sinopia.json?expand=false",
     )
-    expand_false_graph = load_jsonld(expand_false_result.json()["data"])
+    data = expand_false_result.json()["data"]
+    data["@context"] = CONTEXT
+    expand_false_graph = load_jsonld(data)
 
     assert len(expand_false_graph) == len(regular_instance_graph)
 
@@ -115,6 +128,7 @@ def test_get_instance_jsonld(client, db_session):
     response = client.get(f"/instances/{test_instance_uuid}.jsonld")
     assert response.status_code == 200
     assert response.json()["@id"] == test_instance_bluecore_uri
+    assert response.json()["@context"] == CONTEXT_URL
 
 
 def test_get_instance_json(client, db_session):
@@ -126,9 +140,10 @@ def test_get_instance_json(client, db_session):
     assert response.status_code == 200
     assert response.json()["@id"] == test_instance_bluecore_uri
 
-    response = client.get(f"/instances/{test_instance_uuid}.jsonld")
+    response = client.get(f"/instances/{test_instance_uuid}.json")
     assert response.status_code == 200
     assert response.json()["@id"] == test_instance_bluecore_uri
+    assert response.json()["@context"] == CONTEXT_URL
 
 
 def test_get_instance_rdf_xml(client, db_session):
@@ -208,8 +223,10 @@ def test_create_instance(client):
     }
     response = client.post("/instances/", headers={"X-User": "cataloger"}, json=payload)
     assert response.status_code == 201
-    data = response.json()
+    data: dict[str, Any] = response.json()
     new_graph = init_graph()
+    assert data["data"]["@context"] == CONTEXT_URL
+    data["data"]["@context"] = CONTEXT
     new_graph.parse(data=data["data"], format="json-ld")
 
     assert len(original_graph) != len(new_graph)
@@ -243,13 +260,14 @@ def test_update_instance(client, db_session):
         },
     )
     assert create_response.status_code == 201
+    data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    data["data"]["@context"] = CONTEXT
 
-    instance_uri = rdflib.URIRef(create_response.json()["uri"])
-    instance_uuid = create_response.json()["uri"].split("/")[-1]
+    instance_uri = rdflib.URIRef(data["uri"])
+    instance_uuid = data["uri"].split("/")[-1]
     instance_graph = init_graph()
-    instance_graph.parse(
-        data=json.dumps(create_response.json()["data"]), format="json-ld"
-    )
+    instance_graph.parse(data=json.dumps(data["data"]), format="json-ld")
 
     # Updates Graph
     new_oclc_number = rdflib.BNode()
@@ -265,10 +283,13 @@ def test_update_instance(client, db_session):
         json={"data": instance_graph.serialize(format="json-ld")},
     )
     assert put_response.status_code == 200
+    assert put_response.json()["data"]["@context"] == CONTEXT_URL
 
     # Retrieve Instance
     get_response = client.get(f"/instances/{instance_uuid}.vnd.sinopia.json")
     payload = get_response.json()
+    assert payload["data"]["@context"] == CONTEXT_URL
+    payload["data"]["@context"] = CONTEXT
     new_instance_graph = init_graph()
     new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")
     oclc_number = new_instance_graph.value(

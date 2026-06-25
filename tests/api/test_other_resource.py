@@ -2,9 +2,10 @@ import json
 
 import pytest
 import rdflib
-
 from bluecore_models.models import OtherResource
-from bluecore_models.utils.graph import init_graph
+from bluecore_models.utils.graph import CONTEXT, init_graph
+
+from bluecore_api.constants import CONTEXT_URL
 
 
 @pytest.fixture
@@ -28,7 +29,9 @@ def test_read_other_resource(client, db_session, other_graph):
     )
     response = client.get("/resources/3")
     assert response.status_code == 200
-    assert response.json()["uri"] == "http://id.loc.gov/vocabulary/mstatus/u"
+    data = response.json()
+    assert data["uri"] == "http://id.loc.gov/vocabulary/mstatus/u"
+    assert data["data"]["@context"] == CONTEXT_URL
 
 
 def test_create_other_resource(client, other_graph):
@@ -42,10 +45,11 @@ def test_create_other_resource(client, other_graph):
     )
 
     assert create_resource_response.status_code == 201
+    data = create_resource_response.json()["data"]
+    assert data["@context"] == CONTEXT_URL
+    data["@context"] = CONTEXT
     other_resource_graph = init_graph()
-    other_resource_graph.parse(
-        data=json.dumps(create_resource_response.json()["data"]), format="json-ld"
-    )
+    other_resource_graph.parse(data=json.dumps(data), format="json-ld")
     assert len(other_resource_graph) == len(other_graph)
 
 
@@ -81,8 +85,11 @@ def test_update_other_resource(client, db_session, other_graph):
     get_response = client.get("/resources/3")
     assert get_response.status_code == 200
 
+    data = get_response.json()["data"]
+    assert data["@context"] == CONTEXT_URL
+    data["@context"] = CONTEXT
     new_graph = init_graph()
-    new_graph.parse(data=json.dumps(get_response.json()["data"]), format="json-ld")
+    new_graph.parse(data=json.dumps(data), format="json-ld")
 
     label = new_graph.value(subject=unknown_uri, predicate=rdflib.RDFS.label)
     assert str(label).startswith("Status of the resource is unknown")

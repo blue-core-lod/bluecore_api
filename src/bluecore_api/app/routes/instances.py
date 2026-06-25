@@ -16,6 +16,7 @@ from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import (
     serialize,
 )
+from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import (
     filter_vector_result,
     get_db,
@@ -114,7 +115,12 @@ async def create_instance(
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
     result_graph = save_graph(session_maker, graph, BLUECORE_URL)
     instance_uri = str(next(result_graph.subjects(RDF.type, BF.Instance)))
-    return db.query(Instance).filter(Instance.uri == instance_uri).first()
+
+    doc = db.query(Instance).filter(Instance.uri == instance_uri).first()
+
+    if doc:
+        doc.data["@context"] = CONTEXT_URL
+    return doc
 
 
 @endpoints.put(
@@ -148,6 +154,8 @@ async def update_instance(
             graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
         save_graph(session_maker, graph, BLUECORE_URL)
         db.refresh(db_instance)
+
+        db_instance.data["@context"] = CONTEXT_URL
 
     return db_instance
 
