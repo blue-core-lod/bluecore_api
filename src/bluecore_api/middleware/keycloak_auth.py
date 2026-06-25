@@ -35,7 +35,6 @@ class CompatibleFastAPI(FastAPI):
         await self._asgi_app(scope, receive, send)
 
 
-
 def _with_api_root(paths: set[str]) -> set[str]:
     """
     The app is served both at the root and behind NGINX's "/api" root path, so
@@ -68,7 +67,7 @@ class BypassKeycloakForGet:
             "/search",
             "/cbd",
             "/static/",
-            "/mcp"
+            "/mcp",
         }
     )
 
