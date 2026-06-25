@@ -48,29 +48,15 @@ def _with_api_root(paths: set[str]) -> set[str]:
 class BypassKeycloakForGet:
     """Add specific GET paths to bypass keycloak authentication"""
 
-<<<<<<< m81-context
-    EXACT_PATHS = {
-        "/",
-        "/api/",
-        "/docs",
-        "/api/docs",
-        "/context.jsonld",
-        "/openapi.json",
-        "/api/openapi.json",
-        "/api/context.jsonld",
-        "/api/favicon.ico",
-        "/favicon.ico",
-    }
-=======
     EXACT_PATHS = _with_api_root(
         {
             "/",
             "/docs",
+            "/context.jsonld",
             "/openapi.json",
             "/favicon.ico",
         }
     )
->>>>>>> main
 
     """Add GET path prefixes (e.g., /instances/, /works/)"""
     PREFIX_PATHS = _with_api_root(
