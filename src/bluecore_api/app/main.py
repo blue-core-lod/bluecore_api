@@ -3,7 +3,7 @@ import sys
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
@@ -167,7 +167,8 @@ async def favicon():
 
 @base_app.get("/context.jsonld")
 async def context_jsonld():
-    return CONTEXT
+    # Sinopia rejects both a bare mapping anda non-JSON-LD media type.
+    return JSONResponse({"@context": CONTEXT}, media_type="application/ld+json")
 
 
 mcp.mount_http()
