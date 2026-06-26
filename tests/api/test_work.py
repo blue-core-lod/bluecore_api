@@ -196,7 +196,7 @@ def test_get_work_html(client, db_session):
 # cbd requires work & instance and will be tested in test_cbd.py
 
 
-def test_create_work(client, mocker):
+def test_create_work(client, mocker, derived_from_sparql):
     original_graph = init_graph()
     original_graph.parse(
         data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
@@ -219,8 +219,9 @@ def test_create_work(client, mocker):
 
     assert len(original_graph) != len(new_graph)
 
-    new_work_uri = rdflib.URIRef(data["uri"])
-    derived_from = new_graph.value(subject=new_work_uri, predicate=BF.derivedFrom)
+    results = new_graph.query(derived_from_sparql)
+
+    derived_from = results.bindings[0]["derived_from"]
 
     assert str(derived_from).startswith(
         "https://api.sinopia.io/resources/370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
