@@ -250,6 +250,20 @@ def test_create_instance(client, derived_from_sparql):
     )
 
 
+def test_create_instance_without_work_id(client, derived_from_sparql):
+    """The editor omits work_id entirely when saving a standalone instance;
+    work_id is optional, so this must not 422."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
+        format="json-ld",
+    )
+    # Note: no "work_id" key at all.
+    payload = {"data": original_graph.serialize(format="json-ld")}
+    response = client.post("/instances/", headers={"X-User": "cataloger"}, json=payload)
+    assert response.status_code == 201
+
+
 def test_update_instance(client, db_session):
     create_response = client.post(
         "/instances/",

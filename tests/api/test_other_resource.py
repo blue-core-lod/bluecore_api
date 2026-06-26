@@ -95,28 +95,6 @@ def test_update_other_resource(client, db_session, other_graph):
     assert str(label).startswith("Status of the resource is unknown")
 
 
-def test_json_other_resource(client):
-    document = {"id": "abcd456efg", "label": "An Example JSON Profile"}
-
-    create_response = client.post(
-        "/resources/",
-        headers={"X-User": "cataloger"},
-        json={"is_profile": True, "data": json.dumps(document)},
-    )
-
-    assert create_response.status_code == 201
-
-    get_response = client.get("/resources/1")
-
-    assert get_response.status_code == 200
-
-    assert get_response.json()["is_profile"]
-
-    retrieved_document = get_response.json()["data"]
-
-    assert document == retrieved_document
-
-
 def test_read_other_resource_by_uri(client, db_session, other_graph):
     external_uri = "http://id.loc.gov/vocabulary/mstatus/u"
     db_session.add(

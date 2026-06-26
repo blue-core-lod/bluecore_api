@@ -26,7 +26,7 @@ class ResourceBaseSchema(BaseModel):
 
 
 class InstanceCreateSchema(BaseModel):
-    work_id: Optional[int]
+    work_id: Optional[int] = None
     data: str
 
 
@@ -52,19 +52,33 @@ class OtherResourceSchema(BaseModel):
     id: int
     data: Dict[str, Any] | List[Any]
     uri: Optional[str] = None
-    is_profile: bool
 
 
 class OtherResourceCreateSchema(BaseModel):
     data: str
     uri: Optional[str] = None
-    is_profile: bool = False
 
 
 class OtherResourceUpdateSchema(BaseModel):
     data: Optional[str] = None
     uri: Optional[str] = None
-    is_profile: Optional[bool] = None
+
+
+class ProfileSchema(BaseModel):
+    id: int
+    uuid: Optional[UUID] = None
+    uri: Optional[str] = None
+    data: Dict[str, Any] | List[Any]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProfileCreateSchema(BaseModel):
+    data: str
+
+
+class ProfileUpdateSchema(BaseModel):
+    data: Optional[str] = None
 
 
 class HubCreateSchema(BaseModel):
@@ -132,7 +146,7 @@ class SearchResultSchema(BaseModel):
 
 
 class SearchProfileResultSchema(BaseModel):
-    results: Sequence[OtherResourceSchema]
+    results: Sequence[ProfileSchema]
     links: LinksSchema
     total: int
 

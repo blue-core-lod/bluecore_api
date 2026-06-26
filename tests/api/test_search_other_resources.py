@@ -1,6 +1,6 @@
 """HTML search grouping of OtherResources into per-type sections."""
 
-from bluecore_models.models import OtherResource
+from bluecore_models.models import OtherResource, Profile
 
 BF = "http://id.loc.gov/ontologies/bibframe/"
 RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
@@ -17,13 +17,12 @@ def _authority(uri: str, bf_type: str, label: str) -> list[dict]:
     ]
 
 
-def _add(db_session, id_, bf_type, slug, is_profile=False):
+def _add(db_session, id_, bf_type, slug):
     uri = f"https://id.loc.gov/x/{slug}"
     db_session.add(
         OtherResource(
             id=id_,
             uri=uri,
-            is_profile=is_profile,
             data=_authority(uri, bf_type, f"{TOKEN} {slug}"),
         )
     )
@@ -36,7 +35,15 @@ def test_other_resources_grouped_into_sections(client, db_session):
     hub = _add(db_session, 6003, "Hub", "a-hub")
     classif = _add(db_session, 6004, "Classification", "a-class")
     lang = _add(db_session, 6005, "Language", "a-lang")
-    profile = _add(db_session, 6006, "Person", "a-profile", is_profile=True)
+    # A Profile should never surface in the resource search.
+    profile_uri = "https://id.loc.gov/x/a-profile"
+    db_session.add(
+        Profile(
+            id=6006,
+            uri=profile_uri,
+            data=_authority(profile_uri, "Person", f"{TOKEN} a-profile"),
+        )
+    )
     db_session.commit()
 
     resp = client.get("/search", params={"q": TOKEN, "type": "all"})
@@ -53,10 +60,10 @@ def test_other_resources_grouped_into_sections(client, db_session):
     ]:
         assert f">{heading}</h2>" in body, heading
 
-    # Links present for the non-profile authorities, absent for the profile.
+    # Links present for the OtherResource authorities, absent for the profile.
     for uri in (person, topic, hub, classif, lang):
         assert f'href="{uri}"' in body, uri
-    assert f'href="{profile}"' not in body
+    assert f'href="{profile_uri}"' not in body
 
     # Section order: Name Authorities before Subjects before Hubs (per OTHER_SECTION_ORDER).
     assert body.index("Name Authorities") < body.index("Subjects") < body.index("Hubs")

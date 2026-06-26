@@ -25,6 +25,7 @@ from bluecore_api.app.routes.export import endpoints as export_routes
 from bluecore_api.app.routes.hubs import endpoints as hub_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
+from bluecore_api.app.routes.profiles import endpoints as profile_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.change_documents.routes import change_documents
@@ -47,7 +48,11 @@ openapi_tags = [
     {"name": "Instances", "description": "BIBFRAME Instances belonging to a Work."},
     {
         "name": "Resources",
-        "description": "JSON or JSON-LD resources used to support Work and Instances.",
+        "description": "JSON-LD resources used to support Work and Instances.",
+    },
+    {
+        "name": "Profiles",
+        "description": "Resource profiles (e.g. Sinopia profiles) used to drive editing.",
     },
     {
         "name": "Search",
@@ -76,6 +81,7 @@ base_app.include_router(hub_routes, tags=["Hubs"])
 base_app.include_router(work_routes, tags=["Works"])
 base_app.include_router(instance_routes, tags=["Instances"])
 base_app.include_router(resource_routes, tags=["Resources"])
+base_app.include_router(profile_routes, tags=["Profiles"])
 base_app.include_router(search_routes, tags=["Search"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])

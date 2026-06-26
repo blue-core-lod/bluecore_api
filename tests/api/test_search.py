@@ -1,5 +1,5 @@
 from bluecore_api.app.routes.search import format_query
-from bluecore_models.models import OtherResource, Work
+from bluecore_models.models import Profile, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 import json
@@ -134,19 +134,17 @@ def add_data(db_session: Session):
     )
 
 
-def add_other_resources(db_session: Session):
+def add_profiles(db_session: Session):
     eng = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
     kor = json.load(pathlib.Path("tests/blue-core-other-resources2.json").open())
     db_session.add(
-        OtherResource(
-            is_profile=True,
+        Profile(
             uri="https://api.sinopia.io/profiles/test-profile",
             data=eng,
         ),
     )
     db_session.add(
-        OtherResource(
-            is_profile=True,
+        Profile(
             uri="https://api.sinopia.io/profiles/test-profile2",
             data=kor,
         ),
@@ -315,7 +313,7 @@ def test_search_profile_no_match(client: TestClient, db_session: Session):
 
 
 def test_search_profile(client: TestClient, db_session: Session):
-    add_other_resources(db_session)
+    add_profiles(db_session)
 
     response = client.get(
         "/search/profile", params={"q": "id.loc.gov/ontologies/bibframe/language"}
@@ -331,7 +329,7 @@ def test_search_profile(client: TestClient, db_session: Session):
 
 
 def test_search_profile_limit(client: TestClient, db_session: Session):
-    add_other_resources(db_session)
+    add_profiles(db_session)
 
     response = client.get(
         "/search/profile",

@@ -122,8 +122,6 @@ def _build_label_map(resource: Instance | Work) -> dict[str, str]:
     graph = Graph()
     for row in resource.other_resources:
         other = row.other_resource
-        if getattr(other, "is_profile", False):
-            continue
         try:
             graph += load_jsonld(other.data)
         except Exception:
