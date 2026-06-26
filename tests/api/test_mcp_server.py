@@ -20,6 +20,11 @@ def _fresh_mcp_transport():
 def test_mcp_get_is_public(keycloak_client):
     """GET /mcp is public (no auth) and reaches the MCP app."""
     response = keycloak_client.get("/mcp")
+    # 406 is the EXPECTED success signal here, not a failure: the GET cleared auth
+    # (BypassKeycloakForGet let it through) and reached the MCP app, which then
+    # rejected the bare request because MCP's SSE transport requires
+    # `Accept: text/event-stream`. The JSON-RPC -32600 below confirms the response
+    # came from MCP itself. (If /mcp were NOT public, Keycloak would return 401.)
     assert response.status_code == 406
     assert response.json()["error"]["code"] == -32600
 
