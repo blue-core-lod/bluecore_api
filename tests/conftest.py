@@ -180,6 +180,44 @@ def client(mocker, db_session, app):
     Base.metadata.drop_all(bind=db_session.get_bind())
 
 
+class _StubKeycloak:
+    """
+    Stand-in for the external Keycloak Server.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if dict(scope.get("headers") or ()).get(b"x-user"):
+            await self.app(scope, receive, send)
+        else:
+            from fastapi.responses import JSONResponse
+
+            await JSONResponse({"detail": "Not authenticated"}, status_code=401)(
+                scope, receive, send
+            )
+
+
+@pytest.fixture
+def keycloak_client(app):
+    """
+    TestClient that routes through "BypassKeycloakForGet" wrapper.
+    """
+    from bluecore_api.middleware.keycloak_auth import BypassKeycloakForGet
+
+    bypass = BypassKeycloakForGet(app=app, keycloak_middleware=_StubKeycloak(app))
+
+    async def stack(scope, receive, send):
+        if scope["type"] == "http":
+            await bypass(scope, receive, send)
+        else:
+            await app(scope, receive, send)
+
+    with TestClient(stack) as kk_client:
+        yield kk_client
+
+
 @pytest.fixture
 def vector_client():
     # bluecore_api.database.get_vector_client() is configured to use this

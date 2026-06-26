@@ -1,11 +1,13 @@
 import json
 import pathlib
+
 import pytest
 import rdflib
-
 from bluecore_models.models import BibframeOtherResources, Hub, OtherResource, Version
-from bluecore_models.utils.graph import init_graph, load_jsonld, BF
+from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
+
+from bluecore_api.constants import CONTEXT_URL
 
 
 def test_get_hub(client, db_session):
@@ -23,12 +25,16 @@ def test_get_hub(client, db_session):
         )
     )
 
-    response = client.get(f"/hubs/{test_hub_uuid}")
+    response = client.get(
+        f"/hubs/{test_hub_uuid}", headers={"Accept": "application/vnd.sinopia+json"}
+    )
 
     assert response.status_code == 200
     data = response.json()
 
     assert data["uri"].startswith(test_hub_uri)
+    assert data["data"]["@context"] == CONTEXT_URL
+    data["data"]["@context"] = CONTEXT
 
     fetched_graph = load_jsonld(data["data"])
     assert len(fetched_graph) == len(orig_graph)
@@ -63,13 +69,20 @@ def test_get_expanded_hub(client, db_session):
     db_session.add(bf_other_resource)
     db_session.commit()
 
-    regular_response = client.get(f"/hubs/{hub_uuid}")
-    regular_graph = load_jsonld(regular_response.json()["data"])
+    regular_response = client.get(f"/hubs/{hub_uuid}.vnd.sinopia.json")
+    data = regular_response.json()["data"]
+    assert data["@context"] == CONTEXT_URL
+    data["@context"] = CONTEXT
+
+    regular_graph = load_jsonld(data)
 
     assert len(regular_graph) == 2
 
     expanded_response = client.get(f"/hubs/{hub_uuid}?expand=true")
-    expanded_graph = load_jsonld(expanded_response.json()["data"])
+    data = expanded_response.json()
+    assert data["@context"] == CONTEXT_URL
+    data["@context"] = CONTEXT
+    expanded_graph = load_jsonld(data)
 
     assert len(expanded_graph) == 5
 
@@ -89,6 +102,8 @@ def test_create_hub(client, mocker):
 
     assert create_response.status_code == 201
     data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    data["data"]["@context"] = CONTEXT
     new_graph = init_graph()
     new_graph.parse(data=data["data"], format="json-ld")
 
@@ -118,9 +133,12 @@ def test_update_hub(client, db_session):
 
     assert create_response.status_code == 201
 
-    hub_uri = rdflib.URIRef(create_response.json()["uri"])
+    data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    data["data"]["@context"] = CONTEXT
+    hub_uri = rdflib.URIRef(data["uri"])
     hub_graph = init_graph()
-    data_str = json.dumps(create_response.json()["data"])
+    data_str = json.dumps(data["data"])
     hub_graph.parse(data=data_str, format="json-ld")
 
     hub_graph.add(
@@ -139,9 +157,10 @@ def test_update_hub(client, db_session):
 
     assert update_response.status_code == 200
 
-    get_response = client.get(f"/hubs/{hub_uuid}")
+    get_response = client.get(f"/hubs/{hub_uuid}.vnd.sinopia.json")
     assert get_response.status_code == 200
     data = get_response.json()
+    data["data"]["@context"] = CONTEXT
 
     updated_hub_graph = init_graph()
     updated_hub_graph.parse(data=data["data"], format="json-ld")

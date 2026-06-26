@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import load_jsonld
+from bluecore_models.utils.graph import CONTEXT, load_jsonld
 from fastapi import HTTPException
 from lxml import etree
 from rdflib import Graph, Namespace
@@ -63,6 +63,8 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     # The xml serialization uses the first @type to determine the root element
     # Make sure 'Work' is the first in the list of types for the work
     work.data = reorder_work_types(work.data)
+    # Add context as we are not calling load_jsonld on the work data
+    work.data["@context"] = CONTEXT
     instance_graph.parse(data=json.dumps(work.data), format="json-ld")
     instance_graph = expand_resource_as_graph(work, instance_graph)
 
@@ -71,6 +73,7 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     for related_instance in work.instances:
         if uuid != str(related_instance.uuid):
             related_instance.data = reorder_instance_types(related_instance.data)
+            related_instance.data["@context"] = CONTEXT
             instance_graph.parse(
                 data=json.dumps(related_instance.data), format="json-ld"
             )

@@ -1,24 +1,28 @@
 import os
 import sys
 
-from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi_keycloak_middleware import (
     AuthorizationMethod,
     CheckPermissions,
     KeycloakConfiguration,
     KeycloakMiddleware,
+    MatchStrategy,
+    get_auth,
 )
-from fastapi_keycloak_middleware.schemas.match_strategy import MatchStrategy
 from fastapi_mcp import AuthConfig, FastApiMCP
 
 from bluecore_api.app.config.logging_setup import setup_logging
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
+from bluecore_models.utils.graph import CONTEXT
+
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
 from bluecore_api.app.routes.export import endpoints as export_routes
+from bluecore_api.app.routes.hubs import endpoints as hub_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
@@ -31,7 +35,6 @@ from bluecore_api.middleware.keycloak_auth import (
     set_user_context,
 )
 from bluecore_api.middleware.redirect_headers import RedirectLocationMiddleware
-from bluecore_api.app.routes.hubs import endpoints as hub_routes
 
 """Initialize logging config"""
 setup_logging()
@@ -77,6 +80,29 @@ base_app.include_router(search_routes, tags=["Search"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])
 base_app.include_router(export_routes, tags=["Export"])
+
+# MCP write methods require a create/update permission
+_mcp_write_permission = CheckPermissions(
+    ["create", "update"], match_strategy=MatchStrategy.OR
+)
+
+
+async def mcp_permissions(request: Request, auth=Depends(get_auth)):
+    """
+    Auth for the MCP mount.
+    GET /mcp (the SSE/discovery stream) is public it's and bypassed upstream by
+    BypassKeycloakForGet, so get_auth is None here
+    """
+    if request.method == "GET":
+        return
+    _mcp_write_permission(user=None, auth=auth or [])
+
+
+mcp = FastApiMCP(
+    base_app,
+    auth_config=AuthConfig(dependencies=[Depends(mcp_permissions)]),
+)
+mcp.mount_http()
 
 # Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
@@ -136,17 +162,6 @@ base_app.add_middleware(
     allow_headers=["*"],
 )
 
-mcp = FastApiMCP(
-    base_app,
-    auth_config=AuthConfig(
-        dependencies=[
-            Depends(
-                CheckPermissions(["create", "update"], match_strategy=MatchStrategy.OR)
-            )
-        ]
-    ),
-)
-
 
 @base_app.get("/")
 async def index():
@@ -163,4 +178,7 @@ async def favicon():
     return Response(status_code=204, headers={"Cache-Control": "public, max-age=86400"})
 
 
-mcp.mount_http()
+@base_app.get("/context.jsonld")
+async def context_jsonld():
+    # Sinopia rejects both a bare mapping anda non-JSON-LD media type.
+    return JSONResponse({"@context": CONTEXT}, media_type="application/ld+json")

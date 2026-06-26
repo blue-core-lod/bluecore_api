@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from bluecore_models.models import OtherResource, ResourceBase
 
 from bluecore_api.database import get_db
-from bluecore_api.constants import DEFAULT_SEARCH_PAGE_LENGTH, SearchType
+from bluecore_api.constants import CONTEXT_URL, DEFAULT_SEARCH_PAGE_LENGTH, SearchType
 from bluecore_api.schemas.schemas import (
     SearchProfileResultSchema,
     SearchResultSchema,
@@ -79,6 +79,10 @@ async def search(
             status_code=422,
             detail="Search too broad to complete. Please use a more specific query.",
         )
+    # Point the returned JSON-LD at the dereferenceable context document so
+    # consumers (e.g. Sinopia) can resolve it (matches works/instances/hubs).
+    for result in results:
+        result.data["@context"] = CONTEXT_URL
     links = generate_links(
         verb="search",
         slice_size=len(results),
