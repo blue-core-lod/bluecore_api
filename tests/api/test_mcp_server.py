@@ -20,22 +20,25 @@ def _fresh_mcp_transport():
 def test_mcp_get_is_public(client):
     """GET /mcp is public (no auth) and reaches the MCP app."""
     response = client.get("/mcp")
+def test_mcp_get_is_public(keycloak_client):
+    response = keycloak_client.get("/mcp")
     assert response.status_code == 406
+    assert response.json()["error"]["code"] == -32600
 
 
-def test_mcp_endpoint_post_without_auth(client):
-    """Test that MCP endpoint requires authentication for POST requests."""
+def test_mcp_post_without_auth_is_rejected_by_keycloak(keycloak_client):
+    """Anonymous POST /mcp is not bypassed, so Keycloak rejects it with 401."""
     payload = {"jsonrpc": "2.0", "method": "initialize", "params": {}, "id": 1}
-    response = client.post("/mcp", json=payload)
-    # Should fail without proper authentication (create/update permissions)
-    assert response.status_code == 403
+    response = keycloak_client.post("/mcp", json=payload)
+    assert response.status_code == 401
 
 
 def test_mcp_without_required_permissions(client):
     """Test that MCP access is denied without create/update permissions."""
+def test_mcp_without_required_permissions(keycloak_client):
     payload = {"jsonrpc": "2.0", "method": "initialize", "params": {}, "id": 1}
     headers = {"X-User": "public"}  # public user has no special roles
-    response = client.post("/mcp", json=payload, headers=headers)
+    response = keycloak_client.post("/mcp", json=payload, headers=headers)
     # Should be denied without required permissions
     assert response.status_code == 403
 
@@ -44,6 +47,7 @@ def test_mcp_post_with_permissions_clears_gate(client):
     """
     POST /mcp as a create/update user passes the keyclaok auth and reaches the MCP app.
     """
+def test_mcp_post_with_permissions_clears_gate(keycloak_client):
     payload = {
         "jsonrpc": "2.0",
         "method": "initialize",
@@ -58,7 +62,7 @@ def test_mcp_post_with_permissions_clears_gate(client):
         "X-User": "cataloger",
         "Accept": "application/json, text/event-stream",
     }
-    response = client.post("/mcp", json=payload, headers=headers)
+    response = keycloak_client.post("/mcp", json=payload, headers=headers)
     assert response.status_code == 200
 
 
