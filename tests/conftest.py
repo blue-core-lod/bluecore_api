@@ -5,6 +5,22 @@ from pathlib import Path
 
 import pytest
 import pytest_asyncio
+
+import os
+
+from pytest_mock_resources import (
+    PostgresConfig,
+    StaticStatements,
+    create_postgres_fixture,
+)
+
+from fastapi import Request
+from fastapi.testclient import TestClient
+from fastapi_keycloak_middleware import get_auth, get_user
+from httpx import ASGITransport, AsyncClient
+
+from contextlib import contextmanager
+
 from bluecore_models.models import (
     Base,
     BibframeClass,
@@ -19,17 +35,6 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
-from bluecore_models.utils.vector_db import init_collections
-from fastapi import Request
-from fastapi.testclient import TestClient
-from fastapi_keycloak_middleware import FastApiUser, get_auth, get_user
-from httpx import ASGITransport, AsyncClient
-from pymilvus import MilvusClient
-from pytest_mock_resources import (
-    PostgresConfig,
-    StaticStatements,
-    create_postgres_fixture,
-)
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
@@ -216,42 +221,3 @@ def keycloak_client(app):
 
     with TestClient(stack) as kk_client:
         yield kk_client
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _clean_vector_db():
-    # Remove any test-vector.db left over from a previous run before the session starts. Starting from a fresh db
-    # guarantees the collections are (re)created and loaded cleanly each session.
-    db_path = Path("test-vector.db")
-    if db_path.exists():
-        shutil.rmtree(db_path)
-    yield
-
-
-@pytest.fixture
-def vector_client():
-    # bluecore_api.database.get_vector_client() is configured to use this
-    # milvus database when MILVUS_URI is not set
-    client = MilvusClient("test-vector.db")
-    init_collections(client)
-
-    # With a persistent test-vector.db, MilvusLite can recycle its server mid-session and leave existing collections in
-    # a 'released' state, which makes subsequent search/get/query calls fail. Explicitly load them so they're always
-    # queryable regardless of what's persisted on disk.
-    for collection_name in ("works", "instances", "hubs"):
-        client.load_collection(collection_name)
-
-    yield client
-
-    # on tear down empty collections for the next tests
-    client.delete(collection_name="hubs", filter="version == 1")
-    client.delete(collection_name="instances", filter="version == 1")
-    client.delete(collection_name="works", filter="version == 1")
-
-
-@pytest.fixture(scope="session")
-def derived_from_sparql():
-    return """prefix bf: <http://id.loc.gov/ontologies/bibframe/>
-SELECT ?derived_from WHERE {
-  ?admin_metadata bf:derivedFrom ?derived_from .
-}"""

@@ -99,7 +99,6 @@ dependencies = [
     { name = "lxml" },
     { name = "pgvector" },
     { name = "psycopg2-binary" },
-    { name = "pymilvus" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "rdflib" },
@@ -110,7 +109,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "lxml-stubs" },
-    { name = "pymilvus", extra = ["milvus-lite"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-httpx" },
@@ -130,7 +128,6 @@ requires-dist = [
     { name = "lxml", specifier = ">=6.0.2" },
     { name = "pgvector" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
-    { name = "pymilvus", specifier = ">=2.5.14" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rdflib", specifier = ">=7.1.3" },
@@ -141,7 +138,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "lxml-stubs", specifier = ">=0.5.1" },
-    { name = "pymilvus", extras = ["milvus-lite"], specifier = ">=2.6.2" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-httpx", specifier = ">=0.35.0" },
