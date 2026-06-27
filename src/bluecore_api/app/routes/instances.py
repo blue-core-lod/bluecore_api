@@ -5,10 +5,8 @@ from pathlib import Path
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Instance, Work
 from bluecore_models.utils.graph import BF, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
-from pymilvus import MilvusClient
 from rdflib import RDF, URIRef
 from sqlalchemy.orm import Session
 
@@ -18,14 +16,11 @@ from bluecore_api.app.utils.serializer import (
 )
 from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import (
-    filter_vector_result,
     get_db,
     get_session_maker,
-    get_vector_client,
 )
 from bluecore_api.schemas.schemas import (
     InstanceCreateSchema,
-    InstanceEmbeddingSchema,
     InstanceSchema,
     InstanceUpdateSchema,
 )
@@ -63,32 +58,6 @@ async def read_instance(
     # No recognized format, return the default HTML serialization
     return as_html(db_instance, request)
 
-
-@endpoints.get(
-    "/instances/{instance_uuid}/embeddings",
-    response_model=InstanceEmbeddingSchema,
-    operation_id="get_instance_embedding",
-)
-async def get_embedding(
-    instance_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client: MilvusClient = Depends(get_vector_client),
-):
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
-
-    if db_instance is None:
-        raise HTTPException(status_code=404, detail="Instance not found")
-
-    version = max(db_instance.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "instances", version.id)
-
-    return {
-        "instance_id": db_instance.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "instance_uri": db_instance.uri,
-    }
 
 
 @endpoints.post(
@@ -160,35 +129,3 @@ async def update_instance(
     return db_instance
 
 
-@endpoints.post(
-    "/instances/{instance_uuid}/embeddings",
-    response_model=InstanceEmbeddingSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
-    status_code=201,
-    operation_id="new_instance_embedding",
-)
-async def create_instance_embedding(
-    instance_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client=Depends(get_vector_client),
-):
-    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
-    if db_instance is None:
-        raise HTTPException(
-            status_code=404, detail=f"Instance {instance_uuid} not found"
-        )
-
-    version = max(db_instance.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "instances", version.id)
-
-    if len(filtered_result) < 1:
-        create_embeddings(version, "instances", vector_client)
-        filtered_result = filter_vector_result(vector_client, "instances", version.id)
-
-    return {
-        "instance_id": db_instance.id,
-        "instance_uri": db_instance.uri,
-        "version_id": version.id,
-        "embedding": filtered_result,
-    }

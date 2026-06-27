@@ -3,9 +3,8 @@ import pathlib
 
 import pytest
 import rdflib
-from bluecore_models.models import BibframeOtherResources, Hub, OtherResource, Version
+from bluecore_models.models import BibframeOtherResources, Hub, OtherResource
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 
 from bluecore_api.constants import CONTEXT_URL
 
@@ -178,56 +177,6 @@ def test_update_hub(client, db_session):
         "created_at and updated_at should not match on update"
     )
 
-
-def test_get_hub_embedding(client, db_session, vector_client):
-    sample_hub_graph = init_graph()
-    sample_hub_uuid = "a1b2c3d4-0000-0000-0000-000000000002"
-    sample_hub_uri = rdflib.URIRef(f"https://bcld.info/hubs/{sample_hub_uuid}")
-    sample_hub_graph.add((sample_hub_uri, rdflib.RDF.type, BF.Hub))
-    sample_hub_graph.add(
-        (sample_hub_uri, rdflib.RDFS.label, rdflib.Literal("A Sample Hub", lang="en"))
-    )
-    db_session.add(
-        Hub(
-            id=3,
-            uuid=sample_hub_uuid,
-            uri=str(sample_hub_uri),
-            data=json.loads(sample_hub_graph.serialize(format="json-ld")),
-        )
-    )
-
-    version = db_session.query(Version).where(Version.resource_id == 3).first()
-    create_embeddings(version, "hubs", vector_client)
-
-    get_response = client.get(f"/hubs/{sample_hub_uuid}/embeddings")
-    payload = get_response.json()
-
-    assert len(payload["embedding"]) == len(sample_hub_graph)
-
-
-def test_new_hub_embedding(client, db_session, vector_client):
-    sample_hub_graph = init_graph()
-    sample_hub_uuid = "a1b2c3d4-0000-0000-0000-000000000003"
-    sample_hub_uri = rdflib.URIRef(f"https://bcld.info/hubs/{sample_hub_uuid}")
-    sample_hub_graph.add((sample_hub_uri, rdflib.RDF.type, BF.Hub))
-    title_bnode = rdflib.BNode()
-    sample_hub_graph.add((sample_hub_uri, BF.title, title_bnode))
-    sample_hub_graph.add(
-        (title_bnode, BF.mainTitle, rdflib.Literal("A Great Hub", lang="en"))
-    )
-    db_session.add(
-        Hub(
-            id=4,
-            uuid=sample_hub_uuid,
-            uri=str(sample_hub_uri),
-            data=json.loads(sample_hub_graph.serialize(format="json-ld")),
-        )
-    )
-    post_result = client.post(
-        f"/hubs/{sample_hub_uuid}/embeddings", headers={"X-User": "cataloger"}
-    )
-    payload = post_result.json()
-    assert len(payload["embedding"]) == len(sample_hub_graph)
 
 
 if __name__ == "__main__":

@@ -30,13 +30,6 @@ class InstanceCreateSchema(BaseModel):
     data: str
 
 
-class InstanceEmbeddingSchema(BaseModel):
-    instance_id: int
-    instance_uri: str
-    version_id: int
-    embedding: list
-
-
 class InstanceSchema(ResourceBaseSchema):
     type: str = BluecoreType.INSTANCES
     work_id: Optional[int]
@@ -71,13 +64,6 @@ class HubCreateSchema(BaseModel):
     data: str
 
 
-class HubEmbeddingSchema(BaseModel):
-    hub_id: int
-    hub_uri: str
-    version_id: int
-    embedding: list
-
-
 class HubSchema(ResourceBaseSchema):
     type: str = BluecoreType.HUBS
     is_expanded: bool = False
@@ -101,13 +87,6 @@ class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
     hub_id: Optional[int]
     is_expanded: bool = False
-
-
-class WorkEmbeddingSchema(BaseModel):
-    work_id: int
-    work_uri: str
-    version_id: int
-    embedding: list
 
 
 class BatchCreateSchema(BaseModel):
