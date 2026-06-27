@@ -5,10 +5,8 @@ from pathlib import Path
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Work
 from bluecore_models.utils.graph import BF, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
-from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
 
@@ -16,14 +14,11 @@ from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import (
-    filter_vector_result,
     get_db,
     get_session_maker,
-    get_vector_client,
 )
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
-    WorkEmbeddingSchema,
     WorkSchema,
     WorkUpdateSchema,
 )
@@ -55,32 +50,6 @@ async def read_work(
     # No recognized format, return the default HTML serialization
     return as_html(db_work, request)
 
-
-@endpoints.get(
-    "/works/{work_uuid}/embeddings",
-    response_model=WorkEmbeddingSchema,
-    operation_id="get_work_embedding",
-)
-async def get_embedding(
-    work_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client: MilvusClient = Depends(get_vector_client),
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-
-    version = max(db_work.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    return {
-        "work_id": db_work.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "work_uri": db_work.uri,
-    }
 
 
 @endpoints.post(
@@ -129,33 +98,3 @@ async def update_work(
     return db_work
 
 
-@endpoints.post(
-    "/works/{work_uuid}/embeddings",
-    response_model=WorkEmbeddingSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
-    status_code=201,
-    operation_id="new_work_embedding",
-)
-async def create_work_embedding(
-    work_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client=Depends(get_vector_client),
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-
-    version = max(db_work.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    if len(filtered_result) < 1:
-        create_embeddings(version, "works", vector_client)
-        filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    return {
-        "work_id": db_work.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "work_uri": db_work.uri,
-    }

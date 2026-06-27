@@ -5,10 +5,8 @@ from pathlib import Path
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Hub
 from bluecore_models.utils.graph import BF, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi_keycloak_middleware import CheckPermissions
-from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
 
@@ -16,14 +14,11 @@ from bluecore_api.app.utils.serialize.response_generator import as_jsonld
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import (
-    filter_vector_result,
     get_db,
     get_session_maker,
-    get_vector_client,
 )
 from bluecore_api.schemas.schemas import (
     HubCreateSchema,
-    HubEmbeddingSchema,
     HubSchema,
     HubUpdateSchema,
 )
@@ -55,32 +50,6 @@ async def read_hub(
     # No recognized format, return the default JSON-LD serialization
     return as_jsonld(db_hub, expand)
 
-
-@endpoints.get(
-    "/hubs/{hub_uuid}/embeddings",
-    response_model=HubEmbeddingSchema,
-    operation_id="get_hub_embedding",
-)
-async def get_embedding(
-    hub_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client: MilvusClient = Depends(get_vector_client),
-):
-    db_hub = db.query(Hub).filter(Hub.uuid == hub_uuid).first()
-
-    if db_hub is None:
-        raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
-
-    version = max(db_hub.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "hubs", version.id)
-
-    return {
-        "hub_id": db_hub.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "hub_uri": db_hub.uri,
-    }
 
 
 @endpoints.post(
@@ -129,33 +98,3 @@ async def update_hub(
     return db_hub
 
 
-@endpoints.post(
-    "/hubs/{hub_uuid}/embeddings",
-    response_model=HubEmbeddingSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
-    status_code=201,
-    operation_id="new_hub_embedding",
-)
-async def create_hub_embedding(
-    hub_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client=Depends(get_vector_client),
-):
-    db_hub = db.query(Hub).filter(Hub.uuid == hub_uuid).first()
-    if db_hub is None:
-        raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
-
-    version = max(db_hub.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "hubs", version.id)
-
-    if len(filtered_result) < 1:
-        create_embeddings(version, "hubs", vector_client)
-        filtered_result = filter_vector_result(vector_client, "hubs", version.id)
-
-    return {
-        "hub_id": db_hub.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "hub_uri": db_hub.uri,
-    }

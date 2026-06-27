@@ -16,8 +16,6 @@ from httpx import ASGITransport, AsyncClient
 
 from contextlib import contextmanager
 
-from pymilvus import MilvusClient
-
 from bluecore_models.models import (
     Base,
     BibframeClass,
@@ -31,8 +29,6 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
-
-from bluecore_models.utils.vector_db import init_collections
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
@@ -218,16 +214,3 @@ def keycloak_client(app):
         yield kk_client
 
 
-@pytest.fixture
-def vector_client():
-    # bluecore_api.database.get_vector_client() is configured to use this
-    # milvus database when MILVUS_URI is not set
-    client = MilvusClient("test-vector.db")
-    init_collections(client)
-
-    yield client
-
-    # on tear down empty collections for the next tests
-    client.delete(collection_name="hubs", filter="version == 1")
-    client.delete(collection_name="instances", filter="version == 1")
-    client.delete(collection_name="works", filter="version == 1")
