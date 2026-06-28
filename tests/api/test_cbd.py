@@ -95,7 +95,12 @@ def test_reorder_instance_types():
 def test_cbd(client: TestClient, db_session: Session):
     work = add_work(client, db_session)
     work_id: int = work.id
-    work_derived_from: str = work.data["derivedFrom"]["@id"]
+    admin_metadata: list = work.data["adminMetadata"]
+    work_derived_from: str = next(
+        admin_md["derivedFrom"]["@id"]
+        for admin_md in admin_metadata
+        if "derivedFrom" in admin_md
+    )
     instances = add_instances(client, db_session, work_id, work_derived_from)
 
     headers = {"Accept": "application/cbd+xml"}

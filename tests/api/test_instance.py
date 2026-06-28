@@ -211,7 +211,7 @@ def test_get_instance_html(client, db_session):
 # cbd requires work & instance and will be tested in test_cbd.py
 
 
-def test_create_instance(client):
+def test_create_instance(client, derived_from_sparql):
     original_graph = init_graph()
     original_graph.parse(
         data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
@@ -231,14 +231,14 @@ def test_create_instance(client):
 
     assert len(original_graph) != len(new_graph)
 
-    new_work_uri = rdflib.URIRef(data["uri"])
-    derived_from = new_graph.value(subject=new_work_uri, predicate=BF.derivedFrom)
+    results = new_graph.query(derived_from_sparql)
+    derived_from = results.bindings[0]["derived_from"]
 
     assert str(derived_from).startswith(
         "https://bluecore.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
     )
 
-    assert str(new_work_uri).startswith("https://bcld.info/instances"), (
+    assert data["uri"].startswith("https://bcld.info/instances"), (
         "Minted URI uses default base url https://bcld.info/"
     )
 
