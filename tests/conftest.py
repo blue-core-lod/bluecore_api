@@ -231,3 +231,11 @@ def vector_client():
     client.delete(collection_name="hubs", filter="version == 1")
     client.delete(collection_name="instances", filter="version == 1")
     client.delete(collection_name="works", filter="version == 1")
+
+
+@pytest.fixture(scope="session")
+def derived_from_sparql():
+    return """prefix bf: <http://id.loc.gov/ontologies/bibframe/>
+SELECT ?derived_from WHERE {
+  ?admin_metadata bf:derivedFrom ?derived_from .
+}"""

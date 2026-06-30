@@ -87,7 +87,7 @@ def test_get_expanded_hub(client, db_session):
     assert len(expanded_graph) == 5
 
 
-def test_create_hub(client, mocker):
+def test_create_hub(client, mocker, derived_from_sparql):
     original_graph = init_graph()
     original_graph.parse(
         data=pathlib.Path("tests/blue-core-hub.jsonld").read_text(), format="json-ld"
@@ -109,8 +109,8 @@ def test_create_hub(client, mocker):
 
     assert len(original_graph) != len(new_graph)
 
-    new_hub_uri = rdflib.URIRef(data["uri"])
-    derived_from = new_graph.value(subject=new_hub_uri, predicate=BF.derivedFrom)
+    results = new_graph.query(derived_from_sparql)
+    derived_from = results.bindings[0]["derived_from"]
 
     assert str(derived_from).startswith(
         "http://id.loc.gov/resources/hubs/62a26d82-4e65-c696-afed-b12d215a35b1"
