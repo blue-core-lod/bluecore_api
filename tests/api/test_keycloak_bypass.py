@@ -77,7 +77,10 @@ async def test_get_prefix_path_bypasses_keycloak(prefix):
 # --- Everything else still goes through Keycloak ------------------------------
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
-@pytest.mark.parametrize("path", ["/works/123", "/mcp", "/hubs/", "/resources/x"])
+@pytest.mark.parametrize(
+    "path",
+    ["/works/123", "/mcp", "/hubs/", "/resources/x", "/profiles/", "/profiles/x"],
+)
 async def test_mutating_methods_still_require_auth(method, path):
     """The bypass is GET-only; mutating verbs on allow-listed paths are protected."""
     inner, keycloak = await _route(method, path)

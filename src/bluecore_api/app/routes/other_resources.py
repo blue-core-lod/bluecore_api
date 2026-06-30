@@ -41,7 +41,7 @@ def add_context_to_data(doc: OtherResource) -> OtherResource:
     """
     Add @context to data if it is a dictionary and does not already have @context
     """
-    if not doc.is_profile and isinstance(doc.data, dict):
+    if isinstance(doc.data, dict):
         doc.data["@context"] = CONTEXT_URL
     return doc
 
@@ -106,7 +106,6 @@ async def create_other_resource(
     time_now = datetime.now(UTC)
     db_other_resource = OtherResource(
         uri=resource.uri,
-        is_profile=resource.is_profile,
         data=json.loads(resource.data),
         created_at=time_now,
         updated_at=time_now,
@@ -141,8 +140,6 @@ async def update_other_resource(
     if other_resource.data:
         # bluecore_api #126
         db_other_resource.data = json.loads(other_resource.data)
-    if other_resource.is_profile is not None:
-        db_other_resource.is_profile = other_resource.is_profile
 
     db.commit()
     db.refresh(db_other_resource)

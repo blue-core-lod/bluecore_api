@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -84,19 +85,17 @@ def load_profiles(
     ] = False,
 ):
     """
-    Fetch profiles from a remote bluecore /api/search/profile and upsert
-    them directly into the local database, bypassing the local API.
+    Fetch profiles from a remote bluecore /api/search/profile and load them into
+    the local instance by POSTing each to its /profiles/ API. Going through the
+    API (rather than writing to the database directly) ensures a local URI is
+    minted and the Profile's ResourceTemplate is rewritten to use it.
     """
-    from bluecore_api.database import Session
-    from bluecore_models.models import OtherResource
-
     source = f"{host.rstrip('/')}/api/search/profile"
     offset = 0
     loaded = 0
-    updated = 0
 
-    db = Session()
     try:
+        token = _get_token()
         while True:
             resp = httpx.get(
                 source,
@@ -109,44 +108,35 @@ def load_profiles(
                 break
 
             for r in results:
-                uri = r.get("uri")
-                data = r.get("data")
-
-                existing = (
-                    db.query(OtherResource).filter(OtherResource.uri == uri).first()
-                    if uri
-                    else None
-                )
-                if existing:
-                    existing.is_profile = True
-                    existing.data = data
-                    updated += 1
-                else:
-                    db.add(OtherResource(uri=uri, is_profile=True, data=data))
+                if dry_run:
+                    if state.get("verbose"):
+                        printr(f"  would load {r.get('uri')}")
                     loaded += 1
+                    continue
+
+                post_resp = httpx.post(
+                    f"{state['api_url']}/profiles/",
+                    headers={"Authorization": f"Bearer {token}"},
+                    follow_redirects=True,
+                    json={"data": json.dumps(r["data"])},
+                )
+                post_resp.raise_for_status()
+                loaded += 1
 
                 if state.get("verbose"):
-                    printr(f"  {'update' if existing else 'insert'} {uri}")
+                    printr(f"  loaded {r.get('uri')} -> {post_resp.json().get('uri')}")
 
             offset += page_size
             if len(results) < page_size:
                 break
 
         if dry_run:
-            db.rollback()
-            printr(
-                f"[yellow]Dry run:[/yellow] {loaded} new, {updated} updated "
-                f"(no changes written)"
-            )
+            printr(f"[yellow]Dry run:[/yellow] {loaded} profiles (nothing posted)")
         else:
-            db.commit()
-            printr(f"[green]Loaded {loaded} new profiles, updated {updated}[/green]")
+            printr(f"[green]Loaded {loaded} profiles[/green]")
     except httpx.HTTPError as e:
-        db.rollback()
         printr(f"[red]{e}[/red]")
         raise Exit(1)
-    finally:
-        db.close()
 
 
 @app.callback()

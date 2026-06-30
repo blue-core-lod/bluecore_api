@@ -102,9 +102,9 @@ This will tell the Blue Core API to load the data at that URL into the database.
 
 ## 📇 Load Profiles
 
-Sinopia profiles can be pulled from another bluecore instance and written
-directly into your local database (bypassing the API). By default the
-command pulls from `https://dev.bcld.info`:
+Resource profiles (e.g. Sinopia profiles) can be pulled from another bluecore
+instance and written directly into your local database (bypassing the API). By
+default the command pulls from `https://dev.bcld.info`:
 
 ```shell
 uv run bluecore load-profiles

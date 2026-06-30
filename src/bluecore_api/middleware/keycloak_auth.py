@@ -65,6 +65,7 @@ class BypassKeycloakForGet:
             "/works/",
             "/hubs/",
             "/resources/",
+            "/profiles/",
             "/change_documents/",
             "/search",
             "/cbd",

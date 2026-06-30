@@ -3,10 +3,16 @@ import re
 from typing import Any
 from urllib.parse import urlencode
 
-from bluecore_models.models import Instance, OtherResource, ResourceBase, Work
+from bluecore_models.models import (
+    Instance,
+    OtherResource,
+    Profile,
+    ResourceBase,
+    Work,
+)
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.templating import templates
@@ -204,14 +210,11 @@ async def search_html(
     OtherResources (authorities, agents, subjects)
     """
     if type == SearchType.ALL:
-        # Include non-profile OtherResources alongside Works and Instances.
-        non_profile_others = select(OtherResource.id).where(
-            OtherResource.is_profile.is_(False)
-        )
+        # Include OtherResources (authorities, agents, subjects) alongside Works
+        # and Instances. Profiles are a separate type and are excluded here.
         stmt = select(ResourceBase).where(
-            or_(
-                ResourceBase.type.in_([SearchType.WORKS, SearchType.INSTANCES]),
-                ResourceBase.id.in_(non_profile_others),
+            ResourceBase.type.in_(
+                [SearchType.WORKS, SearchType.INSTANCES, "other_resources"]
             )
         )
     else:
@@ -306,12 +309,12 @@ async def search_profile(
     """
     Search for profiles in the resource base.
     """
-    stmt = select(OtherResource).where(OtherResource.is_profile.is_(True))
+    stmt = select(Profile)
 
     formatted = format_query(q)
     if formatted:
         stmt = stmt.where(
-            func.to_tsquery("english", formatted).op("@@")(OtherResource.data_vector)
+            func.to_tsquery("english", formatted).op("@@")(Profile.data_vector)
         )
         params: dict[str, str] = {"q": q}
         links_query = f"&{urlencode(params)}"
