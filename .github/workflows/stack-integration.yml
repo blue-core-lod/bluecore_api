@@ -74,15 +74,17 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: blue-core-lod/bluecore-stack
-          RUN_ID: ${{ steps.dispatch.outputs.workflow-id }}
           RUN_URL: ${{ steps.dispatch.outputs.workflow-url }}
           POLL_INTERVAL: 30      # seconds between status checks
           MAX_POLLS: 90          # 90 * 30s = 45m
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "${RUN_ID}" ]; then
-            echo "::error::bluecore-stack run id was not resolved; cannot wait"
+          # The action sets workflow-url but not reliably workflow-id when not
+          # waiting, so derive the run id from the URL's last path segment.
+          RUN_ID="${RUN_URL##*/}"
+          if [ -z "${RUN_URL}" ] || ! [[ "${RUN_ID}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not derive a bluecore-stack run id from '${RUN_URL}'"
             exit 1
           fi
           for i in $(seq 1 "$MAX_POLLS"); do
