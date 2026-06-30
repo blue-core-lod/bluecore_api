@@ -34,57 +34,21 @@ jobs:
           repositories: bluecore-stack
 
       # Dispatch the bluecore-stack integration workflow and wait for its result.
+      # Uses RUN_NAME for the remote run (passed via the "run_name"
+      # input, which bluecore-stack echoes into its top-level run-name:) so the
+      # action correlates THIS exact run by name.
       - name: Trigger bluecore-stack integration tests and wait
+        uses: aurelien-baudet/workflow-dispatch@v4
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPO: blue-core-lod/bluecore-stack
-          WORKFLOW: bluecore-integration-test.yml
-          API_REF: ${{ github.head_ref }}
-          POLL_INTERVAL: 30      # seconds between status checks
-          MAX_POLLS: 90          # 90 * 30s = 45m, matching the old timeout
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Highest existing run id before we dispatch (run ids only ever grow).
-          before=$(gh run list --repo "$REPO" --workflow "$WORKFLOW" \
-            --json databaseId --jq '[.[].databaseId] | max // 0')
-          echo "Latest existing run id before dispatch: $before"
-
-          echo "Dispatching $WORKFLOW (api_ref=$API_REF)..."
-          gh workflow run "$WORKFLOW" --repo "$REPO" --ref main -f api_ref="$API_REF"
-
-          # Wait for the new run (id > before) to register, then capture it.
-          run_id=""
-          for i in $(seq 1 24); do
-            run_id=$(gh run list --repo "$REPO" --workflow "$WORKFLOW" \
-              --json databaseId \
-              --jq "[.[].databaseId] | map(select(. > $before)) | max // empty")
-            [ -n "$run_id" ] && break
-            echo "  ...new run not visible yet (attempt $i), retrying in 5s"
-            sleep 5
-          done
-          if [ -z "$run_id" ]; then
-            echo "::error::Dispatched but could not locate the new bluecore-stack run"
-            exit 1
-          fi
-          run_url="https://github.com/$REPO/actions/runs/$run_id"
-          echo "Tracking run: $run_url"
-
-          # Poll to completion and mirror the conclusion as this job's result.
-          for i in $(seq 1 "$MAX_POLLS"); do
-            read -r status conclusion < <(gh run view "$run_id" --repo "$REPO" \
-              --json status,conclusion --jq '"\(.status) \(.conclusion)"')
-            echo "[$i/$MAX_POLLS] status=$status conclusion=$conclusion"
-            if [ "$status" = "completed" ]; then
-              if [ "$conclusion" = "success" ]; then
-                echo "Integration tests passed: $run_url"
-                exit 0
-              fi
-              echo "::error::Integration tests concluded '$conclusion': $run_url"
-              exit 1
-            fi
-            sleep "$POLL_INTERVAL"
-          done
-          echo "::error::Timed out after $((MAX_POLLS * POLL_INTERVAL))s waiting for $run_url"
-          exit 1
+          RUN_NAME: api-integration-${{ github.run_id }}-${{ github.run_attempt }}
+        with:
+          repo: blue-core-lod/bluecore-stack
+          workflow: bluecore-integration-test.yml
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+          run-name: ${{ env.RUN_NAME }}
+          wait-for-completion: true
+          wait-for-completion-timeout: 45m
+          wait-for-completion-interval: 30s
+          display-workflow-run-url: true
+          inputs: '{ "api_ref": "${{ github.head_ref }}", "run_name": "${{ env.RUN_NAME }}" }'
