@@ -323,6 +323,66 @@ def test_update_instance(client, db_session):
     )
 
 
+def test_create_instance_jsonld(client, derived_from_sparql):
+    """A raw JSON-LD body (application/ld+json) is accepted in addition to the
+    Sinopia-specific body."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
+        format="json-ld",
+    )
+
+    response = client.post(
+        "/instances/",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=original_graph.serialize(format="json-ld"),
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["uri"].startswith("https://bcld.info/instances")
+
+
+def test_update_instance_jsonld(client, db_session):
+    create_response = client.post(
+        "/instances/",
+        headers={"X-User": "cataloger"},
+        json={"data": pathlib.Path("tests/blue-core-instance.jsonld").read_text()},
+    )
+    assert create_response.status_code == 201
+    data = create_response.json()
+    data["data"]["@context"] = CONTEXT
+
+    instance_uri = rdflib.URIRef(data["uri"])
+    instance_uuid = data["uri"].split("/")[-1]
+    instance_graph = init_graph()
+    instance_graph.parse(data=json.dumps(data["data"]), format="json-ld")
+    instance_graph.add(
+        (
+            instance_uri,
+            rdflib.URIRef("https://schema.org/name"),
+            rdflib.Literal("A JSON-LD Instance Name"),
+        )
+    )
+
+    put_response = client.put(
+        f"/instances/{instance_uuid}",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=instance_graph.serialize(format="json-ld"),
+    )
+    assert put_response.status_code == 200
+
+    get_response = client.get(f"/instances/{instance_uuid}.vnd.sinopia.json")
+    payload = get_response.json()
+    payload["data"]["@context"] = CONTEXT
+    new_instance_graph = init_graph()
+    new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")
+    name = new_instance_graph.value(
+        subject=instance_uri, predicate=rdflib.URIRef("https://schema.org/name")
+    )
+    assert str(name) == "A JSON-LD Instance Name"
+
+
 def test_get_instance_embeddings(client, db_session, vector_client):
     sample_instance_graph = init_graph()
     instance_uuid = "3890cc27-6fbf-42b6-8efb-d0ed40e9188e"
