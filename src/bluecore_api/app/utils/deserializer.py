@@ -23,8 +23,15 @@ def deserialize(schema: Type[BaseModel]) -> Callable:
     async def dependency(request: Request) -> BaseModel:
         payload = await request.json()
         content_type = request.headers.get("content-type", "").split(";")[0].strip()
+
+        # Raw JSON-LD (application/ld+json): the whole body is the graph, so wrap
+        # it as the schema's 'data' string.
         if content_type == JSONLD_CONTENT_TYPE:
             return schema(data=json.dumps(payload))
+
+        # Sinopia (application/vnd.sinopia+json, or application/json for backwards
+        # compatibility): already shaped like the schema
+        # ({"data": "<json-ld string>", ...}), so validate it directly
         try:
             return schema(**payload)
         except ValidationError as error:
