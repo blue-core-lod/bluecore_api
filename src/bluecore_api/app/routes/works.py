@@ -12,6 +12,8 @@ from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
+from bluecore_api.app.utils.examples import WORK_EXAMPLE
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.constants import CONTEXT_URL
@@ -89,9 +91,10 @@ async def get_embedding(
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
     operation_id="get_works",
+    openapi_extra=request_body_openapi(WorkCreateSchema, WORK_EXAMPLE),
 )
 async def create_work(
-    work: WorkCreateSchema,
+    work: WorkCreateSchema = Depends(deserialize(WorkCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
@@ -109,10 +112,11 @@ async def create_work(
     response_model=WorkSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
     operation_id="update_work",
+    openapi_extra=request_body_openapi(WorkUpdateSchema, WORK_EXAMPLE),
 )
 async def update_work(
     work_uuid: str,
-    work: WorkUpdateSchema,
+    work: WorkUpdateSchema = Depends(deserialize(WorkUpdateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):

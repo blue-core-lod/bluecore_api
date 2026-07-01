@@ -179,6 +179,66 @@ def test_update_hub(client, db_session):
     )
 
 
+def test_create_hub_jsonld(client, mocker, derived_from_sparql):
+    """A raw JSON-LD body (application/ld+json) is accepted in addition to the
+    Sinopia-specific body."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-hub.jsonld").read_text(), format="json-ld"
+    )
+
+    create_response = client.post(
+        "/hubs/",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=original_graph.serialize(format="json-ld"),
+    )
+
+    assert create_response.status_code == 201
+    data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["uri"].startswith("https://bcld.info/hubs")
+
+
+def test_update_hub_jsonld(client, db_session):
+    create_response = client.post(
+        "/hubs/",
+        headers={"X-User": "cataloger"},
+        json={"data": pathlib.Path("tests/blue-core-hub.jsonld").read_text()},
+    )
+    assert create_response.status_code == 201
+
+    data = create_response.json()
+    data["data"]["@context"] = CONTEXT
+    hub_uri = rdflib.URIRef(data["uri"])
+    hub_graph = init_graph()
+    hub_graph.parse(data=json.dumps(data["data"]), format="json-ld")
+    hub_graph.add(
+        (
+            hub_uri,
+            rdflib.URIRef("https://schema.org/name"),
+            rdflib.Literal("A JSON-LD Hub Name"),
+        )
+    )
+    hub_uuid = data["uri"].split("/")[-1]
+
+    update_response = client.put(
+        f"/hubs/{hub_uuid}",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=hub_graph.serialize(format="json-ld"),
+    )
+    assert update_response.status_code == 200
+
+    get_response = client.get(f"/hubs/{hub_uuid}.vnd.sinopia.json")
+    data = get_response.json()
+    data["data"]["@context"] = CONTEXT
+    updated_hub_graph = init_graph()
+    updated_hub_graph.parse(data=data["data"], format="json-ld")
+    name = updated_hub_graph.value(
+        subject=hub_uri, predicate=rdflib.URIRef("https://schema.org/name")
+    )
+    assert str(name) == "A JSON-LD Hub Name"
+
+
 def test_get_hub_embedding(client, db_session, vector_client):
     sample_hub_graph = init_graph()
     sample_hub_uuid = "a1b2c3d4-0000-0000-0000-000000000002"
