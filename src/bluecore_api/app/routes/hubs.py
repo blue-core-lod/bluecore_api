@@ -12,6 +12,8 @@ from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
+from bluecore_api.app.utils.examples import HUB_EXAMPLE
 from bluecore_api.app.utils.serialize.response_generator import as_jsonld
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.constants import CONTEXT_URL
@@ -89,9 +91,10 @@ async def get_embedding(
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
     operation_id="create_hub",
+    openapi_extra=request_body_openapi(HubCreateSchema, HUB_EXAMPLE),
 )
 async def create_hub(
-    hub: HubCreateSchema,
+    hub: HubCreateSchema = Depends(deserialize(HubCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
@@ -109,10 +112,11 @@ async def create_hub(
     response_model=HubSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
     operation_id="update_hub",
+    openapi_extra=request_body_openapi(HubUpdateSchema, HUB_EXAMPLE),
 )
 async def update_hub(
     hub_uuid: str,
-    hub: HubUpdateSchema,
+    hub: HubUpdateSchema = Depends(deserialize(HubUpdateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):

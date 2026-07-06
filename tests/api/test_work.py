@@ -292,6 +292,99 @@ def test_update_work(client, db_session):
     )
 
 
+def test_create_work_vnd_sinopia_json(client, mocker, derived_from_sparql):
+    """The Sinopia body is accepted under its explicit content type
+    (application/vnd.sinopia+json), not only the legacy application/json."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
+    )
+
+    create_response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Content-Type": "application/vnd.sinopia+json"},
+        content=json.dumps({"data": original_graph.serialize(format="json-ld")}),
+    )
+
+    assert create_response.status_code == 201
+    data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["uri"].startswith("https://bcld.info/works")
+
+
+def test_create_work_jsonld(client, mocker, derived_from_sparql):
+    """A raw JSON-LD body (application/ld+json) is accepted in addition to the
+    Sinopia-specific body."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-work.jsonld").read_text(), format="json-ld"
+    )
+
+    create_response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=original_graph.serialize(format="json-ld"),
+    )
+
+    assert create_response.status_code == 201
+    data = create_response.json()
+    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["uri"].startswith("https://bcld.info/works")
+
+
+def test_update_work_jsonld(client, db_session):
+    create_response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger"},
+        json={"data": pathlib.Path("tests/blue-core-work.jsonld").read_text()},
+    )
+    assert create_response.status_code == 201
+
+    data = create_response.json()
+    data["data"]["@context"] = CONTEXT
+    work_uri = rdflib.URIRef(data["uri"])
+    work_graph = init_graph()
+    work_graph.parse(data=json.dumps(data["data"]), format="json-ld")
+    work_graph.add(
+        (
+            work_uri,
+            rdflib.URIRef("https://schema.org/name"),
+            rdflib.Literal("A JSON-LD Work Name"),
+        )
+    )
+    work_uuid = data["uri"].split("/")[-1]
+
+    update_response = client.put(
+        f"/works/{work_uuid}",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=work_graph.serialize(format="json-ld"),
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["data"]["@context"] == CONTEXT_URL
+
+    get_response = client.get(f"/works/{work_uuid}.vnd.sinopia.json")
+    data = get_response.json()
+    data["data"]["@context"] = CONTEXT
+    updated_work_graph = init_graph()
+    updated_work_graph.parse(data=data["data"], format="json-ld")
+    name = updated_work_graph.value(
+        subject=work_uri, predicate=rdflib.URIRef("https://schema.org/name")
+    )
+    assert str(name) == "A JSON-LD Work Name"
+
+
+def test_create_work_malformed_json(client):
+    """A malformed request body returns 422 (not 500) for both the JSON-LD and
+    the Sinopia content types."""
+    for content_type in ("application/ld+json", "application/vnd.sinopia+json"):
+        response = client.post(
+            "/works/",
+            headers={"X-User": "cataloger", "Content-Type": content_type},
+            content="{ this is not valid json ",
+        )
+        assert response.status_code == 422, content_type
+
+
 def test_get_work_embedding(client, db_session, vector_client):
     sample_work_graph = init_graph()
     sample_work_uuid = "55ce1584-9a98-4063-84c9-775c53623142"

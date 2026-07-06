@@ -12,6 +12,8 @@ from pymilvus import MilvusClient
 from rdflib import RDF, URIRef
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
+from bluecore_api.app.utils.examples import INSTANCE_EXAMPLE
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import (
     serialize,
@@ -97,9 +99,10 @@ async def get_embedding(
     dependencies=[Depends(CheckPermissions(["create"]))],
     status_code=201,
     operation_id="new_instance",
+    openapi_extra=request_body_openapi(InstanceCreateSchema, INSTANCE_EXAMPLE),
 )
 async def create_instance(
-    instance: InstanceCreateSchema,
+    instance: InstanceCreateSchema = Depends(deserialize(InstanceCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
@@ -128,10 +131,11 @@ async def create_instance(
     response_model=InstanceSchema,
     dependencies=[Depends(CheckPermissions(["update"]))],
     operation_id="update_instance",
+    openapi_extra=request_body_openapi(InstanceUpdateSchema, INSTANCE_EXAMPLE),
 )
 async def update_instance(
     instance_uuid: str,
-    instance: InstanceUpdateSchema,
+    instance: InstanceUpdateSchema = Depends(deserialize(InstanceUpdateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
