@@ -1,7 +1,7 @@
 import json
 from typing import Any, Callable, Type
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
 
@@ -21,7 +21,10 @@ def deserialize(schema: Type[BaseModel]) -> Callable:
     """
 
     async def dependency(request: Request) -> BaseModel:
-        payload = await request.json()
+        try:
+            payload = await request.json()
+        except json.JSONDecodeError as error:
+            raise HTTPException(status_code=422, detail=f"Invalid JSON body: {error}")
         content_type = request.headers.get("content-type", "").split(";")[0].strip()
 
         # Raw JSON-LD (application/ld+json): the whole body is the graph, so wrap
