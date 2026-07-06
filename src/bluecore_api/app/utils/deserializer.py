@@ -9,6 +9,25 @@ JSONLD_CONTENT_TYPE = "application/ld+json"
 SINOPIA_CONTENT_TYPE = "application/vnd.sinopia+json"
 
 
+async def _request_payload(request: Request) -> tuple[Any, str]:
+    """Read the JSON body and normalized request media type."""
+    try:
+        payload = await request.json()
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=422, detail=f"Invalid JSON body: {error}")
+
+    content_type = request.headers.get("content-type", "").split(";")[0].strip()
+    return payload, content_type
+
+
+def _validate_schema(schema: Type[BaseModel], payload: Any) -> BaseModel:
+    """Validate payload as a FastAPI request body."""
+    try:
+        return schema.model_validate(payload)
+    except ValidationError as error:
+        raise RequestValidationError(error.errors()) from error
+
+
 def deserialize(schema: Type[BaseModel]) -> Callable:
     """
     FastAPI dependency parsing a PUT/POST body by Content-Type into 'schema'.
@@ -21,24 +40,17 @@ def deserialize(schema: Type[BaseModel]) -> Callable:
     """
 
     async def dependency(request: Request) -> BaseModel:
-        try:
-            payload = await request.json()
-        except json.JSONDecodeError as error:
-            raise HTTPException(status_code=422, detail=f"Invalid JSON body: {error}")
-        content_type = request.headers.get("content-type", "").split(";")[0].strip()
+        payload, content_type = await _request_payload(request)
 
         # Raw JSON-LD (application/ld+json): the whole body is the graph, so wrap
         # it as the schema's 'data' string.
         if content_type == JSONLD_CONTENT_TYPE:
-            return schema(data=json.dumps(payload))
+            payload = {"data": json.dumps(payload)}
 
         # Sinopia (application/vnd.sinopia+json, or application/json for backwards
         # compatibility): already shaped like the schema
         # ({"data": "<json-ld string>", ...}), so validate it directly
-        try:
-            return schema(**payload)
-        except ValidationError as error:
-            raise RequestValidationError(error.errors())
+        return _validate_schema(schema, payload)
 
     return dependency
 

@@ -373,6 +373,18 @@ def test_update_work_jsonld(client, db_session):
     assert str(name) == "A JSON-LD Work Name"
 
 
+def test_create_work_malformed_json(client):
+    """A malformed request body returns 422 (not 500) for both the JSON-LD and
+    the Sinopia content types."""
+    for content_type in ("application/ld+json", "application/vnd.sinopia+json"):
+        response = client.post(
+            "/works/",
+            headers={"X-User": "cataloger", "Content-Type": content_type},
+            content="{ this is not valid json ",
+        )
+        assert response.status_code == 422, content_type
+
+
 def test_get_work_embedding(client, db_session, vector_client):
     sample_work_graph = init_graph()
     sample_work_uuid = "55ce1584-9a98-4063-84c9-775c53623142"
