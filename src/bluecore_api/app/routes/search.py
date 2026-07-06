@@ -70,12 +70,14 @@ def format_query(query: str) -> str:
     formatted = INVALID_WILDCARD_MAPPER.sub("* ", formatted).replace(" * ", " ")
     formatted = SPACE_CONDENSER.sub(" ", formatted)
     formatted = PHRASE_MAPPER.sub(
-        lambda m: m.group(1)
-        .strip()
-        .replace("&", "\\&")
-        .replace("|", "__OR_ESCAPE__")
-        .replace(":", "__COLON_ESCAPE__")
-        .replace(" ", "__PH__"),
+        lambda m: (
+            m.group(1)
+            .strip()
+            .replace("&", "\\&")
+            .replace("|", "__OR_ESCAPE__")
+            .replace(":", "__COLON_ESCAPE__")
+            .replace(" ", "__PH__")
+        ),
         formatted,
     )
     formatted = PHRASE_LEADING_WILDCARD_MAPPER.sub("", formatted)
