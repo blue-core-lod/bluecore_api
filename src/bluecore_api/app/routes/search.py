@@ -17,8 +17,6 @@ from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.templating import templates
 from bluecore_api.app.utils.serialize.html import (
-    OTHER_SECTION_ORDER,
-    resource_section,
     resource_title,
 )
 from bluecore_api.constants import (
@@ -167,12 +165,16 @@ async def search(
     if formatted:
         lang: str = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
+        # Break ties on rank with the primary key so equally-ranked results keep a
+        # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
+            ResourceBase.id,
         )
         params: dict[str, str] = {"q": q, "type": type}
         links_query = f"&{urlencode(params)}"
     else:
+        stmt = stmt.order_by(ResourceBase.id)
         links_query = f"&type={type}"
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
@@ -203,31 +205,24 @@ async def search_html(
     q: str = "",
     type: SearchType = SearchType.ALL,
 ) -> HTMLResponse:
-    """Public, HTML search for BIBFRAME Works, Instances, OtherResources.
+    """Public, HTML search for BIBFRAME Works and Instances.
 
     Backs the header search box (the form posts here, distinct from the
     JSON `GET /search/`) and renders the ``search_results.html`` template.
-
-    Unlike the JSON ``/search/`` API, an "all" search here also returns
-    OtherResources (authorities, agents, subjects)
     """
-    if type == SearchType.ALL:
-        # Include OtherResources (authorities, agents, subjects) alongside Works
-        # and Instances. Profiles are a separate type and are excluded here.
-        stmt = select(ResourceBase).where(
-            ResourceBase.type.in_(
-                [SearchType.WORKS, SearchType.INSTANCES, "other_resources"]
-            )
-        )
-    else:
-        stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
+    stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
     formatted = format_query(q)
     if formatted:
         lang = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
+        # Break ties on rank with the primary key so equally-ranked results keep a
+        # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
+            ResourceBase.id,
         )
+    else:
+        stmt = stmt.order_by(ResourceBase.id)
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
@@ -239,10 +234,9 @@ async def search_html(
             "title": resource_title(resource),
         }
 
-    # Results are always grouped under a labeled heading. For an "all" search,
-    # Works and Instances are pinned to the top, then OtherResources split into
-    # their own sections (Name Authorities, Subjects, Hubs, ...). A single-type
-    # search shows just that one labeled group ("Works" / "Instances").
+    # Results are grouped under a labeled heading. For an "all" search, Works and
+    # Instances each get their own group; a single-type search shows just that
+    # one labeled group ("Works" / "Instances").
     groups: list[dict] = []
     if type == SearchType.ALL:
         works = [item(r) for r in results if isinstance(r, Work)]
@@ -251,16 +245,6 @@ async def search_html(
             groups.append({"label": "Works", "results": works})
         if instances:
             groups.append({"label": "Instances", "results": instances})
-
-        # Bucket OtherResources by their derived section, preserving rank order.
-        sections: dict[str, list[dict[str, str]]] = {}
-        for r in results:
-            if isinstance(r, OtherResource):
-                sections.setdefault(resource_section(r), []).append(item(r))
-        ordered = [s for s in OTHER_SECTION_ORDER if s in sections] + sorted(
-            s for s in sections if s not in OTHER_SECTION_ORDER
-        )
-        groups.extend({"label": s, "results": sections[s]} for s in ordered)
     elif results:
         label = "Works" if type == SearchType.WORKS else "Instances"
         groups = [{"label": label, "results": [item(r) for r in results]}]
