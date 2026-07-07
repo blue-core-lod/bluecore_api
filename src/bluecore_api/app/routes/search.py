@@ -167,12 +167,16 @@ async def search(
     if formatted:
         lang: str = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
+        # Break ties on rank with the primary key so equally-ranked results keep a
+        # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
+            ResourceBase.id,
         )
         params: dict[str, str] = {"q": q, "type": type}
         links_query = f"&{urlencode(params)}"
     else:
+        stmt = stmt.order_by(ResourceBase.id)
         links_query = f"&type={type}"
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
@@ -225,9 +229,14 @@ async def search_html(
     if formatted:
         lang = "simple" if "<->" in formatted else "english"
         search_query = func.to_tsquery(lang, func.unaccent(formatted))
+        # Break ties on rank with the primary key so equally-ranked results keep a
+        # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc()
+            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
+            ResourceBase.id,
         )
+    else:
+        stmt = stmt.order_by(ResourceBase.id)
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
