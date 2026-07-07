@@ -231,7 +231,10 @@ async def search_html(
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
-        result.data["@context"] = CONTEXT_URL
+        # Some OtherResources store "data" as a JSON-LD graph (a list of nodes)
+        # rather than a single object; only object-shaped data takes an @context.
+        if isinstance(result.data, dict):
+            result.data["@context"] = CONTEXT_URL
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
