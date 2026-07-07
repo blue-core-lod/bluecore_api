@@ -56,25 +56,6 @@ def _as_list(value: Any) -> list:
     return value if isinstance(value, list) else [value]
 
 
-def _primary_node(resource: Instance | Work) -> dict[str, Any]:
-    """The primary JSON-LD node for a resource, as a dict.
-    Most resources store "data" as a single JSON-LD object, but some
-    OtherResources store a graph (a list of node dicts). Pick the node whose
-    "@id" matches the resource URI, falling back to the first dict node.
-    """
-    data = resource.data
-    if isinstance(data, dict):
-        return data
-    if isinstance(data, list):
-        for node in data:
-            if isinstance(node, dict) and node.get("@id") == resource.uri:
-                return node
-        for node in data:
-            if isinstance(node, dict):
-                return node
-    return {}
-
-
 def _scalar(value: Any) -> str:
     """Flatten a label-ish value (str, {@value}, or list) to plain text."""
     if isinstance(value, str):
@@ -378,7 +359,7 @@ def _title_of(data: dict[str, Any]) -> str:
 
 def resource_title(resource: Instance | Work) -> str:
     """Public helper: a display title for a Work/Instance (used by search)."""
-    return _title_of(_primary_node(resource))
+    return _title_of(resource.data)
 
 
 # Maps an OtherResource's RDF @type (local name, prefix/namespace stripped — so
@@ -460,7 +441,7 @@ def resource_section(resource: Instance | Work) -> str:
     Used by the search view to group authorities, vocabularies, classifications,
     hubs, etc. into their own headings. See [[_SECTION_BY_TYPE]].
     """
-    types = [_type_localname(t) for t in _as_list(_primary_node(resource).get("@type"))]
+    types = [_type_localname(t) for t in _as_list(resource.data.get("@type"))]
     for local in types:
         if local in _SECTION_BY_TYPE:
             return _SECTION_BY_TYPE[local]

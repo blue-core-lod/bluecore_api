@@ -17,8 +17,6 @@ from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.templating import templates
 from bluecore_api.app.utils.serialize.html import (
-    OTHER_SECTION_ORDER,
-    resource_section,
     resource_title,
 )
 from bluecore_api.constants import (
@@ -207,24 +205,12 @@ async def search_html(
     q: str = "",
     type: SearchType = SearchType.ALL,
 ) -> HTMLResponse:
-    """Public, HTML search for BIBFRAME Works, Instances, OtherResources.
+    """Public, HTML search for BIBFRAME Works and Instances.
 
     Backs the header search box (the form posts here, distinct from the
     JSON `GET /search/`) and renders the ``search_results.html`` template.
-
-    Unlike the JSON ``/search/`` API, an "all" search here also returns
-    OtherResources (authorities, agents, subjects)
     """
-    if type == SearchType.ALL:
-        # Include OtherResources (authorities, agents, subjects) alongside Works
-        # and Instances. Profiles are a separate type and are excluded here.
-        stmt = select(ResourceBase).where(
-            ResourceBase.type.in_(
-                [SearchType.WORKS, SearchType.INSTANCES, "other_resources"]
-            )
-        )
-    else:
-        stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
+    stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
     formatted = format_query(q)
     if formatted:
         lang = "simple" if "<->" in formatted else "english"
@@ -240,10 +226,7 @@ async def search_html(
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
-        # Some OtherResources store "data" as a JSON-LD graph (a list of nodes)
-        # rather than a single object; only object-shaped data takes an @context.
-        if isinstance(result.data, dict):
-            result.data["@context"] = CONTEXT_URL
+        result.data["@context"] = CONTEXT_URL
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
@@ -251,10 +234,9 @@ async def search_html(
             "title": resource_title(resource),
         }
 
-    # Results are always grouped under a labeled heading. For an "all" search,
-    # Works and Instances are pinned to the top, then OtherResources split into
-    # their own sections (Name Authorities, Subjects, Hubs, ...). A single-type
-    # search shows just that one labeled group ("Works" / "Instances").
+    # Results are grouped under a labeled heading. For an "all" search, Works and
+    # Instances each get their own group; a single-type search shows just that
+    # one labeled group ("Works" / "Instances").
     groups: list[dict] = []
     if type == SearchType.ALL:
         works = [item(r) for r in results if isinstance(r, Work)]
@@ -263,16 +245,6 @@ async def search_html(
             groups.append({"label": "Works", "results": works})
         if instances:
             groups.append({"label": "Instances", "results": instances})
-
-        # Bucket OtherResources by their derived section, preserving rank order.
-        sections: dict[str, list[dict[str, str]]] = {}
-        for r in results:
-            if isinstance(r, OtherResource):
-                sections.setdefault(resource_section(r), []).append(item(r))
-        ordered = [s for s in OTHER_SECTION_ORDER if s in sections] + sorted(
-            s for s in sections if s not in OTHER_SECTION_ORDER
-        )
-        groups.extend({"label": s, "results": sections[s]} for s in ordered)
     elif results:
         label = "Works" if type == SearchType.WORKS else "Instances"
         groups = [{"label": label, "results": [item(r) for r in results]}]
