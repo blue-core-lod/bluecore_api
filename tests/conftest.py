@@ -1,23 +1,8 @@
-import pytest
-import pytest_asyncio
-
 import os
-
-from pytest_mock_resources import (
-    PostgresConfig,
-    StaticStatements,
-    create_postgres_fixture,
-)
-
-from fastapi import Request
-from fastapi.testclient import TestClient
-from fastapi_keycloak_middleware import get_auth, get_user
-from httpx import ASGITransport, AsyncClient
-
 from contextlib import contextmanager
 
-from pymilvus import MilvusClient
-
+import pytest
+import pytest_asyncio
 from bluecore_models.models import (
     Base,
     BibframeClass,
@@ -32,8 +17,17 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
-
 from bluecore_models.utils.vector_db import init_collections
+from fastapi import Request
+from fastapi.testclient import TestClient
+from fastapi_keycloak_middleware import FastApiUser, get_auth, get_user
+from httpx import ASGITransport, AsyncClient
+from pymilvus import MilvusClient
+from pytest_mock_resources import (
+    PostgresConfig,
+    StaticStatements,
+    create_postgres_fixture,
+)
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
@@ -65,6 +59,8 @@ async def mocked_get_auth(request: Request):
     match user:
         case "cataloger":
             roles = ["create", "update"]
+        case "cataloger-conflicting":
+            roles = ["cataloger-read-only", "create"]
 
         case _:
             roles = []
@@ -75,9 +71,9 @@ async def mocked_get_auth(request: Request):
     return roles
 
 
-async def mocked_get_user(request: Request):
+async def mocked_get_user(request: Request) -> FastApiUser:
     user = request.get("X-User", "public")
-    return user
+    return FastApiUser("Jon", "Doe", user)
 
 
 @pytest.fixture(scope="session")

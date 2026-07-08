@@ -1,16 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi_keycloak_middleware import CheckPermissions
-
-from bluecore_api.schemas.schemas import ExportSchema, ExportResponseSchema
-from bluecore_api import workflow
 from bluecore_models.models.version import CURRENT_USER_ID
+from fastapi import APIRouter, Depends, HTTPException
+
+from bluecore_api import workflow
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
+from bluecore_api.middleware.bluecore_check_permissions import (
+    BluecoreCheckPermissions as BCP,
+)
+from bluecore_api.schemas.schemas import ExportResponseSchema, ExportSchema
 
 endpoints = APIRouter()
 
 
 @endpoints.post(
     "/export/",
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     response_model=ExportResponseSchema,
     operation_id="export",
 )

@@ -5,11 +5,14 @@ from uuid import uuid4
 from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld, replace_uri
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_keycloak_middleware import CheckPermissions
 from rdflib import RDF, Namespace, URIRef
 from sqlalchemy.orm import Session
 
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
+from bluecore_api.middleware.bluecore_check_permissions import (
+    BluecoreCheckPermissions as BCP,
+)
 from bluecore_api.schemas.schemas import (
     ProfileCreateSchema,
     ProfileSchema,
@@ -44,7 +47,7 @@ def _mint_resource_template(data, minted_uri: str):
     return json.loads(graph.serialize(format="json-ld"))
 
 
-def _generate_links(slice_size: int, limit: int, offset: int) -> dict:
+def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
     bluecore_url = BLUECORE_URL.rstrip("/")
     links = {"first": f"{bluecore_url}/api/profiles/?limit={limit}&offset=0"}
     if offset > 0:
@@ -100,7 +103,7 @@ async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
 @endpoints.post(
     "/profiles/",
     response_model=ProfileSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     status_code=201,
     operation_id="new_profile",
 )
@@ -122,7 +125,7 @@ async def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get
 @endpoints.put(
     "/profiles/{profile_uuid}",
     response_model=ProfileSchema,
-    dependencies=[Depends(CheckPermissions(["update"]))],
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="update_profile",
 )
 async def update_profile(

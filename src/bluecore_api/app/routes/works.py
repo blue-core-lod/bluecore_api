@@ -7,7 +7,6 @@ from bluecore_models.models import Work
 from bluecore_models.utils.graph import BF, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi_keycloak_middleware import CheckPermissions
 from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
@@ -16,12 +15,15 @@ from bluecore_api.app.utils.deserializer import deserialize, request_body_openap
 from bluecore_api.app.utils.examples import WORK_EXAMPLE
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
-from bluecore_api.constants import CONTEXT_URL
+from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import (
     filter_vector_result,
     get_db,
     get_session_maker,
     get_vector_client,
+)
+from bluecore_api.middleware.bluecore_check_permissions import (
+    BluecoreCheckPermissions as BCP,
 )
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
@@ -88,7 +90,7 @@ async def get_embedding(
 @endpoints.post(
     "/works/",
     response_model=WorkSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     status_code=201,
     operation_id="get_works",
     openapi_extra=request_body_openapi(WorkCreateSchema, WORK_EXAMPLE),
@@ -110,7 +112,7 @@ async def create_work(
 @endpoints.put(
     "/works/{work_uuid}",
     response_model=WorkSchema,
-    dependencies=[Depends(CheckPermissions(["update"]))],
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="update_work",
     openapi_extra=request_body_openapi(WorkUpdateSchema, WORK_EXAMPLE),
 )
@@ -136,7 +138,7 @@ async def update_work(
 @endpoints.post(
     "/works/{work_uuid}/embeddings",
     response_model=WorkEmbeddingSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     status_code=201,
     operation_id="new_work_embedding",
 )

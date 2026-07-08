@@ -1,14 +1,17 @@
 import json
 import os
 from datetime import UTC, datetime
+from typing import Any
 
 from bluecore_models.models import OtherResource
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_keycloak_middleware import CheckPermissions
 from sqlalchemy.orm import Session
 
-from bluecore_api.constants import CONTEXT_URL
+from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
+from bluecore_api.middleware.bluecore_check_permissions import (
+    BluecoreCheckPermissions as BCP,
+)
 from bluecore_api.schemas.schemas import (
     OtherResourceCreateSchema,
     OtherResourceSchema,
@@ -20,7 +23,7 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 endpoints = APIRouter()
 
 
-def _generate_links(slice_size: int, limit: int, offset: int) -> dict:
+def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
     """
     NOTE: Current Paging strategy used by Sinopia
     """
@@ -70,7 +73,7 @@ async def read_other_resources(
     total = db.query(OtherResource).count()
     for doc in db_other_resources:
         add_context_to_data(doc)
-    payload = {"resources": db_other_resources, "total": total}
+    payload: dict[str, Any] = {"resources": db_other_resources, "total": total}
     payload["links"] = _generate_links(len(db_other_resources), limit, offset)
     return payload
 
@@ -96,7 +99,7 @@ async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
 @endpoints.post(
     "/resources/",
     response_model=OtherResourceSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     status_code=201,
     operation_id="new_other_resource",
 )
@@ -120,7 +123,7 @@ async def create_other_resource(
 @endpoints.put(
     "/resources/{resource_id}",
     response_model=OtherResourceSchema,
-    dependencies=[Depends(CheckPermissions(["update"]))],
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="update_other_resource",
 )
 async def update_other_resource(
