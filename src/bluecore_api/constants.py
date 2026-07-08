@@ -1,23 +1,16 @@
 import os
-from enum import Enum
+from enum import StrEnum, auto
 
 
-class StringEnum(str, Enum):
-    """Convinience Enum that works interchangably as string."""
-
-    def __str__(self) -> str:
-        return str.__str__(self)
-
-
-class BluecoreType(StringEnum):
+class BluecoreType(StrEnum):
     """Bluecore type enum."""
 
-    HUBS = "hubs"
-    WORKS = "works"
-    INSTANCES = "instances"
+    HUBS = auto()
+    WORKS = auto()
+    INSTANCES = auto()
 
 
-class BibframeType(StringEnum):
+class BibframeType(StrEnum):
     """Bibframe type enum."""
 
     HUB = "Hub"
@@ -26,13 +19,24 @@ class BibframeType(StringEnum):
     ITEM = "Item"
 
 
-class SearchType(StringEnum):
+class KeycloakRole(StrEnum):
+    """Keycloak role enum."""
+
+    CATALOGER_READ_ONLY = "cataloger-read-only"
+    CREATE = auto()
+    UPDATE = auto()
+
+
+READ_ONLY_ROLES = [KeycloakRole.CATALOGER_READ_ONLY.value]
+
+
+class SearchType(StrEnum):
     """Search type enum."""
 
-    HUBS = "hubs"
-    WORKS = "works"
-    INSTANCES = "instances"
-    ALL = "all"
+    HUBS = auto()
+    WORKS = auto()
+    INSTANCES = auto()
+    ALL = auto()
 
 
 CONTEXT_URL = (

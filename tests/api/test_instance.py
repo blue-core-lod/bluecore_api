@@ -264,6 +264,21 @@ def test_create_instance_without_work_id(client, derived_from_sparql):
     assert response.status_code == 201
 
 
+def test_create_instance_with_readonly(client, derived_from_sparql):
+    """If a user has both create and cataloger-read-only roles, the read-only role takes precedence and they cannot create an instance."""
+    original_graph = init_graph()
+    original_graph.parse(
+        data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
+        format="json-ld",
+    )
+    # Note: no "work_id" key at all.
+    payload = {"data": original_graph.serialize(format="json-ld")}
+    response = client.post(
+        "/instances/", headers={"X-User": "cataloger-conflicting"}, json=payload
+    )
+    assert response.status_code == 403
+
+
 def test_update_instance(client, db_session):
     create_response = client.post(
         "/instances/",

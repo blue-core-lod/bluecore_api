@@ -1,15 +1,17 @@
 from pathlib import Path
-from uuid import uuid4
 from typing import Optional
+from uuid import uuid4
 
 import rdflib
+from bluecore_models.models.version import CURRENT_USER_ID
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
-from fastapi_keycloak_middleware import CheckPermissions
 
 from bluecore_api import workflow
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
+from bluecore_api.middleware.bluecore_check_permissions import (
+    BluecoreCheckPermissions as BCP,
+)
 from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
-
-from bluecore_models.models.version import CURRENT_USER_ID
 
 endpoints = APIRouter()
 
@@ -39,7 +41,7 @@ def _xml_to_jsonld_and_save(
 @endpoints.post(
     "/batches/",
     response_model=BatchSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     operation_id="create_batch",
 )
 async def create_batch(batch: BatchCreateSchema):
@@ -58,7 +60,7 @@ async def create_batch(batch: BatchCreateSchema):
 @endpoints.post(
     "/batches/upload/",
     response_model=BatchSchema,
-    dependencies=[Depends(CheckPermissions(["create"]))],
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     operation_id="batch_upload",
 )
 async def create_batch_file(
