@@ -298,7 +298,13 @@ def test_update_instance(client, db_session):
     instance_graph = init_graph()
     instance_graph.parse(data=json.dumps(data["data"]), format="json-ld")
 
-    # Updates Graph
+    # Updates Graph: add a LCCN identifier (persisted) and an OCLC number
+    # (stripped on save by bluecore_models, see EXCLUDED_TRIPLE_TYPES).
+    new_lccn = rdflib.BNode()
+    instance_graph.add((instance_uri, BF.identifiedBy, new_lccn))
+    instance_graph.add((new_lccn, rdflib.RDF.type, BF.Lccn))
+    instance_graph.add((new_lccn, rdflib.RDF.value, rdflib.Literal("2099540000")))
+
     new_oclc_number = rdflib.BNode()
     instance_graph.add((instance_uri, BF.identifiedBy, new_oclc_number))
     instance_graph.add((new_oclc_number, rdflib.RDF.type, BF.OclcNumber))
@@ -321,14 +327,16 @@ def test_update_instance(client, db_session):
     payload["data"]["@context"] = CONTEXT
     new_instance_graph = init_graph()
     new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")
-    oclc_number = new_instance_graph.value(
-        predicate=rdflib.RDF.type, object=BF.OclcNumber
-    )
-    oclc_number_value = new_instance_graph.value(
-        subject=oclc_number, predicate=rdflib.RDF.value
-    )
 
-    assert str(oclc_number_value).startswith("1458303129")
+    # The newly added LCCN identifier is persisted by the update.
+    lccn_values = {
+        str(new_instance_graph.value(subject=subject, predicate=rdflib.RDF.value))
+        for subject in new_instance_graph.subjects(rdflib.RDF.type, BF.Lccn)
+    }
+    assert "2099540000" in lccn_values
+
+    # OCLC numbers are stripped on save (EXCLUDED_TRIPLE_TYPES in bluecore_models),
+    assert (None, rdflib.RDF.type, BF.OclcNumber) not in new_instance_graph
 
     # Assert timestamps exist and are now different
     assert "created_at" in payload
