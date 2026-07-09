@@ -1,5 +1,7 @@
 import os
+import shutil
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -216,12 +218,28 @@ def keycloak_client(app):
         yield kk_client
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _clean_vector_db():
+    # Remove any test-vector.db left over from a previous run before the session starts. Starting from a fresh db
+    # guarantees the collections are (re)created and loaded cleanly each session.
+    db_path = Path("test-vector.db")
+    if db_path.exists():
+        shutil.rmtree(db_path)
+    yield
+
+
 @pytest.fixture
 def vector_client():
     # bluecore_api.database.get_vector_client() is configured to use this
     # milvus database when MILVUS_URI is not set
     client = MilvusClient("test-vector.db")
     init_collections(client)
+
+    # With a persistent test-vector.db, MilvusLite can recycle its server mid-session and leave existing collections in
+    # a 'released' state, which makes subsequent search/get/query calls fail. Explicitly load them so they're always
+    # queryable regardless of what's persisted on disk.
+    for collection_name in ("works", "instances", "hubs"):
+        client.load_collection(collection_name)
 
     yield client
 
