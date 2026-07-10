@@ -23,12 +23,14 @@ RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 # compacted prefixed form (e.g. identifiers from the API context use "rdf:value").
 RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
 
+
 def _rdf_value(node: dict[str, Any]) -> Any:
     """Return the rdf:value of a node, whichever key form it uses."""
     for key in RDF_VALUE_KEYS:
         if key in node:
             return node[key]
     return None
+
 
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
