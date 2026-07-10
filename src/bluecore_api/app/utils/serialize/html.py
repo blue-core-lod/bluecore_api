@@ -19,6 +19,18 @@ from bluecore_models.utils.graph import load_jsonld
 from bluecore_api.app.templating import BLUECORE_URL, templates
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
+# The stored JSON-LD may carry rdf:value either fully expanded or in its
+# compacted prefixed form (e.g. identifiers from the API context use "rdf:value").
+RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
+
+
+def _rdf_value(node: dict[str, Any]) -> Any:
+    """Return the rdf:value of a node, whichever key form it uses."""
+    for key in RDF_VALUE_KEYS:
+        if key in node:
+            return node[key]
+    return None
+
 
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
@@ -86,8 +98,8 @@ def _label_text(node: Any) -> str:
     ):
         if key in node:
             return _scalar(node[key])
-    if RDF_VALUE in node:
-        return _scalar(node[RDF_VALUE]).strip()
+    if any(key in node for key in RDF_VALUE_KEYS):
+        return _scalar(_rdf_value(node)).strip()
     if "code" in node:
         return _scalar(node["code"])
     if "@value" in node:
@@ -155,7 +167,7 @@ def _node_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     return values
 
 
-def _identifier_values(node: Any) -> list[dict[str, Any]]:
+def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     values: list[dict[str, Any]] = []
     for item in _as_list(node):
         if not isinstance(item, dict):
@@ -163,8 +175,20 @@ def _identifier_values(node: Any) -> list[dict[str, Any]]:
         bf_type = item.get("@type", "")
         if isinstance(bf_type, list):
             bf_type = bf_type[0] if bf_type else ""
-        ident = _scalar(item.get(RDF_VALUE, "")).strip()
-        values.append(_value(f"{bf_type}: {ident}".strip()))
+        ident = _scalar(_rdf_value(item) or "").strip()
+        text = f"{bf_type}: {ident}".strip()
+        # Qualifier (e.g. "epub") and status (e.g. cancelled/invalid) tell apart
+        # otherwise identical-looking numbers, so show them alongside the value.
+        qualifier = _scalar(item.get("qualifier", "")).strip()
+        status = item.get("status")
+        status_href = status.get("@id") if isinstance(status, dict) else None
+        status_text = _resolve_label(
+            status_href, _label_text(status) if status else "", label_map
+        )
+        extras = [e for e in (qualifier, status_text) if e]
+        if extras:
+            text = f"{text} ({', '.join(extras)})"
+        values.append(_value(text))
     return values
 
 
@@ -318,7 +342,7 @@ def _field(
     if key not in data:
         return None
     if key == "identifiedBy":
-        values = _identifier_values(data[key])
+        values = _identifier_values(data[key], label_map)
     elif key == "contribution":
         values = _contribution_values(data[key], label_map)
     elif key == "classification":
