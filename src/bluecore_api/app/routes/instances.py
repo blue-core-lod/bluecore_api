@@ -118,7 +118,9 @@ async def create_instance(
         graph += load_jsonld(db_work.data)
         instance_subject = next(graph.subjects(RDF.type, BF.Instance))
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
-    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    result_graph = save_graph(
+        session_maker, graph, BLUECORE_URL, primary_class=BF.Instance
+    )
     instance_uri = str(next(result_graph.subjects(RDF.type, BF.Instance)))
 
     doc = db.query(Instance).filter(Instance.uri == instance_uri).first()
@@ -158,7 +160,7 @@ async def update_instance(
             graph += load_jsonld(db_work.data)
             instance_subject = next(graph.subjects(RDF.type, BF.Instance))
             graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
-        save_graph(session_maker, graph, BLUECORE_URL)
+        save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Instance)
         db.refresh(db_instance)
 
         db_instance.data["@context"] = CONTEXT_URL
