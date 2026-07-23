@@ -3,7 +3,14 @@ import pathlib
 
 import pytest
 import rdflib
-from bluecore_models.models import BibframeOtherResources, Hub, OtherResource, Version
+from bluecore_models.models import (
+    BibframeOtherResources,
+    Hub,
+    Instance,
+    OtherResource,
+    Version,
+    Work,
+)
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 from bluecore_models.utils.vector_db import create_embeddings
 
@@ -288,6 +295,92 @@ def test_new_hub_embedding(client, db_session, vector_client):
     )
     payload = post_result.json()
     assert len(payload["embedding"]) == len(sample_hub_graph)
+
+
+def test_delete_hub(client, db_session):
+    test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
+    test_hub_uri = f"http://id.loc.gov/resources/hubs/{test_hub_uuid}"
+    jsonld_data = json.load(pathlib.Path("tests/blue-core-hub.jsonld").open())
+    db_session.add(Hub(id=1, uuid=test_hub_uuid, uri=test_hub_uri, data=jsonld_data))
+    db_session.commit()
+
+    response = client.delete(f"/hubs/{test_hub_uuid}", headers={"X-User": "cataloger"})
+    assert response.status_code == 204
+
+    get_response = client.get(f"/hubs/{test_hub_uuid}.vnd.sinopia.json")
+    assert get_response.status_code == 404
+
+
+def test_delete_hub_not_found(client, db_session):
+    response = client.delete(
+        "/hubs/00000000-0000-0000-0000-000000000000",
+        headers={"X-User": "cataloger"},
+    )
+    assert response.status_code == 404
+
+
+def test_delete_hub_cascades_to_works_and_instances(client, db_session):
+    hub_uuid = "aaaaaaaa-1111-0000-0000-000000000001"
+    hub_uri = f"https://bcld.info/hubs/{hub_uuid}"
+    hub_graph = init_graph()
+    hub_graph.add((rdflib.URIRef(hub_uri), rdflib.RDF.type, BF.Hub))
+    hub = Hub(
+        id=1,
+        uuid=hub_uuid,
+        uri=hub_uri,
+        data=json.loads(hub_graph.serialize(format="json-ld")),
+    )
+    db_session.add(hub)
+    db_session.flush()
+
+    work_uuid = "bbbbbbbb-2222-0000-0000-000000000002"
+    work_uri = f"https://bcld.info/works/{work_uuid}"
+    work_graph = init_graph()
+    work_graph.add((rdflib.URIRef(work_uri), rdflib.RDF.type, BF.Work))
+    work = Work(
+        id=2,
+        uuid=work_uuid,
+        uri=work_uri,
+        hub_id=1,
+        data=json.loads(work_graph.serialize(format="json-ld")),
+    )
+    db_session.add(work)
+    db_session.flush()
+
+    instance_uuid = "cccccccc-3333-0000-0000-000000000003"
+    instance_uri = f"https://bcld.info/instances/{instance_uuid}"
+    instance_graph = init_graph()
+    instance_graph.add((rdflib.URIRef(instance_uri), rdflib.RDF.type, BF.Instance))
+    instance = Instance(
+        id=3,
+        uuid=instance_uuid,
+        uri=instance_uri,
+        work_id=2,
+        data=json.loads(instance_graph.serialize(format="json-ld")),
+    )
+    db_session.add(instance)
+    db_session.commit()
+
+    response = client.delete(f"/hubs/{hub_uuid}", headers={"X-User": "cataloger"})
+    assert response.status_code == 204
+
+    assert db_session.query(Hub).filter(Hub.uuid == hub_uuid).first() is None
+    assert db_session.query(Work).filter(Work.uuid == work_uuid).first() is None
+    assert (
+        db_session.query(Instance).filter(Instance.uuid == instance_uuid).first()
+        is None
+    )
+
+
+def test_delete_hub_forbidden(client, db_session):
+    test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
+    test_hub_uri = f"http://id.loc.gov/resources/hubs/{test_hub_uuid}"
+    jsonld_data = json.load(pathlib.Path("tests/blue-core-hub.jsonld").open())
+    db_session.add(Hub(id=1, uuid=test_hub_uuid, uri=test_hub_uri, data=jsonld_data))
+    db_session.commit()
+
+    response = client.delete(f"/hubs/{test_hub_uuid}")
+    assert response.status_code == 403
 
 
 if __name__ == "__main__":

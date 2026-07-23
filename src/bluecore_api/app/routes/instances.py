@@ -166,6 +166,32 @@ async def update_instance(
     return db_instance
 
 
+@endpoints.delete(
+    "/instances/{instance_uuid}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_instance",
+)
+async def delete_instance(
+    instance_uuid: str,
+    db: Session = Depends(get_db),
+):
+    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
+    if db_instance is None:
+        raise HTTPException(
+            status_code=404, detail=f"Instance {instance_uuid} not found"
+        )
+    for rbc in db_instance.classes:
+        db.delete(rbc)
+    for bor in db_instance.other_resources:
+        db.delete(bor)
+    for version in db_instance.versions:
+        db.delete(version)
+    db.delete(db_instance)
+    db.commit()
+    return Response(status_code=204)
+
+
 @endpoints.post(
     "/instances/{instance_uuid}/embeddings",
     response_model=InstanceEmbeddingSchema,

@@ -467,5 +467,48 @@ def test_new_instance_embedding(client, db_session, vector_client):
     assert len(payload["embedding"][0]["vector"]) == 768
 
 
+def test_delete_instance(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.delete(
+        f"/instances/{test_instance_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    get_response = client.get(f"/instances/{test_instance_uuid}.vnd.sinopia.json")
+    assert get_response.status_code == 404
+
+
+def test_delete_instance_not_found(client, db_session):
+    response = client.delete(
+        "/instances/00000000-0000-0000-0000-000000000000",
+        headers={"X-User": "cataloger"},
+    )
+    assert response.status_code == 404
+
+
+def test_delete_instance_with_other_resources(client, db_session):
+    add_test_expanded_instance(db_session)
+
+    response = client.delete(
+        f"/instances/{test_expanded_instance_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    remaining_links = (
+        db_session.query(BibframeOtherResources)
+        .filter(BibframeOtherResources.id == 1)
+        .first()
+    )
+    assert remaining_links is None
+
+
+def test_delete_instance_forbidden(client, db_session):
+    add_test_instance(db_session)
+
+    response = client.delete(f"/instances/{test_instance_uuid}")
+    assert response.status_code == 403
+
+
 if __name__ == "__main__":
     pytest.main()

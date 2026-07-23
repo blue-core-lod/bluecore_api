@@ -135,6 +135,46 @@ async def update_hub(
     return db_hub
 
 
+@endpoints.delete(
+    "/hubs/{hub_uuid}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_hub",
+)
+async def delete_hub(
+    hub_uuid: str,
+    db: Session = Depends(get_db),
+):
+    db_hub = db.query(Hub).filter(Hub.uuid == hub_uuid).first()
+    if db_hub is None:
+        raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
+    for work in db_hub.works:
+        for instance in work.instances:
+            for rbc in instance.classes:
+                db.delete(rbc)
+            for bor in instance.other_resources:
+                db.delete(bor)
+            for version in instance.versions:
+                db.delete(version)
+            db.delete(instance)
+        for rbc in work.classes:
+            db.delete(rbc)
+        for bor in work.other_resources:
+            db.delete(bor)
+        for version in work.versions:
+            db.delete(version)
+        db.delete(work)
+    for rbc in db_hub.classes:
+        db.delete(rbc)
+    for bor in db_hub.other_resources:
+        db.delete(bor)
+    for version in db_hub.versions:
+        db.delete(version)
+    db.delete(db_hub)
+    db.commit()
+    return Response(status_code=204)
+
+
 @endpoints.post(
     "/hubs/{hub_uuid}/embeddings",
     response_model=HubEmbeddingSchema,
