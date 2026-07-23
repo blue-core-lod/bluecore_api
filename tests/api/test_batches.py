@@ -185,6 +185,42 @@ async def test_upload_raw_xml_body(
 
 
 # ------------------------------
+# /batches/upload/ (archive -> archived_file_loader DAG)
+# ------------------------------
+@pytest.mark.asyncio
+@pytest.mark.parametrize("filename", ["records.zip", "records.tar.gz", "records.tgz"])
+async def test_upload_archive_routes_to_archive_loader(
+    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path, filename
+):
+    monkeypatch.chdir(tmp_path)
+    # token
+    httpx_mock.add_response(
+        method="POST",
+        url=re.compile(r"^http://airflow:8080/auth/token$"),
+        json={"access_token": "xxx"},
+    )
+    # archive uploads should trigger the archived_file_loader DAG, not resource_loader
+    httpx_mock.add_response(
+        method="POST",
+        url=re.compile(r".*/api/v2/dags/archived_file_loader/dagRuns$"),
+        json={"dag_run_id": "archive-999"},
+    )
+
+    files = {"file": (filename, b"not-a-real-archive", "application/octet-stream")}
+    resp = client.post("/batches/upload/", headers={"X-User": "cataloger"}, files=files)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["workflow_id"] == "archive-999"
+    assert data["uri"].endswith(f"/{filename}")
+
+    # the file is passed through as-is for the DAG to unpack
+    saved_rel = data["uri"].split("uploads/")[-1]
+    saved_path = Path("./uploads") / saved_rel
+    assert saved_path.is_file()
+    assert saved_path.read_bytes() == b"not-a-real-archive"
+
+
+# ------------------------------
 # Error cases
 # ------------------------------
 @pytest.mark.asyncio

@@ -34,7 +34,9 @@ def load_file(
     ],
 ):
     """
-    Upload a Bibframe JSON-LD file as a batch import.
+    Upload a Bibframe file as a batch import. Accepts a single RDF file
+    (JSON-LD or RDF/XML) or a zip/tar.gz archive of RDF files, which is bulk
+    loaded via the archived_file_loader workflow.
     """
     try:
         token = _get_token()

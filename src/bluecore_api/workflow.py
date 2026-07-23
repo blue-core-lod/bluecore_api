@@ -10,17 +10,23 @@ AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_WWW_USER_PASSWORD")
 AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL").rstrip("/")
 
 
-async def create_batch_from_uri(uri: str, user_uid: Optional[str] = None) -> str:
+async def create_batch_from_uri(
+    uri: str,
+    user_uid: Optional[str] = None,
+    dag_id: str = "resource_loader",
+) -> str:
     """
     uri: Start an Airflow DAG run to process data at a given URI. Returns the ID
          for the created DAG Run. A URI can have https, http, s3 or file protocol.
     user_uid: Keycloak subject/UID of the caller (optional). When provided, it will
               be available to the DAG as dag_run.conf["user_uid"].
+    dag_id: The Airflow DAG to trigger. Defaults to "resource_loader" for a single
+            RDF file; use "archived_file_loader" for a zip/tar.gz of RDF files.
     """
 
     token = await get_token()
 
-    url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/resource_loader/dagRuns"
+    url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/{dag_id}/dagRuns"
     now = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
     # Put the UID into the DAG run's conf so tasks can read it
