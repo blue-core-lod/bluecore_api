@@ -2,8 +2,8 @@ import json
 
 import pytest
 import rdflib
-from bluecore_models.models import OtherResource
-from bluecore_models.utils.graph import CONTEXT, init_graph
+from bluecore_models.models import BibframeOtherResources, OtherResource, Work
+from bluecore_models.utils.graph import BF, CONTEXT, init_graph
 
 from bluecore_api.constants import CONTEXT_URL
 
@@ -153,3 +153,78 @@ def test_read_slice_offset(client, db_session):
     assert "next" not in returned_payload["links"]
     first_document = returned_payload["resources"][0]["data"]
     assert first_document["rdfs:label"] == "A label for 6"
+
+
+def test_delete_other_resource(client, db_session, other_graph):
+    db_session.add(
+        OtherResource(
+            id=3,
+            uri="http://id.loc.gov/vocabulary/mstatus/u",
+            data=json.loads(other_graph.serialize(format="json-ld")),
+        )
+    )
+    db_session.commit()
+
+    response = client.delete("/resources/3", headers={"X-User": "cataloger"})
+    assert response.status_code == 204
+
+    get_response = client.get("/resources/3")
+    assert get_response.status_code == 404
+
+
+def test_delete_other_resource_not_found(client, db_session):
+    response = client.delete("/resources/99999", headers={"X-User": "cataloger"})
+    assert response.status_code == 404
+
+
+def test_delete_other_resource_cleans_up_bibframe_links(client, db_session):
+    work_uuid = "dddddddd-0000-0000-0000-000000000001"
+    work_uri = f"https://bcld.info/works/{work_uuid}"
+    work_graph = init_graph()
+    work_graph.add((rdflib.URIRef(work_uri), rdflib.RDF.type, BF.Work))
+    work = Work(
+        id=1,
+        uuid=work_uuid,
+        uri=work_uri,
+        data=json.loads(work_graph.serialize(format="json-ld")),
+    )
+    db_session.add(work)
+    db_session.flush()
+
+    other_resource = OtherResource(
+        id=2,
+        uri="http://id.loc.gov/vocabulary/languages/eng",
+        data={"@id": "http://id.loc.gov/vocabulary/languages/eng"},
+    )
+    db_session.add(other_resource)
+    db_session.flush()
+
+    bor = BibframeOtherResources(
+        id=1, other_resource=other_resource, bibframe_resource=work
+    )
+    db_session.add(bor)
+    db_session.commit()
+
+    response = client.delete("/resources/2", headers={"X-User": "cataloger"})
+    assert response.status_code == 204
+
+    remaining = (
+        db_session.query(BibframeOtherResources)
+        .filter(BibframeOtherResources.id == 1)
+        .first()
+    )
+    assert remaining is None
+
+
+def test_delete_other_resource_forbidden(client, db_session, other_graph):
+    db_session.add(
+        OtherResource(
+            id=3,
+            uri="http://id.loc.gov/vocabulary/mstatus/u",
+            data=json.loads(other_graph.serialize(format="json-ld")),
+        )
+    )
+    db_session.commit()
+
+    response = client.delete("/resources/3")
+    assert response.status_code == 403

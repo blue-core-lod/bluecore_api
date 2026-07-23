@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld, replace_uri
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from rdflib import RDF, Namespace, URIRef
 from sqlalchemy.orm import Session
 
@@ -141,3 +141,25 @@ async def update_profile(
     db.commit()
     db.refresh(db_profile)
     return db_profile
+
+
+@endpoints.delete(
+    "/profiles/{profile_uuid}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_profile",
+)
+async def delete_profile(
+    profile_uuid: str,
+    db: Session = Depends(get_db),
+):
+    db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
+    if db_profile is None:
+        raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
+    for rbc in db_profile.classes:
+        db.delete(rbc)
+    for version in db_profile.versions:
+        db.delete(version)
+    db.delete(db_profile)
+    db.commit()
+    return Response(status_code=204)

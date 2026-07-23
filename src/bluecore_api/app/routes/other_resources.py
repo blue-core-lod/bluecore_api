@@ -3,8 +3,8 @@ import os
 from datetime import UTC, datetime
 from typing import Any
 
-from bluecore_models.models import OtherResource
-from fastapi import APIRouter, Depends, HTTPException
+from bluecore_models.models import BibframeOtherResources, OtherResource
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
@@ -148,3 +148,37 @@ async def update_other_resource(
     db.refresh(db_other_resource)
     add_context_to_data(db_other_resource)
     return db_other_resource
+
+
+@endpoints.delete(
+    "/resources/{resource_id}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_other_resource",
+)
+async def delete_other_resource(
+    resource_id: str,
+    db: Session = Depends(get_db),
+):
+    db_other_resource = (
+        db.query(OtherResource).filter(OtherResource.id == resource_id).first()
+    )
+    if db_other_resource is None:
+        raise HTTPException(
+            status_code=404, detail=f"Other Resource {resource_id} not found"
+        )
+    for bor in (
+        db.query(BibframeOtherResources)
+        .filter(BibframeOtherResources.other_resource_id == db_other_resource.id)
+        .all()
+    ):
+        db.delete(bor)
+    for bor in db_other_resource.other_resources:
+        db.delete(bor)
+    for rbc in db_other_resource.classes:
+        db.delete(rbc)
+    for version in db_other_resource.versions:
+        db.delete(version)
+    db.delete(db_other_resource)
+    db.commit()
+    return Response(status_code=204)

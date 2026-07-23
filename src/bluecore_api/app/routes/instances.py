@@ -149,3 +149,63 @@ async def update_instance(
         db_instance.data["@context"] = CONTEXT_URL
 
     return db_instance
+
+
+@endpoints.delete(
+    "/instances/{instance_uuid}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_instance",
+)
+async def delete_instance(
+    instance_uuid: str,
+    db: Session = Depends(get_db),
+):
+    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
+    if db_instance is None:
+        raise HTTPException(
+            status_code=404, detail=f"Instance {instance_uuid} not found"
+        )
+    for rbc in db_instance.classes:
+        db.delete(rbc)
+    for bor in db_instance.other_resources:
+        db.delete(bor)
+    for version in db_instance.versions:
+        db.delete(version)
+    db.delete(db_instance)
+    db.commit()
+    return Response(status_code=204)
+
+
+@endpoints.post(
+    "/instances/{instance_uuid}/embeddings",
+    response_model=InstanceEmbeddingSchema,
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
+    status_code=201,
+    operation_id="new_instance_embedding",
+)
+async def create_instance_embedding(
+    instance_uuid: str,
+    db: Session = Depends(get_db),
+    vector_client=Depends(get_vector_client),
+):
+    db_instance = db.query(Instance).filter(Instance.uuid == instance_uuid).first()
+    if db_instance is None:
+        raise HTTPException(
+            status_code=404, detail=f"Instance {instance_uuid} not found"
+        )
+
+    version = max(db_instance.versions, key=lambda version: version.created_at)
+
+    filtered_result = filter_vector_result(vector_client, "instances", version.id)
+
+    if len(filtered_result) < 1:
+        create_embeddings(version, "instances", vector_client)
+        filtered_result = filter_vector_result(vector_client, "instances", version.id)
+
+    return {
+        "instance_id": db_instance.id,
+        "instance_uri": db_instance.uri,
+        "version_id": version.id,
+        "embedding": filtered_result,
+    }

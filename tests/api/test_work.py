@@ -3,7 +3,13 @@ import pathlib
 
 import pytest
 import rdflib
-from bluecore_models.models import BibframeOtherResources, OtherResource, Work
+from bluecore_models.models import (
+    BibframeOtherResources,
+    Instance,
+    OtherResource,
+    Version,
+    Work,
+)
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 
 from bluecore_api.constants import CONTEXT_URL
@@ -302,6 +308,74 @@ def test_create_work_embedding_returns_501(client):
         "/works/some-uuid/embeddings", headers={"X-User": "cataloger"}
     )
     assert response.status_code == 501
+
+
+def test_delete_work(client, db_session):
+    add_test_work(db_session)
+
+    response = client.delete(
+        f"/works/{test_work_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    get_response = client.get(f"/works/{test_work_uuid}.vnd.sinopia.json")
+    assert get_response.status_code == 404
+
+
+def test_delete_work_not_found(client, db_session):
+    response = client.delete(
+        "/works/00000000-0000-0000-0000-000000000000",
+        headers={"X-User": "cataloger"},
+    )
+    assert response.status_code == 404
+
+
+def test_delete_work_cascades_to_instances(client, db_session):
+    add_test_work(db_session)
+    instance_uuid = "aaaaaaaa-0000-0000-0000-000000000001"
+    instance_uri = f"https://bcld.info/instances/{instance_uuid}"
+    instance = Instance(
+        id=2,
+        uuid=instance_uuid,
+        uri=instance_uri,
+        work_id=1,
+        data=jsonld_data,
+    )
+    db_session.add(instance)
+    db_session.commit()
+
+    response = client.delete(
+        f"/works/{test_work_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    assert (
+        db_session.query(Instance).filter(Instance.uuid == instance_uuid).first()
+        is None
+    )
+
+
+def test_delete_work_with_other_resources(client, db_session):
+    add_test_expanded_work(db_session)
+
+    response = client.delete(
+        f"/works/{expanded_work_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    remaining = (
+        db_session.query(BibframeOtherResources)
+        .filter(BibframeOtherResources.id == 1)
+        .first()
+    )
+    assert remaining is None
+
+
+def test_delete_work_forbidden(client, db_session):
+    add_test_work(db_session)
+
+    response = client.delete(f"/works/{test_work_uuid}")
+    assert response.status_code == 403
 
 
 if __name__ == "__main__":
