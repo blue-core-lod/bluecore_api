@@ -101,7 +101,9 @@ async def create_hub(
     session_maker=Depends(get_session_maker),
 ):
     graph = load_jsonld(json.loads(hub.data))
-    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    result_graph = save_graph(
+        session_maker, graph, BLUECORE_URL, primary_class=BF.Hub
+    )
     hub_uri = str(next(result_graph.subjects(RDF.type, BF.Hub)))
     doc = db.query(Hub).filter(Hub.uri == hub_uri).first()
     if doc:
@@ -128,7 +130,7 @@ async def update_hub(
 
     if hub.data is not None:
         graph = load_jsonld(json.loads(hub.data))
-        save_graph(session_maker, graph, BLUECORE_URL)
+        save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Hub)
         db.refresh(db_hub)
         db_hub.data["@context"] = CONTEXT_URL
 

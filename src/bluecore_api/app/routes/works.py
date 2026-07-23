@@ -101,7 +101,9 @@ async def create_work(
     session_maker=Depends(get_session_maker),
 ):
     graph = load_jsonld(json.loads(work.data))
-    result_graph = save_graph(session_maker, graph, BLUECORE_URL)
+    result_graph = save_graph(
+        session_maker, graph, BLUECORE_URL, primary_class=BF.Work
+    )
     work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
     doc = db.query(Work).filter(Work.uri == work_uri).first()
     if doc:
@@ -128,7 +130,7 @@ async def update_work(
 
     if work.data is not None:
         graph = load_jsonld(json.loads(work.data))
-        save_graph(session_maker, graph, BLUECORE_URL)
+        save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Work)
         db.refresh(db_work)
         db_work.data["@context"] = CONTEXT_URL
 
