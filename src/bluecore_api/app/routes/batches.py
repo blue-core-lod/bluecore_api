@@ -15,6 +15,18 @@ from bluecore_api.schemas.schemas import BatchCreateSchema, BatchSchema
 
 endpoints = APIRouter()
 
+# File extensions that indicate an archive of RDF files to be bulk loaded via
+# the archived_file_loader DAG rather than the single-file resource_loader DAG.
+ARCHIVE_SUFFIXES = (".zip", ".tar.gz", ".tgz", ".gz")
+
+
+def _dag_for_filename(filename: str) -> str:
+    """Pick the Airflow DAG based on whether the upload is an archive."""
+    lower = filename.lower()
+    if any(lower.endswith(suffix) for suffix in ARCHIVE_SUFFIXES):
+        return "archived_file_loader"
+    return "resource_loader"
+
 
 def _xml_to_jsonld_and_save(
     upload_root: Path, xml_data: bytes | str, name: Optional[str] = None
@@ -92,7 +104,9 @@ async def create_batch_file(
 
             file_location = f"/opt/airflow/uploads/{batch_file}"
             workflow_id = await workflow.create_batch_from_uri(
-                file_location, user_uid=user_uid
+                file_location,
+                user_uid=user_uid,
+                dag_id=_dag_for_filename(file.filename),
             )
             return {"uri": file_location, "workflow_id": workflow_id}
 
