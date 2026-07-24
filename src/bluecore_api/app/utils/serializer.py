@@ -44,8 +44,8 @@ def serialize(
     if format in serializer_format_registry:
         return serializer_format_registry[format](doc, expand)
     accept_header = request.headers.get("accept", "")
-    for accept in accept_header.split(","):
-        accept = accept.split(";")[0].strip()
+    for accept_raw in accept_header.split(","):
+        accept = accept_raw.split(";")[0].strip()
         if (
             accept == "text/html"
         ):  # HTML is reached by content negotiation "Accept: text/html"

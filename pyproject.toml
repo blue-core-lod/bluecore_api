@@ -55,3 +55,9 @@ extend-immutable-calls = [
 # Test fixtures/assertions do blocking file I/O inside async-marked tests;
 # there's no event loop contention to worry about here.
 "tests/**" = ["ASYNC230"]
+
+[tool.ruff.lint]
+ignore = [
+  "B008",    # FastAPI requires Depends/File calls in function-parameter defaults
+  "ASYNC240", # os.path ops in async are fast metadata calls, not blocking I/O
+]

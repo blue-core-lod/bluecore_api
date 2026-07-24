@@ -7,7 +7,6 @@ from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Hub
 from bluecore_models.utils.graph import BF, load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi_keycloak_middleware import CheckPermissions
 from rdflib import RDF
 from sqlalchemy.orm import Session
 

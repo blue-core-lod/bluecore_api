@@ -1,26 +1,8 @@
 import os
-import shutil
 from contextlib import contextmanager
-from pathlib import Path
 
 import pytest
 import pytest_asyncio
-
-import os
-
-from pytest_mock_resources import (
-    PostgresConfig,
-    StaticStatements,
-    create_postgres_fixture,
-)
-
-from fastapi import Request
-from fastapi.testclient import TestClient
-from fastapi_keycloak_middleware import get_auth, get_user
-from httpx import ASGITransport, AsyncClient
-
-from contextlib import contextmanager
-
 from bluecore_models.models import (
     Base,
     BibframeClass,
@@ -35,6 +17,15 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.models.pg_ext_func import PG_EXT_FUNC
+from fastapi import Request
+from fastapi.testclient import TestClient
+from fastapi_keycloak_middleware import FastApiUser, get_auth, get_user
+from httpx import ASGITransport, AsyncClient
+from pytest_mock_resources import (
+    PostgresConfig,
+    StaticStatements,
+    create_postgres_fixture,
+)
 
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
@@ -221,3 +212,11 @@ def keycloak_client(app):
 
     with TestClient(stack) as kk_client:
         yield kk_client
+
+
+@pytest.fixture(scope="session")
+def derived_from_sparql():
+    return """prefix bf: <http://id.loc.gov/ontologies/bibframe/>
+SELECT ?derived_from WHERE {
+  ?admin_metadata bf:derivedFrom ?derived_from .
+}"""
