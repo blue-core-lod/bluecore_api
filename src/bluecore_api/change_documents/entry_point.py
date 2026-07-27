@@ -1,3 +1,7 @@
+import math
+
+from sqlalchemy.orm import Session
+
 from bluecore_api.change_documents.counter import Counter
 from bluecore_api.constants import (
     BluecoreType,
@@ -5,8 +9,6 @@ from bluecore_api.constants import (
 from bluecore_api.schemas.change_documents.schemas import (
     EntryPointSchema,
 )
-from sqlalchemy.orm import Session
-import math
 
 
 class EntryPoint(Counter, EntryPointSchema):

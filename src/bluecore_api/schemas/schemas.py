@@ -1,32 +1,33 @@
-from typing import Optional
+from collections.abc import Sequence
+from datetime import datetime
+from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
-from datetime import datetime
+
 from bluecore_api.constants import BluecoreType
-from typing import Any, Dict, List, Sequence
-from uuid import UUID
 
 
 class ErrorResponse(BaseModel):
     title: str
-    details: Optional[str] = None
+    details: str | None = None
     status: str
 
 
 class ResourceBaseSchema(BaseModel):
-    id: Optional[int]
+    id: int | None
     type: str
-    data: Dict[str, Any]
-    uri: Optional[str]
-    uuid: Optional[UUID]
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
+    data: dict[str, Any]
+    uri: str | None
+    uuid: UUID | None
+    created_at: datetime | None
+    updated_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class InstanceCreateSchema(BaseModel):
-    work_id: Optional[int] = None
+    work_id: int | None = None
     data: str
 
 
@@ -39,36 +40,36 @@ class InstanceEmbeddingSchema(BaseModel):
 
 class InstanceSchema(ResourceBaseSchema):
     type: str = BluecoreType.INSTANCES
-    work_id: Optional[int]
+    work_id: int | None
     is_expanded: bool = False
 
 
 class InstanceUpdateSchema(BaseModel):
-    data: Optional[str] = None
-    work_id: Optional[int] = None
+    data: str | None = None
+    work_id: int | None = None
 
 
 class OtherResourceSchema(BaseModel):
     id: int
-    data: Dict[str, Any] | List[Any]
-    uri: Optional[str] = None
+    data: dict[str, Any] | list[Any]
+    uri: str | None = None
 
 
 class OtherResourceCreateSchema(BaseModel):
     data: str
-    uri: Optional[str] = None
+    uri: str | None = None
 
 
 class OtherResourceUpdateSchema(BaseModel):
-    data: Optional[str] = None
-    uri: Optional[str] = None
+    data: str | None = None
+    uri: str | None = None
 
 
 class ProfileSchema(BaseModel):
     id: int
-    uuid: Optional[UUID] = None
-    uri: Optional[str] = None
-    data: Dict[str, Any] | List[Any]
+    uuid: UUID | None = None
+    uri: str | None = None
+    data: dict[str, Any] | list[Any]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -78,7 +79,7 @@ class ProfileCreateSchema(BaseModel):
 
 
 class ProfileUpdateSchema(BaseModel):
-    data: Optional[str] = None
+    data: str | None = None
 
 
 class HubCreateSchema(BaseModel):
@@ -98,22 +99,22 @@ class HubSchema(ResourceBaseSchema):
 
 
 class HubUpdateSchema(BaseModel):
-    data: Optional[str] = None
-    hub_id: Optional[int] = None
+    data: str | None = None
+    hub_id: int | None = None
 
 
 class WorkCreateSchema(BaseModel):
-    hub_id: Optional[int] = None
+    hub_id: int | None = None
     data: str
 
 
 class WorkUpdateSchema(BaseModel):
-    data: Optional[str] = None
+    data: str | None = None
 
 
 class WorkSchema(ResourceBaseSchema):
     type: str = BluecoreType.WORKS
-    hub_id: Optional[int]
+    hub_id: int | None
     is_expanded: bool = False
 
 
@@ -125,18 +126,18 @@ class WorkEmbeddingSchema(BaseModel):
 
 
 class BatchCreateSchema(BaseModel):
-    uri: Optional[str] = None
+    uri: str | None = None
 
 
 class BatchSchema(BaseModel):
-    uri: Optional[str] = None
+    uri: str | None = None
     workflow_id: str
 
 
 class LinksSchema(BaseModel):
     first: str
-    prev: Optional[str] = None
-    next: Optional[str] = None
+    prev: str | None = None
+    next: str | None = None
 
 
 class SearchResultSchema(BaseModel):

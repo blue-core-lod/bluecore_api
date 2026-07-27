@@ -1,18 +1,19 @@
+import math
+
+from bluecore_models.models import ResourceBase, Version
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
 from bluecore_api.change_documents.counter import Counter
 from bluecore_api.constants import (
     BibframeType,
     BluecoreType,
 )
-from bluecore_models.models import ResourceBase, Version
 from bluecore_api.schemas.change_documents.schemas import (
     ChangeSetSchema,
     EntityChangeActivitiesSchema,
     EntityChangeObjectSchema,
 )
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from typing import Dict, List, Union
-import math
 
 
 class EntityChangeObject(EntityChangeObjectSchema):
@@ -98,7 +99,7 @@ class ChangeSet(Counter, ChangeSetSchema):
             .limit(page_length)
         )
         paginated_query = db.execute(stmt).scalars().all()
-        ordered_items: List[EntityChangeActivitiesSchema] = []
+        ordered_items: list[EntityChangeActivitiesSchema] = []
         for version in paginated_query:
             ordered_items.append(EntityChangeActivity(version=version))
 
@@ -117,7 +118,7 @@ class ChangeSet(Counter, ChangeSetSchema):
         total_pages: int,
         bc_type: BluecoreType,
         host: str,
-    ) -> Dict[str, Union[str, None]]:
+    ) -> dict[str, str | None]:
         """
         Out of bounds conditions are not handled here.
         """

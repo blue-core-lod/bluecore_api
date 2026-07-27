@@ -70,11 +70,12 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
         json={"dag_run_id": "12345"},
     )
 
-    response = client.post(
-        "/batches/upload/",
-        files={"file": open("README.md", "rb")},
-        headers={"X-User": "cataloger"},
-    )
+    with open("README.md", "rb") as readme:
+        response = client.post(
+            "/batches/upload/",
+            files={"file": readme},
+            headers={"X-User": "cataloger"},
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -87,7 +88,8 @@ async def test_create_batch_from_upload(client, httpx_mock: HTTPXMock):
     # ensure that the file was saved to the uploads directory for airflow
     upload_file = Path("./uploads/") / data["uri"].split("uploads/")[-1]
     assert upload_file.is_file()
-    assert upload_file.open("r").read() == open("README.md").read()
+    with upload_file.open("r") as saved, open("README.md") as original:
+        assert saved.read() == original.read()
 
 
 def _mock_airflow_chain(httpx_mock: HTTPXMock, dag_run_id="12345"):

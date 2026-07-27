@@ -11,7 +11,8 @@ from bluecore_api.constants import CONTEXT_URL
 
 test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
 test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
-jsonld_data = json.load(pathlib.Path("tests/blue-core-work.jsonld").open())
+with pathlib.Path("tests/blue-core-work.jsonld").open() as fo:
+    jsonld_data = json.load(fo)
 orig_graph = load_jsonld(jsonld_data)
 
 expanded_work_uuid = "7b7ed475-9126-4368-925a-8b8c5520250e"

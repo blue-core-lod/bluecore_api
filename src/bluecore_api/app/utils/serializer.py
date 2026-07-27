@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from bluecore_models.models import Instance, Work
 from fastapi import Request, Response

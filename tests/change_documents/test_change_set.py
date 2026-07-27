@@ -1,5 +1,10 @@
 from __future__ import annotations
-from bluecore_models.models import Work, Instance
+
+import pytest
+from bluecore_models.models import Instance, Work
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
 from bluecore_api.change_documents.change_set import (
     ChangeSet,
 )
@@ -7,11 +12,6 @@ from bluecore_api.constants import BibframeType, BluecoreType
 from bluecore_api.schemas.change_documents.schemas import (
     ChangeSetSchema,
 )
-
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-import pytest
-
 
 TEST_PAGE_LENGTH = 2
 BLUECORE_URL = "https://bcld.info"

@@ -1,7 +1,6 @@
 import re
 
 import pytest
-
 from pytest_httpx import HTTPXMock
 
 

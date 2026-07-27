@@ -1,5 +1,6 @@
 import json
-from typing import Any, Callable, Type
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -20,7 +21,7 @@ async def _request_payload(request: Request) -> tuple[Any, str]:
     return payload, content_type
 
 
-def _validate_schema(schema: Type[BaseModel], payload: Any) -> BaseModel:
+def _validate_schema(schema: type[BaseModel], payload: Any) -> BaseModel:
     """Validate payload as a FastAPI request body."""
     try:
         return schema.model_validate(payload)
@@ -28,7 +29,7 @@ def _validate_schema(schema: Type[BaseModel], payload: Any) -> BaseModel:
         raise RequestValidationError(error.errors()) from error
 
 
-def deserialize(schema: Type[BaseModel]) -> Callable:
+def deserialize(schema: type[BaseModel]) -> Callable:
     """
     FastAPI dependency parsing a PUT/POST body by Content-Type into 'schema'.
 
@@ -56,7 +57,7 @@ def deserialize(schema: Type[BaseModel]) -> Callable:
 
 
 def request_body_openapi(
-    schema: Type[BaseModel], jsonld_example: dict[str, Any]
+    schema: type[BaseModel], jsonld_example: dict[str, Any]
 ) -> dict:
     """
     Document both accepted request bodies for a create/update endpoint.

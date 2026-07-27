@@ -1,7 +1,8 @@
-from bluecore_api.constants import BluecoreType
 from bluecore_models.models import ResourceBase, Version
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+
+from bluecore_api.constants import BluecoreType
 
 
 class Counter:

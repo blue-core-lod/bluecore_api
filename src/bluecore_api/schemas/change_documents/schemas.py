@@ -1,17 +1,18 @@
+from typing import Annotated
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Annotated, Dict, List, Optional, Union
 
 """
 There are many hard coded values in the schemas.
 These should be moved to constants when other parts of the application reference them.
 """
 
-ENTRY_POINT_CONTEXT: List[str] = [
+ENTRY_POINT_CONTEXT: list[str] = [
     "https://www.w3.org/ns/activitystreams",
     "https://emm-spec.org/1.0/context.json",
 ]
 
-CHANGE_SET_CONTEXT: List[Union[str, Dict[str, str]]] = [
+CHANGE_SET_CONTEXT: list[str | dict[str, str]] = [
     "https://www.w3.org/ns/activitystreams",
     "https://emm-spec.org/1.0/context.json",
     {"bf": "http://id.loc.gov/ontologies/bibframe/"},
@@ -28,13 +29,13 @@ class EntryPointSchema(BaseModel):
         revalidate_instances="subclass-instances",
     )
 
-    context: Annotated[List[str], Field(alias="@context")] = ENTRY_POINT_CONTEXT
+    context: Annotated[list[str], Field(alias="@context")] = ENTRY_POINT_CONTEXT
     summary: str
     type: str = "OrderedCollection"
     id: str
-    url: Optional[str] = None
-    first: Dict[str, str]
-    last: Dict[str, str]
+    url: str | None = None
+    first: dict[str, str]
+    last: dict[str, str]
     totalItems: int
 
 
@@ -43,8 +44,8 @@ class EntityChangeObjectSchema(BaseModel):
         revalidate_instances="subclass-instances",
     )
 
-    type: Optional[str] = None
-    updated: Optional[str] = None
+    type: str | None = None
+    updated: str | None = None
     id: str
 
 
@@ -56,7 +57,7 @@ class EntityChangeActivitiesSchema(BaseModel):
     summary: str
     published: str
     type: str
-    partOf: Optional[str] = None
+    partOf: str | None = None
     object: EntityChangeObjectSchema
 
 
@@ -70,13 +71,13 @@ class ChangeSetSchema(BaseModel):
         revalidate_instances="subclass-instances",
     )
 
-    context: Annotated[List[Union[str, Dict[str, str]]], Field(alias="@context")] = (
+    context: Annotated[list[str | dict[str, str]], Field(alias="@context")] = (
         CHANGE_SET_CONTEXT
     )
     type: str = "OrderedCollectionPage"
     id: str
     partOf: str
-    totalItems: Optional[int] = None
-    prev: Optional[str] = None
-    next: Optional[str] = None
-    orderedItems: List[EntityChangeActivitiesSchema]
+    totalItems: int | None = None
+    prev: str | None = None
+    next: str | None = None
+    orderedItems: list[EntityChangeActivitiesSchema]
