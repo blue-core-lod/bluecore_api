@@ -104,7 +104,7 @@ def test_cbd(client: TestClient, db_session: Session):
     instances = add_instances(client, db_session, work_id, work_derived_from)
 
     headers = {"Accept": "application/cbd+xml"}
-    response = client.get(f"/instances/{str(instances[0].uuid)}", headers=headers)
+    response = client.get(f"/instances/{instances[0].uuid!s}", headers=headers)
     assert response.status_code == 200
     assert response.headers["Content-Type"] == "application/rdf+xml"
     response_data = response.content.decode("utf-8")

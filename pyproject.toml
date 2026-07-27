@@ -43,3 +43,17 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bluecore_api"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection pattern relies on calling these in argument
+# defaults, so they're not the mutable-default footgun B008 warns about.
+extend-immutable-calls = [
+  "fastapi.Depends",
+  "fastapi.File",
+  "bluecore_api.app.utils.deserializer.deserialize",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test fixtures/assertions do blocking file I/O inside async-marked tests;
+# there's no event loop contention to worry about here.
+"tests/**" = ["ASYNC230"]

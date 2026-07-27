@@ -13,7 +13,7 @@ from bluecore_api.constants import CONTEXT_URL
 def test_get_hub(client, db_session):
     test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
     test_hub_uri = f"http://id.loc.gov/resources/hubs/{test_hub_uuid}"
-    jsonld_data = json.load(pathlib.Path("tests/blue-core-hub.jsonld").open())
+    jsonld_data = json.loads(pathlib.Path("tests/blue-core-hub.jsonld").read_text())
     orig_graph = load_jsonld(jsonld_data)
 
     db_session.add(

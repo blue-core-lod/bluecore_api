@@ -4,19 +4,21 @@ few special cases (identifiers, provision activity, admin metadata) that match
 the UI/UX mockups. Referenced Blue Core Works/Instances link to their own URL (their `@id`).
 """
 
+import logging
 import re
 from typing import Any
 from urllib.parse import urlparse
 
+from bluecore_models.models import Instance, Work
+from bluecore_models.namespaces import MADS
+from bluecore_models.utils.graph import load_jsonld
 from fastapi import Request, Response
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDFS
 
-from bluecore_models.models import Instance, Work
-from bluecore_models.namespaces import MADS
-from bluecore_models.utils.graph import load_jsonld
-
 from bluecore_api.app.templating import BLUECORE_URL, templates
+
+logger = logging.getLogger(__name__)
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 # The stored JSON-LD may carry rdf:value either fully expanded or in its
@@ -137,6 +139,7 @@ def _build_label_map(resource: Instance | Work) -> dict[str, str]:
         try:
             graph += load_jsonld(other.data)
         except Exception:
+            logger.exception("Failed to load OtherResource %s", other.uuid)
             continue
     label_map: dict[str, str] = {}
     for subject in set(graph.subjects()):

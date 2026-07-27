@@ -1,10 +1,12 @@
-from bluecore_api.app.routes.search import format_query
+import json
+import pathlib
+
+import pytest
 from bluecore_models.models import Profile, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-import json
-import pathlib
-import pytest
+
+from bluecore_api.app.routes.search import format_query
 
 
 def test_format_query():
@@ -122,7 +124,8 @@ test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
 
 
 def add_data(db_session: Session):
-    work_data = json.load(pathlib.Path("tests/blue-core-work.jsonld").open())
+    with pathlib.Path("tests/blue-core-work.jsonld").open() as fo:
+        work_data = json.load(fo)
 
     db_session.add(
         Work(
@@ -135,8 +138,10 @@ def add_data(db_session: Session):
 
 
 def add_profiles(db_session: Session):
-    eng = json.load(pathlib.Path("tests/blue-core-other-resources.json").open())
-    kor = json.load(pathlib.Path("tests/blue-core-other-resources2.json").open())
+    with pathlib.Path("tests/blue-core-other-resources.json").open() as fo:
+        eng = json.load(fo)
+    with pathlib.Path("tests/blue-core-other-resources2.json").open() as fo:
+        kor = json.load(fo)
     db_session.add(
         Profile(
             uri="https://api.sinopia.io/profiles/test-profile",

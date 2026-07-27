@@ -1,9 +1,8 @@
 import json
 
-from rdflib import Graph
-
 from bluecore_models.models import Instance, Work
 from bluecore_models.utils.graph import load_jsonld
+from rdflib import Graph
 
 
 def expand_resource_graph(db_resource: Instance | Work) -> list:

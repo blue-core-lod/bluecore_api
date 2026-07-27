@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 from uuid import uuid4
 
 import rdflib
@@ -17,7 +16,7 @@ endpoints = APIRouter()
 
 
 def _xml_to_jsonld_and_save(
-    upload_root: Path, xml_data: bytes | str, name: Optional[str] = None
+    upload_root: Path, xml_data: bytes | str, name: str | None = None
 ) -> str:
     """
     Convert RDF/XML (bytes or str) to JSON-LD, save under ./uploads/<uuid>/<name>.jsonld,
@@ -116,7 +115,7 @@ async def create_batch_file(
             return {"uri": file_location, "workflow_id": workflow_id}
 
         # Case C: raw XML body -> convert to JSON-LD
-        if ct.startswith("application/xml") or ct.startswith("text/xml"):
+        if ct.startswith(("application/xml", "text/xml")):
             xml_bytes = await request.body()
             if not xml_bytes:
                 raise HTTPException(status_code=422, detail="Empty XML body.")

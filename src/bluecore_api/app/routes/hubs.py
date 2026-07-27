@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -33,6 +34,7 @@ from bluecore_api.schemas.schemas import (
 )
 
 endpoints = APIRouter()
+logger = logging.getLogger(__name__)
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
@@ -53,8 +55,8 @@ async def read_hub(
         resp: Response | None = serialize(db_hub, expand, format, request)
         if resp:
             return resp
-    except Exception as _e:
-        pass
+    except Exception:
+        logger.exception("Failed to serialize hub %s as %s", hub_uuid, format)
 
     # No recognized format, return the default JSON-LD serialization
     return as_jsonld(db_hub, expand)

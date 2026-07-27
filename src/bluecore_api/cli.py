@@ -1,12 +1,12 @@
 import json
 import os
 from pathlib import Path
+from typing import Annotated
 
 import dotenv
 import httpx
 from rich import print as printr
 from typer import Argument, Exit, Option, Typer
-from typing_extensions import Annotated
 
 dotenv.load_dotenv()
 app = Typer()
@@ -141,11 +141,11 @@ def load_profiles(
 
 @app.callback()
 def main(
-    bluecore_url: Annotated[str, Option(help="Bluecore URL")] = None,
-    api_url: Annotated[str, Option(help="Bluecore API URL")] = None,
-    keycloak_url: Annotated[str, Option(help="Keycloak URL")] = None,
-    username: Annotated[str, Option(help="Bluecore username")] = None,
-    password: Annotated[str, Option(help="Bluecore password")] = None,
+    bluecore_url: Annotated[str | None, Option(help="Bluecore URL")] = None,
+    api_url: Annotated[str | None, Option(help="Bluecore API URL")] = None,
+    keycloak_url: Annotated[str | None, Option(help="Keycloak URL")] = None,
+    username: Annotated[str | None, Option(help="Bluecore username")] = None,
+    password: Annotated[str | None, Option(help="Bluecore password")] = None,
     verbose: Annotated[bool, Option(help="Verbose output")] = False,
 ):
     # set some global options either from the command line, a .env or a prompt

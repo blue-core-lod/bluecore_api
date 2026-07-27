@@ -1,14 +1,16 @@
+import os
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from bluecore_api.change_documents.change_set import ChangeSet
 from bluecore_api.change_documents.entry_point import EntryPoint
-from bluecore_api.constants import BluecoreType, DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH
+from bluecore_api.constants import DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH, BluecoreType
 from bluecore_api.database import get_db
 from bluecore_api.schemas.change_documents.schemas import (
     ChangeSetSchema,
     EntryPointSchema,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-import os
 
 page_length: int = int(
     os.getenv("ACTIVITY_STREAMS_PAGE_LENGTH", DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH)

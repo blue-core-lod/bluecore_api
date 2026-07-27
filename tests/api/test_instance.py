@@ -17,7 +17,7 @@ from bluecore_api.app.utils.serialize.response_generator import CONTEXT_URL
 
 test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
 test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
-jsonld_data = json.load(pathlib.Path("tests/blue-core-instance.jsonld").open())
+jsonld_data = json.loads(pathlib.Path("tests/blue-core-instance.jsonld").read_text())
 orig_graph = load_jsonld(jsonld_data)
 
 test_expanded_instance_uuid = "1e09c839-474d-4ab5-8b44-479e08927045"

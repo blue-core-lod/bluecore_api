@@ -1,16 +1,17 @@
 import datetime
-import os
 import logging
-from typing import Optional
+import os
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 AIRFLOW_USER = os.environ.get("AIRFLOW_WWW_USER_USERNAME")
 AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_WWW_USER_PASSWORD")
 AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL").rstrip("/")
 
 
-async def create_batch_from_uri(uri: str, user_uid: Optional[str] = None) -> str:
+async def create_batch_from_uri(uri: str, user_uid: str | None = None) -> str:
     """
     uri: Start an Airflow DAG run to process data at a given URI. Returns the ID
          for the created DAG Run. A URI can have https, http, s3 or file protocol.
@@ -36,7 +37,7 @@ async def create_batch_from_uri(uri: str, user_uid: Optional[str] = None) -> str
             resp.raise_for_status()
             job_id = resp.json().get("dag_run_id")
         except httpx.HTTPError as e:
-            logging.error(e)
+            logger.error(e)
             if resp.status_code == 401:
                 raise WorkflowError("Invalid credentials for Bluecore Workflow API")
             else:
@@ -70,7 +71,7 @@ async def export_instance(instance_uri: str, user_uid: str) -> str:
             resp.raise_for_status()
             job_id = resp.json().get("dag_run_id")
         except httpx.HTTPError as e:
-            logging.error(e)
+            logger.error(e)
             match resp.response_code:
                 case 401:
                     raise WorkflowError("Invalid credentials for Bluecore Workflow API")
@@ -93,13 +94,14 @@ async def get_token() -> str:
     #
     # See: https://github.com/apache/airflow/issues/51362
 
-    resp = httpx.post(
-        f"{AIRFLOW_INTERNAL_URL}/auth/token",
-        json={"username": AIRFLOW_USER, "password": AIRFLOW_PASSWORD},
-    )
-    resp.raise_for_status()
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{AIRFLOW_INTERNAL_URL}/auth/token",
+            json={"username": AIRFLOW_USER, "password": AIRFLOW_PASSWORD},
+        )
+        resp.raise_for_status()
 
-    return resp.json()["access_token"]
+        return resp.json()["access_token"]
 
 
 class WorkflowError(Exception):

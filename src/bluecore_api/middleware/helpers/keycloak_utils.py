@@ -1,15 +1,16 @@
 from __future__ import annotations
-from typing import Optional, Tuple
-from fastapi import Request
+
 import base64
 import json
 import logging
 import sys
 
+from fastapi import Request
+
 logger = logging.getLogger("keycloak_auth")
 
 
-def _decode_bearer_claims(auth_header: Optional[str]) -> dict:
+def _decode_bearer_claims(auth_header: str | None) -> dict:
     """
     Extract standard OIDC fields (sub, username, email, given/family name) from a
     Bearer JWT *without verification* (just to log who is calling). Returns a
@@ -36,13 +37,13 @@ def _decode_bearer_claims(auth_header: Optional[str]) -> dict:
             "name",
         )
         return {k: payload.get(k) for k in keep if k in payload}
-    except Exception:
+    except (ValueError, TypeError):
         return {}
 
 
 def get_keycloak_user_info(
     request: Request,
-) -> Tuple[str, Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str, str | None, str | None, str | None, str | None]:
     """
     Pull user-identifying fields from the JWT decoded above.
     Returns: (uid, username, email, given_name, family_name)
@@ -65,11 +66,11 @@ def get_keycloak_user_info(
 
 def log_user_info(
     uid,
-    username: Optional[str] = None,
-    email: Optional[str] = None,
-    given_name: Optional[str] = None,
-    family_name: Optional[str] = None,
-    request: Optional[Request] = None,
+    username: str | None = None,
+    email: str | None = None,
+    given_name: str | None = None,
+    family_name: str | None = None,
+    request: Request | None = None,
     level: int = logging.INFO,
 ) -> None:
     # color only in an interactive terminal
