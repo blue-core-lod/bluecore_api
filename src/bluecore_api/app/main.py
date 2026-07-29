@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 from bluecore_models.utils.graph import CONTEXT
 
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
+from bluecore_api.app.routes.convert import endpoints as convert_endpoints
 from bluecore_api.app.routes.export import endpoints as export_routes
 from bluecore_api.app.routes.hubs import endpoints as hub_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
@@ -64,6 +65,7 @@ openapi_tags = [
     },
     {"name": "Batches", "description": "Bulk ingestion via Airflow."},
     {"name": "Export", "description": "Resource export."},
+    {"name": "Convert", "description": "Format conversion utilities."},
 ]
 
 """Init base app"""
@@ -86,6 +88,7 @@ base_app.include_router(search_routes, tags=["Search"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])
 base_app.include_router(export_routes, tags=["Export"])
+base_app.include_router(convert_endpoints, tags=["Convert"])
 
 # MCP write methods require a create/update permission
 _mcp_write_permission = CheckPermissions(
