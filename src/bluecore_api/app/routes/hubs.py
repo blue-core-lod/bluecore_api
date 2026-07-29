@@ -57,6 +57,23 @@ async def read_hub(
     return as_jsonld(db_hub, expand)
 
 
+@endpoints.get(
+    "/hubs/{hub_uuid}/embeddings",
+    operation_id="get_hub_embedding",
+)
+async def get_hub_embedding(hub_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
+@endpoints.post(
+    "/hubs/{hub_uuid}/embeddings",
+    operation_id="new_hub_embedding",
+    status_code=201,
+)
+async def create_hub_embedding(hub_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
 @endpoints.post(
     "/hubs/",
     response_model=HubSchema,

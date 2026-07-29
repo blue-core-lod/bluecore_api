@@ -63,6 +63,23 @@ async def read_instance(
     return as_html(db_instance, request)
 
 
+@endpoints.get(
+    "/instances/{instance_uuid}/embeddings",
+    operation_id="get_instance_embedding",
+)
+async def get_instance_embedding(instance_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
+@endpoints.post(
+    "/instances/{instance_uuid}/embeddings",
+    operation_id="new_instance_embedding",
+    status_code=201,
+)
+async def create_instance_embedding(instance_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
 @endpoints.post(
     "/instances/",
     response_model=InstanceSchema,

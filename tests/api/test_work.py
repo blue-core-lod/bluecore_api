@@ -292,5 +292,17 @@ def test_update_work(client, db_session):
     )
 
 
+def test_get_work_embedding_returns_501(client):
+    response = client.get("/works/some-uuid/embeddings")
+    assert response.status_code == 501
+
+
+def test_create_work_embedding_returns_501(client):
+    response = client.post(
+        "/works/some-uuid/embeddings", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 501
+
+
 if __name__ == "__main__":
     pytest.main()

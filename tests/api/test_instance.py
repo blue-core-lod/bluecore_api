@@ -344,5 +344,17 @@ def test_update_instance(client, db_session):
     )
 
 
+def test_get_instance_embedding_returns_501(client):
+    response = client.get("/instances/some-uuid/embeddings")
+    assert response.status_code == 501
+
+
+def test_create_instance_embedding_returns_501(client):
+    response = client.post(
+        "/instances/some-uuid/embeddings", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 501
+
+
 if __name__ == "__main__":
     pytest.main()

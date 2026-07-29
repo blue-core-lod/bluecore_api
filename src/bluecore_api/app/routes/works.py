@@ -55,6 +55,23 @@ async def read_work(
     return as_html(db_work, request)
 
 
+@endpoints.get(
+    "/works/{work_uuid}/embeddings",
+    operation_id="get_work_embedding",
+)
+async def get_work_embedding(work_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
+@endpoints.post(
+    "/works/{work_uuid}/embeddings",
+    operation_id="new_work_embedding",
+    status_code=201,
+)
+async def create_work_embedding(work_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
+
+
 @endpoints.post(
     "/works/",
     response_model=WorkSchema,

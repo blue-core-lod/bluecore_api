@@ -178,5 +178,17 @@ def test_update_hub(client, db_session):
     )
 
 
+def test_get_hub_embedding_returns_501(client):
+    response = client.get("/hubs/some-uuid/embeddings")
+    assert response.status_code == 501
+
+
+def test_create_hub_embedding_returns_501(client):
+    response = client.post(
+        "/hubs/some-uuid/embeddings", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 501
+
+
 if __name__ == "__main__":
     pytest.main()
