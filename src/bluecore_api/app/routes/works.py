@@ -150,35 +150,3 @@ async def delete_work(
     db.delete(db_work)
     db.commit()
     return Response(status_code=204)
-
-
-@endpoints.post(
-    "/works/{work_uuid}/embeddings",
-    response_model=WorkEmbeddingSchema,
-    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
-    status_code=201,
-    operation_id="new_work_embedding",
-)
-async def create_work_embedding(
-    work_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client=Depends(get_vector_client),
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-
-    version = max(db_work.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    if len(filtered_result) < 1:
-        create_embeddings(version, "works", vector_client)
-        filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    return {
-        "work_id": db_work.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "work_uri": db_work.uri,
-    }

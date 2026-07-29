@@ -7,7 +7,6 @@ from bluecore_models.models import (
     BibframeOtherResources,
     Instance,
     OtherResource,
-    Version,
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld

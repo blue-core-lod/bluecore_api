@@ -8,7 +8,6 @@ from bluecore_models.models import (
     Hub,
     Instance,
     OtherResource,
-    Version,
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
@@ -200,7 +199,8 @@ def test_create_hub_embedding_returns_501(client):
 def test_delete_hub(client, db_session):
     test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
     test_hub_uri = f"http://id.loc.gov/resources/hubs/{test_hub_uuid}"
-    jsonld_data = json.load(pathlib.Path("tests/blue-core-hub.jsonld").open())
+    with pathlib.Path("tests/blue-core-hub.jsonld").open() as f:
+        jsonld_data = json.load(f)
     db_session.add(Hub(id=1, uuid=test_hub_uuid, uri=test_hub_uri, data=jsonld_data))
     db_session.commit()
 
@@ -275,7 +275,8 @@ def test_delete_hub_cascades_to_works_and_instances(client, db_session):
 def test_delete_hub_forbidden(client, db_session):
     test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
     test_hub_uri = f"http://id.loc.gov/resources/hubs/{test_hub_uuid}"
-    jsonld_data = json.load(pathlib.Path("tests/blue-core-hub.jsonld").open())
+    with pathlib.Path("tests/blue-core-hub.jsonld").open() as f:
+        jsonld_data = json.load(f)
     db_session.add(Hub(id=1, uuid=test_hub_uuid, uri=test_hub_uri, data=jsonld_data))
     db_session.commit()
 
