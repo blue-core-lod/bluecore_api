@@ -118,3 +118,35 @@ async def update_work(
         db_work.data["@context"] = CONTEXT_URL
 
     return db_work
+
+
+@endpoints.delete(
+    "/works/{work_uuid}",
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    status_code=204,
+    operation_id="delete_work",
+)
+async def delete_work(
+    work_uuid: str,
+    db: Session = Depends(get_db),
+):
+    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
+    if db_work is None:
+        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
+    for instance in db_work.instances:
+        for rbc in instance.classes:
+            db.delete(rbc)
+        for bor in instance.other_resources:
+            db.delete(bor)
+        for version in instance.versions:
+            db.delete(version)
+        db.delete(instance)
+    for rbc in db_work.classes:
+        db.delete(rbc)
+    for bor in db_work.other_resources:
+        db.delete(bor)
+    for version in db_work.versions:
+        db.delete(version)
+    db.delete(db_work)
+    db.commit()
+    return Response(status_code=204)

@@ -152,6 +152,46 @@ def test_read_profile_by_uri(client):
     assert response.json()["uri"] == created["uri"]
 
 
+def test_delete_profile(client):
+    created = client.post(
+        "/profiles/",
+        headers={"X-User": "cataloger"},
+        json={"data": json.dumps({"label": "To Be Deleted"})},
+    ).json()
+    profile_uuid = created["uuid"]
+
+    response = client.delete(
+        f"/profiles/{profile_uuid}", headers={"X-User": "cataloger"}
+    )
+    assert response.status_code == 204
+
+    get_response = client.get(f"/profiles/{profile_uuid}")
+    assert get_response.status_code == 404
+
+
+def test_delete_profile_not_found(client):
+    response = client.delete(
+        "/profiles/00000000-0000-0000-0000-000000000000",
+        headers={"X-User": "cataloger"},
+    )
+    assert response.status_code == 404
+
+
+def test_delete_profile_forbidden(client, db_session):
+    db_session.add(
+        Profile(
+            id=20,
+            uuid="00000000-0000-0000-0000-000000000020",
+            uri="https://bcld.info/profiles/00000000-0000-0000-0000-000000000020",
+            data={"label": "forbidden test"},
+        )
+    )
+    db_session.commit()
+
+    response = client.delete("/profiles/00000000-0000-0000-0000-000000000020")
+    assert response.status_code == 403
+
+
 def test_profile_not_found_in_resources(client):
     """A Profile is not an OtherResource, so it is absent from /resources/."""
     created = client.post(
