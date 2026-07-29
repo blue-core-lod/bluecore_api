@@ -5,9 +5,7 @@ from pathlib import Path
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Work
 from bluecore_models.utils.graph import BF, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pymilvus import MilvusClient
 from rdflib import RDF
 from sqlalchemy.orm import Session
 
@@ -17,17 +15,14 @@ from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import (
-    filter_vector_result,
     get_db,
     get_session_maker,
-    get_vector_client,
 )
 from bluecore_api.middleware.bluecore_check_permissions import (
     BluecoreCheckPermissions as BCP,
 )
 from bluecore_api.schemas.schemas import (
     WorkCreateSchema,
-    WorkEmbeddingSchema,
     WorkSchema,
     WorkUpdateSchema,
 )
@@ -62,29 +57,19 @@ async def read_work(
 
 @endpoints.get(
     "/works/{work_uuid}/embeddings",
-    response_model=WorkEmbeddingSchema,
     operation_id="get_work_embedding",
 )
-async def get_embedding(
-    work_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client: MilvusClient = Depends(get_vector_client),
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
+async def get_work_embedding(work_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
 
-    version = max(db_work.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    return {
-        "work_id": db_work.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "work_uri": db_work.uri,
-    }
+@endpoints.post(
+    "/works/{work_uuid}/embeddings",
+    operation_id="new_work_embedding",
+    status_code=201,
+)
+async def create_work_embedding(work_uuid: str):
+    raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
 @endpoints.post(
@@ -133,35 +118,3 @@ async def update_work(
         db_work.data["@context"] = CONTEXT_URL
 
     return db_work
-
-
-@endpoints.post(
-    "/works/{work_uuid}/embeddings",
-    response_model=WorkEmbeddingSchema,
-    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
-    status_code=201,
-    operation_id="new_work_embedding",
-)
-async def create_work_embedding(
-    work_uuid: str,
-    db: Session = Depends(get_db),
-    vector_client=Depends(get_vector_client),
-):
-    db_work = db.query(Work).filter(Work.uuid == work_uuid).first()
-    if db_work is None:
-        raise HTTPException(status_code=404, detail=f"Work {work_uuid} not found")
-
-    version = max(db_work.versions, key=lambda version: version.created_at)
-
-    filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    if len(filtered_result) < 1:
-        create_embeddings(version, "works", vector_client)
-        filtered_result = filter_vector_result(vector_client, "works", version.id)
-
-    return {
-        "work_id": db_work.id,
-        "version_id": version.id,
-        "embedding": filtered_result,
-        "work_uri": db_work.uri,
-    }

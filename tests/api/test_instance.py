@@ -8,10 +8,8 @@ from bluecore_models.models import (
     BibframeOtherResources,
     Instance,
     OtherResource,
-    Version,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
-from bluecore_models.utils.vector_db import create_embeddings
 
 from bluecore_api.app.utils.serialize.response_generator import CONTEXT_URL
 
@@ -346,125 +344,16 @@ def test_update_instance(client, db_session):
     )
 
 
-def test_create_instance_jsonld(client, derived_from_sparql):
-    """A raw JSON-LD body (application/ld+json) is accepted in addition to the
-    Sinopia-specific body."""
-    original_graph = init_graph()
-    original_graph.parse(
-        data=pathlib.Path("tests/blue-core-instance.jsonld").read_text(),
-        format="json-ld",
-    )
+def test_get_instance_embedding_returns_501(client):
+    response = client.get("/instances/some-uuid/embeddings")
+    assert response.status_code == 501
 
+
+def test_create_instance_embedding_returns_501(client):
     response = client.post(
-        "/instances/",
-        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
-        content=original_graph.serialize(format="json-ld"),
+        "/instances/some-uuid/embeddings", headers={"X-User": "cataloger"}
     )
-    assert response.status_code == 201
-    data = response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
-    assert data["uri"].startswith("https://bcld.info/instances")
-
-
-def test_update_instance_jsonld(client, db_session):
-    create_response = client.post(
-        "/instances/",
-        headers={"X-User": "cataloger"},
-        json={"data": pathlib.Path("tests/blue-core-instance.jsonld").read_text()},
-    )
-    assert create_response.status_code == 201
-    data = create_response.json()
-    data["data"]["@context"] = CONTEXT
-
-    instance_uri = rdflib.URIRef(data["uri"])
-    instance_uuid = data["uri"].split("/")[-1]
-    instance_graph = init_graph()
-    instance_graph.parse(data=json.dumps(data["data"]), format="json-ld")
-    instance_graph.add(
-        (
-            instance_uri,
-            rdflib.URIRef("https://schema.org/name"),
-            rdflib.Literal("A JSON-LD Instance Name"),
-        )
-    )
-
-    put_response = client.put(
-        f"/instances/{instance_uuid}",
-        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
-        content=instance_graph.serialize(format="json-ld"),
-    )
-    assert put_response.status_code == 200
-
-    get_response = client.get(f"/instances/{instance_uuid}.vnd.sinopia.json")
-    payload = get_response.json()
-    payload["data"]["@context"] = CONTEXT
-    new_instance_graph = init_graph()
-    new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")
-    name = new_instance_graph.value(
-        subject=instance_uri, predicate=rdflib.URIRef("https://schema.org/name")
-    )
-    assert str(name) == "A JSON-LD Instance Name"
-
-
-def test_get_instance_embeddings(client, db_session, vector_client):
-    sample_instance_graph = init_graph()
-    instance_uuid = "3890cc27-6fbf-42b6-8efb-d0ed40e9188e"
-    instance_uri = rdflib.URIRef(f"https://bcld.info/instances/{instance_uuid}")
-    sample_instance_graph.add((instance_uri, rdflib.RDF.type, BF.Instance))
-    title_uri = rdflib.URIRef(f"https://bcld.info/instances/{instance_uuid}#abdef345")
-    sample_instance_graph.add((instance_uri, BF.title, title_uri))
-    sample_instance_graph.add(
-        (title_uri, BF.mainTitle, rdflib.Literal("A Fine Instance", lang="en"))
-    )
-    db_session.add(
-        Instance(
-            id=3,
-            uuid=instance_uuid,
-            uri=str(instance_uri),
-            data=json.loads(sample_instance_graph.serialize(format="json-ld")),
-        )
-    )
-    version = db_session.query(Version).where(Version.resource_id == 3).first()
-    create_embeddings(version, "instances", vector_client)
-
-    # Query client for embeddings
-    get_response = client.get(f"/instances/{instance_uuid}/embeddings")
-    payload = get_response.json()
-
-    assert len(payload["embedding"]) == 3
-    # Sorting embeddings because Milvus doesn't ensure insert order
-    sorted_embedding = sorted(payload["embedding"], key=lambda x: x["text"])
-    assert len(sorted_embedding[0]["vector"]) == 768
-    assert sorted_embedding[2]["text"].startswith(
-        "<https://bcld.info/instances/3890cc27-6fbf-42b6-8efb-d0ed40e9188e> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://id.loc.gov/ontologies/bibframe/Instance>"
-    )
-
-
-def test_new_instance_embedding(client, db_session, vector_client):
-    sample_graph = init_graph()
-    uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    uri = rdflib.URIRef(
-        "https://bluecore.info/instances/75d831b9-e0d6-40f0-abb3-e9130622eb8a"
-    )
-    sample_graph.add((uri, rdflib.RDF.type, BF.Instance))
-    sample_graph.add((uri, rdflib.RDFS.label, rdflib.Literal("Another Instance")))
-
-    db_session.add(
-        Instance(
-            id=4,
-            uuid=uuid,
-            uri=str(uri),
-            data=json.loads(sample_graph.serialize(format="json-ld")),
-        )
-    )
-    post_result = client.post(
-        f"/instances/{uuid}/embeddings", headers={"X-User": "cataloger"}
-    )
-
-    payload = post_result.json()
-    assert payload["instance_uri"] == str(uri)
-    assert len(payload["embedding"]) == len(sample_graph)
-    assert len(payload["embedding"][0]["vector"]) == 768
+    assert response.status_code == 501
 
 
 if __name__ == "__main__":
