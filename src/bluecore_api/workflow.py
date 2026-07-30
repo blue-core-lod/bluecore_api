@@ -46,12 +46,17 @@ async def create_batch_from_uri(uri: str, user_uid: str | None = None) -> str:
         return job_id
 
 
-async def export_instance(instance_uri: str, user_uid: str) -> str:
+async def export_instance(
+    user_uid: str, instance_uri: str, local_id: str | None = None
+) -> str:
     """
     Triggers the monitor_export_api DAG run that exports the Instance and Work to
     institution's LSP based on the user's group.
 
-    instance_uri: Blue Core Instance URI
+    instance_uri: Blue Core Instance URI.
+    local_id: Optional institution-local identifier (e.g. an HRID, or another
+              institution's equivalent) of an existing catalog record to overlay,
+              instead of resolving the target record from instance_uri alone.
     user_uid: Keycloak subject/UID
     """
     token = await get_token()
@@ -59,7 +64,12 @@ async def export_instance(instance_uri: str, user_uid: str) -> str:
     url = f"{AIRFLOW_INTERNAL_URL}/api/v2/dags/monitor_institutions_exports/dagRuns"
     now = datetime.datetime.now(tz=datetime.UTC).isoformat()
 
-    conf = {"resource": instance_uri, "user": user_uid}
+    # NOTE: the "local_id" conf key is provisional and needs to be confirmed against
+    # (or coordinated with) the monitor_institutions_exports DAG definition in
+    # bluecore-workflows, which today only reads "resource" from conf. "resource"
+    # is always present; "local_id" is present only when an overlay target
+    # identifier was submitted, otherwise it's sent as null.
+    conf = {"resource": instance_uri, "local_id": local_id, "user": user_uid}
 
     async with httpx.AsyncClient() as client:
         try:
@@ -72,7 +82,7 @@ async def export_instance(instance_uri: str, user_uid: str) -> str:
             job_id = resp.json().get("dag_run_id")
         except httpx.HTTPError as e:
             logger.error(e)
-            match resp.response_code:
+            match resp.status_code:
                 case 401:
                     raise WorkflowError("Invalid credentials for Bluecore Workflow API")
 
