@@ -1,6 +1,6 @@
 [project]
 name = "bluecore-api"
-version = "0.24.0"
+version = "0.24.1"
 description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -19,6 +19,7 @@ dependencies = [
   "lxml>=6.0.2",
   "jinja2>=3.1.6",
   "pymarc>=5.2.0",
+  "mcp==1.29.0" # Pinning version until fastapi-mcp is updated
 ]
 
 [project.scripts]
