@@ -133,8 +133,10 @@ class SearchProfileResultSchema(BaseModel):
 
 class ExportSchema(BaseModel):
     instance_uri: str
+    local_id: str | None = None
 
 
 class ExportResponseSchema(BaseModel):
     instance_uri: str
+    local_id: str | None = None
     workflow_id: str
