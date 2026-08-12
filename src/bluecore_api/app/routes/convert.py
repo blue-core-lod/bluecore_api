@@ -99,33 +99,47 @@ async def marc2bibframe(
     file: UploadFile = File(None),
 ):
     """
-    Convert MARCXML to BIBFRAME JSON-LD using the LC marc2bibframe2 stylesheet.
+    Convert MARC to BIBFRAME JSON-LD using the LC marc2bibframe2 stylesheet.
 
     Accepts either:
-    - Multipart form-data with a ``file`` field containing MARCXML.
-    - A raw body with ``Content-Type: application/xml`` or ``Content-Type: text/xml``.
+    - Multipart form-data with a ``file`` field containing MARCXML or binary MARC21.
+    - A raw body with ``Content-Type: application/xml``, ``text/xml``,
+      or ``application/marc``.
+
+    Binary MARC21 payloads are automatically converted to MARCXML before
+    the BIBFRAME transformation.
 
     Returns BIBFRAME as ``application/ld+json``.
     """
     if file and getattr(file, "filename", None):
-        marcxml_bytes = await file.read()
+        raw_bytes = await file.read()
     else:
         ct = (request.headers.get("content-type") or "").lower()
-        if not ct.startswith(("application/xml", "text/xml")):
+        if not ct.startswith(("application/xml", "text/xml", "application/marc")):
             raise HTTPException(
                 status_code=415,
                 detail=(
                     "Send multipart/form-data with a 'file' field, "
-                    "or a raw body with Content-Type: application/xml or text/xml."
+                    "or a raw body with Content-Type: application/xml, text/xml, "
+                    "or application/marc."
                 ),
             )
-        marcxml_bytes = await request.body()
+        raw_bytes = await request.body()
 
-    if not marcxml_bytes:
-        raise HTTPException(status_code=422, detail="Empty MARCXML payload.")
+    if not raw_bytes:
+        raise HTTPException(status_code=422, detail="Empty payload.")
+
+    # If the payload looks like binary MARC21 (not XML), convert to MARCXML first.
+    if not raw_bytes.lstrip().startswith(b"<"):
+        try:
+            raw_bytes = _marc_bytes_to_marcxml(raw_bytes)
+        except Exception as exc:  # noqa: BLE001
+            raise HTTPException(
+                status_code=422, detail=f"Failed to parse MARC data: {exc}"
+            )
 
     try:
-        jsonld = _marcxml_to_bibframe_jsonld(marcxml_bytes)
+        jsonld = _marcxml_to_bibframe_jsonld(raw_bytes)
     except etree.XMLSyntaxError as exc:
         raise HTTPException(status_code=422, detail=f"Invalid XML: {exc}")
     except etree.XSLTApplyError as exc:
