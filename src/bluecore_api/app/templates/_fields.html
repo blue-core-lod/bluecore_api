@@ -3,7 +3,14 @@
 {##############################################################################}
 
 {####  Render Values Section  ####}
+{####  Stub Flag: marks a placeholder record still waiting for its own description  ####}
+{% macro stub_flag() -%}
+    <span class="bc-stub" role="img" aria-label="Stub record"
+          title="Linked Data Stub: Import record for full description">{{ _alert_icon() }}</span>
+{%- endmacro %}
+
 {% macro render_value(v) -%}
+    {%- if v.alert %}{{ stub_flag() }}{% endif -%}
     {%- if v.href -%}<a href="{{ v.href }}">{{ v.text }}</a>{%- else -%}{{ v.text }}{%- endif -%}
 {%- endmacro %}
 

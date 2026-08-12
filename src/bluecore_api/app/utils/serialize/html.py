@@ -25,6 +25,11 @@ RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 # compacted prefixed form (e.g. identifiers from the API context use "rdf:value").
 RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
 
+# Note bluecore_models writes on a resource that a record only stubbed out.
+# Kept as a literal rather than imported so the view doesn't need a newer
+# bluecore_models release to render.
+STUB_NOTE = "Linked Data Stub: Import record for full description"
+
 
 def _rdf_value(node: dict[str, Any]) -> Any:
     """Return the rdf:value of a node, whichever key form it uses."""
@@ -88,7 +93,9 @@ def _label_text(node: Any) -> str:
     if isinstance(node, str):
         return node
     if isinstance(node, list):
-        return ", ".join(filter(None, (_label_text(n) for n in node)))
+        # A record can carry the same title or label twice as separate but
+        # identical nodes; dict.fromkeys drops the repeats and keeps the order.
+        return ", ".join(dict.fromkeys(filter(None, (_label_text(n) for n in node))))
     if not isinstance(node, dict):
         return str(node) if node is not None else ""
     for key in (
@@ -287,7 +294,11 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
         for key, val in block.items():
             if key in ("@id", "@type"):
                 continue
-            values.append(_value(f"{_humanize(key)}: {_label_text(val)}"))
+            value = _value(f"{_humanize(key)}: {_label_text(val)}")
+            # flag the stub note here too, not just beside the heading
+            if STUB_NOTE in value["text"]:
+                value["alert"] = True
+            values.append(value)
         if values:
             fields.append({"label": "Admin Metadata", "values": values})
     return fields
@@ -482,6 +493,14 @@ def _work_types(data: dict[str, Any]) -> list[dict[str, Any]]:
     return [_value(_id_tail(t)) for t in types]
 
 
+def _is_stub(data: dict[str, Any]) -> bool:
+    """Whether this record is a placeholder waiting for its own description."""
+    return any(
+        isinstance(block, dict) and STUB_NOTE in _label_text(block.get("note", ""))
+        for block in _as_list(data.get("adminMetadata"))
+    )
+
+
 def render_instance_html(instance: Instance, request: Request) -> Response:
     data = instance.data
     label_map = _build_label_map(instance)
@@ -510,6 +529,7 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
             "sidebar": sidebar,
             "resource_uri": instance.uri,
             "is_work": False,
+            "is_stub": _is_stub(data),
         },
     )
 
@@ -546,5 +566,6 @@ def render_work_html(work: Work, request: Request) -> Response:
             "sidebar": sidebar,
             "resource_uri": work.uri,
             "is_work": True,
+            "is_stub": _is_stub(data),
         },
     )
