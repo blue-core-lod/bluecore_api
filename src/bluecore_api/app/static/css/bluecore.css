@@ -310,16 +310,24 @@ body {
   vertical-align: -3px;
 }
 
-/* Stub flag, next to the heading and the note: the same amber advisory colour,
-   sized to whatever text it sits beside. The heading centres it with flex; the
-   vertical-align keeps it on the baseline when it runs inline in a note. */
+/* Stub flag: the same amber advisory colour, sized to whatever text it sits
+   beside. The heading centres it with flex; the vertical-align keeps it on the
+   baseline when it runs inline in a field value. */
 .bc-stub {
   display: inline-flex;
   align-items: center;
   color: #b45309;
   cursor: help;
   vertical-align: -0.15em;
+}
+
+/* It leads the heading and trails a field value, so the gap swaps sides. */
+.bc-doctype .bc-stub {
   margin-right: 6px;
+}
+
+.bc-list-value .bc-stub {
+  margin-left: 6px;
 }
 
 .bc-stub svg {

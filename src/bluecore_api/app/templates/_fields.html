@@ -10,8 +10,8 @@
 {%- endmacro %}
 
 {% macro render_value(v) -%}
-    {%- if v.alert %}{{ stub_flag() }}{% endif -%}
     {%- if v.href -%}<a href="{{ v.href }}">{{ v.text }}</a>{%- else -%}{{ v.text }}{%- endif -%}
+    {%- if v.alert %}{{ stub_flag() }}{% endif -%}
 {%- endmacro %}
 
 {####  Render Field Section  ####}

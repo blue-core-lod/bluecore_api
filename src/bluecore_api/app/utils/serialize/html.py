@@ -25,10 +25,18 @@ RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 # compacted prefixed form (e.g. identifiers from the API context use "rdf:value").
 RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
 
-# Note bluecore_models writes on a resource that a record only stubbed out.
-# Kept as a literal rather than imported so the view doesn't need a newer
-# bluecore_models release to render.
-STUB_NOTE = "Linked Data Stub: Import record for full description"
+# Status bluecore_models records on a resource a record only stubbed out
+# ("incomplete"). Kept as a literal rather than imported so the view doesn't need
+# a newer bluecore_models release to render.
+STUB_STATUS = "http://id.loc.gov/vocabulary/mstatus/incmp"
+
+
+def _is_stub_status(value: Any) -> bool:
+    """Whether a bf:status value is the one we record on a stub."""
+    return any(
+        isinstance(item, dict) and item.get("@id") == STUB_STATUS
+        for item in _as_list(value)
+    )
 
 
 def _rdf_value(node: dict[str, Any]) -> Any:
@@ -295,8 +303,8 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
             if key in ("@id", "@type"):
                 continue
             value = _value(f"{_humanize(key)}: {_label_text(val)}")
-            # flag the stub note here too, not just beside the heading
-            if STUB_NOTE in value["text"]:
+            # flag the stub status here too, not just beside the heading
+            if key == "status" and _is_stub_status(val):
                 value["alert"] = True
             values.append(value)
         if values:
@@ -496,7 +504,7 @@ def _work_types(data: dict[str, Any]) -> list[dict[str, Any]]:
 def _is_stub(data: dict[str, Any]) -> bool:
     """Whether this record is a placeholder waiting for its own description."""
     return any(
-        isinstance(block, dict) and STUB_NOTE in _label_text(block.get("note", ""))
+        isinstance(block, dict) and _is_stub_status(block.get("status"))
         for block in _as_list(data.get("adminMetadata"))
     )
 
