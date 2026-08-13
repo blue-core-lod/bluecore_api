@@ -30,6 +30,9 @@ RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
 # a newer bluecore_models release to render.
 STUB_STATUS = "http://id.loc.gov/vocabulary/mstatus/incmp"
 
+# Host whose record pages we know how to link to (see _source_record_url).
+LC_ID_HOST = "id.loc.gov"
+
 
 def _is_stub_status(value: Any) -> bool:
     """Whether a bf:status value is the one we record on a stub."""
@@ -47,9 +50,20 @@ def _rdf_value(node: dict[str, Any]) -> Any:
     return None
 
 
+# A pseudo-key for the field tables below: bf:title holds both the title proper
+# and any variants, and they get separate headings the way LC's own views do, so
+# one json-ld key feeds two display fields. Order stays declarative this way.
+VARIANT_TITLE_KEY = "title:variant"
+VARIANT_TITLE_LABEL = "Other Titles (e.g. Variant)"
+
+# The headings bf:title feeds, so anything inserted after the titles (the Work
+# view's Type) can find where they end rather than assuming a position.
+TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL})
+
 # (json-ld key, human label) in display order. Mirrors the mockups.
 INSTANCE_FIELDS: list[tuple[str, str]] = [
     ("title", "Title"),
+    (VARIANT_TITLE_KEY, VARIANT_TITLE_LABEL),
     ("identifiedBy", "Identified by"),
     ("contribution", "Contribution"),
     ("note", "Note"),
@@ -65,6 +79,7 @@ INSTANCE_FIELDS: list[tuple[str, str]] = [
 
 WORK_FIELDS: list[tuple[str, str]] = [
     ("title", "Title"),
+    (VARIANT_TITLE_KEY, VARIANT_TITLE_LABEL),
     ("contribution", "Contribution"),
     ("subject", "Subject"),
     ("language", "Language"),
@@ -288,6 +303,43 @@ def _humanize(key: str) -> str:
     return name[:1].upper() + name[1:].lower()
 
 
+def _source_record_url(uri: str) -> str:
+    """
+    The human-readable page for a record a resource was derived from.
+
+    id.loc.gov serves its HTML view at the .html suffix, so the bare resource
+    URI we store is turned into the page a cataloger can actually read. Anything
+    from another source is linked as-is -- we only know this convention for LC.
+    """
+    parsed = urlparse(uri)
+    if parsed.netloc != LC_ID_HOST:
+        return uri
+    path = parsed.path.rstrip("/")
+    if not path or path.endswith(".html"):
+        return f"https://{LC_ID_HOST}{path}"
+    return f"https://{LC_ID_HOST}{path}.html"
+
+
+def _derived_from_values(key: str, node: Any) -> list[dict[str, Any]]:
+    """
+    Link a derivedFrom to its source record rather than showing a bare number.
+
+    The identifier is the link text and the "Derived from" label stays outside
+    it, so the line reads as a label with a link rather than one long link.
+    """
+    values: list[dict[str, Any]] = []
+    for item in _as_list(node):
+        href = item.get("@id") if isinstance(item, dict) else item
+        if not isinstance(href, str) or not href.startswith("http"):
+            values.append(_value(f"{_humanize(key)}: {_label_text(item)}"))
+            continue
+        value = _value(_id_tail(href), _source_record_url(href))
+        value["prefix"] = f"{_humanize(key)}: "
+        value["external"] = True
+        values.append(value)
+    return values
+
+
 def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
     """Each AdminMetadata block becomes its own 'Admin Metadata' field.
 
@@ -301,6 +353,9 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
         values: list[dict[str, Any]] = []
         for key, val in block.items():
             if key in ("@id", "@type"):
+                continue
+            if key == "derivedFrom":
+                values.extend(_derived_from_values(key, val))
                 continue
             value = _value(f"{_humanize(key)}: {_label_text(val)}")
             # flag the stub status here too, not just beside the heading
@@ -358,12 +413,38 @@ def _label_sources(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
 SOURCE_LABELED_KEYS = {"subject"}
 
 
+def _split_titles(node: Any) -> tuple[list[Any], list[Any]]:
+    """
+    Separate the title proper from variants.
+
+    bf:title carries them together, distinguished only by the node's type: the
+    title proper is a plain bf:Title, while a variant is a subtype (bf:VariantTitle
+    and friends, often alongside a vartitletype term). Nodes with no type at all
+    are treated as the title proper -- there is nothing marking them as a variant.
+    """
+    primary: list[Any] = []
+    variant: list[Any] = []
+    for item in _as_list(node):
+        if isinstance(item, dict):
+            types = [_id_tail(t) for t in _as_list(item.get("@type"))]
+        else:
+            types = []
+        (variant if types and "Title" not in types else primary).append(item)
+    return primary, variant
+
+
 def _field(
     label: str, key: str, data: dict[str, Any], label_map: dict[str, str]
 ) -> dict[str, Any] | None:
+    if key == VARIANT_TITLE_KEY:
+        values = _node_values(_split_titles(data.get("title"))[1], label_map)
+        return {"label": label, "values": _dedupe(values)} if values else None
     if key not in data:
         return None
-    if key == "identifiedBy":
+    if key == "title":
+        # variants get their own heading, so keep them out of Title
+        values = _node_values(_split_titles(data[key])[0], label_map)
+    elif key == "identifiedBy":
         values = _identifier_values(data[key], label_map)
     elif key == "contribution":
         values = _contribution_values(data[key], label_map)
@@ -394,8 +475,12 @@ def _build_fields(
 
 
 def _title_of(data: dict[str, Any]) -> str:
+    # the title proper names the resource; variants would otherwise all get
+    # joined into the heading and into links pointing at it
+    primary, variant = _split_titles(data.get("title"))
     return (
-        _label_text(data.get("title"))
+        _label_text(primary)
+        or _label_text(variant)
         or _scalar(data.get("bflc:aap", ""))
         # Other Resources (authorities/agents/subjects) carry no title; fall back
         # to their rdfs:label / authoritative label before the bare URI tail.
@@ -517,7 +602,10 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
     sidebar: list[dict[str, Any]] = []
     work = instance.work
     if work is not None:
-        label = _scalar(work.data.get("bflc:aap", "")) or _title_of(work.data)
+        # _title_of prefers the Work's title and only falls back to its
+        # authorized access point, so this reads the same as the Work's own page
+        # and as the "Has Instance" links pointing back the other way.
+        label = _title_of(work.data)
         sidebar.append({"label": "Instance of", "values": [_value(label, work.uri)]})
     elif "instanceOf" in data:
         sidebar.append(
@@ -548,7 +636,13 @@ def render_work_html(work: Work, request: Request) -> Response:
     fields = _build_fields(data, WORK_FIELDS, label_map)
     types = _work_types(data)
     if types:
-        fields.insert(1, {"label": "Type", "values": types})
+        # after the titles rather than at a fixed index, so Type can't land
+        # between Title and the variants that belong directly under it
+        after_titles = 0
+        for position, field in enumerate(fields):
+            if field["label"] in TITLE_LABELS:
+                after_titles = position + 1
+        fields.insert(after_titles, {"label": "Type", "values": types})
 
     sidebar: list[dict[str, Any]] = []
     instance_values = [

@@ -9,8 +9,13 @@
           title="Linked Data Stub: Import record for full description">{{ _alert_icon() }}</span>
 {%- endmacro %}
 
+{####  v.prefix labels the link without being part of it (e.g. "Derived from: ").  ####}
+{####  v.external opens the target in a new tab, for links off Blue Core.         ####}
 {% macro render_value(v) -%}
-    {%- if v.href -%}<a href="{{ v.href }}">{{ v.text }}</a>{%- else -%}{{ v.text }}{%- endif -%}
+    {%- if v.prefix %}{{ v.prefix }}{% endif -%}
+    {%- if v.href -%}
+        <a href="{{ v.href }}"{% if v.external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ v.text }}</a>
+    {%- else -%}{{ v.text }}{%- endif -%}
     {%- if v.alert %}{{ stub_flag() }}{% endif -%}
 {%- endmacro %}
 
