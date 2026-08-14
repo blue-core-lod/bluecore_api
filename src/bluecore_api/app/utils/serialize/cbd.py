@@ -7,6 +7,7 @@ from bluecore_models.utils.graph import CONTEXT, load_jsonld
 from fastapi import HTTPException
 from lxml import etree
 from rdflib import Graph, Namespace
+from sqlalchemy.orm import object_session
 
 from bluecore_api.constants import BibframeType
 from bluecore_api.expansion import expand_resource_as_graph
@@ -44,10 +45,81 @@ def reorder_instance_types(instance_data: dict[str, Any]) -> dict[str, Any]:
     return instance_data
 
 
+def _as_list(value: Any) -> list:
+    if value is None:
+        return []
+    return value if isinstance(value, list) else [value]
+
+
+def related_works(work: Work) -> list[Work]:
+    """
+    The other Works this one points at through bf:relation, e.g. the online
+    edition of a printed book. LC's CBD includes them, so ours does too. Only
+    ones with a uri: anything LC described in place is already in this graph.
+    """
+    uris = {
+        item["@id"]
+        for relation in _as_list(work.data.get("relation"))
+        if isinstance(relation, dict)
+        for item in _as_list(relation.get("associatedResource"))
+        if isinstance(item, dict) and str(item.get("@id", "")).startswith("http")
+    }
+    session = object_session(work)
+    if not uris or session is None:
+        return []
+    return session.query(Work).where(Work.uri.in_(uris)).all()
+
+
+# LC gives a related Work and its Instances a thumbnail rather than a second full
+# record: just enough to say which resource is meant. These are the properties it
+# keeps. We list rdfs:label and bflc:aap both, since our records name themselves
+# with "bflc:aap" where LC's use "rdfs:label".
+WORK_THUMBNAIL = frozenset(
+    {
+        "@id",
+        "@type",
+        "rdfs:label",
+        "bflc:aap",
+        "title",
+        "contribution",
+        "classification",
+        "language",
+        "hasInstance",
+    }
+)
+INSTANCE_THUMBNAIL = frozenset(
+    {"@id", "@type", "title", "identifiedBy", "publicationStatement", "extent"}
+)
+
+
+def add_resource(
+    graph: Graph,
+    resource: Instance | Work,
+    reorder,
+    keep: frozenset[str] | None = None,
+) -> Graph:
+    """
+    Add a Work/Instance and the vocabulary terms it references to the graph.
+
+    keep trims the record to a thumbnail, and then the terms are left out too --
+    a thumbnail names the resource rather than describing it. The data is copied
+    first so the record we were handed keeps the shape it has in the database.
+    """
+    data = dict(reorder(resource.data))
+    if keep is not None:
+        data = {key: value for key, value in data.items() if key in keep}
+    data["@context"] = CONTEXT
+    graph.parse(data=json.dumps(data), format="json-ld")
+    if keep is not None:
+        return graph
+    return expand_resource_as_graph(resource, graph)
+
+
 def generate_cbd_graph(instance: Instance) -> Graph:
     """
     Generate a CBD graph for a given Instance.
-    It includes the Instance, its Work, and any other Instances of that Work, along with their related resources.
+    It includes the Instance, its Work, any Works that Work is related to, and
+    every Instance of those Works, along with their related resources.
 
     Args:
         instance (Instance): The Instance for which to generate the CBD graph
@@ -55,29 +127,37 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     Returns:
         Graph: RDF graph containing the CBD for the given Instance
     """
+    # The xml serialization uses the first @type to determine the root element,
+    # so 'Work'/'Instance' has to come first in the list of types.
     instance.data = reorder_instance_types(instance.data)
     instance_graph: Graph = load_jsonld(instance.data)
     instance_graph = expand_resource_as_graph(instance, instance_graph)
 
     work = instance.work
-    # The xml serialization uses the first @type to determine the root element
-    # Make sure 'Work' is the first in the list of types for the work
-    work.data = reorder_work_types(work.data)
-    # Add context as we are not calling load_jsonld on the work data
-    work.data["@context"] = CONTEXT
-    instance_graph.parse(data=json.dumps(work.data), format="json-ld")
-    instance_graph = expand_resource_as_graph(work, instance_graph)
+    seen = {str(instance.uuid)}
+    instance_graph = add_resource(instance_graph, work, reorder_work_types)
+    for sibling in work.instances:
+        if str(sibling.uuid) in seen:
+            continue
+        seen.add(str(sibling.uuid))
+        instance_graph = add_resource(instance_graph, sibling, reorder_instance_types)
 
-    uuid = str(instance.uuid)
-    # If the work has multiple instances, include them in the graph
-    for related_instance in work.instances:
-        if uuid != str(related_instance.uuid):
-            related_instance.data = reorder_instance_types(related_instance.data)
-            related_instance.data["@context"] = CONTEXT
-            instance_graph.parse(
-                data=json.dumps(related_instance.data), format="json-ld"
+    # One hop only: a related Work points back here, and LC's document stops at
+    # the same place. These get a thumbnail rather than a full description.
+    for related_work in related_works(work):
+        instance_graph = add_resource(
+            instance_graph, related_work, reorder_work_types, WORK_THUMBNAIL
+        )
+        for related_instance in related_work.instances:
+            if str(related_instance.uuid) in seen:
+                continue
+            seen.add(str(related_instance.uuid))
+            instance_graph = add_resource(
+                instance_graph,
+                related_instance,
+                reorder_instance_types,
+                INSTANCE_THUMBNAIL,
             )
-            instance_graph = expand_resource_as_graph(related_instance, instance_graph)
 
     instance_graph.bind("bf", BF_NAMESPACE, override=True, replace=True)
     instance_graph.bind("madsrdf", MADSRDF_NAMESPACE, override=True, replace=True)
