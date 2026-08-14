@@ -102,3 +102,43 @@ async def test_export_rejects_missing_instance_uri(client, httpx_mock: HTTPXMock
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_export_allowed_with_export_role(client, httpx_mock: HTTPXMock):
+    """User with only the 'export' role (no create/update) can export."""
+    httpx_mock.add_response(
+        method="POST",
+        url=(re.compile(r"^http://airflow:8080/auth/token$")),
+        json={"access_token": "xxx"},
+    )
+    httpx_mock.add_response(
+        method="POST",
+        url=re.compile(r".*/api/v2/dags/monitor_institutions_exports/dagRuns$"),
+        json={"dag_run_id": "99999"},
+    )
+
+    response = client.post(
+        "/export/",
+        headers={"X-User": "public", "X-Roles": "export"},
+        json={
+            "instance_uri": "https://bcld.info/instances/8836b3c5-9bc6-421b-9591-df25499cd93c"
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["workflow_id"].startswith("99999")
+
+
+@pytest.mark.asyncio
+async def test_export_rejected_without_export_role(client, httpx_mock: HTTPXMock):
+    """User with create role but no export role cannot export."""
+    response = client.post(
+        "/export/",
+        headers={"X-User": "public", "X-Roles": "create"},
+        json={
+            "instance_uri": "https://bcld.info/instances/8836b3c5-9bc6-421b-9591-df25499cd93c"
+        },
+    )
+
+    assert response.status_code == 403
