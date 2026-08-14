@@ -17,6 +17,7 @@ from bluecore_api.app.utils.serialize.cbd import (
     XPATH_NAMESPACES,
     generate_cbd_graph,
     generate_cbd_xml,
+    related_works,
     reorder_instance_types,
     reorder_work_types,
 )
@@ -169,7 +170,9 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
     instance = db_session.query(Instance).filter(Instance.uuid == uuid).first()
     cbd_graph = generate_cbd_graph(instance)
     cbd_xml = generate_cbd_xml(cbd_graph)
-    assert len(cbd_xml) == 2, "Expected 2 top-level elements in CBD XML"
+    # This record has two Works, each with an Instance, and they reference each
+    # other through bf:relation. LC's CBD carries all four, so ours does too.
+    assert len(cbd_xml) == 4, "Expected 4 top-level elements in CBD XML"
     top_level_tags: list[BibframeType] = [BibframeType.WORK, BibframeType.INSTANCE]
     for elem in cbd_xml:
         local_name = etree.QName(elem).localname
@@ -178,14 +181,207 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
         )
     xpath = "bf:Work/bf:contribution/bf:Contribution/bf:agent/bf:Agent[@rdf:about='http://id.loc.gov/rwo/agents/n2024040883']"
     match = cbd_xml.xpath(xpath, namespaces=XPATH_NAMESPACES)
-    assert len(match) == 1, (
-        "Expected to find exactly one matching Agent element for http://id.loc.gov/rwo/agents/n2024040883"
+    # Both Works credit this agent, and each nests its own copy of the description.
+    assert len(match) == 2, (
+        "Expected to find a matching Agent element for "
+        "http://id.loc.gov/rwo/agents/n2024040883 under each Work"
     )
-    label = match[0].find("{http://www.w3.org/2000/01/rdf-schema#}label")
-    assert label is not None, "Expected to find rdfs:label element for the Agent"
-    assert label.text == "Farri, Elisa", (
-        f"Expected Agent label to be 'Farri, Elisa' but got '{label.text}'"
+    for agent in match:
+        label = agent.find("{http://www.w3.org/2000/01/rdf-schema#}label")
+        assert label is not None, "Expected to find rdfs:label element for the Agent"
+        assert label.text == "Farri, Elisa", (
+            f"Expected Agent label to be 'Farri, Elisa' but got '{label.text}'"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Related Works: LC's CBD carries them, as thumbnails
+# ---------------------------------------------------------------------------
+ONLINE_VERSION = "http://id.loc.gov/entities/relationships/onlineversion"
+
+
+def _make_work(db_session, uuid_, title, related_uri=None):
+    """A Work carrying one property that a thumbnail drops (summary)."""
+    uri = f"https://bluecore.info/works/{uuid_}"
+    data = {
+        "@id": uri,
+        "@type": "Work",
+        "title": {"@type": "Title", "mainTitle": title},
+        "language": {"@id": "http://id.loc.gov/vocabulary/languages/eng"},
+        "summary": {"@type": "Summary", "rdfs:label": f"About {title}"},
+    }
+    if related_uri is not None:
+        data["relation"] = {
+            "@type": "Relation",
+            "relationship": {"@id": ONLINE_VERSION},
+            "associatedResource": {"@id": related_uri},
+        }
+    work = Work(uuid=uuid_, uri=uri, data=data)
+    db_session.add(work)
+    return work
+
+
+def _make_instance(db_session, uuid_, work, title):
+    """An Instance carrying one property a thumbnail keeps (extent) and one it drops (note)."""
+    uri = f"https://bluecore.info/instances/{uuid_}"
+    instance = Instance(
+        uuid=uuid_,
+        uri=uri,
+        work=work,
+        data={
+            "@id": uri,
+            "@type": "Instance",
+            "title": {"@type": "Title", "mainTitle": title},
+            "extent": {"@type": "Extent", "rdfs:label": "1 volume"},
+            "note": {"@type": "Note", "rdfs:label": f"Note on {title}"},
+            "instanceOf": {"@id": work.uri},
+        },
     )
+    db_session.add(instance)
+    return instance
+
+
+def _resources(graph: Graph) -> set[str]:
+    """The Work and Instance uris the CBD graph describes."""
+    return {str(s) for s in graph.subjects(RDF.type, BF.Work)} | {
+        str(s) for s in graph.subjects(RDF.type, BF.Instance)
+    }
+
+
+def _pair(db_session, tag, related_uri=None):
+    work = _make_work(
+        db_session,
+        f"11111111-0000-0000-0000-00000000000{tag}",
+        f"Work {tag}",
+        related_uri,
+    )
+    instance = _make_instance(
+        db_session, f"22222222-0000-0000-0000-00000000000{tag}", work, f"Instance {tag}"
+    )
+    return work, instance
+
+
+def test_cbd_describes_related_work_from_either_instance(
+    client: TestClient, db_session: Session
+):
+    """
+    two Works that point at each other, each with its own Instance.
+    Asking through either Instance has to describe all four, the way LC's does.
+    """
+    work_a, instance_a = _pair(db_session, "1")
+    work_b, instance_b = _pair(db_session, "2", related_uri=work_a.uri)
+    work_a.data["relation"] = {
+        "@type": "Relation",
+        "relationship": {"@id": ONLINE_VERSION},
+        "associatedResource": {"@id": work_b.uri},
+    }
+    db_session.commit()
+
+    expected = {work_a.uri, work_b.uri, instance_a.uri, instance_b.uri}
+    assert _resources(generate_cbd_graph(instance_a)) == expected
+    assert _resources(generate_cbd_graph(instance_b)) == expected
+
+
+def test_cbd_thumbnails_the_related_work_and_its_instance(
+    client: TestClient, db_session: Session
+):
+    """
+    The requested pair is described in full; the related pair is cut down to the
+    properties that identify it, as LC does. Extent survives, summary and note don't.
+    """
+    work_a, instance_a = _pair(db_session, "3")
+    work_b, instance_b = _pair(db_session, "4")
+    work_a.data["relation"] = {
+        "@type": "Relation",
+        "relationship": {"@id": ONLINE_VERSION},
+        "associatedResource": {"@id": work_b.uri},
+    }
+    db_session.commit()
+
+    graph = generate_cbd_graph(instance_a)
+
+    # requested pair: everything
+    assert (URIRef(work_a.uri), BF.summary, None) in graph
+    assert (URIRef(instance_a.uri), BF.note, None) in graph
+
+    # related pair: thumbnail only
+    assert (URIRef(work_b.uri), BF.title, None) in graph
+    assert (URIRef(work_b.uri), BF.summary, None) not in graph
+    assert (URIRef(instance_b.uri), BF.extent, None) in graph
+    assert (URIRef(instance_b.uri), BF.note, None) not in graph
+
+
+def test_cbd_follows_relations_one_hop_only(client: TestClient, db_session: Session):
+    """
+    A points at B points at C. LC's document stops after one hop, so C stays out
+    -- otherwise a chain of editions would drag in the whole chain.
+    """
+    work_c, instance_c = _pair(db_session, "5")
+    work_b, _ = _pair(db_session, "6", related_uri=work_c.uri)
+    _, instance_a = _pair(db_session, "7", related_uri=work_b.uri)
+    db_session.commit()
+
+    resources = _resources(generate_cbd_graph(instance_a))
+    assert work_b.uri in resources
+    assert work_c.uri not in resources
+    assert instance_c.uri not in resources
+
+
+def test_related_works_ignores_a_relation_described_in_place(
+    client: TestClient, db_session: Session
+):
+    """
+    LC often describes the other end of a relation inline, with no uri of its own.
+    There is no record to fetch, and it already travels with the Work's own data.
+    """
+    work, _ = _pair(db_session, "8")
+    work.data["relation"] = {
+        "@type": "Relation",
+        "relationship": {"@id": ONLINE_VERSION},
+        "associatedResource": {
+            "@id": "_:b29",
+            "@type": "Work",
+            "title": {"@type": "Title", "mainTitle": "Nested edition"},
+        },
+    }
+    db_session.commit()
+
+    assert related_works(work) == []
+
+
+def test_related_works_skips_a_record_we_do_not_hold(
+    client: TestClient, db_session: Session
+):
+    """A relation can point at something never ingested; that is not an error."""
+    work, _ = _pair(db_session, "9", related_uri="https://bluecore.info/works/missing")
+    db_session.commit()
+
+    assert related_works(work) == []
+
+
+def test_cbd_leaves_the_related_records_untouched(
+    client: TestClient, db_session: Session
+):
+    """
+    Serializing needs an @context on each record, and it has to go on a copy:
+    these are rows we were only reading, and we shouldn't leave edits on them.
+
+    Only the related pair is checked. The requested Instance goes through the
+    model's own framing on the way in, which puts an @context back by itself.
+    """
+    _, instance_a = _pair(db_session, "0")
+    work_b, instance_b = _pair(db_session, "a")
+    instance_a.work.data["relation"] = {
+        "@type": "Relation",
+        "relationship": {"@id": ONLINE_VERSION},
+        "associatedResource": {"@id": work_b.uri},
+    }
+    db_session.commit()
+
+    generate_cbd_graph(instance_a)
+
+    assert "@context" not in work_b.data
+    assert "@context" not in instance_b.data
 
 
 if __name__ == "__main__":
