@@ -27,6 +27,15 @@ from pytest_mock_resources import (
     create_postgres_fixture,
 )
 
+# libpq attempts a GSSAPI handshake before anything else whenever the machine
+# has Kerberos credentials configured, which developer laptops often do. There
+# is nothing to authenticate to on the throwaway test container, and the attempt
+# doesn't fail cleanly -- it hangs until the connect timeout, so the suite looks
+# frozen during fixture setup rather than reporting an error. Nothing here is
+# reachable off localhost, so turn the negotiation off. setdefault leaves an
+# explicit override alone, and this is a no-op in CI, which has no Kerberos.
+os.environ.setdefault("PGGSSENCMODE", "disable")
+
 if os.getenv("DATABASE_URL") is None:
     os.environ["DATABASE_URL"] = (
         "postgresql://bluecore_admin:bluecore_admin@localhost/bluecore"
