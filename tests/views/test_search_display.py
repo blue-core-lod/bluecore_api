@@ -1,4 +1,4 @@
-"""Unit tests for serialize/search_display.py -- naming and grouping for search.
+"""Unit tests for views/search_display.py -- naming and grouping for search.
 
 resource_title backs the search results list. resource_section groups
 OtherResources -- authorities, vocabularies, classifications -- by the RDF type

@@ -1,11 +1,10 @@
-"""Unit tests for serialize/values.py -- reading json-ld nodes into text.
+"""Unit tests for views/nodes.py -- reading json-ld nodes into text.
 
-The layer below fields and sidebars: which rdf:value key form a node uses, which
-of several titles names the record, and how a source record's readable page is
-addressed.
+Which rdf:value form a node uses, which of several titles names the record, and
+how a source record's readable page is addressed.
 """
 
-from bluecore_api.app.views.values import (
+from bluecore_api.app.views.nodes import (
     _rdf_value,
     _source_record_url,
     _title_of,

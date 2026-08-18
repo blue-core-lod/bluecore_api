@@ -1,4 +1,4 @@
-"""Unit tests for serialize/fields.py -- a record's properties as labelled fields.
+"""Unit tests for views/fields.py -- a record's properties as labelled fields.
 
 Exercises the builders directly: _identifier_values so the ISBN/LCCN behaviour is
 covered whichever rdf:value key form the stored JSON-LD uses, _admin_metadata_fields
@@ -15,7 +15,7 @@ from bluecore_api.app.views.fields import (
     _field_label,
     _identifier_values,
 )
-from bluecore_api.app.views.values import _title_of
+from bluecore_api.app.views.nodes import _title_of
 
 RDF_VALUE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 

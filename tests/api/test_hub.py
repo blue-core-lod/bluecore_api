@@ -308,7 +308,7 @@ def add_view_hub(db_session):
 def add_work_in_hub(db_session, id_, uuid_, title, hub_uri=hub_view_uri):
     """A Work whose bf:relation names its Hub -- how the link is actually stored.
 
-    works.hub_id stays null; see serialize/sidebar.py relation_sections.
+    works.hub_id stays null; see views/sidebar.py relation_sections.
     """
     uri = f"https://bcld.info/works/{uuid_}"
     work = Work(

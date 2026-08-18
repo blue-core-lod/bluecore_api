@@ -1,4 +1,4 @@
-"""Unit tests for serialize/vocabulary.py -- turning uris into readable words.
+"""Unit tests for views/vocabulary.py -- turning uris into readable words.
 
 The layer the recent view bugs actually lived in: a record references a term by
 uri and leaves the label behind, so a gap here shows up as "n79063767 (ctb)" or
