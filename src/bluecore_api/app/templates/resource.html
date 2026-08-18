@@ -7,7 +7,7 @@
 
 {####  Content Block Section  ####}
 {% block content %}
-    <h1 class="bc-doctype">{{ doc_type }}</h1>
+    <h1 class="bc-doctype">{% if is_stub %}{{ f.stub_flag() }}{% endif %}{{ doc_type }}</h1>
     {% for field in fields %}
         {{ f.render_field(field) }}
     {% endfor %}
