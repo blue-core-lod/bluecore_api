@@ -13,13 +13,13 @@ from bluecore_api.app.views.vocabulary import (
     RELATIONSHIP_LABELS,
     RELATOR_LABELS,
     SPECIFIC_RELATIONSHIP_NS,
-    _build_label_map,
-    _label_sources,
-    _relationship_label,
     _relationship_term,
     _relationship_words,
-    _resolve_label,
-    _section_order,
+    build_label_map,
+    label_sources,
+    relationship_label,
+    resolve_label,
+    section_order,
 )
 
 RELATIONSHIP = "http://id.loc.gov/vocabulary/relationship/"
@@ -44,7 +44,7 @@ def test_label_map_reads_rdfs_label():
     work = _work_citing(
         AGENT, {"@id": AGENT, "@type": "Agent", "rdfs:label": "King, Stephen, 1947-"}
     )
-    assert _build_label_map(work)[AGENT] == "King, Stephen, 1947-"
+    assert build_label_map(work)[AGENT] == "King, Stephen, 1947-"
 
 
 def test_label_map_reads_an_authoritative_label():
@@ -58,7 +58,7 @@ def test_label_map_reads_an_authoritative_label():
             "mads:authoritativeLabel": "Roland (Fictitious character)",
         },
     )
-    assert _build_label_map(work)[uri] == "Roland (Fictitious character)"
+    assert build_label_map(work)[uri] == "Roland (Fictitious character)"
 
 
 def test_label_map_skips_a_term_with_no_label():
@@ -66,7 +66,7 @@ def test_label_map_skips_a_term_with_no_label():
     which is why RELATOR_LABELS exists."""
     ctb = f"{RELATIONSHIP.replace('relationship/', '')}relators/ctb"
     work = _work_citing(ctb, {"@id": ctb, "@type": "Role", "code": "ctb"})
-    assert ctb not in _build_label_map(work)
+    assert ctb not in build_label_map(work)
 
 
 def test_label_map_survives_an_unreadable_other_resource(monkeypatch):
@@ -78,7 +78,7 @@ def test_label_map_survives_an_unreadable_other_resource(monkeypatch):
 
     monkeypatch.setattr(vocabulary, "load_jsonld", explode)
 
-    assert _build_label_map(work) == {}
+    assert build_label_map(work) == {}
 
 
 # --- resolving a value's own text against the map ----------------------------
@@ -86,17 +86,17 @@ def test_label_map_survives_an_unreadable_other_resource(monkeypatch):
 
 def test_resolve_label_prefers_text_the_node_already_carries():
     label_map = {AGENT: "From the map"}
-    assert _resolve_label(AGENT, "Embedded label", label_map) == "Embedded label"
+    assert resolve_label(AGENT, "Embedded label", label_map) == "Embedded label"
 
 
 def test_resolve_label_fills_in_a_bare_reference():
     """A bare {"@id": ...} renders as its uri tail until the map supplies a label."""
     label_map = {AGENT: "King, Stephen, 1947-"}
-    assert _resolve_label(AGENT, "n79063767", label_map) == "King, Stephen, 1947-"
+    assert resolve_label(AGENT, "n79063767", label_map) == "King, Stephen, 1947-"
 
 
 def test_resolve_label_leaves_the_tail_when_the_map_has_nothing():
-    assert _resolve_label(AGENT, "n79063767", {}) == "n79063767"
+    assert resolve_label(AGENT, "n79063767", {}) == "n79063767"
 
 
 # --- relationship headings ---------------------------------------------------
@@ -108,20 +108,20 @@ def _relation(*terms):
 
 def test_relationship_label_uses_lcs_wording_for_a_run_together_slug():
     """These slugs cannot be split by rule, so the table carries LC's spelling."""
-    assert _relationship_label(_relation(f"{RELATIONSHIP}seriesof"), {}) == "Series of"
+    assert relationship_label(_relation(f"{RELATIONSHIP}seriesof"), {}) == "Series of"
     assert (
-        _relationship_label(_relation(f"{RELATIONSHIP}relatedwork"), {})
+        relationship_label(_relation(f"{RELATIONSHIP}relatedwork"), {})
         == "Related work"
     )
     assert (
-        _relationship_label(_relation(f"{RELATIONSHIP}translatedas"), {})
+        relationship_label(_relation(f"{RELATIONSHIP}translatedas"), {})
         == "Translated as"
     )
 
 
 def test_relationship_label_prefers_a_vocabulary_label_we_hold():
     term = f"{RELATIONSHIP}series"
-    assert _relationship_label(_relation(term), {term: "series"}) == "Series"
+    assert relationship_label(_relation(term), {term: "series"}) == "Series"
 
 
 def test_relationship_label_takes_the_specific_designator_of_several():
@@ -129,11 +129,11 @@ def test_relationship_label_takes_the_specific_designator_of_several():
     not the two mashed together."""
     relation = _relation(f"{RELATIONSHIP}otherphysicalformat", ONLINE_VERSION)
 
-    assert _relationship_label(relation, {}) == "Online version"
+    assert relationship_label(relation, {}) == "Online version"
 
 
 def test_relationship_label_falls_back_to_related():
-    assert _relationship_label({}, {}) == "Related"
+    assert relationship_label({}, {}) == "Related"
 
 
 def test_relationship_term_picks_the_specific_namespace_whatever_the_order():
@@ -171,16 +171,16 @@ def test_relationship_words_leaves_a_word_it_cannot_split():
 
 def test_section_order_follows_lcs_hub_page():
     labels = ["Series of", "Related work", "Part of", "Translated as", "Related To"]
-    assert [_section_order(x) for x in labels] == sorted(
-        _section_order(x) for x in labels
+    assert [section_order(x) for x in labels] == sorted(
+        section_order(x) for x in labels
     )
 
 
 def test_unlisted_sections_sort_after_the_known_ones():
     """A heading the table does not carry -- from _relationship_words -- follows
     every heading it does."""
-    assert _section_order("Preceded by") > _section_order("Related To")
-    assert _section_order("Has series") > _section_order("Series of")
+    assert section_order("Preceded by") > section_order("Related To")
+    assert section_order("Has series") > section_order("Series of")
 
 
 # --- source tags -------------------------------------------------------------
@@ -195,7 +195,7 @@ def test_label_sources_tags_by_authority():
         {"text": "Unlinked", "href": None},
     ]
 
-    assert [v["text"] for v in _label_sources(values)] == [
+    assert [v["text"] for v in label_sources(values)] == [
         "Vampires (LC)",
         "Vampires (FAST)",
         "Something (WorldCat)",

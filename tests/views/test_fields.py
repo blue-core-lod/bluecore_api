@@ -11,11 +11,11 @@ from bluecore_api.app.views.fields import (
     NON_FIELD_KEYS,
     VARIANT_TITLE_KEY,
     _admin_metadata_fields,
-    _build_fields,
     _field_label,
     _identifier_values,
+    build_fields,
 )
-from bluecore_api.app.views.nodes import _title_of
+from bluecore_api.app.views.nodes import title_of
 
 RDF_VALUE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 
@@ -105,7 +105,7 @@ def test_identifier_values_skips_non_dict_items():
 def _fields(data):
     return {
         field["label"]: [v["text"] for v in field["values"]]
-        for field in _build_fields(data, {})
+        for field in build_fields(data, {})
     }
 
 
@@ -134,7 +134,7 @@ def test_untyped_title_is_the_title_proper():
     data = {"title": {"mainTitle": "No Type"}}
     assert _fields(data)["Title"] == ["No Type"]
     assert "Other Titles (e.g. Variant)" not in _fields(data)
-    assert _title_of(data) == "No Type"
+    assert title_of(data) == "No Type"
 
 
 def test_expanded_title_type_uri_is_the_title_proper():
@@ -157,7 +157,7 @@ def test_a_record_with_only_variant_titles_still_has_a_heading():
     fields = _fields(data)
     assert "Title" not in fields
     assert fields["Other Titles (e.g. Variant)"] == ["Only Variant"]
-    assert _title_of(data) == "Only Variant"
+    assert title_of(data) == "Only Variant"
 
 
 # --- derivedFrom -------------------------------------------------------------
@@ -218,7 +218,7 @@ def test_a_property_no_list_names_still_gets_a_section():
         "title": {"@type": "Title", "mainTitle": "A work"},
         "somethingBrandNew": {"rdfs:label": "a value we have never seen"},
     }
-    fields = _build_fields(data, {})
+    fields = build_fields(data, {})
 
     assert "Something brand new" in _labels(fields)
     values = next(f for f in fields if f["label"] == "Something brand new")["values"]
@@ -233,7 +233,7 @@ def test_named_properties_keep_their_place_and_the_rest_follow():
         "bflc:aap": "Author, A. A work",
         "zzUnknown": {"rdfs:label": "trailing"},
     }
-    labels = _labels(_build_fields(data, {}))
+    labels = _labels(build_fields(data, {}))
 
     # the ordered list decides Title before the access point ...
     assert labels.index("Title") < labels.index("Authorized Access Point")
@@ -253,7 +253,7 @@ def test_non_field_keys_are_the_only_things_hidden():
         "relation": {"@type": "Relation"},
         "genreForm": {"rdfs:label": "Fantasy fiction"},
     }
-    labels = _labels(_build_fields(data, {}))
+    labels = _labels(build_fields(data, {}))
 
     assert "Genre Form" in labels
     for hidden in ("Bflc:aap-normalized", "MARC Key", "Has instance", "Relation"):
@@ -269,7 +269,7 @@ def test_a_field_with_nothing_to_show_is_dropped():
         "title": {"@type": "Title", "mainTitle": "A work"},
         "mysteryField": {"@type": "Mystery"},
     }
-    labels = _labels(_build_fields(data, {}))
+    labels = _labels(build_fields(data, {}))
 
     assert "Mystery field" not in labels
 
@@ -288,7 +288,7 @@ def test_supplementary_content_is_named_by_its_note_and_linked_to_its_locator():
             "electronicLocator": {"@id": locator},
         },
     }
-    fields = _build_fields(data, {})
+    fields = build_fields(data, {})
 
     field = next(f for f in fields if f["label"] == "Supplementary content")
     assert field["values"][0]["text"] == "Contributor biographical information"
@@ -327,7 +327,7 @@ def test_dropping_title_from_the_list_does_not_hide_it():
     }
 
     without_title = tuple(k for k in FIELD_ORDER if k != "title")
-    fields = _build_fields(data, {}, without_title)
+    fields = build_fields(data, {}, without_title)
     title = next(f for f in fields if f["label"] == "Title")
     # the title proper, still not mixed in with the variants
     assert [v["text"] for v in title["values"]] == ["Wizard and glass"]
@@ -335,7 +335,7 @@ def test_dropping_title_from_the_list_does_not_hide_it():
 
     # and with neither title entry declared it still reaches the page
     bare = tuple(k for k in FIELD_ORDER if k not in ("title", VARIANT_TITLE_KEY))
-    assert "Title" in _labels(_build_fields(data, {}, bare))
+    assert "Title" in _labels(build_fields(data, {}, bare))
 
 
 def test_declared_title_is_not_rendered_twice():
@@ -346,7 +346,7 @@ def test_declared_title_is_not_rendered_twice():
         "title": {"@type": "Title", "mainTitle": "Wizard and glass"},
     }
 
-    assert _labels(_build_fields(data, {})).count("Title") == 1
+    assert _labels(build_fields(data, {})).count("Title") == 1
 
 
 def test_non_field_keys_hold_only_what_is_shown_elsewhere_or_withheld():
