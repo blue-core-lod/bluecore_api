@@ -1,5 +1,5 @@
 """Search display logic for main search page
-   this will be fleshed out for more search view additions in the future
+this will be fleshed out for more search view additions in the future
 """
 
 from bluecore_models.models import Hub, Instance, Work

@@ -1,5 +1,4 @@
-"""Unit tests for views/search_display.py -- naming and other logic for search.
-"""
+"""Unit tests for views/search_display.py -- naming and other logic for search."""
 
 from bluecore_models.models import Hub, Instance, OtherResource, Work
 
