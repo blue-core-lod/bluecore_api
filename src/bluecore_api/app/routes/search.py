@@ -4,6 +4,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 from bluecore_models.models import (
+    Hub,
     Instance,
     OtherResource,
     Profile,
@@ -15,10 +16,10 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, noload
 
-from bluecore_api.app.templating import templates
-from bluecore_api.app.utils.serialize.html import (
+from bluecore_api.app.views.search_display import (
     resource_title,
 )
+from bluecore_api.app.views.templating import templates
 from bluecore_api.constants import (
     CONTEXT_URL,
     DEFAULT_SEARCH_PAGE_LENGTH,
@@ -101,10 +102,20 @@ def format_query(query: str) -> str:
 def get_types(type: SearchType) -> list[SearchType]:
     """Return a list of types based on the input type."""
     if type == SearchType.ALL:
-        return [SearchType.WORKS, SearchType.INSTANCES]
+        return [SearchType.WORKS, SearchType.INSTANCES, SearchType.HUBS]
     else:
         # fastapi should throw an error if the type is not recognized SearchType before getting here
         return [type]
+
+
+# (model, heading) in the order the groups appear on the results page. A search
+# for a single type only ever matches one of them, so this drives both the "all"
+# search's grouping and the one labeled group a single-type search shows.
+SEARCH_GROUPS: list[tuple[type[ResourceBase], str]] = [
+    (Work, "Works"),
+    (Instance, "Instances"),
+    (Hub, "Hubs"),
+]
 
 
 def generate_links(
@@ -152,7 +163,7 @@ async def search(
     type: SearchType = SearchType.ALL,
 ) -> dict[str, Any]:
     """
-    Search for Works and Instances.
+    Search for Works, Instances and Hubs.
     It transforms the query string to be compatible with PostgreSQL full-text search.
     It supports phrase search using double quotes.
     If the query contains a phrase in double quotes, it will use "simple" language for
@@ -205,7 +216,7 @@ async def search_html(
     q: str = "",
     type: SearchType = SearchType.ALL,
 ) -> HTMLResponse:
-    """Public, HTML search for BIBFRAME Works and Instances.
+    """Public, HTML search for BIBFRAME Works, Instances and Hubs.
 
     Backs the header search box (the form posts here, distinct from the
     JSON `GET /search/`) and renders the ``search_results.html`` template.
@@ -234,20 +245,14 @@ async def search_html(
             "title": resource_title(resource),
         }
 
-    # Results are grouped under a labeled heading. For an "all" search, Works and
-    # Instances each get their own group; a single-type search shows just that
-    # one labeled group ("Works" / "Instances").
+    # Results are grouped under a labeled heading (see SEARCH_GROUPS). For an
+    # "all" search, Works, Instances and Hubs each get their own group; a
+    # single-type search shows just that one labeled group.
     groups: list[dict] = []
-    if type == SearchType.ALL:
-        works = [item(r) for r in results if isinstance(r, Work)]
-        instances = [item(r) for r in results if isinstance(r, Instance)]
-        if works:
-            groups.append({"label": "Works", "results": works})
-        if instances:
-            groups.append({"label": "Instances", "results": instances})
-    elif results:
-        label = "Works" if type == SearchType.WORKS else "Instances"
-        groups = [{"label": label, "results": [item(r) for r in results]}]
+    for model, label in SEARCH_GROUPS:
+        matched = [item(r) for r in results if isinstance(r, model)]
+        if matched:
+            groups.append({"label": label, "results": matched})
 
     # Build pagination URLs from the request's root_path-aware route URL so they
     # resolve correctly behind the reverse proxy (e.g. /api/search) and when the
