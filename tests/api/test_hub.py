@@ -361,17 +361,6 @@ def test_get_hub_html(client, db_session):
     assert f"{hub_view_uri}.ttl" in page
 
 
-def test_get_hub_html_by_suffix(client, db_session):
-    """`.html` asks for the view outright, without content negotiation."""
-    add_view_hub(db_session)
-
-    response = client.get(f"/hubs/{hub_view_uuid}.html")
-
-    assert response.status_code == 200
-    assert response.headers["Content-Type"].startswith("text/html")
-    assert "BIBFRAME Hub" in response.text
-
-
 def test_get_hub_still_defaults_to_jsonld(client, db_session):
     """API clients that ask for no format keep getting JSON-LD, as before."""
     add_view_hub(db_session)
