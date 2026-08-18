@@ -45,7 +45,6 @@ async def read_hub(
     if db_hub is None:
         raise HTTPException(status_code=404, detail=f"Hub {hub_uuid} not found")
 
-    # html is not supported for Hubs for now, serve jsonld when html is requested
     try:
         resp: Response | None = serialize(db_hub, expand, format, request)
         if resp:
