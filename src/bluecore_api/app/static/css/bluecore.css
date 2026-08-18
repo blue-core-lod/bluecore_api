@@ -16,10 +16,9 @@
 }
 
 
-
 /*############################################################################*/
-/*#######  Main Template Styles Section  #######*/
-/*##############################################*/
+/*#######  Base Styles Section  #######*/
+/*#####################################*/
 * {
   box-sizing: border-box;
 }
@@ -33,6 +32,10 @@ body {
   font-size: 16px;
 }
 
+
+/*############################################################################*/
+/*#######  Links Section  #######*/
+/*###############################*/
 /* No underline at rest, in the body or the sidebar: the views are largely
    lists of record links, and a rule under every line turns them into stripes. */
 .bc-main a,
@@ -49,6 +52,10 @@ body {
   text-decoration: underline;
 }
 
+
+/*############################################################################*/
+/*#######  Page Shell Section  #######*/
+/*####################################*/
 .bc-page {
   width: min(100%, 1200px);
   min-height: 100vh;
@@ -58,7 +65,23 @@ body {
   border-right: 1px solid var(--bc-border);
 }
 
-/* Header */
+.bc-layout {
+  display: flex;
+  /*flex-direction: column;*/
+  gap: 40px;
+  padding: 34px 20px 70px 34px;
+  align-items: flex-start;
+}
+
+.bc-main {
+  flex: 1;
+  min-width: 0;
+}
+
+
+/*############################################################################*/
+/*#######  Header and Nav Section  #######*/
+/*########################################*/
 .bc-header {
   display: flex;
   align-items: center;
@@ -79,13 +102,6 @@ body {
   text-decoration: none;
 }
 
-.top-pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-right: 1em;
-}
-
 .bc-brand img {
   height: 22px;
   width: auto;
@@ -104,6 +120,10 @@ body {
   text-decoration: none;
 }
 
+
+/*############################################################################*/
+/*#######  Hamburger Menu Section  #######*/
+/*########################################*/
 /* Hamburger menu — hidden on desktop, revealed in the Responsive Section.
    Driven by the #bc-menu-toggle checkbox; the checkbox itself is never shown. */
 .bc-menu-toggle {
@@ -130,6 +150,9 @@ body {
 }
 
 
+/*############################################################################*/
+/*#######  Search Form Section  #######*/
+/*#####################################*/
 .bc-hero {
   min-height: 29px;
   position: relative;
@@ -183,31 +206,10 @@ body {
   border: 0;
 }
 
-/* Layout: main column + right sidebar */
-.bc-layout {
-  display: flex;
-  /*flex-direction: column;*/
-  gap: 40px;
-  padding: 34px 20px 70px 34px;
-  align-items: flex-start;
-}
 
-.bc-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.bc-sidebar {
-  min-width: auto;
-  max-width: 550px;
-  min-height: auto;
-  flex-shrink: 0;
-  background: var(--bc-sidebar-bg);
-  padding: 32px 10px 18px;
-  border-radius: 0;
-  margin-top: 58px;
-}
-
+/*############################################################################*/
+/*#######  Resource View: Fields Section  #######*/
+/*###############################################*/
 .bc-doctype {
   font-size: 22px;
   font-weight: 700;
@@ -219,10 +221,8 @@ body {
 
 /* Field blocks (indented under the heading, like the mockups) */
 .bc-field {
-  margin: 0 0 22px 31px;
-  margin-left: 24px;
+  margin: 0 0 22px 24px;
 }
-
 
 .bc-field h2 {
   font-size: 16px;
@@ -244,6 +244,10 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.bc-field li {
+  margin: 0;
 }
 
 /* Dashed fields. The dash is drawn rather than used as a list marker so it can
@@ -269,8 +273,20 @@ body {
   left: 0;
 }
 
-.bc-field li {
-  margin: 0;
+
+/*############################################################################*/
+/*#######  Resource View: Sidebar Section  #######*/
+/*################################################*/
+.bc-sidebar {
+  min-width: auto;
+  max-width: 550px;
+  min-height: auto;
+  flex-shrink: 0;
+  background: var(--bc-sidebar-bg);
+  padding: 32px 10px 18px;
+  border-radius: 4px;
+  margin-top: 58px;
+  border: 1px solid var(--bc-border);
 }
 
 /* Sidebar: headings and the values under them share one size, a step down from
@@ -298,7 +314,10 @@ body {
   line-height: 1.35;
 }
 
-/* Alternative Formats */
+
+/*############################################################################*/
+/*#######  Alternative Formats and Editors Section  #######*/
+/*#########################################################*/
 .bc-formats ul {
   list-style: none;
 }
@@ -313,6 +332,13 @@ body {
   color: var(--bc-muted);
 }
 
+/* Disabled "Load to Marva" row: label + alert-icon tooltip */
+.bc-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .bc-link-disabled {
   color: var(--bc-muted);
   cursor: not-allowed;
@@ -322,32 +348,10 @@ body {
   background-color: var(--bc-muted-bg);
 }
 
-.bc-note {
-  margin: 0.2rem 0 0;
-  font-size: 0.85rem;
-  line-height: 1.35;
-  color: var(--bc-muted);
-}
 
-/* Disabled "Load to Marva" row: label + alert-icon tooltip */
-.bc-editor-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.bc-tooltip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  color: #b45309; /* amber: an advisory, not an error */
-  cursor: help;
-}
-
-.bc-alert {
-  vertical-align: -3px;
-}
-
+/*############################################################################*/
+/*#######  Advisories: Stub Flags and Tooltips Section  #######*/
+/*#############################################################*/
 /* Stub flag: the same amber advisory colour, sized to whatever text it sits
    beside. The heading centres it with flex; the vertical-align keeps it on the
    baseline when it runs inline in a field value. */
@@ -371,6 +375,18 @@ body {
 .bc-stub svg {
   width: 1em;
   height: 1em;
+}
+
+.bc-alert {
+  vertical-align: -3px;
+}
+
+.bc-tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: #b45309; /* amber: an advisory, not an error */
+  cursor: help;
 }
 
 .bc-tooltip-text {
@@ -411,11 +427,11 @@ body {
   opacity: 1;
 }
 
-.bc-muted {
-  color: var(--bc-muted);
-}
 
-/* Search results: flat list + grouped (All) sections */
+/*############################################################################*/
+/*#######  Search Results Section  #######*/
+/*########################################*/
+/* A flat list when one type was searched, grouped sections for All. */
 .bc-results {
   margin: 0 0 18px;
   padding: 0 0 0 18px;
@@ -438,7 +454,17 @@ body {
   border-bottom: 1px solid var(--bc-border);
 }
 
-/* Pagination controls */
+
+/*############################################################################*/
+/*#######  Pagination Section  #######*/
+/*####################################*/
+.top-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-right: 1em;
+}
+
 .bc-pager {
   display: flex;
   align-items: center;
@@ -458,6 +484,20 @@ body {
 }
 
 
+/*############################################################################*/
+/*#######  Text Utilities Section  #######*/
+/*########################################*/
+.bc-muted {
+  color: var(--bc-muted);
+}
+
+.bc-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--bc-muted);
+}
+
 
 /*############################################################################*/
 /*#######  Responsive Section  #######*/
@@ -476,6 +516,7 @@ body {
     max-width: 100%;
     width: 100%;
     min-height: auto;
+    border: 1px solid var(--bc-border);
   }
   .bc-field {
     margin-left: 24px;
