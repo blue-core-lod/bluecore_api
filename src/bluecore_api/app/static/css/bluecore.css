@@ -33,16 +33,20 @@ body {
   font-size: 16px;
 }
 
-/* Links inside the document body / sidebar are underlined like the mockups. */
+/* No underline at rest, in the body or the sidebar: the views are largely
+   lists of record links, and a rule under every line turns them into stripes. */
 .bc-main a,
 .bc-sidebar a {
   color: var(--bc-link);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
+/* Hover brings the underline back, so colour is not the only thing marking a
+   link as clickable. */
 .bc-main a:hover,
 .bc-sidebar a:hover {
   color: var(--bc-orient);
+  text-decoration: underline;
 }
 
 .bc-page {
@@ -242,13 +246,37 @@ body {
   list-style: none;
 }
 
+/* Dashed fields. The dash is drawn rather than used as a list marker so it can
+   sit in the gutter at the field's left edge: the values stay lined up where
+   they always were, and the list gains a marker without the block shifting. */
+.bc-field ul.bc-bulleted {
+  list-style: none;
+  padding-left: 0;
+}
+
+.bc-field ul.bc-bulleted > li {
+  position: relative;
+  /* the gap between the dash, pinned at left: 0, and the value */
+  padding-left: 10px;
+}
+
+.bc-field ul.bc-bulleted > li::before {
+  /* hyphen rather than an en dash, and set down a step: the marker should read
+     as a tick in the gutter, not as punctuation competing with the value */
+  content: "-";
+  font-size: 0.85em;
+  position: absolute;
+  left: 0;
+}
+
 .bc-field li {
   margin: 0;
 }
 
-/* Sidebar */
+/* Sidebar: headings and the values under them share one size, a step down from
+   the main column's 16px, so the box reads as a compact index of links. */
 .bc-sidebar h2 {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   margin: 0;
   line-height: 1.15;
@@ -256,8 +284,18 @@ body {
 
 .bc-sidebar ul {
   margin: 0 0 22px;
-  padding: 0;
+  /* indents the values under their heading, so each section reads as a group */
+  padding: 0 0 0 14px;
   list-style: none;
+}
+
+/* Sized on the item rather than the link: a section mixes linked records with
+   plain text -- a transcribed series statement has no uri to link -- and the
+   lines have to sit at one size. The extra leading is for the long access
+   points, which wrap inside the sidebar's width. */
+.bc-sidebar li {
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 /* Alternative Formats */
