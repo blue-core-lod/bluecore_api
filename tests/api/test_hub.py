@@ -737,7 +737,7 @@ def test_get_hub_html_resolves_terms_it_is_not_joined_to(client, db_session):
 
     page = client.get(f"/hubs/{uuid_}", headers={"Accept": "text/html"}).text
 
-    assert f'<a href="{AGENT}">King, Stephen, 1947- (contributor)</a>' in page
+    assert f'<a href="{AGENT}">King, Stephen, 1947-</a>' in page
     # the bare identifier was the link text before the term resolved
     assert ">n79063767<" not in page
     assert "Lccn: n 2003044804 (canceled or invalid)" in page
@@ -746,12 +746,13 @@ def test_get_hub_html_resolves_terms_it_is_not_joined_to(client, db_session):
 
 def test_get_hub_html_spells_out_the_relator_code(client, db_session):
     """The stored Role has a code and no label, so the spelling comes from
-    RELATOR_LABELS rather than from the data."""
+    RELATOR_LABELS -- and the role links to its own vocabulary term, separately
+    from the agent it describes."""
     uuid_ = add_unattached_hub(db_session)
 
     page = client.get(f"/hubs/{uuid_}", headers={"Accept": "text/html"}).text
 
-    assert "(contributor)" in page
+    assert f'(<a href="{CTB}">contributor</a>)' in page
     assert "(ctb)" not in page
 
 

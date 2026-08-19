@@ -193,13 +193,18 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
             agent_href, nodes.label_text(agent) if agent else "", label_map
         )
         role = item.get("role")
-        role_href = role.get("@id") if isinstance(role, dict) else None
+        role_href = nodes.link_uri(role.get("@id")) if isinstance(role, dict) else None
         role_text = vocabulary.resolve_label(
             role_href, nodes.label_text(role) if role else "", label_map
         )
         role_text = vocabulary.RELATOR_LABELS.get(role_text, role_text)
-        text = f"{agent_text} ({role_text})" if role_text else agent_text
-        values.append(nodes.value(text or (agent_href or ""), agent_href))
+
+        value = nodes.value(agent_text or (agent_href or ""), agent_href)
+        # the role is its own vocabulary term, so it links separately from the
+        # agent rather than sitting inside the agent's link
+        if role_text:
+            value["suffixes"] = [{"text": role_text, "href": role_href}]
+        values.append(value)
     return values
 
 
