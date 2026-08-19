@@ -23,8 +23,9 @@ logger = logging.getLogger(__name__)
 def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
     """Maps each uri a record cites to its label, so pages show words not codes.
 
-    Attached OtherResources first, then a lookup by uri -- ingestion often
-    records no attachment, and without the lookup the page shows bare ids.
+    Without it a contributor reads "n79063767" instead of "King, Stephen, 1947-".
+    Terms attached to the record are read first, then any others it cites are
+    looked up by uri -- ingestion often records no attachment at all.
     """
     graph = Graph()
     for row in resource.other_resources:
@@ -61,7 +62,12 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
 
 
 def resolve_label(href: str | None, text: str, label_map: dict[str, str]) -> str:
-    """Prefer a vocabulary label when the node itself had no embedded label."""
+    """The text to show for a value, preferring a real label over a bare uri.
+
+    A node that already carries its own label keeps it; one that is only a
+    reference gets whatever the vocabulary says, or its uri tail if we hold
+    nothing.
+    """
     if href and (not text or text == nodes.id_tail(href)):
         return label_map.get(href, text)
     return text
@@ -90,10 +96,10 @@ NOTE_TYPE_LABELS: dict[str, str] = {
 
 
 def label_sources(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Tag each linked value with the authority it came from.
+    """Appends the source authority to each linked value, in place.
 
-    Subjects come from several, so this separates "Vampires (LC)" from
-    "Vampires (FAST)".
+    Subjects come from several vocabularies at once, so the tag is what tells
+    "Vampires (LC)" from "Vampires (FAST)".
     """
     for v in values:
         href = v["href"]
@@ -130,7 +136,10 @@ _SECTION_ORDER = {
 
 
 def section_order(label: str) -> int:
-    """Sort key putting known relationship headings in LC's display order."""
+    """Sort key that puts sidebar headings in the order LC shows them.
+
+    Headings we have no order for sort after the ones we do.
+    """
     return _SECTION_ORDER.get(label, len(_SECTION_ORDER))
 
 
@@ -172,9 +181,10 @@ def _relationship_term(node: Any) -> str | None:
 
 
 def relationship_label(relation: dict[str, Any], label_map: dict[str, str]) -> str:
-    """The heading a relation sits under, from its bf:relationship term.
+    """The heading a relation sits under, such as "Series of" or "Translated as".
 
-    Tries the vocabulary we hold, then RELATIONSHIP_LABELS, then the uri's tail.
+    The term is nearly always a bare uri, so its wording comes from the
+    vocabulary if we hold it, then RELATIONSHIP_LABELS, then the uri's tail.
     """
     node = relation.get("relationship")
     href = _relationship_term(node)

@@ -19,7 +19,7 @@ LC_ID_HOST = "id.loc.gov"
 
 
 def rdf_value(node: dict[str, Any]) -> Any:
-    """Return the rdf:value of a node, whichever key form it uses."""
+    """The rdf:value of a node, under whichever of the two key spellings it uses."""
     for key in RDF_VALUE_KEYS:
         if key in node:
             return node[key]
@@ -27,13 +27,18 @@ def rdf_value(node: dict[str, Any]) -> Any:
 
 
 def as_list(value: Any) -> list:
+    """Wraps a value in a list unless it already is one, so callers can loop.
+
+    Stored JSON-LD holds one title as a bare node and two as a list, and most
+    code here does not care which it got.
+    """
     if value is None:
         return []
     return value if isinstance(value, list) else [value]
 
 
 def scalar(value: Any) -> str:
-    """Flatten a label-ish value (str, {@value}, or list) to plain text."""
+    """Flattens whatever a key holds -- text, a wrapped literal, a list -- to plain text."""
     if isinstance(value, str):
         return value
     if isinstance(value, list):
@@ -46,7 +51,11 @@ def scalar(value: Any) -> str:
 
 
 def label_text(node: Any) -> str:
-    """Best human-readable label for a JSON-LD node."""
+    """The best readable label a node offers, trying each place one can hide.
+
+    Titles, labels and codes all name a node in different records, so they are
+    tried in turn and the first one found wins.
+    """
     if isinstance(node, str):
         return node
     if isinstance(node, list):
@@ -80,10 +89,16 @@ def label_text(node: Any) -> str:
 
 
 def id_tail(uri: str) -> str:
+    """The last segment of a uri: ".../vocabulary/relators/ctb" -> "ctb"."""
     return uri.rstrip("/").rsplit("/", 1)[-1]
 
 
 def _is_bluecore(uri: str | None) -> bool:
+    """Whether a uri points at a record of ours rather than off to another site.
+
+    LC-derived records keep their id.loc.gov uris, so the path is checked as
+    well as the host.
+    """
     if not uri:
         return False
     return uri.startswith(BLUECORE_URL) or any(
@@ -92,11 +107,19 @@ def _is_bluecore(uri: str | None) -> bool:
 
 
 def value(text: str, href: str | None = None) -> dict[str, Any]:
+    """One line for the page: its text, and a link if it has somewhere to go.
+
+    Every rendered value passes through here, so the templates can count on the
+    shape.
+    """
     return {"text": text, "href": href, "internal": _is_bluecore(href)}
 
 
 def referenced_uris(node: Any, found: set[str]) -> None:
-    """Collect every http @id a record cites, at any depth, in place."""
+    """Collects every uri a record mentions, however deeply nested, into `found`.
+
+    Used to look up the vocabulary terms a record only references.
+    """
     if isinstance(node, dict):
         for key, value in node.items():
             if key == "@id":
@@ -110,7 +133,10 @@ def referenced_uris(node: Any, found: set[str]) -> None:
 
 
 def node_href(item: Any) -> str | None:
-    """The uri to link a value at: its own, else the locator it points to."""
+    """Where a value should link to: its own uri, or the locator it points at.
+
+    Supplementary content has no uri of its own -- only an electronicLocator.
+    """
     if not isinstance(item, dict):
         return None
     own = item.get("@id")
@@ -126,7 +152,7 @@ def node_href(item: Any) -> str | None:
 
 
 def humanize(key: str) -> str:
-    """'descriptionConventions' -> 'Description conventions'."""
+    """Turns a json-ld key into a heading: "descriptionConventions" -> "Description conventions"."""
     name = key.rsplit("/", 1)[-1] if "://" in key else key.split(":")[-1]
     name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
     return name[:1].upper() + name[1:].lower()
@@ -179,6 +205,11 @@ def split_titles(node: Any) -> tuple[list[Any], list[Any]]:
 
 
 def title_of(data: dict[str, Any]) -> str:
+    """The one title that names a record, for a heading or a link.
+
+    Falls back to the access point, then to any plain label, so authorities and
+    agents -- which carry no title at all -- still come back with something.
+    """
     # Only the title proper names the resource; variants would all get joined in.
     primary, variant = split_titles(data.get("title"))
     return (
@@ -191,7 +222,10 @@ def title_of(data: dict[str, Any]) -> str:
 
 
 def capitalize(text: str) -> str:
-    """Sentence-case a label without touching the rest of it ("series" -> "Series")."""
+    """Capitalizes the first letter only, leaving the rest as written.
+
+    "series" becomes "Series", but "MARC key" is not flattened to "Marc key".
+    """
     return text[:1].upper() + text[1:]
 
 

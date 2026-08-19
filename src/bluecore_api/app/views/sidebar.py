@@ -25,9 +25,11 @@ _WORKS_FOR_HUB_SQL = sql_text(
 def add_section(
     sidebar: list[dict[str, Any]], label: str, values: list[dict[str, Any]]
 ) -> None:
-    """Add values, folding them into an open section of the same name.
+    """Adds values under a heading, reusing that heading if it is already open.
 
-    A transcribed seriesStatement and a bf:relation both belong under Series.
+    Two different properties can belong under one heading -- a transcribed
+    seriesStatement and a bf:relation both read as Series -- and the reader
+    should see it once, not twice.
     """
     for section in sidebar:
         if section["label"] == label:
@@ -39,7 +41,8 @@ def add_section(
 def _instance_label(data: dict[str, Any]) -> str:
     """Names an Instance by its imprint: "Hershey, PA: IGI Global, [2025]".
 
-    Its title is its Work's, so only the imprint tells two Instances apart.
+    Every Instance of a Work repeats that Work's title, so the title cannot tell
+    two printings apart and the publisher and date have to.
     """
     statement = nodes.scalar(data.get("publicationStatement", "")).strip()
     if statement:
@@ -63,7 +66,7 @@ def _instance_label(data: dict[str, Any]) -> str:
 
 
 def _record_label(record: ResourceBase) -> str:
-    """The text naming a record wherever it is linked from."""
+    """The text that names a record in a link, whichever page the link is on."""
     if isinstance(record, Instance):
         return _instance_label(record.data)
     return nodes.access_point(record.data)
@@ -80,11 +83,11 @@ def record_link(record: ResourceBase) -> dict[str, Any]:
 def _relation_value(
     node: dict[str, Any], enumeration: str, records: dict[str, ResourceBase]
 ) -> dict[str, Any] | None:
-    """One line under a relation's heading.
+    """One line under a relation's heading, linked when there is somewhere to go.
 
-    A record we hold is named from its own data, since ingestion leaves only a
-    bare uri here. One described in place keeps its label, and links only if it
-    has a uri.
+    Ingestion leaves only a bare uri behind, so a record we hold is named from
+    its own data. One described in place keeps the label written here, and a
+    transcribed statement -- which has no uri at all -- stays plain text.
     """
     uri = node.get("@id") if isinstance(node.get("@id"), str) else None
     record = records.get(uri) if uri else None
@@ -109,10 +112,11 @@ def _relation_value(
 def relation_sections(
     resource: Hub | Work, label_map: dict[str, str]
 ) -> list[dict[str, Any]]:
-    """Groups a record's bf:relation into a section per relationship term.
+    """Groups a record's bf:relation into one sidebar section per relationship.
 
-    A Work's Series holds the transcribed statement and the Hub controlling it; a
-    described Hub gets "Series of", "Translated as" and so on, as LC does.
+    A Work's Series section holds both the series as printed and the Hub that
+    controls it. A fully described Hub points back the other way, so it gets a
+    section each for "Series of", "Translated as", "Part of" and the rest.
     """
     relations = [
         r for r in nodes.as_list(resource.data.get("relation")) if isinstance(r, dict)
@@ -156,9 +160,10 @@ def relation_sections(
 
 
 def works_for_hub(hub: Hub) -> list[Work]:
-    """The Works pointing at this Hub.
+    """The Works that name this Hub, found by searching their own relations.
 
-    A Hub holds no pointer down to its Works, so their own relations are searched.
+    A Hub record holds no list of its Works; the link exists only on the Work
+    side, so the only way down is to look for it.
     """
     session = object_session(hub)
     if session is None or not hub.uri:
