@@ -70,9 +70,9 @@ def _record_label(record: ResourceBase) -> str:
 
 
 def record_link(record: ResourceBase) -> dict[str, Any]:
-    """The one way a sidebar links to a record, so it reads the same everywhere.
+    """Builds every sidebar link, so a record reads the same on every page.
 
-    Instances by imprint, everything else by access point.
+    Instances are named by their imprint, everything else by its access point.
     """
     return nodes.value(_record_label(record), record.uri)
 

@@ -140,7 +140,7 @@ _RELATIONSHIP_TAILS = ("work", "with", "from", "for", "as", "by", "of", "to")
 
 
 def _relationship_words(tail: str) -> str:
-    """Best effort at spacing a run-together relationship slug."""
+    """Splits a run-together slug into words: "precededby" -> "Preceded by"."""
     for word in _RELATIONSHIP_TAILS:
         if tail.endswith(word) and len(tail) > len(word):
             return nodes.humanize(f"{tail[: -len(word)]} {word}")
@@ -154,7 +154,10 @@ SPECIFIC_RELATIONSHIP_NS = "id.loc.gov/entities/relationships/"
 
 
 def _relationship_term(node: Any) -> str | None:
-    """The uri of the one relationship term a heading is taken from."""
+    """The single relationship term to build a heading from.
+
+    A relation can name several at once; the more specific designator wins.
+    """
     uris = [
         term["@id"]
         for term in nodes.as_list(node)

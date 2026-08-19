@@ -149,7 +149,8 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
 
 def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     """Each Contribution renders as its agent, optionally with the role.
-    The contribution node itself carries no label — the data is in the nested
+
+    The Contribution node has no label of its own; the names are in the nested
     "agent" and "role" nodes.
     """
     values: list[dict[str, Any]] = []
@@ -174,8 +175,9 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
 
 
 def _classification_values(node: Any) -> list[dict[str, Any]]:
-    """Each Classification renders as its call number, optionally prefixed by kind.
-    The value lives in "classificationPortion" (+ "itemPortion");
+    """Each Classification renders as its call number, optionally led by kind.
+
+    The number itself is split across "classificationPortion" and "itemPortion".
     """
     values: list[dict[str, Any]] = []
     for item in nodes.as_list(node):
@@ -339,7 +341,7 @@ def _field(
 
 
 def _field_label(key: str) -> str:
-    """The heading a key that no ordered list names should get."""
+    """The heading a key gets: its curated label, or the key itself humanized."""
     return FIELD_LABELS.get(key, nodes.humanize(key))
 
 
@@ -348,7 +350,7 @@ def build_fields(
     label_map: dict[str, str],
     field_order: tuple[str, ...] = FIELD_ORDER,
 ) -> list[dict[str, Any]]:
-    """The fields FIELD_ORDER names, in that order, then everything else it holds.
+    """The fields FIELD_ORDER names, in that order, then whatever else the record has.
 
     FIELD_ORDER is not a filter: dropping a key from it moves that field to the
     end, not off the page. Only NON_FIELD_KEYS withholds anything.
@@ -372,7 +374,7 @@ def build_fields(
 
 
 def mark_bulleted(fields: list[dict[str, Any]]) -> None:
-    """Flag fields with more than one value, in place, for the template to dash.
+    """Marks fields holding more than one value, so the template bullets (dashes) them.
 
     A single value reads as a statement, so LC leaves it plain and so do we.
     """
@@ -388,6 +390,12 @@ IMPLIED_HUB_TYPES = frozenset({"Work"})
 
 
 def extra_types(data: dict[str, Any], implied: frozenset[str]) -> list[dict[str, Any]]:
+    """The types to list under the Type heading, minus any the caller skips.
+
+    A Work is typed bf:Work, bf:Text and bf:Monograph all at once. The page
+    heading already says "BIBFRAME Work", so callers pass implied={"Work"} to
+    leave that one out and list only Text and Monograph.
+    """
     types = [
         t for t in nodes.as_list(data.get("@type")) if nodes.id_tail(t) not in implied
     ]
@@ -397,9 +405,11 @@ def extra_types(data: dict[str, Any], implied: frozenset[str]) -> list[dict[str,
 def insert_type_field(
     fields: list[dict[str, Any]], types: list[dict[str, Any]]
 ) -> None:
-    """Insert the Type field after the titles, in place.
+    """Add the Type field to `fields`, just below the last title heading.
 
-    Found rather than fixed, so Type cannot land between Title and its variants.
+    Titles occupy one heading or two ("Title", then "Other Titles" when the
+    record has variants), so this scans for the last of them instead of using a
+    fixed position -- at a fixed position Type would land between the two.
     """
     if not types:
         return
