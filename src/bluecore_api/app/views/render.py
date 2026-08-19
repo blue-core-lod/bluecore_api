@@ -72,6 +72,9 @@ def render_work_html(work: Work, request: Request) -> Response:
     fields.mark_bulleted(main_fields)
 
     sidebar_sections: list[dict[str, Any]] = []
+    expressed = sidebar.linked_records(work, "expressionOf")
+    if expressed:
+        sidebar.add_section(sidebar_sections, "Expression Of", expressed)
     instance_values = [sidebar.record_link(inst) for inst in work.instances]
     if instance_values:
         sidebar.add_section(sidebar_sections, "Has Instance", instance_values)
@@ -117,6 +120,9 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
     fields.mark_bulleted(main_fields)
 
     sidebar_sections: list[dict[str, Any]] = []
+    expressions = sidebar.linked_records(hub, "hasExpression")
+    if expressions:
+        sidebar.add_section(sidebar_sections, "Has Expression", expressions)
     for section in sidebar.relation_sections(hub, label_map):
         sidebar.add_section(sidebar_sections, section["label"], section["values"])
 

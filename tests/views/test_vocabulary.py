@@ -16,7 +16,6 @@ from bluecore_api.app.views.vocabulary import (
     _relationship_term,
     _relationship_words,
     build_label_map,
-    label_sources,
     relationship_label,
     resolve_label,
     section_order,
@@ -181,27 +180,6 @@ def test_unlisted_sections_sort_after_the_known_ones():
     every heading it does."""
     assert section_order("Preceded by") > section_order("Related To")
     assert section_order("Has series") > section_order("Series of")
-
-
-# --- source tags -------------------------------------------------------------
-
-
-def test_label_sources_tags_by_authority():
-    values = [
-        {"text": "Vampires", "href": "http://id.loc.gov/authorities/subjects/sh1"},
-        {"text": "Vampires", "href": "http://id.worldcat.org/fast/1163155"},
-        {"text": "Something", "href": "http://www.worldcat.org/oclc/12345"},
-        {"text": "Elsewhere", "href": "https://id.example.org/thing"},
-        {"text": "Unlinked", "href": None},
-    ]
-
-    assert [v["text"] for v in label_sources(values)] == [
-        "Vampires (LC)",
-        "Vampires (FAST)",
-        "Something (WorldCat)",
-        "Elsewhere (example.org)",
-        "Unlinked",
-    ]
 
 
 # --- the curated tables ------------------------------------------------------

@@ -25,7 +25,15 @@ CANCINV = "http://id.loc.gov/vocabulary/mstatus/cancinv"
 
 
 def _texts(values):
-    return [v["text"] for v in values]
+    """Each value as the page shows it: prefix, text, then any qualifiers."""
+    lines = []
+    for v in values:
+        line = f"{v.get('prefix', '')}{v['text']}"
+        for s in v.get("suffixes", []):
+            label = f"{s['label']}: " if s.get("label") else ""
+            line += f" ({label}{s['text']})"
+        lines.append(line)
+    return lines
 
 
 def test_identifier_values_prefixed_rdf_value_key():
@@ -361,6 +369,8 @@ def test_non_field_keys_hold_only_what_is_shown_elsewhere_or_withheld():
             "@id",
             "@type",
             "adminMetadata",
+            "expressionOf",
+            "hasExpression",
             "hasInstance",
             "instanceOf",
             "relation",
@@ -382,3 +392,49 @@ def test_type_values_are_spaced_out():
     types = [v["text"] for v in extra_types(data, IMPLIED_HUB_TYPES)]
 
     assert types == ["Hub", "Moving Image"]
+
+
+# --- classification ----------------------------------------------------------
+
+DLC = "http://id.loc.gov/vocabulary/organizations/dlc"
+UBA = "http://id.loc.gov/vocabulary/mstatus/uba"
+
+
+def test_classification_reads_the_way_lc_writes_it():
+    """ "LCC: ML31 .C595 (Assigner: dlc) (Status: used by assigner)" -- the kind
+    as a short code, then who assigned it and how far it is trusted."""
+    data = {
+        "@id": "https://bluecore.info/works/x",
+        "@type": "Work",
+        "classification": {
+            "@type": "ClassificationLcc",
+            "classificationPortion": "ML31",
+            "itemPortion": ".C595",
+            "assigner": {"@id": DLC},
+            "status": {"@id": UBA},
+        },
+    }
+
+    (value,) = build_fields(data, {UBA: "used by assigner"})[0]["values"]
+
+    assert value["text"] == "LCC: ML31 .C595"
+    assert value["suffixes"] == [
+        {"label": "Assigner", "text": "dlc", "href": DLC},
+        {"label": "Status", "text": "used by assigner", "href": UBA},
+    ]
+
+
+def test_classification_without_an_assigner_or_status_has_no_qualifiers():
+    data = {
+        "@id": "https://bluecore.info/works/x",
+        "@type": "Work",
+        "classification": {
+            "@type": "ClassificationDdc",
+            "classificationPortion": "813/.54",
+        },
+    }
+
+    (value,) = build_fields(data, {})[0]["values"]
+
+    assert value["text"] == "DDC: 813/.54"
+    assert "suffixes" not in value

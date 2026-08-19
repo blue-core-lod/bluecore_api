@@ -132,6 +132,17 @@ def referenced_uris(node: Any, found: set[str]) -> None:
             referenced_uris(item, found)
 
 
+def link_uri(value: Any) -> str | None:
+    """A uri worth linking to, or None.
+
+    Blank-node ids like "_:b25" are strings but address nothing outside the
+    record they came from, so they never become links.
+    """
+    if isinstance(value, str) and not value.startswith("_:"):
+        return value
+    return None
+
+
 def node_href(item: Any) -> str | None:
     """Where a value should link to: its own uri, or the locator it points at.
 
@@ -139,15 +150,18 @@ def node_href(item: Any) -> str | None:
     """
     if not isinstance(item, dict):
         return None
-    own = item.get("@id")
-    if isinstance(own, str):
+    own = link_uri(item.get("@id"))
+    if own:
         return own
     locator = item.get("electronicLocator")
     for candidate in as_list(locator):
-        if isinstance(candidate, dict) and isinstance(candidate.get("@id"), str):
-            return candidate["@id"]
-        if isinstance(candidate, str):
-            return candidate
+        if isinstance(candidate, dict):
+            found = link_uri(candidate.get("@id"))
+            if found:
+                return found
+        found = link_uri(candidate)
+        if found:
+            return found
     return None
 
 
@@ -186,10 +200,11 @@ def dedupe(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     Records often repeat the same title or contribution.
     """
-    seen: set[tuple[str, str | None]] = set()
+    seen: set[tuple[str, str, str | None]] = set()
     unique: list[dict[str, Any]] = []
     for v in values:
-        key = (v["text"], v["href"])
+        # the prefix counts: "Isbn: 123" and "Lccn: 123" are different lines
+        key = (v.get("prefix", ""), v["text"], v["href"])
         if key in seen:
             continue
         seen.add(key)

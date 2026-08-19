@@ -16,6 +16,8 @@
     {%- if v.href -%}
         <a href="{{ v.href }}"{% if v.external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ v.text }}</a>
     {%- else -%}{{ v.text }}{%- endif -%}
+    {#### v.suffixes trail the value, each able to carry its own link, e.g. "(Assigner: dlc)" ####}
+    {%- for s in v.suffixes %} ({% if s.label %}{{ s.label }}: {% endif %}{% if s.href %}<a href="{{ s.href }}">{{ s.text }}</a>{% else %}{{ s.text }}{% endif %}){% endfor -%}
     {%- if v.alert %}{{ stub_flag() }}{% endif -%}
 {%- endmacro %}
 
@@ -32,8 +34,10 @@
                     <li class="bc-list-value">{{ render_value(v) }}</li>
                 {% endfor %}
             </ul>
+        {#### A lone unlinked value reads as a sentence, not a list -- but it still ####}
+        {#### goes through render_value, so a prefix or qualifier is not dropped.    ####}
         {% elif field['values']|length == 1 and not field['values'][0].href %}
-            <p class="bc-value">{{ field['values'][0].text }}</p>
+            <p class="bc-value">{{ render_value(field['values'][0]) }}</p>
         {% else %}
             <ul>
                 {% for v in field['values'] %}

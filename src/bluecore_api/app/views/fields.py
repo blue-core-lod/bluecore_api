@@ -125,11 +125,25 @@ def node_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     return values
 
 
-def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
-    """An identifier written as "Lccn: 2021062674", led by the kind of number.
+# An ISSN record at issn.org is addressed by the number itself, which is the only
+# handle we have -- the identifier node carries no uri of its own.
+ISSN_TYPES = frozenset({"Issn", "IssnL"})
+ISSN_URL = "https://issn.org/resource/issn/{}"
 
-    Any qualifier or status is appended, since that is what tells two
-    identical-looking numbers apart.
+
+def _identifier_url(bf_type: str, ident: str) -> str | None:
+    """The registry page for an identifier, where we know how to address one."""
+    if bf_type in ISSN_TYPES and ident:
+        return ISSN_URL.format(ident)
+    return None
+
+
+def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+    """An identifier written as "Issn: 1435-5655", led by the kind of number.
+
+    The number is the link text where a registry page exists, so the kind stays
+    outside the link; a qualifier or status trails it, since that is what tells
+    two identical-looking numbers apart.
     """
     values: list[dict[str, Any]] = []
     for item in nodes.as_list(node):
@@ -138,20 +152,27 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
         bf_type = item.get("@type", "")
         if isinstance(bf_type, list):
             bf_type = bf_type[0] if bf_type else ""
+        bf_type = nodes.id_tail(bf_type) if bf_type else ""
         ident = nodes.scalar(nodes.rdf_value(item) or "").strip()
-        text = f"{bf_type}: {ident}".strip()
-        # A qualifier ("epub") or status ("canceled") tells otherwise identical
-        # numbers apart, so show them alongside.
+
+        href = _identifier_url(bf_type, ident)
+        value = nodes.value(ident, href)
+        if bf_type:
+            value["prefix"] = f"{bf_type}: "
+        if href:
+            value["external"] = True
+
         qualifier = nodes.scalar(item.get("qualifier", "")).strip()
         status = item.get("status")
         status_href = status.get("@id") if isinstance(status, dict) else None
         status_text = vocabulary.resolve_label(
             status_href, nodes.label_text(status) if status else "", label_map
         )
+        # both read as one aside: "(paperback, canceled or invalid)"
         extras = [e for e in (qualifier, status_text) if e]
         if extras:
-            text = f"{text} ({', '.join(extras)})"
-        values.append(nodes.value(text))
+            value["suffixes"] = [{"text": ", ".join(extras)}]
+        values.append(value)
     return values
 
 
@@ -182,22 +203,55 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
     return values
 
 
-def _classification_values(node: Any) -> list[dict[str, Any]]:
-    """Each Classification renders as its call number, optionally led by kind.
+def _classification_kind(local_name: str) -> str:
+    """The short form LC prints for a classification class: "ClassificationLcc"
+    -> "LCC". Anything not starting with "Classification" is left alone."""
+    tail = local_name.removeprefix("Classification")
+    return tail.upper() if tail and tail != local_name else local_name
 
-    The number itself is split across "classificationPortion" and "itemPortion".
+
+def _classification_extras(
+    item: dict[str, Any], label_map: dict[str, str]
+) -> list[dict[str, Any]]:
+    """The assigner and status LC prints after a call number, each linked.
+
+    The assigner shows its code ("dlc") the way LC does, rather than the
+    organization's full name; the status shows its vocabulary label.
+    """
+    extras: list[dict[str, Any]] = []
+    for label, key in (("Assigner", "assigner"), ("Status", "status")):
+        node = item.get(key)
+        href = node.get("@id") if isinstance(node, dict) else None
+        if key == "assigner":
+            text = nodes.id_tail(href) if href else nodes.label_text(node)
+        else:
+            text = vocabulary.resolve_label(
+                href, nodes.label_text(node) if node else "", label_map
+            )
+        if text:
+            extras.append({"label": label, "text": text, "href": href})
+    return extras
+
+
+def _classification_values(
+    node: Any, label_map: dict[str, str]
+) -> list[dict[str, Any]]:
+    """A call number written the way LC writes it.
+
+    "LCC: ML31 .C595 (Assigner: dlc) (Status: used by assigner)" -- the kind,
+    the number itself, then whoever assigned it and how far it is trusted.
     """
     values: list[dict[str, Any]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
             continue
-        types = [
+        kinds = [
             t
             for t in nodes.as_list(item.get("@type"))
             if nodes.id_tail(t) != "Classification"
         ]
-        kind = nodes.id_tail(types[0]) if types else ""
+        kind = _classification_kind(nodes.id_tail(kinds[0])) if kinds else ""
         portion = " ".join(
             p
             for p in (
@@ -207,7 +261,11 @@ def _classification_values(node: Any) -> list[dict[str, Any]]:
             if p
         )
         text = f"{kind}: {portion}".strip(": ").strip() if kind else portion
-        values.append(nodes.value(text))
+        value = nodes.value(text)
+        extras = _classification_extras(item, label_map)
+        if extras:
+            value["suffixes"] = extras
+        values.append(value)
     return values
 
 
@@ -309,8 +367,53 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
     return fields
 
 
-# Fields whose values get an authority tag; see _label_sources. Add as needed.
-SOURCE_LABELED_KEYS = {"subject"}
+# Fields whose values name a controlled term, so each one is tagged with the
+# authority it came from -- see _authority_values.
+AUTHORITY_KEYS = {"subject", "genreForm"}
+
+# A term addressed straight at one of these carries no bf:source of its own, so
+# its own uri says which authority it belongs to.
+AUTHORITY_URI_TAGS: tuple[tuple[str, str], ...] = (
+    ("/authorities/subjects", "LCSH"),
+    ("/authorities/genreForms", "LCGFT"),
+    ("/authorities/names", "LCNAF"),
+    ("worldcat.org/fast/", "FAST"),
+)
+
+
+def _scheme_tag(item: Any, href: str | None) -> str:
+    """The authority a term belongs to, as LC prints it: LCSH, GND, FAST.
+
+    Read from the term's bf:source where it has one, and from the uri the term
+    lives at where it does not.
+    """
+    source = item.get("source") if isinstance(item, dict) else None
+    source_id = source.get("@id") if isinstance(source, dict) else None
+    if source_id and "Schemes/" in source_id:
+        return nodes.id_tail(source_id).upper()
+    for uri in (source_id, href):
+        for fragment, tag in AUTHORITY_URI_TAGS:
+            if uri and fragment in uri:
+                return tag
+    return ""
+
+
+def _authority_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+    """A controlled term with the authority it came from: "Periodicals (LCGFT)".
+
+    The tag sits outside the link, and it is what separates the several
+    same-named headings a record can carry from different vocabularies.
+    """
+    values: list[dict[str, Any]] = []
+    for item in nodes.as_list(node):
+        href = nodes.node_href(item)
+        text = vocabulary.resolve_label(href, nodes.label_text(item), label_map)
+        value = nodes.value(text or (href or ""), href)
+        tag = _scheme_tag(item, href)
+        if tag:
+            value["suffixes"] = [{"text": tag}]
+        values.append(value)
+    return values
 
 
 def _field(
@@ -334,17 +437,18 @@ def _field(
     elif key == "contribution":
         values = _contribution_values(data[key], label_map)
     elif key == "classification":
-        values = _classification_values(data[key])
+        values = _classification_values(data[key], label_map)
     elif key == "provisionActivity":
         values = _provision_values(data[key], label_map)
     elif key == "note":
         values = _note_values(data[key], label_map)
+    elif key in AUTHORITY_KEYS:
+        values = _authority_values(data[key], label_map)
     else:
         values = node_values(data[key], label_map)
     # A node with neither text nor a uri would render as a blank line.
     values = nodes.dedupe([v for v in values if v["text"] or v["href"]])
-    if key in SOURCE_LABELED_KEYS:
-        values = vocabulary.label_sources(values)
+
     return {"label": label, "values": values} if values else None
 
 

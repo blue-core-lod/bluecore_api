@@ -89,7 +89,7 @@ def _relation_value(
     its own data. One described in place keeps the label written here, and a
     transcribed statement -- which has no uri at all -- stays plain text.
     """
-    uri = node.get("@id") if isinstance(node.get("@id"), str) else None
+    uri = nodes.link_uri(node.get("@id"))
     record = records.get(uri) if uri else None
     external = False
     if record is not None:
@@ -107,6 +107,34 @@ def _relation_value(
     if external:
         value["external"] = True
     return value
+
+
+def _records_by_uri(resource: ResourceBase, uris: list[str]) -> dict[str, ResourceBase]:
+    """The records we hold for those uris, looked up in one query."""
+    session = object_session(resource)
+    if not uris or session is None:
+        return {}
+    return {
+        row.uri: row
+        for row in session.query(ResourceBase).where(ResourceBase.uri.in_(uris)).all()
+    }
+
+
+def linked_records(resource: ResourceBase, key: str) -> list[dict[str, Any]]:
+    """Sidebar values for a key that points straight at other records by uri.
+
+    Covers both ends of the Hub-Work pair -- expressionOf going up and
+    hasExpression coming back down -- and names each target from its own record,
+    since the data holds nothing but a uuid.
+    """
+    candidates = [
+        n for n in nodes.as_list(resource.data.get(key)) if isinstance(n, dict)
+    ]
+    records = _records_by_uri(
+        resource, [u for n in candidates if (u := nodes.link_uri(n.get("@id")))]
+    )
+    values = [_relation_value(n, "", records) for n in candidates]
+    return nodes.dedupe([v for v in values if v is not None])
 
 
 def relation_sections(

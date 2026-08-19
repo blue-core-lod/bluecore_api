@@ -6,7 +6,6 @@ the OtherResources we hold, or from the tables below when we hold nothing.
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from bluecore_models.models import Hub, Instance, OtherResource, Work
 from bluecore_models.namespaces import MADS
@@ -93,28 +92,6 @@ NOTE_TYPE_LABELS: dict[str, str] = {
     "datasource": "data source",
     "descsource": "description source",
 }
-
-
-def label_sources(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Appends the source authority to each linked value, in place.
-
-    Subjects come from several vocabularies at once, so the tag is what tells
-    "Vampires (LC)" from "Vampires (FAST)".
-    """
-    for v in values:
-        href = v["href"]
-        if not href:
-            continue
-        host = urlparse(href).netloc.lower()
-        if "loc.gov" in host:
-            source = "LC"
-        elif "worldcat.org" in host:
-            source = "FAST" if "/fast/" in href else "WorldCat"
-        else:
-            source = host.removeprefix("www.").removeprefix("id.")
-        if source:
-            v["text"] = f"{v['text']} ({source})"
-    return values
 
 
 # LC's own spellings, since slugs like "relatedwork" cannot be split reliably;
