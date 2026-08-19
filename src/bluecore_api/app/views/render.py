@@ -18,6 +18,10 @@ from bluecore_api.app.views import (
 
 
 def render_instance_html(instance: Instance, request: Request) -> Response:
+    """Renders one Instance -- a particular published edition of a Work.
+
+    Its sidebar holds a single link, back to the Work it is an instance of.
+    """
     data = instance.data
     label_map = vocabulary.build_label_map(instance)
     main_fields = fields.build_fields(data, label_map)
@@ -54,6 +58,11 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
 
 
 def render_work_html(work: Work, request: Request) -> Response:
+    """Renders one Work -- the thing itself, apart from any published edition.
+
+    Its sidebar lists the Instances beneath it and whatever its bf:relation
+    points at, such as the Hub for a series.
+    """
     data = work.data
     label_map = vocabulary.build_label_map(work)
     main_fields = fields.build_fields(data, label_map)
@@ -94,6 +103,11 @@ def render_work_html(work: Work, request: Request) -> Response:
 
 
 def render_hub_html(hub: Hub, request: Request) -> Response:
+    """Renders one Hub -- the record gathering everything about a single work.
+
+    Its sidebar gets a section per relationship ("Series of", "Translated as"),
+    plus any Works that point here without the Hub naming them back.
+    """
     data = hub.data
     label_map = vocabulary.build_label_map(hub)
     main_fields = fields.build_fields(data, label_map)
