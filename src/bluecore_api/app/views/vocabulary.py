@@ -1,4 +1,4 @@
-"""Turns vocabulary uris into words a cataloguer can read.
+"""Turns vocabulary uris into words a cataloger can read.
 
 Records cite terms by uri and drop the label, so it is looked up here -- from
 the OtherResources we hold, or from the tables below when we hold nothing.

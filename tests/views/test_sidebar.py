@@ -1,4 +1,4 @@
-"""Unit tests for views/sidebar.py -- how a record links to its neighbours.
+"""Unit tests for views/sidebar.py -- how a record links to its neighbors.
 
 These run without a database. relation_sections falls back to the labels a
 record's own json-ld carries when there is no session to resolve targets in,

@@ -1,6 +1,6 @@
-"""Unit tests for views/fields.py -- a record's properties as labelled fields.
+"""Unit tests for views/fields.py -- a record's properties as labeled fields.
 
-Exercises the builders directly: _identifier_values so the ISBN/LCCN behaviour is
+Exercises the builders directly: _identifier_values so the ISBN/LCCN behavior is
 covered whichever rdf:value key form the stored JSON-LD uses, _admin_metadata_fields
 for the derivedFrom links, and _build_fields for the rule that a property no
 ordered list names still reaches the page.
@@ -80,9 +80,9 @@ def test_identifier_values_status_resolves_label():
             "rdf:value": "9781032075129",
         }
     ]
-    label_map = {CANCINV: "cancelled or invalid"}
+    label_map = {CANCINV: "canceled or invalid"}
     assert _texts(_identifier_values(node, label_map)) == [
-        "Isbn: 9781032075129 (paperback, cancelled or invalid)"
+        "Isbn: 9781032075129 (paperback, canceled or invalid)"
     ]
 
 
@@ -297,16 +297,16 @@ def test_supplementary_content_is_named_by_its_note_and_linked_to_its_locator():
 
 def test_every_ordered_key_gets_a_readable_heading():
     """FIELD_ORDER holds keys only; the wording comes from FIELD_LABELS or from
-    humanising. Neither may produce something like "Aap" or "Variant"."""
+    humanizing. Neither may produce something like "Aap" or "Variant"."""
     for key in FIELD_ORDER:
         label = _field_label(key)
         assert label, key
         assert label[0].isupper(), (key, label)
-        # a key humanised into a fragment of itself needs a curated label
+        # a key humanized into a fragment of itself needs a curated label
         assert label.lower() not in {"aap", "variant"}, (key, label)
 
 
-def test_field_label_humanises_anything_uncurated():
+def test_field_label_humanizes_anything_uncurated():
     assert _field_label("illustrativeContent") == "Illustrative Content"
     assert _field_label("descriptionConventions") == "Description conventions"
     assert "@id" in NON_FIELD_KEYS

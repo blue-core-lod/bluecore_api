@@ -76,7 +76,7 @@ NON_FIELD_KEYS = frozenset(
         "instanceOf",
         "relation",
         "seriesStatement",
-        # a normalisation of bflc:aap for matching, never for reading
+        # a normalization of bflc:aap for matching, never for reading
         "bflc:aap-normalized",
         # raw MARC for data already shown above it; LC omits it too. Move it to
         # FIELD_LABELS to surface it.
@@ -91,7 +91,7 @@ UNBULLETED_LABELS = frozenset(
     {"Admin Metadata", "Alternative Formats", "Blue Core Editors"}
 )
 
-# Headings for keys that humanise oddly or that LC words differently.
+# Headings for keys that humanize oddly or that LC words differently.
 FIELD_LABELS: dict[str, str] = {
     VARIANT_TITLE_KEY: VARIANT_TITLE_LABEL,
     "bflc:aap": "Authorized Access Point",
@@ -119,6 +119,11 @@ def node_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
 
 
 def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+    """An identifier written as "Lccn: 2021062674", led by the kind of number.
+
+    Any qualifier or status is appended, since that is what tells two
+    identical-looking numbers apart.
+    """
     values: list[dict[str, Any]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
@@ -128,7 +133,7 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
             bf_type = bf_type[0] if bf_type else ""
         ident = nodes.scalar(nodes.rdf_value(item) or "").strip()
         text = f"{bf_type}: {ident}".strip()
-        # A qualifier ("epub") or status ("cancelled") tells otherwise identical
+        # A qualifier ("epub") or status ("canceled") tells otherwise identical
         # numbers apart, so show them alongside.
         qualifier = nodes.scalar(item.get("qualifier", "")).strip()
         status = item.get("status")
@@ -198,6 +203,10 @@ def _classification_values(node: Any) -> list[dict[str, Any]]:
 
 
 def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+    """A provision activity written as "Publication: New York 1991".
+
+    Led by its kind, then whichever of place, date and statement it carries.
+    """
     values: list[dict[str, Any]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
@@ -298,6 +307,11 @@ SOURCE_LABELED_KEYS = {"subject"}
 def _field(
     label: str, key: str, data: dict[str, Any], label_map: dict[str, str]
 ) -> dict[str, Any] | None:
+    """Builds one field -- a heading and its values -- or None if it is empty.
+
+    Most keys render generically; the few with a shape of their own, like
+    identifiers and notes, have a dedicated builder.
+    """
     if key == VARIANT_TITLE_KEY:
         values = node_values(nodes.split_titles(data.get("title"))[1], label_map)
         return {"label": label, "values": nodes.dedupe(values)} if values else None
