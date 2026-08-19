@@ -7,6 +7,7 @@ how a source record's readable page is addressed.
 from bluecore_api.app.views.nodes import (
     rdf_value,
     source_record_url,
+    split_camel_case,
     title_of,
 )
 
@@ -64,3 +65,19 @@ def test_source_record_url_leaves_other_hosts_alone():
     """We only know the .html convention for LC, so anything else links as-is."""
     other = "https://api.sinopia.io/resource/abc123"
     assert source_record_url(other) == other
+
+
+def test_split_camel_case_spaces_a_run_together_type():
+    """Type values arrive as one word: "MovingImage" should read "Moving Image"."""
+    assert split_camel_case("MovingImage") == "Moving Image"
+    assert split_camel_case("NotatedMusic") == "Notated Music"
+    assert split_camel_case("NonMusicAudio") == "Non Music Audio"
+
+
+def test_split_camel_case_leaves_single_words_and_acronyms_alone():
+    for word in ("Hub", "Text", "Monograph", "Series", "LCCN"):
+        assert split_camel_case(word) == word
+
+
+def test_split_camel_case_keeps_an_acronym_whole_before_a_word():
+    assert split_camel_case("PDFDocument") == "PDF Document"

@@ -158,6 +158,15 @@ def humanize(key: str) -> str:
     return name[:1].upper() + name[1:].lower()
 
 
+def split_camel_case(text: str) -> str:
+    """Spaces out a run-together name: "MovingImage" -> "Moving Image".
+
+    Unlike humanize() the existing capitals are kept, and an acronym is left
+    whole so "LCCN" does not come out as "L C C N".
+    """
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", text)
+
+
 def source_record_url(uri: str) -> str:
     """LC serves its readable page at the .html suffix, so add it.
 

@@ -8,12 +8,14 @@ ordered list names still reaches the page.
 
 from bluecore_api.app.views.fields import (
     FIELD_ORDER,
+    IMPLIED_HUB_TYPES,
     NON_FIELD_KEYS,
     VARIANT_TITLE_KEY,
     _admin_metadata_fields,
     _field_label,
     _identifier_values,
     build_fields,
+    extra_types,
 )
 from bluecore_api.app.views.nodes import title_of
 
@@ -367,3 +369,16 @@ def test_non_field_keys_hold_only_what_is_shown_elsewhere_or_withheld():
             "bflc:marcKey",
         }
     )
+
+
+def test_type_values_are_spaced_out():
+    """A Hub typed bf:MovingImage should read "Moving Image" under Type."""
+    data = {
+        "@id": "http://localhost/hubs/h",
+        "@type": ["Hub", "MovingImage", "Work"],
+        "title": {"@type": "Title", "mainTitle": "A film"},
+    }
+
+    types = [v["text"] for v in extra_types(data, IMPLIED_HUB_TYPES)]
+
+    assert types == ["Hub", "Moving Image"]

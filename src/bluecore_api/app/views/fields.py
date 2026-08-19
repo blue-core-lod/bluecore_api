@@ -399,7 +399,7 @@ def extra_types(data: dict[str, Any], implied: frozenset[str]) -> list[dict[str,
     types = [
         t for t in nodes.as_list(data.get("@type")) if nodes.id_tail(t) not in implied
     ]
-    return [nodes.value(nodes.id_tail(t)) for t in types]
+    return [nodes.value(nodes.split_camel_case(nodes.id_tail(t))) for t in types]
 
 
 def insert_type_field(
