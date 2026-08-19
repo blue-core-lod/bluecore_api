@@ -84,9 +84,8 @@ NON_FIELD_KEYS = frozenset(
     }
 )
 
-# Fields never dashed, whatever they hold. Admin Metadata is provenance, not a
-# list of choices; the other two are rendered by the alt_formats macro and never
-# reach here.
+# Fields never dashed, whatever they hold.
+# (all other fields not in list  are bulleted if more than one item in field)
 UNBULLETED_LABELS = frozenset(
     {"Admin Metadata", "Alternative Formats", "Blue Core Editors"}
 )
