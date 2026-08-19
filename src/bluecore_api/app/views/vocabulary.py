@@ -98,17 +98,27 @@ NOTE_TYPE_LABELS: dict[str, str] = {
 # _relationship_words guesses at anything unlisted. The order here is LC's
 # heading order, which _section_order follows.
 RELATIONSHIP_LABELS: dict[str, str] = {
+    "series": "Series",
+    "hasSeries": "Series",
     "seriesof": "Series of",
-    "onlineversion": "Online version",
-    "otherphysicalformat": "Other physical format",
     "relatedwork": "Related work",
+    "musicformotionpicture": "Music for motion picture",
     "partof": "Part of",
+    "holdingof": "Holding of",
+    "otherphysicalformat": "Other physical format",
+    "reproducedas": "Reproduced as",
     "translatedas": "Translated as",
+    "onlineversion": "Online version",
+    "printversion": "Print version",
     "relatedTo": "Related To",
 }
 
+# Two slugs can share a heading ("series" and "hasSeries" are both Series), so
+# the positions come from the distinct labels -- otherwise the last real heading
+# collides with the fallback given to unlisted ones.
 _SECTION_ORDER = {
-    label: position for position, label in enumerate(RELATIONSHIP_LABELS.values())
+    label: position
+    for position, label in enumerate(dict.fromkeys(RELATIONSHIP_LABELS.values()))
 }
 
 
@@ -133,43 +143,45 @@ def _relationship_words(tail: str) -> str:
     return nodes.humanize(tail)
 
 
-# One relation can carry several terms, and LC still shows a single heading --
-# taking the more specific designator, which lives in this namespace. Inferred
-# from one record (work 23867197), so revisit if a counter-example turns up.
-SPECIFIC_RELATIONSHIP_NS = "id.loc.gov/entities/relationships/"
+# "Print version" and "Online version" already say the thing is another physical
+# format, so LC drops the generic term when a relation names both. It keeps both
+# where the second term means something else -- work 23209928 shows "Other
+# physical format" and "Reproduced as" together.
+GENERIC_FORMAT_TERM = "otherphysicalformat"
 
 
-def _relationship_term(node: Any) -> str | None:
-    """The single relationship term to build a heading from.
+def _drop_redundant_format(terms: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """Drop the generic format heading when a specific version heading is there."""
+    if any(slug.endswith("version") for slug, _ in terms):
+        return [(slug, label) for slug, label in terms if slug != GENERIC_FORMAT_TERM]
+    return terms
 
-    A relation can name several at once; the more specific designator wins.
+
+def relationship_labels(
+    relation: dict[str, Any], label_map: dict[str, str]
+) -> list[str]:
+    """Every heading a relation belongs under, one per bf:relationship term.
+
+    A relation routinely names two at once -- "partof" and "holdingof" -- and LC
+    lists it under both rather than choosing between them. A term described in
+    place instead of referenced supplies its own label.
     """
-    uris = [
-        term["@id"]
-        for term in nodes.as_list(node)
-        if isinstance(term, dict) and isinstance(term.get("@id"), str)
-    ]
-    if not uris:
-        return None
-    for uri in uris:
-        if SPECIFIC_RELATIONSHIP_NS in uri:
-            return uri
-    return uris[0]
-
-
-def relationship_label(relation: dict[str, Any], label_map: dict[str, str]) -> str:
-    """The heading a relation sits under, such as "Series of" or "Translated as".
-
-    The term is nearly always a bare uri, so its wording comes from the
-    vocabulary if we hold it, then RELATIONSHIP_LABELS, then the uri's tail.
-    """
-    node = relation.get("relationship")
-    href = _relationship_term(node)
-    if href:
-        label = label_map.get(href)
-        if label:
-            return nodes.capitalize(label)
-        tail = nodes.id_tail(href)
-        return RELATIONSHIP_LABELS.get(tail) or _relationship_words(tail)
-    label = nodes.label_text(node) if node else ""
-    return nodes.capitalize(label) if label else "Related"
+    terms: list[tuple[str, str]] = []
+    for term in nodes.as_list(relation.get("relationship")):
+        if not isinstance(term, dict):
+            continue
+        href = nodes.link_uri(term.get("@id"))
+        if href:
+            slug = nodes.id_tail(href)
+            held = label_map.get(href)
+            label = (
+                nodes.capitalize(held)
+                if held
+                else RELATIONSHIP_LABELS.get(slug) or _relationship_words(slug)
+            )
+            terms.append((slug, label))
+            continue
+        text = nodes.label_text(term)
+        if text:
+            terms.append(("", nodes.capitalize(text)))
+    return [label for _, label in _drop_redundant_format(terms)] or ["Related"]

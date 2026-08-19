@@ -12,11 +12,9 @@ from bluecore_api.app.views.vocabulary import (
     NOTE_TYPE_LABELS,
     RELATIONSHIP_LABELS,
     RELATOR_LABELS,
-    SPECIFIC_RELATIONSHIP_NS,
-    _relationship_term,
     _relationship_words,
     build_label_map,
-    relationship_label,
+    relationship_labels,
     resolve_label,
     section_order,
 )
@@ -107,50 +105,24 @@ def _relation(*terms):
 
 def test_relationship_label_uses_lcs_wording_for_a_run_together_slug():
     """These slugs cannot be split by rule, so the table carries LC's spelling."""
-    assert relationship_label(_relation(f"{RELATIONSHIP}seriesof"), {}) == "Series of"
-    assert (
-        relationship_label(_relation(f"{RELATIONSHIP}relatedwork"), {})
-        == "Related work"
-    )
-    assert (
-        relationship_label(_relation(f"{RELATIONSHIP}translatedas"), {})
-        == "Translated as"
-    )
+    assert relationship_labels(_relation(f"{RELATIONSHIP}seriesof"), {}) == [
+        "Series of"
+    ]
+    assert relationship_labels(_relation(f"{RELATIONSHIP}relatedwork"), {}) == [
+        "Related work"
+    ]
+    assert relationship_labels(_relation(f"{RELATIONSHIP}translatedas"), {}) == [
+        "Translated as"
+    ]
 
 
 def test_relationship_label_prefers_a_vocabulary_label_we_hold():
     term = f"{RELATIONSHIP}series"
-    assert relationship_label(_relation(term), {term: "series"}) == "Series"
-
-
-def test_relationship_label_takes_the_specific_designator_of_several():
-    """LC heads work 23867197 "Online version", not "Other physical format" and
-    not the two mashed together."""
-    relation = _relation(f"{RELATIONSHIP}otherphysicalformat", ONLINE_VERSION)
-
-    assert relationship_label(relation, {}) == "Online version"
+    assert relationship_labels(_relation(term), {term: "series"}) == ["Series"]
 
 
 def test_relationship_label_falls_back_to_related():
-    assert relationship_label({}, {}) == "Related"
-
-
-def test_relationship_term_picks_the_specific_namespace_whatever_the_order():
-    other = f"{RELATIONSHIP}otherphysicalformat"
-    assert (
-        _relationship_term([{"@id": other}, {"@id": ONLINE_VERSION}]) == ONLINE_VERSION
-    )
-    assert (
-        _relationship_term([{"@id": ONLINE_VERSION}, {"@id": other}]) == ONLINE_VERSION
-    )
-    assert SPECIFIC_RELATIONSHIP_NS in ONLINE_VERSION
-
-
-def test_relationship_term_falls_back_to_the_first_and_then_to_nothing():
-    a, b = f"{RELATIONSHIP}partof", f"{RELATIONSHIP}seriesof"
-    assert _relationship_term([{"@id": a}, {"@id": b}]) == a
-    assert _relationship_term([]) is None
-    assert _relationship_term("not a node") is None
+    assert relationship_labels({}, {}) == ["Related"]
 
 
 def test_relationship_words_spaces_a_slug_it_can_read():

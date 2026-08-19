@@ -841,47 +841,84 @@ def test_get_work_html_assembles_an_imprint_without_a_statement(client, db_sessi
     assert "Hershey, PA: IGI Global, [2025]" in page
 
 
-def test_get_work_html_heads_a_multi_term_relation_with_one_label(client, db_session):
-    """
-    One relation, two relationship terms. LC shows a single heading and takes the
-    specific designator: "Online version", not "Other physical format" and not
-    the two mashed together.
-    """
-    target_uri = "http://localhost/works/491eb535-0ee1-43ae-957f-b03184faaa5b"
-    access_point = "Bailey, Erold K., 1965-. Minority voices"
+PART_OF = "http://id.loc.gov/vocabulary/relationship/partof"
+HOLDING_OF = "http://id.loc.gov/entities/relationships/holdingof"
+PRINT_VERSION = "http://id.loc.gov/entities/relationships/printversion"
+
+
+def _work_relating_to(db_session, id_, uuid_, terms, target_uri, access_point):
     db_session.add(
         Work(
-            id=55,
-            uuid="491eb535-0ee1-43ae-957f-b03184faaa5b",
+            id=id_,
+            uuid=uuid_,
             uri=target_uri,
             data={"@id": target_uri, "@type": "Work", "bflc:aap": access_point},
         )
     )
-    work_uuid = "8748735d-0000-4000-8000-000000000055"
-    uri = f"http://localhost/works/{work_uuid}"
+    uri = f"http://localhost/works/{uuid_}-src"
     db_session.add(
         Work(
-            id=56,
-            uuid=work_uuid,
+            id=id_ + 1,
+            uuid=f"{uuid_[:-1]}f",
             uri=uri,
             data={
                 "@id": uri,
                 "@type": "Work",
-                "title": {"mainTitle": "Minority voices"},
+                "title": {"mainTitle": "A work"},
                 "relation": {
                     "@type": "Relation",
-                    "relationship": [{"@id": OTHER_PHYSICAL}, {"@id": ONLINE_VERSION}],
+                    "relationship": [{"@id": t} for t in terms],
                     "associatedResource": {"@id": target_uri},
                 },
             },
         )
     )
     db_session.commit()
+    return f"{uuid_[:-1]}f"
 
-    page = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"}).text
 
-    assert "<h2>Online version</h2>" in page
-    assert "Otherphysicalformat" not in page
-    assert "onlineversion" not in page
+def test_get_work_html_heads_a_multi_term_relation_under_every_term(client, db_session):
+    """
+    One relation, two terms that mean different things, so it appears twice.
+
+    LC's work 23209928 lists a single partof/holdingof relation under "Part of"
+    and again under "Holding of", rather than choosing between them.
+    """
+    target = "http://localhost/works/491eb535-0ee1-43ae-957f-b03184faaa5b"
+    uuid_ = _work_relating_to(
+        db_session,
+        55,
+        "491eb535-0ee1-43ae-957f-b03184faaa5b",
+        [PART_OF, HOLDING_OF],
+        target,
+        "Clarke, Ida V. Silent film music cue sheets",
+    )
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "<h2>Part of</h2>" in page
+    assert "<h2>Holding of</h2>" in page
+    assert page.count(f'href="{target}"') == 2
+
+
+def test_get_work_html_drops_the_generic_format_beside_a_version(client, db_session):
+    """
+    "Print version" already says the thing is another physical format, so LC
+    shows only that -- unlike the partof/holdingof pair above, the two terms
+    here say the same thing at different precision.
+    """
+    target = "http://localhost/works/7a530842-5c36-452d-b16a-2b161059b620"
+    uuid_ = _work_relating_to(
+        db_session,
+        57,
+        "7a530842-5c36-452d-b16a-2b161059b620",
+        [OTHER_PHYSICAL, PRINT_VERSION],
+        target,
+        "AI and society",
+    )
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "<h2>Print version</h2>" in page
     assert "<h2>Other physical format</h2>" not in page
-    assert f'<a href="{target_uri}">{access_point}</a>' in page
+    assert page.count(f'href="{target}"') == 1

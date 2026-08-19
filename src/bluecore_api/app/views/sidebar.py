@@ -172,13 +172,15 @@ def relation_sections(
 
     sections: dict[str, list[dict[str, Any]]] = {}
     for relation in relations:
-        label = vocabulary.relationship_label(relation, label_map)
+        labels = vocabulary.relationship_labels(relation, label_map)
         enumeration = nodes.scalar(relation.get("seriesEnumeration", "")).strip()
         for node in nodes.as_list(relation.get("associatedResource")):
             if not isinstance(node, dict):
                 continue
             value = _relation_value(node, enumeration, records)
-            if value is not None:
+            if value is None:
+                continue
+            for label in labels:
                 sections.setdefault(label, []).append(value)
     return [
         {"label": label, "values": nodes.dedupe(sections[label])}
