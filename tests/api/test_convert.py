@@ -212,13 +212,13 @@ async def test_marc2bibframe_empty_body_returns_422(client):
 
 
 @pytest.mark.asyncio
-async def test_marc2bibframe_unsupported_content_type_returns_415(client):
+async def test_marc2bibframe_with_binary_marc_returns_200(client):
     resp = client.post(
         "/marc2bibframe",
         headers={"X-User": "cataloger", "Content-Type": "application/marc"},
-        content=MARCXML,
+        content=MARC_BYTES,
     )
-    assert resp.status_code == 415
+    assert resp.status_code == 200
 
 
 @pytest.mark.asyncio

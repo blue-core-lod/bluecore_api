@@ -8,6 +8,7 @@ from bluecore_models.models import (
     BibframeOtherResources,
     Instance,
     OtherResource,
+    Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 
@@ -204,6 +205,58 @@ def test_get_instance_html(client, db_session):
     response = client.get(f"/instances/{test_instance_uuid}.html")
     assert response.status_code == 200
     assert response.headers["Content-Type"].startswith("text/html")
+
+
+def test_get_instance_html_shows_the_works_title(client, db_session):
+    """
+    The "Instance of" link names the Work by its title. bflc:aap is an authorized
+    access point ("Author, A. Title"), so leading with it showed a heading rather
+    than the title the Work's own page and the reverse "Has Instance" links use.
+    """
+    work_uuid = "cd786d58-7adf-4f4e-aa40-3e0560330943"
+    work_uri = f"https://bluecore.info/works/{work_uuid}"
+    db_session.add(
+        Work(
+            id=99,
+            uuid=work_uuid,
+            uri=work_uri,
+            data={
+                "@id": work_uri,
+                "@type": "Work",
+                "title": [
+                    {
+                        "@type": [
+                            "VariantTitle",
+                            "http://id.loc.gov/vocabulary/vartitletype/por",
+                        ],
+                        "mainTitle": "One thousand best movies on DVD",
+                    },
+                    {"@type": "Title", "mainTitle": "REINGESTED 1"},
+                ],
+                "bflc:aap": "\u00c7evik-Compi\u00e8gne, Burcu. Turkey and India",
+            },
+        )
+    )
+    db_session.add(
+        Instance(
+            id=98,
+            uuid=test_instance_uuid,
+            uri=str(test_instance_bluecore_uri),
+            data=json.loads(orig_graph.serialize(format="json-ld")),
+            work_id=99,
+        )
+    )
+    db_session.commit()
+
+    response = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "text/html"}
+    )
+    assert response.status_code == 200
+    assert "Instance of" in response.text
+    assert "REINGESTED 1" in response.text
+    # not the authorized access point, and not the Work's variant titles either
+    assert "Turkey and India" not in response.text
+    assert "One thousand best movies on DVD" not in response.text
 
 
 # cbd requires work & instance and will be tested in test_cbd.py

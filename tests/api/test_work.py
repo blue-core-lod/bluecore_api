@@ -198,6 +198,88 @@ def test_get_work_html(client, db_session):
     assert response.headers["Content-Type"].startswith("text/html")
 
 
+def test_get_work_html_orders_variant_titles_under_the_title(client, db_session):
+    """
+    The title proper, then its variants directly beneath it, then Type -- the way
+    LC's own views read. Type used to be inserted at a fixed position and landed
+    between the two title headings.
+    """
+    work_uuid = "7f6c1711-663b-4a7d-a196-21c5a953413c"
+    db_session.add(
+        Work(
+            id=97,
+            uuid=work_uuid,
+            uri=f"https://bluecore.info/works/{work_uuid}",
+            data={
+                "@id": f"https://bluecore.info/works/{work_uuid}",
+                "@type": ["Work", "Monograph"],
+                "title": [
+                    {
+                        "@type": [
+                            "VariantTitle",
+                            "http://id.loc.gov/vocabulary/vartitletype/por",
+                        ],
+                        "mainTitle": "One thousand best movies on DVD",
+                    },
+                    {"@type": "Title", "mainTitle": "1,000 best movies on DVD"},
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+    assert response.status_code == 200
+    page = response.text
+
+    # each title sits under its own heading
+    assert "Other Titles (e.g. Variant)" in page
+    title_at = page.index("1,000 best movies on DVD")
+    variant_heading_at = page.index("Other Titles (e.g. Variant)")
+    variant_at = page.index("One thousand best movies on DVD")
+    type_at = page.index("Monograph")
+
+    assert title_at < variant_heading_at < variant_at, "variants follow the title"
+    assert variant_at < type_at, "Type comes after the titles, not between them"
+
+
+def test_get_work_html_links_derived_from_to_the_source_record(client, db_session):
+    """
+    Derived from used to show a bare record number. It links to LC's readable
+    page for that record, in a new tab since it leaves Blue Core.
+    """
+    work_uuid = "cd786d58-7adf-4f4e-aa40-3e0560330943"
+    db_session.add(
+        Work(
+            id=96,
+            uuid=work_uuid,
+            uri=f"https://bluecore.info/works/{work_uuid}",
+            data={
+                "@id": f"https://bluecore.info/works/{work_uuid}",
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "Derived Work"},
+                "adminMetadata": {
+                    "@type": "AdminMetadata",
+                    "derivedFrom": {
+                        "@id": "http://id.loc.gov/resources/works/23960506"
+                    },
+                },
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+    assert response.status_code == 200
+    page = response.text
+
+    assert "Derived from:" in page
+    assert (
+        '<a href="https://id.loc.gov/resources/works/23960506.html"'
+        ' target="_blank" rel="noopener noreferrer">23960506</a>'
+    ) in page
+
+
 # cbd requires work & instance and will be tested in test_cbd.py
 
 
