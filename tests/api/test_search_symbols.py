@@ -23,12 +23,9 @@ from bluecore_api.app.routes.search import format_query
 
 pytestmark = pytest.mark.symbols
 
-# Records are keyed by the uuid in their @id rather than a readable slug: uri is
-# indexed into data_vector at weight C, so a slug like "symbol-test-flat" would
-# contribute the token "flat" and make these assertions pass for the wrong
-# reason.
-# ---------------------------------------------------------------------------
-
+# Keyed by uuid, not a readable slug: uri is indexed into data_vector at weight
+# C, so a slug like "symbol-test-flat" would contribute the token "flat" and make
+# these assertions pass for the wrong reason.
 FLAT = "e26cb16a-bff3-5170-889b-2d76f34e7ff9"
 SHARP = "ed503446-4a40-52d1-b2af-729840d0955e"
 NATURAL = "62ac5099-3d5d-583c-8641-e5b235d5e970"
@@ -93,6 +90,25 @@ def test_ascii_hash_finds_the_sharp_record(client: TestClient, db_session: Sessi
     assert search_uuids(client, "F# minor") == search_uuids(client, "F♯ minor")
 
 
+def test_ascii_b_finds_the_flat_record(client: TestClient, db_session: Session):
+    """Cataloguers type "Db" because keyboards have no U+266D."""
+    add_symbol_data(db_session)
+
+    assert FLAT in search_uuids(client, "Db major")
+    assert search_uuids(client, "Db major") == search_uuids(client, "D♭ major")
+
+
+def test_ascii_b_in_ordinary_words_is_not_a_flat(
+    client: TestClient, db_session: Session
+):
+    """Guarding b badly once put a flat token into 1043 of 1056 records,
+    including every hex uuid in the database."""
+    add_symbol_data(db_session)
+
+    # Only the one seeded record carries a flat.
+    assert len(search_uuids(client, "♭")) == 1
+
+
 def test_ascii_hash_in_a_uri_is_not_a_sharp(client: TestClient, db_session: Session):
     """Every JSON-LD record contains XMLSchema#dateTime. If that counted as a
     sharp, a bare sharp search would return most of the database."""
@@ -116,7 +132,7 @@ def test_natural_sign(client: TestClient, db_session: Session):
 
 
 def test_romanization_mark_stripped(client: TestClient, db_session: Session):
-    """ "Sadi" finds "Sa'di". Returns nothing before this change."""
+    """Searching Sadi finds Saʻdī. Returned nothing before this change."""
     add_symbol_data(db_session)
 
     assert ROMANIZATION in search_uuids(client, "Sadi")
