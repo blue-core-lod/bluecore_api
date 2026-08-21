@@ -1,5 +1,11 @@
 """Pulls readable text out of stored JSON-LD and wraps it for the templates.
 
+A "node" here is one JSON-LD object out of a record's stored data -- the dict
+sitting under a property like bf:title or bf:contribution. A node may carry a
+literal, an "@id" referring to another resource, or both, and a property may
+hold a single node or a list of them. The helpers below take whatever a property
+held and hand back text a template can print.
+
 The bottom layer: it knows nothing about fields, sidebars or vocabularies.
 """
 
