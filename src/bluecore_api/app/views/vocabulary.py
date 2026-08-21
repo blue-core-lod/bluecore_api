@@ -74,9 +74,16 @@ def resolve_label(href: str | None, text: str, label_map: dict[str, str]) -> str
 
 # A stored bf:Role usually has only a code, no label, so spell the common ones
 # out here. Anything unlisted shows its code.
+#
+# Holding the term as an OtherResource is not enough on its own -- some are
+# stored as a bare {"@id", "code", "@type": "Role"} with no label at all, so
+# build_label_map finds nothing and this table is what names them. "ctb" and
+# "pbl" are both stored that way, and between them account for the majority of
+# the contributions on our records.
 RELATOR_LABELS: dict[str, str] = {
     "aut": "author",
     "cmp": "composer",
+    "cre": "creator",
     "ctb": "contributor",
     "edt": "editor",
     "ill": "illustrator",

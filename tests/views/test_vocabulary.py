@@ -157,6 +157,17 @@ def test_unlisted_sections_sort_after_the_known_ones():
 # --- the curated tables ------------------------------------------------------
 
 
+def test_relator_table_covers_the_codes_stored_without_a_label():
+    """A held OtherResource is not enough -- some Role terms carry only a code.
+
+    bf:Role nodes for these arrive as {"@id", "code", "@type"} with no label, so
+    build_label_map returns nothing for them and RELATOR_LABELS is the only
+    thing standing between a cataloger and a bare "ctb".
+    """
+    for code in ("ctb", "pbl", "cre"):
+        assert code in RELATOR_LABELS
+
+
 def test_curated_tables_are_keyed_by_bare_code_or_slug():
     """Lookups pass a uri tail, so a key with a slash or colon would never hit."""
     for table in (RELATOR_LABELS, NOTE_TYPE_LABELS, RELATIONSHIP_LABELS):
