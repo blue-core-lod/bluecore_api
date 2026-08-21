@@ -1,11 +1,11 @@
 """End-to-end search tests for symbol normalization (#203).
 
-Split out of test_search.py, which covers query syntax and paging. These go
+Split out from test_search.py, which covers query syntax and paging. These go
 through the HTTP endpoint against a real index, so they exercise the whole
 path: framing on insert, the data_vector generated column, and the tsquery
 built by search_tsquery.
 
-Run just these with:
+Run just these test with:
 
     uv run pytest -m symbols
 """
@@ -23,9 +23,6 @@ from bluecore_api.app.routes.search import format_query
 
 pytestmark = pytest.mark.symbols
 
-# Keyed by uuid, not a readable slug: uri is indexed into data_vector at weight
-# C, so a slug like "symbol-test-flat" would contribute the token "flat" and make
-# these assertions pass for the wrong reason.
 FLAT = "e26cb16a-bff3-5170-889b-2d76f34e7ff9"
 SHARP = "ed503446-4a40-52d1-b2af-729840d0955e"
 NATURAL = "62ac5099-3d5d-583c-8641-e5b235d5e970"
@@ -42,7 +39,6 @@ CONTROL = "02f4ae51-5042-564a-b4ec-503583570762"
 
 
 def add_symbol_data(db_session: Session):
-    """Load one record per row of the symbol table."""
     with pathlib.Path("tests/symbols.jsonld").open() as fo:
         records = json.load(fo)
     for offset, record in enumerate(records, start=100):
@@ -74,8 +70,6 @@ def test_flat_matches_flat_record(client: TestClient, db_session: Session):
 
 
 def test_sharp_matches_its_own_record(client: TestClient, db_session: Session):
-    """Guards against the sentinel silently matching nothing at all, which would
-    also make the test above pass."""
     add_symbol_data(db_session)
 
     assert SHARP in search_uuids(client, "F♯ minor")
@@ -101,8 +95,6 @@ def test_ascii_b_finds_the_flat_record(client: TestClient, db_session: Session):
 def test_ascii_b_in_ordinary_words_is_not_a_flat(
     client: TestClient, db_session: Session
 ):
-    """Guarding b badly once put a flat token into 1043 of 1056 records,
-    including every hex uuid in the database."""
     add_symbol_data(db_session)
 
     # Only the one seeded record carries a flat.
@@ -119,7 +111,6 @@ def test_ascii_hash_in_a_uri_is_not_a_sharp(client: TestClient, db_session: Sess
 
 
 def test_plain_letter_search_still_matches(client: TestClient, db_session: Session):
-    """No regression: dropping the symbol must not stop "D major" matching."""
     add_symbol_data(db_session)
 
     assert FLAT in search_uuids(client, "D major")
@@ -132,15 +123,12 @@ def test_natural_sign(client: TestClient, db_session: Session):
 
 
 def test_romanization_mark_stripped(client: TestClient, db_session: Session):
-    """Searching Sadi finds Saʻdī. Returned nothing before this change."""
     add_symbol_data(db_session)
 
     assert ROMANIZATION in search_uuids(client, "Sadi")
 
 
 def test_romanization_mark_typed(client: TestClient, db_session: Session):
-    """And typing the mark still works. This regressed when only the index was
-    normalized: the index held "sadi" while the query split into "sa" + "di"."""
     add_symbol_data(db_session)
 
     assert ROMANIZATION in search_uuids(client, "Saʻdī")
@@ -182,10 +170,7 @@ def test_parenthesis_forms_do_not_break_the_query(
     client: TestClient, db_session: Session
 ):
     """The sub/superscript parentheses fold to a space rather than to ASCII
-    parentheses, which are tsquery grouping operators. Folding to them raised
-    "syntax error in tsquery" on input a user could actually type.
-
-    Note the record is still found by its digits, not by the parentheses.
+    parentheses, which are tsquery grouping operators.
     """
     add_symbol_data(db_session)
 
@@ -226,15 +211,12 @@ def test_coordinate_primes_separate_the_numbers(
 
 
 def test_ampersand_control_unaffected(client: TestClient, db_session: Session):
-    """Control: a record with no targeted characters must behave as before."""
     add_symbol_data(db_session)
 
     assert CONTROL in search_uuids(client, "Castles palaces")
 
 
 def test_symbol_inside_phrase_search(client: TestClient, db_session: Session):
-    """Exercises the "simple" phrase path. Catches the ordering bug: normalizing
-    after format_query would emit malformed tsquery syntax here."""
     add_symbol_data(db_session)
 
     assert FLAT in search_uuids(client, '"D♭ major"')
