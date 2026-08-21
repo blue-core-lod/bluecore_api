@@ -97,6 +97,12 @@ NOTE_TYPE_LABELS: dict[str, str] = {
 # LC's own spellings, since slugs like "relatedwork" cannot be split reliably;
 # _relationship_words guesses at anything unlisted. The order here is LC's
 # heading order, which _section_order follows.
+#
+# Keys are the tail of the relationship's @id exactly as written, so the casing
+# is the source vocabulary's, not ours. LC's relationship vocabularies are all
+# lowercase ("series", "partof"); BIBFRAME ontology properties and OCLC's
+# WorldCat ontology are camelCase ("hasSeries", "relatedTo"). Records cite both,
+# so both spellings are listed.
 RELATIONSHIP_LABELS: dict[str, str] = {
     "series": "Series",
     "hasSeries": "Series",
