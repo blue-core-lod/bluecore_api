@@ -297,35 +297,18 @@
     "bflc:governmentPubType": {
       "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/f"
     },
-    "adminMetadata": [
-      {},
-      {},
-      {}
-    ],
-    "classification": [
-      {},
-      {},
-      {}
-    ],
     "content": {
       "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
     },
     "contribution": [
-      {},
-      {},
-      {},
-      {},
       {
         "@type": "Contribution",
-        "agent": {},
         "role": {
           "@id": "http://id.loc.gov/vocabulary/relators/ctb"
         }
       }
     ],
     "genreForm": [
-      {},
-      {},
       {
         "@id": "http://id.loc.gov/authorities/genreForms/gf2011026362"
       }
@@ -336,7 +319,6 @@
       "adminMetadata": [
         {
           "@type": "AdminMetadata",
-          "agent": {},
           "date": {
             "@type": "http://www.w3.org/2001/XMLSchema#date",
             "@value": "2025-01-17"
@@ -344,9 +326,7 @@
           "status": {
             "@id": "http://id.loc.gov/vocabulary/mstatus/n"
           }
-        },
-        {},
-        {}
+        }
       ],
       "carrier": {
         "@id": "http://id.loc.gov/vocabulary/carriers/cr"
@@ -355,11 +335,6 @@
         "@type": "Extent",
         "rdfs:label": "1 online resource (5 pages)."
       },
-      "identifiedBy": [
-        {},
-        {},
-        {}
-      ],
       "instanceOf": {
         "@id": "http://id.loc.gov/resources/works/24113259"
       },
@@ -369,7 +344,6 @@
       "media": {
         "@id": "http://id.loc.gov/vocabulary/mediaTypes/c"
       },
-      "note": {},
       "provisionActivity": {
         "@type": [
           "ProvisionActivity",
@@ -395,10 +369,6 @@
     "language": {
       "@id": "http://id.loc.gov/vocabulary/languages/eng"
     },
-    "relation": [
-      {},
-      {}
-    ],
     "subject": [
       {
         "@id": "http://id.loc.gov/authorities/subjects/sh85027424"
@@ -406,19 +376,12 @@
       {
         "@id": "http://id.loc.gov/authorities/subjects/sh85085159"
       },
-      {},
       {
         "@id": "http://id.loc.gov/authorities/subjects/sh85119483"
       },
-      {},
       {
         "@id": "http://id.loc.gov/authorities/subjects/sh85108969"
-      },
-      {}
-    ],
-    "title": [
-      {},
-      {}
+      }
     ]
   }
 ]
