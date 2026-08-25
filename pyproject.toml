@@ -1,11 +1,11 @@
 [project]
 name = "bluecore-api"
-version = "0.25.5"
+version = "0.26.0"
 description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "bluecore-models>=0.26.1",
+  "bluecore-models>=0.28.0",
   "fastapi[standard]",
   "sqlalchemy",
   "pgvector",
@@ -19,7 +19,7 @@ dependencies = [
   "lxml>=6.0.2",
   "jinja2>=3.1.6",
   "pymarc>=5.2.0",
-  "mcp==1.29.0" # Pinning version until fastapi-mcp is updated
+  "mcp==1.29.0", # Pinning version until fastapi-mcp is updated
 ]
 
 [project.scripts]
@@ -43,6 +43,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bluecore_api"]
+
+[tool.pytest.ini_options]
+markers = [
+  "symbols: end-to-end search tests for symbol normalization (#203)",
+]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection pattern relies on calling these in argument
