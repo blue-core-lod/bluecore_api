@@ -164,7 +164,9 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
 
         qualifier = nodes.scalar(item.get("qualifier", "")).strip()
         status = item.get("status")
-        status_href = nodes.link_uri(status.get("@id")) if isinstance(status, dict) else None
+        status_href = (
+            nodes.link_uri(status.get("@id")) if isinstance(status, dict) else None
+        )
         status_text = vocabulary.resolve_label(
             status_href, nodes.label_text(status) if status else "", label_map
         )
@@ -188,7 +190,9 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
             values.append(nodes.value(nodes.label_text(item)))
             continue
         agent = item.get("agent")
-        agent_href = nodes.link_uri(agent.get("@id")) if isinstance(agent, dict) else None
+        agent_href = (
+            nodes.link_uri(agent.get("@id")) if isinstance(agent, dict) else None
+        )
         agent_text = vocabulary.resolve_label(
             agent_href, nodes.label_text(agent) if agent else "", label_map
         )
@@ -289,7 +293,9 @@ def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, An
         ]
         kind = nodes.id_tail(types[0]) if types else "Provision"
         place = item.get("place")
-        place_href = nodes.link_uri(place.get("@id")) if isinstance(place, dict) else None
+        place_href = (
+            nodes.link_uri(place.get("@id")) if isinstance(place, dict) else None
+        )
         parts = [
             vocabulary.resolve_label(
                 place_href, nodes.label_text(place) if place else "", label_map
