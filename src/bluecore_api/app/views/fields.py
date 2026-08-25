@@ -376,21 +376,45 @@ def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
 # authority it came from -- see _authority_values.
 AUTHORITY_KEYS = {"subject", "genreForm"}
 
-# A term addressed straight at one of these carries no bf:source of its own, so
-# its own uri says which authority it belongs to.
+# The authorities whose tag cannot be read off the uri, because it is an agreed
+# abbreviation rather than the last path segment ("/authorities/subjects" is
+# printed LCSH, not SUBJECTS). Those have to be spelled out, so this table is
+# necessarily partial.
+#
+# Matched as substrings, against the term's bf:source first and then the uri the
+# term itself lives at, since a term addressed straight at an authority usually
+# carries no bf:source of its own.
 AUTHORITY_URI_TAGS: tuple[tuple[str, str], ...] = (
+    # LC, whose authorities do not follow the scheme-uri pattern above.
+    # childrensSubjects precedes subjects only for readability; the capital S in
+    # "childrensSubjects" already keeps the two from colliding.
+    ("/authorities/childrensSubjects", "LCSHAC"),
     ("/authorities/subjects", "LCSH"),
     ("/authorities/genreForms", "LCGFT"),
     ("/authorities/names", "LCNAF"),
+    ("/authorities/demographicTerms", "LCDGT"),
+    ("/authorities/performanceMediums", "LCMPT"),
+    # A real-world object is the twin of a name authority record, and LC prints
+    # it under the same tag.
+    ("/rwo/agents", "LCNAF"),
+    # Non-LC registries, whose tags are likewise conventional.
     ("worldcat.org/fast/", "FAST"),
+    ("viaf.org/", "VIAF"),
+    ("d-nb.info/gnd/", "GND"),
+    ("wikidata.org/", "WIKIDATA"),
+    ("isni.org/", "ISNI"),
 )
 
 
 def _scheme_tag(item: Any, href: str | None) -> str:
     """The authority a term belongs to, as LC prints it: LCSH, GND, FAST.
 
-    Read from the term's bf:source where it has one, and from the uri the term
-    lives at where it does not.
+    An LC scheme uri names its own tag, so that family needs no listing. Anything
+    else is looked up in AUTHORITY_URI_TAGS, by bf:source first and then by the
+    term's own uri.
+
+    An authority in neither is tagged with nothing, and the term renders with its
+    label and link intact -- only the parenthesised marker is missing.
     """
     source = item.get("source") if isinstance(item, dict) else None
     source_id = source.get("@id") if isinstance(source, dict) else None

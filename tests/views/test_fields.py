@@ -475,3 +475,76 @@ def test_a_blank_node_classification_assigner_is_not_linked():
     (value,) = build_fields(data, {})[0]["values"]
 
     assert value["suffixes"] == [{"label": "Assigner", "text": "dlc", "href": None}]
+
+
+# --- authority tags ----------------------------------------------------------
+
+
+def _tag(item, href=None):
+    from bluecore_api.app.views.fields import _scheme_tag
+
+    return _scheme_tag(item, href)
+
+
+def test_an_lc_scheme_uri_names_its_own_tag():
+    """The whole LC scheme family is read off the uri, not listed: a vocabulary
+    we have never seen still tags correctly."""
+    assert (
+        _tag({"source": {"@id": "http://id.loc.gov/vocabulary/subjectSchemes/gnd"}})
+        == "GND"
+    )
+    assert (
+        _tag({"source": {"@id": "http://id.loc.gov/vocabulary/genreFormSchemes/aat"}})
+        == "AAT"
+    )
+    assert (
+        _tag({"source": {"@id": "http://id.loc.gov/vocabulary/classSchemes/bisacsh"}})
+        == "BISACSH"
+    )
+
+
+def test_authorities_whose_tag_is_an_abbreviation_are_listed():
+    """These cannot be read off the uri -- "subjects" is printed LCSH."""
+    assert _tag({}, "http://id.loc.gov/authorities/subjects/sh85033827") == "LCSH"
+    assert (
+        _tag({}, "http://id.loc.gov/authorities/childrensSubjects/sj96005537")
+        == "LCSHAC"
+    )
+    assert _tag({}, "http://id.loc.gov/rwo/agents/nb2008026982") == "LCNAF"
+    assert _tag({}, "https://viaf.org/viaf/102333412") == "VIAF"
+    assert _tag({}, "https://d-nb.info/gnd/118540238") == "GND"
+
+
+def test_childrens_subjects_does_not_collide_with_subjects():
+    """Substring matching, so the two /authorities/ paths must stay distinct."""
+    assert (
+        _tag({"source": {"@id": "http://id.loc.gov/authorities/childrensSubjects"}})
+        == "LCSHAC"
+    )
+
+
+def test_an_unlisted_authority_is_untagged_rather_than_guessed_at():
+    """A tag states which vocabulary a heading came from, so a wrong one is worse
+    than none. The term itself still renders."""
+    assert (
+        _tag(
+            {},
+            "https://scigraph.springernature.com/ontologies/product-market-codes/1000",
+        )
+        == ""
+    )
+
+
+def test_an_untagged_term_keeps_its_label_and_link():
+    unknown = "https://scigraph.springernature.com/ontologies/product-market-codes/1000"
+    data = {
+        "@id": "https://bluecore.info/works/x",
+        "@type": "Work",
+        "subject": {"@id": unknown, "rdfs:label": "Video games"},
+    }
+
+    (value,) = build_fields(data, {})[0]["values"]
+
+    assert value["text"] == "Video games"
+    assert value["href"] == unknown
+    assert "suffixes" not in value
