@@ -65,7 +65,7 @@ async def mocked_get_auth(request: Request):
 
     match user:
         case "cataloger":
-            roles = ["create", "update"]
+            roles = ["create", "export", "update"]
         case "cataloger-conflicting":
             roles = ["cataloger-read-only", "create"]
 

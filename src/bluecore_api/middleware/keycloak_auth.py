@@ -10,7 +10,11 @@ from bluecore_api.middleware.helpers.keycloak_utils import (
 
 def enable_developer_mode(app):
     """Bypass Keycloak auth in dev mode by setting DEVELOPER_MODE=true"""
-    developer_permissions = ["create", "update"]  # update to add more permissions
+    developer_permissions = [
+        "create",
+        "export",
+        "update",
+    ]  # update to add more permissions
 
     async def mocked_get_auth(request: Request):
         return developer_permissions

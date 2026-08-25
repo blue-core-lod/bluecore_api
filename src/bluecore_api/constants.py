@@ -24,6 +24,7 @@ class KeycloakRole(StrEnum):
 
     CATALOGER_READ_ONLY = "cataloger-read-only"
     CREATE = auto()
+    EXPORT = auto()
     UPDATE = auto()
 
 

@@ -36,7 +36,7 @@ EXPORT_EXAMPLES = {
 
 @endpoints.post(
     "/export/",
-    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
+    dependencies=[Depends(BCP(KeycloakRole.EXPORT, READ_ONLY_ROLES))],
     response_model=ExportResponseSchema,
     operation_id="export",
 )
