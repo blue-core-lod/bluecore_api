@@ -164,7 +164,7 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
 
         qualifier = nodes.scalar(item.get("qualifier", "")).strip()
         status = item.get("status")
-        status_href = status.get("@id") if isinstance(status, dict) else None
+        status_href = nodes.link_uri(status.get("@id")) if isinstance(status, dict) else None
         status_text = vocabulary.resolve_label(
             status_href, nodes.label_text(status) if status else "", label_map
         )
@@ -188,7 +188,7 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
             values.append(nodes.value(nodes.label_text(item)))
             continue
         agent = item.get("agent")
-        agent_href = agent.get("@id") if isinstance(agent, dict) else None
+        agent_href = nodes.link_uri(agent.get("@id")) if isinstance(agent, dict) else None
         agent_text = vocabulary.resolve_label(
             agent_href, nodes.label_text(agent) if agent else "", label_map
         )
@@ -226,7 +226,7 @@ def _classification_extras(
     extras: list[dict[str, Any]] = []
     for label, key in (("Assigner", "assigner"), ("Status", "status")):
         node = item.get(key)
-        href = node.get("@id") if isinstance(node, dict) else None
+        href = nodes.link_uri(node.get("@id")) if isinstance(node, dict) else None
         if key == "assigner":
             text = nodes.id_tail(href) if href else nodes.label_text(node)
         else:
@@ -289,7 +289,7 @@ def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, An
         ]
         kind = nodes.id_tail(types[0]) if types else "Provision"
         place = item.get("place")
-        place_href = place.get("@id") if isinstance(place, dict) else None
+        place_href = nodes.link_uri(place.get("@id")) if isinstance(place, dict) else None
         parts = [
             vocabulary.resolve_label(
                 place_href, nodes.label_text(place) if place else "", label_map
