@@ -1,0 +1,204 @@
+[
+  {
+    "@id": "http://localhost/works/e26cb16a-bff3-5170-889b-2d76f34e7ff9",
+    "@type": [
+      "NotatedMusic",
+      "Work"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Nocturne in D♭ major, opus 27, no. 2 BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/ed503446-4a40-52d1-b2af-729840d0955e",
+    "@type": [
+      "NotatedMusic",
+      "Work"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Sonata in F♯ minor, opus 2, no. 2 BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/62ac5099-3d5d-583c-8641-e5b235d5e970",
+    "@type": [
+      "NotatedMusic",
+      "Work"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Study in B♮, opus 10 BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/7043cbf4-22e3-5738-b385-6ca34493cacd",
+    "@type": [
+      "Cartography",
+      "Work"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Concrete Los Angeles map BCAPI203"
+      }
+    ],
+    "note": {
+      "@type": "Note",
+      "rdfs:label": "(W 118°27ʹ16ʺ--W 118°11ʹ43ʺ/N 34°09ʹ48ʺ--N 33°51ʹ21ʺ)"
+    }
+  },
+  {
+    "@id": "http://localhost/works/f5fd382d-2c18-59a8-aa45-63ed09094eee",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Descriptive cataloguing handbook BCAPI203"
+      }
+    ],
+    "note": {
+      "@type": "Note",
+      "rdfs:label": "Previous editions ©2022, 2019, and 2016."
+    }
+  },
+  {
+    "@id": "http://localhost/works/65a4f7d9-8ebd-51f3-b7f1-8716cc39c68c",
+    "@type": [
+      "Audio",
+      "Work"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Quintet for clarinet and strings BCAPI203"
+      }
+    ],
+    "note": {
+      "@type": "Note",
+      "rdfs:label": "℗2001 by the publisher."
+    }
+  },
+  {
+    "@id": "http://localhost/works/cb0e1827-c1bf-569e-982c-5085bfc6e89b",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Saʻdī. Gulistān BCAPI203"
+      },
+      {
+        "@type": "VariantTitle",
+        "mainTitle": "Andīshahʹhā-yi ʻAlavī dar Gulistān-i Saʻdī BCAPI203",
+        "variantType": "portion"
+      }
+    ],
+    "note": {
+      "@type": "Note",
+      "rdfs:label": "Includes references to Tafsīr al-Qurʼān and Shuʻaib, Amjad."
+    }
+  },
+  {
+    "@id": "http://localhost/works/509a82d1-7152-500f-9ca3-57d106c7d3f6",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "O nekotorykh aktualʹnykh problemakh transformat︠s︡ii sistemy BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/62521e5a-ccc9-5d1e-a1c4-0cd85f30eb57",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Mongol n︢g︣ün bichig BCAPI203"
+      }
+    ],
+    "note": {
+      "@type": "Note",
+      "rdfs:label": "Romanization uses the double tilde, U+FE22 and U+FE23."
+    }
+  },
+  {
+    "@id": "http://localhost/works/ffe8e9b0-a108-56fe-ae8e-372f98d28d5e",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "The chemistry of H₂O and C₆H₁₂O₆ BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/62942362-c428-5f72-a973-eaa7575766c7",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "A proof that x² + y² = z² BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/cb237475-28e0-5f1d-974d-90b1603d627a",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Notation for x⁽¹⁾ and a₍₋₁₎ in series BCAPI203"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/works/02f4ae51-5042-564a-b4ec-503583570762",
+    "@type": [
+      "Text",
+      "Work",
+      "Monograph"
+    ],
+    "title": [
+      {
+        "@type": "Title",
+        "mainTitle": "Castles & palaces--1950-1960 BCAPI203"
+      }
+    ]
+  }
+]

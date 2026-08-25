@@ -11,6 +11,7 @@ from bluecore_models.models import (
     ResourceBase,
     Work,
 )
+from bluecore_models.utils.search import normalize_symbols
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import Select, func, select
@@ -99,6 +100,26 @@ def format_query(query: str) -> str:
     )
 
 
+def search_tsquery(q: str):
+    """
+    Build the tsquery for a raw user query, or None if it is empty.
+
+    normalize_symbols -> format_query -> unaccent -> to_tsquery
+
+    normalize_symbols has to see raw input, before format_query inserts tsquery
+    operators. It emits space padded sentinels, and a space introduced after the
+    operators are in place would sit between two terms with nothing joining
+    them, which to_tsquery rejects.
+
+    unaccent stays on the SQL side.
+    """
+    formatted = format_query(normalize_symbols(q))
+    if not formatted:
+        return None
+    lang = "simple" if "<->" in formatted else "english"
+    return func.to_tsquery(lang, func.unaccent(formatted))
+
+
 def get_types(type: SearchType) -> list[SearchType]:
     """Return a list of types based on the input type."""
     if type == SearchType.ALL:
@@ -172,10 +193,8 @@ async def search(
     Otherwise, it will use "english" language for the full-text search.
     """
     stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
-    formatted = format_query(q)
-    if formatted:
-        lang: str = "simple" if "<->" in formatted else "english"
-        search_query = func.to_tsquery(lang, func.unaccent(formatted))
+    search_query = search_tsquery(q)
+    if search_query is not None:
         # Break ties on rank with the primary key so equally-ranked results keep a
         # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
@@ -222,10 +241,8 @@ async def search_html(
     JSON `GET /search/`) and renders the ``search_results.html`` template.
     """
     stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
-    formatted = format_query(q)
-    if formatted:
-        lang = "simple" if "<->" in formatted else "english"
-        search_query = func.to_tsquery(lang, func.unaccent(formatted))
+    search_query = search_tsquery(q)
+    if search_query is not None:
         # Break ties on rank with the primary key so equally-ranked results keep a
         # stable, repeatable order across identical searches.
         stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
@@ -302,11 +319,9 @@ async def search_profile(
     """
     stmt = select(Profile)
 
-    formatted = format_query(q)
-    if formatted:
-        stmt = stmt.where(
-            func.to_tsquery("english", formatted).op("@@")(Profile.data_vector)
-        )
+    search_query = search_tsquery(q)
+    if search_query is not None:
+        stmt = stmt.where(search_query.op("@@")(Profile.data_vector))
         params: dict[str, str] = {"q": q}
         links_query = f"&{urlencode(params)}"
     else:
