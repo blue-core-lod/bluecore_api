@@ -288,8 +288,6 @@ def test_delete_hub_forbidden(client, db_session):
 # ---------------------------------------------------------------------------
 # The Hub view: the human-facing page, and the Works it gathers
 # ---------------------------------------------------------------------------
-SERIES_RELATIONSHIP = "http://id.loc.gov/vocabulary/relationship/series"
-
 hub_view_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
 hub_view_uri = f"http://id.loc.gov/resources/hubs/{hub_view_uuid}"
 # The fixture Hub's title, as the template escapes it (the apostrophe becomes an
@@ -306,31 +304,24 @@ def add_view_hub(db_session):
 
 
 def add_work_in_hub(db_session, id_, uuid_, title, hub_uri=hub_view_uri):
-    """A Work whose bf:relation names its Hub -- how the link is actually stored.
+    """A Work linked to its Hub by works.hub_id -- how the link is actually stored.
 
-    works.hub_id stays null; see views/sidebar.py relation_sections.
+    Ingest sets the foreign key from bf:expressionOf, so the Work keeps that
+    predicate in its own data too. A hub_uri we hold no record for leaves the
+    key null, which is what an unresolvable reference looks like.
     """
     uri = f"https://bcld.info/works/{uuid_}"
+    hub = db_session.query(Hub).filter(Hub.uri == hub_uri).one_or_none()
     work = Work(
         id=id_,
         uuid=uuid_,
         uri=uri,
+        hub_id=hub.id if hub is not None else None,
         data={
             "@id": uri,
             "@type": "Work",
             "title": {"@type": "Title", "mainTitle": title},
-            "relation": {
-                "@type": "Relation",
-                "relationship": {"@id": SERIES_RELATIONSHIP},
-                "associatedResource": {
-                    "@id": hub_uri,
-                    "@type": ["Hub", "Series"],
-                    "title": {
-                        "@type": "Title",
-                        "mainTitle": "Chŏngch'aek yŏn'gu sirijŭ",
-                    },
-                },
-            },
+            "expressionOf": {"@id": hub_uri},
         },
     )
     db_session.add(work)
@@ -397,14 +388,21 @@ def test_get_hub_html_without_works_has_no_heading(client, db_session):
 
 
 def test_get_hub_html_ignores_works_in_another_hub(client, db_session):
-    """The lookup matches on the Hub's uri, not merely on having a Hub relation."""
+    """The lookup follows this Hub's foreign key, not merely any Work that has one."""
     add_view_hub(db_session)
+    other_hub = _stub(
+        db_session,
+        4,
+        "hub",
+        "00000000-0000-0000-0000-000000000000",
+        "Some other series",
+    )
     other_uri = add_work_in_hub(
         db_session,
         3,
         "8f1c4f8e-0000-4000-8000-000000000002",
         "Some other series title",
-        hub_uri="http://id.loc.gov/resources/hubs/00000000-0000-0000-0000-000000000000",
+        hub_uri=other_hub,
     ).uri
 
     response = client.get(f"/hubs/{hub_view_uuid}", headers={"Accept": "text/html"})
@@ -589,16 +587,9 @@ def test_get_hub_html_does_not_repeat_a_work_it_already_names(client, db_session
     glass. It should be listed once, under the relationship the Hub asserts.
     """
     uris = add_described_dark_tower(db_session)
-    # the Work asserts the link back, which is what works_for_hub matches on
+    # the foreign key points back at the Hub, which is what works_for_hub follows
     work = db_session.query(Work).filter(Work.uri == uris["wizard"]).one()
-    work.data = {
-        **work.data,
-        "relation": {
-            "@type": "Relation",
-            "relationship": {"@id": f"{RELATIONSHIP}series"},
-            "associatedResource": {"@id": dark_tower_uri},
-        },
-    }
+    work.hub_id = 10
     db_session.commit()
 
     response = client.get(f"/hubs/{dark_tower_uuid}", headers={"Accept": "text/html"})

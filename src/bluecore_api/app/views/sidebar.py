@@ -1,25 +1,16 @@
 """Builds the sidebar: how a record links to the records around it.
 
 Has Instance, Instance of, and a section per relationship term. The Hub-Work link
-lives in the JSON-LD, not a foreign key, so it is read from both ends.
+is a foreign key, set at ingest from bf:expressionOf, so it is read from there.
 """
 
 from typing import Any
 from urllib.parse import urlparse
 
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
-from sqlalchemy import text as sql_text
 from sqlalchemy.orm import object_session
 
 from bluecore_api.app.views import nodes, vocabulary
-
-# Finds the Works pointing at a Hub; works.hub_id is never populated, so their
-# bf:relation is searched instead. This form is used because only it can take a
-# GIN jsonb_path_ops index (0.22 ms vs 24.3 ms on 50k rows).
-_WORKS_FOR_HUB_SQL = sql_text(
-    "jsonb_path_query_array(resource_base.data, "
-    "'$.relation[*].associatedResource.\"@id\"') @> to_jsonb(cast(:hub_uri as text))"
-)
 
 
 def add_section(
@@ -147,7 +138,10 @@ def relation_sections(
     section each for "Series of", "Translated as", "Part of" and the rest.
     """
     relations = [
-        r for r in nodes.as_list(resource.data.get("relation")) if isinstance(r, dict)
+        r
+        for r in nodes.as_list(resource.data.get("relation"))
+        if isinstance(r, dict) and not vocabulary.is_exempt_relation(r)
+
     ]
     if not relations:
         return []
@@ -190,14 +184,11 @@ def relation_sections(
 
 
 def works_for_hub(hub: Hub) -> list[Work]:
-    """The Works that name this Hub, found by searching their own relations.
+    """The Works linked to this Hub by works.hub_id.
 
-    A Hub record holds no list of its Works; the link exists only on the Work
-    side, so the only way down is to look for it.
+    Ingest sets the foreign key from bf:expressionOf, adding the inverse of a
+    bf:hasExpression first, so either direction in the payload arrives here. A
+    Hub with no session of its own has no Works to report, which is empty rather
+    than an error.
     """
-    session = object_session(hub)
-    if session is None or not hub.uri:
-        return []
-    return (
-        session.query(Work).where(_WORKS_FOR_HUB_SQL.bindparams(hub_uri=hub.uri)).all()
-    )
+    return list(hub.works)

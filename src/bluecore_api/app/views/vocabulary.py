@@ -103,13 +103,13 @@ NOTE_TYPE_LABELS: dict[str, str] = {
 
 # LC's own spellings, since slugs like "relatedwork" cannot be split reliably;
 # _relationship_words guesses at anything unlisted. The order here is LC's
-# heading order, which _section_order follows.
+# heading order, which _SECTION_ORDER reads -- so a term the guess would spell
+# correctly anyway is still listed, to place its heading rather than to name it.
 #
 # Keys are the tail of the relationship's @id exactly as written, so the casing
-# is the source vocabulary's, not ours. LC's relationship vocabularies are all
-# lowercase ("series", "partof"); BIBFRAME ontology properties and OCLC's
-# WorldCat ontology are camelCase ("hasSeries", "relatedTo"). Records cite both,
-# so both spellings are listed.
+# is the source vocabulary's, not ours. LC's relationship vocabulary is all
+# lowercase ("series", "partof"); BIBFRAME ontology properties are camelCase
+# ("hasSeries", "relatedTo"). Records cite both, so both spellings are listed.
 RELATIONSHIP_LABELS: dict[str, str] = {
     "series": "Series",
     "hasSeries": "Series",
@@ -125,6 +125,25 @@ RELATIONSHIP_LABELS: dict[str, str] = {
     "printversion": "Print version",
     "relatedTo": "Related To",
 }
+
+# OCLC records which WorldCat entity a Work corresponds to, and writes it as a
+# bf:Relation like any other. It is an identity statement about the record, not a
+# link to another record: the target is an opaque entity id carrying no label, so
+# the sidebar can only print the id back at the reader. Left out for that reason.
+EXTERNAL_RELATIONSHIPS = frozenset(
+    {
+        "https://id.oclc.org/worldcat/ontology/hasWork",
+    }
+)
+
+def is_exempt_relation(relation: dict[str, Any]) -> bool:
+    """True for a relation asserting an external identity rather than a link."""
+    return any(
+        term.get("@id") in EXTERNAL_RELATIONSHIPS
+        for term in nodes.as_list(relation.get("relationship"))
+        if isinstance(term, dict)
+    )
+
 
 # Two slugs can share a heading ("series" and "hasSeries" are both Series), so
 # the positions come from the distinct labels -- otherwise the last real heading

@@ -232,6 +232,54 @@ def test_a_blue_core_target_links_as_it_stands():
     assert "external" not in value
 
 
-def test_works_for_hub_needs_a_session_and_says_so_quietly():
-    """A detached Hub cannot be queried from; that is empty, not an error."""
+def test_an_oclc_work_identity_is_not_a_sidebar_section():
+    """OCLC states which WorldCat entity a Work is, as a bf:Relation. That is an
+    identity, not a link, and its target is an opaque id with nothing to show."""
+    sections = _sections(
+        {
+            "relation": {
+                "@type": "Relation",
+                "relationship": {
+                    "@id": "https://id.oclc.org/worldcat/ontology/hasWork"
+                },
+                "associatedResource": {
+                    "@id": "https://id.oclc.org/worldcat/entity/E39PCGdHPPTXB7wyDxfp7hTxH3"
+                },
+            }
+        }
+    )
+
+    assert sections == {}
+
+
+def test_an_oclc_identity_does_not_suppress_a_real_relation_beside_it():
+    """Only the identity relation drops out; the record's other links stay."""
+    sections = _sections(
+        {
+            "relation": [
+                {
+                    "relationship": {
+                        "@id": "https://id.oclc.org/worldcat/ontology/hasWork"
+                    },
+                    "associatedResource": {
+                        "@id": "https://id.oclc.org/worldcat/entity/E39PCG"
+                    },
+                },
+                {
+                    "relationship": {"@id": SERIES},
+                    "associatedResource": {
+                        "@id": "http://localhost/hubs/h",
+                        "rdfs:label": "Dark tower",
+                    },
+                },
+            ]
+        }
+    )
+
+    assert list(sections) == ["Series"]
+    assert sections["Series"][0]["text"] == "Dark tower"
+
+
+def test_works_for_hub_is_empty_when_nothing_links_back():
+    """A Hub no Work's foreign key names has no Works; that is empty, not an error."""
     assert works_for_hub(Hub(uri="http://localhost/hubs/h", data={})) == []

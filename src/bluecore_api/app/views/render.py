@@ -126,8 +126,9 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
     for section in sidebar.relation_sections(hub, label_map):
         sidebar.add_section(sidebar_sections, section["label"], section["values"])
 
-    # A described Hub names its Works above, so this catches only the ones just
-    # the Work end asserts, without repeating anything already linked.
+    # A described Hub names its Works above, so the foreign key catches only the
+    # ones it does not -- a Work ingested after the Hub was described -- without
+    # repeating anything already linked.
     linked = {
         value["href"]
         for section in sidebar_sections
