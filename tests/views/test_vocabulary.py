@@ -11,7 +11,7 @@ from bluecore_api.app.views import vocabulary
 from bluecore_api.app.views.vocabulary import (
     NOTE_TYPE_LABELS,
     RELATIONSHIP_LABELS,
-    RELATOR_LABELS,
+    RELATOR_LABEL_FALLBACKS,
     _relationship_words,
     build_label_map,
     relationship_labels,
@@ -60,7 +60,7 @@ def test_label_map_reads_an_authoritative_label():
 
 def test_label_map_skips_a_term_with_no_label():
     """A bf:Role carries a code and nothing else -- there is no label to find,
-    which is why RELATOR_LABELS exists."""
+    which is why RELATOR_LABEL_FALLBACKS exists."""
     ctb = f"{RELATIONSHIP.replace('relationship/', '')}relators/ctb"
     work = _work_citing(ctb, {"@id": ctb, "@type": "Role", "code": "ctb"})
     assert ctb not in build_label_map(work)
@@ -161,16 +161,18 @@ def test_relator_table_covers_the_codes_stored_without_a_label():
     """A held OtherResource is not enough -- some Role terms carry only a code.
 
     bf:Role nodes for these arrive as {"@id", "code", "@type"} with no label, so
-    build_label_map returns nothing for them and RELATOR_LABELS is the only
-    thing standing between a cataloger and a bare "ctb".
+    build_label_map returns nothing for them and RELATOR_LABEL_FALLBACKS is the
+    only thing standing between a cataloger and a bare "ctb".
+
+    Only these two: every other relator in use carries its own label and resolves
+    through the label map, so listing it here would be dead weight.
     """
-    for code in ("ctb", "pbl", "cre"):
-        assert code in RELATOR_LABELS
+    assert set(RELATOR_LABEL_FALLBACKS) == {"ctb", "pbl"}
 
 
 def test_curated_tables_are_keyed_by_bare_code_or_slug():
     """Lookups pass a uri tail, so a key with a slash or colon would never hit."""
-    for table in (RELATOR_LABELS, NOTE_TYPE_LABELS, RELATIONSHIP_LABELS):
+    for table in (RELATOR_LABEL_FALLBACKS, NOTE_TYPE_LABELS, RELATIONSHIP_LABELS):
         for key, label in table.items():
             assert "/" not in key and ":" not in key, key
             assert label and label == label.strip(), key

@@ -737,7 +737,7 @@ def test_get_hub_html_resolves_terms_it_is_not_joined_to(client, db_session):
 
 def test_get_hub_html_spells_out_the_relator_code(client, db_session):
     """The stored Role has a code and no label, so the spelling comes from
-    RELATOR_LABELS -- and the role links to its own vocabulary term, separately
+    RELATOR_LABEL_FALLBACKS -- and the role links to its own vocabulary term, separately
     from the agent it describes."""
     uuid_ = add_unattached_hub(db_session)
 

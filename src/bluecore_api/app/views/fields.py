@@ -201,7 +201,7 @@ def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str,
         role_text = vocabulary.resolve_label(
             role_href, nodes.label_text(role) if role else "", label_map
         )
-        role_text = vocabulary.RELATOR_LABELS.get(role_text, role_text)
+        role_text = vocabulary.RELATOR_LABEL_FALLBACKS.get(role_text, role_text)
 
         value = nodes.value(agent_text or (agent_href or ""), agent_href)
         # the role is its own vocabulary term, so it links separately from the

@@ -72,25 +72,17 @@ def resolve_label(href: str | None, text: str, label_map: dict[str, str]) -> str
     return text
 
 
-# A stored bf:Role usually has only a code, no label, so spell the common ones
-# out here. Anything unlisted shows its code.
+# The relators build_label_map cannot name, so they are named here instead.
 #
-# Holding the term as an OtherResource is not enough on its own -- some are
-# stored as a bare {"@id", "code", "@type": "Role"} with no label at all, so
-# build_label_map finds nothing and this table is what names them. "ctb" and
-# "pbl" are both stored that way, and between them account for the majority of
-# the contributions on our records.
-RELATOR_LABELS: dict[str, str] = {
-    "aut": "author",
-    "cmp": "composer",
-    "cre": "creator",
+# Being ingested is not enough. These two are held as OtherResources like every
+# other relator, but the stored document is a bare {"@id", "code", "@type":
+# "Role"} carrying no label at all, so there is nothing for build_label_map to
+# read and the role would otherwise render as its code. Every other relator in
+# use -- 26 of 28 -- arrives with its own rdfs:label and resolves normally, which
+# is why they are deliberately absent from this table rather than missing from it.
+RELATOR_LABEL_FALLBACKS: dict[str, str] = {
     "ctb": "contributor",
-    "edt": "editor",
-    "ill": "illustrator",
-    "nrt": "narrator",
     "pbl": "publisher",
-    "prf": "performer",
-    "trl": "translator",
 }
 
 # Note kinds, which we never hold as terms at all. An unlisted kind is left off
