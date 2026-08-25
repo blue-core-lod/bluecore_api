@@ -40,9 +40,7 @@ class SearchType(StrEnum):
     ALL = auto()
 
 
-CONTEXT_URL = (
-    os.environ.get("BLUECORE_URL", "https://bcld.info/").rstrip("/")
-    + "/api/context.jsonld"
-)
+BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
+CONTEXT_URL = BLUECORE_URL.rstrip("/") + "/api/context.jsonld"
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
 DEFAULT_SEARCH_PAGE_LENGTH = 20

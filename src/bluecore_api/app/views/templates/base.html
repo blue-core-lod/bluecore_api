@@ -52,6 +52,10 @@
                 <option value="instances"{% if search_type == 'instances' %} selected{% endif %}>
                     BIBFRAME Instances
                 </option>
+                {####  Search BIBFRAME Hubs Resources  ####}
+                <option value="hubs"{% if search_type == 'hubs' %} selected{% endif %}>
+                    BIBFRAME Hubs
+                </option>
             </select>
             <input type="search" name="q" value="{{ search_q|default('', true) }}" placeholder="Start typing…">
             <button type="submit">Search</button>

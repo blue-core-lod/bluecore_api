@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from bluecore_models.models import Instance, Work
+from bluecore_models.models import Hub, Instance, Work
 from fastapi import Request, Response
 
 from bluecore_api.app.utils.serialize.response_generator import (
@@ -14,7 +14,7 @@ from bluecore_api.app.utils.serialize.response_generator import (
     as_vnd_sinopia_json,
 )
 
-type SerializerFn = Callable[[Instance | Work, bool], Response | None]
+type SerializerFn = Callable[[Hub | Instance | Work, bool], Response | None]
 serializer_format_registry: dict[str, SerializerFn] = {
     "cbd.jsonld": as_cbd_jsonld,
     "cbd.xml": as_cbd_xml,
@@ -39,7 +39,7 @@ serializer_accept_registry: dict[str, SerializerFn] = {
 
 
 def serialize(
-    doc: Instance | Work, expand: bool, format: str | None, request: Request
+    doc: Hub | Instance | Work, expand: bool, format: str | None, request: Request
 ) -> Response | None:
     if format in serializer_format_registry:
         return serializer_format_registry[format](doc, expand)

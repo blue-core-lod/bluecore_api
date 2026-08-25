@@ -1,10 +1,12 @@
 import json
 import pathlib
+import re
 
 import pytest
 import rdflib
 from bluecore_models.models import (
     BibframeOtherResources,
+    Hub,
     Instance,
     OtherResource,
     Work,
@@ -459,5 +461,464 @@ def test_delete_work_forbidden(client, db_session):
     assert response.status_code == 403
 
 
+# ---------------------------------------------------------------------------
+# bf:relation on the Work view: LC groups these under the relationship term,
+# e.g. one "Series" heading holding the transcribed statement as plain text and
+# the Hub that controls it as a link.
+# ---------------------------------------------------------------------------
+SERIES_RELATIONSHIP = "http://id.loc.gov/vocabulary/relationship/series"
+HUB_LABEL = "Colección libro blanco de la ciudadanía"
+
+
+def add_work_with_hub_relation(db_session, hub_uri, label=HUB_LABEL):
+    """A Work naming its Hub the way the data actually carries it.
+
+    works.hub_id stays null; the link is a bf:relation whose associatedResource
+    is typed bf:Hub.
+    """
+    work_uuid = "b3f0c0de-0000-4000-8000-00000000f00d"
+    uri = f"https://bcld.info/works/{work_uuid}"
+    db_session.add(
+        Work(
+            id=41,
+            uuid=work_uuid,
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "A work in a series"},
+                "relation": {
+                    "@type": "Relation",
+                    "relationship": {"@id": SERIES_RELATIONSHIP},
+                    "associatedResource": {
+                        "@id": hub_uri,
+                        "@type": ["Hub", "Series"],
+                        "title": {"@type": "Title", "mainTitle": label},
+                    },
+                },
+            },
+        )
+    )
+    db_session.commit()
+    return work_uuid
+
+
+def test_get_work_html_names_a_hub_by_its_access_point(client, db_session):
+    """
+    LC writes the Hub as its name/title heading, not its plain title, so the
+    Series line reads "King, Stephen, 1947-. Dark tower" rather than "Dark
+    tower". Ours does the same, out of the Hub's own record.
+    """
+    hub_uuid = "052a7e69-8d84-6c2e-5015-76ac471f76ca"
+    hub_uri = f"https://bcld.info/hubs/{hub_uuid}"
+    access_point = "King, Stephen, 1947-. Dark tower"
+    db_session.add(
+        Hub(
+            id=40,
+            uuid=hub_uuid,
+            uri=hub_uri,
+            data={
+                "@id": hub_uri,
+                "@type": ["Hub", "Series"],
+                "title": {"@type": "Title", "mainTitle": "Dark tower"},
+                "rdfs:label": access_point,
+            },
+        )
+    )
+    # the Work's own copy of the label differs, to show which one is used
+    work_uuid = add_work_with_hub_relation(db_session, hub_uri, label="A stale label")
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    page = response.text
+    # headed by the relationship term, the way LC heads it
+    assert "<h2>Series</h2>" in page
+    assert f'<a href="{hub_uri}">{access_point}</a>' in page
+    assert "A stale label" not in page
+    # the access point wins over the Hub's plain title
+    assert ">Dark tower<" not in page
+
+
+def test_get_work_html_links_a_hub_we_do_not_hold_at_its_source(client, db_session):
+    """
+    A Hub never ingested still gets a link -- to the source record's readable
+    page, in a new tab, since following it leaves Blue Core.
+    """
+    hub_uri = "http://id.loc.gov/resources/hubs/052a7e69-8d84-6c2e-5015-76ac471f76ca"
+    work_uuid = add_work_with_hub_relation(db_session, hub_uri)
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    page = response.text
+    assert "<h2>Series</h2>" in page
+    # the label the Work carries, linked at LC's HTML view of that record
+    lc_page = hub_uri.replace("http://", "https://") + ".html"
+    assert f'href="{lc_page}"' in page
+    assert HUB_LABEL in page
+    assert 'target="_blank"' in page
+
+
+def test_get_work_html_without_relations_has_no_relation_heading(client, db_session):
+    work_uuid = "b3f0c0de-0000-4000-8000-0000000000aa"
+    uri = f"https://bcld.info/works/{work_uuid}"
+    db_session.add(
+        Work(
+            id=45,
+            uuid=work_uuid,
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "A work with no relations"},
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    assert "<h2>Series</h2>" not in response.text
+
+
+def add_dark_tower(db_session):
+    """The exact shape ingestion produces, from the dev stack's Dark Tower record.
+
+    Framing moves the Hub's description into the Hub record, so the Work is left
+    holding a bare {"@id": ...} -- no @type, no title -- with the transcribed,
+    uncontrolled series relation sitting right beside it under the same
+    relationship. LC renders the pair as:
+
+        Series
+        The dark tower 4
+        King, Stephen, 1947-. Dark tower 4.
+    """
+    hub_uuid = "85fed6fc-5367-45a4-affa-aa8e75ff0e30"
+    hub_uri = f"http://localhost/hubs/{hub_uuid}"
+    db_session.add(
+        Hub(
+            id=43,
+            uuid=hub_uuid,
+            uri=hub_uri,
+            data={
+                "@id": hub_uri,
+                "@type": ["Hub", "Series"],
+                "title": {"@type": "Title", "mainTitle": "Dark tower"},
+                "rdfs:label": "King, Stephen, 1947-. Dark tower",
+            },
+        )
+    )
+    work_uuid = "b3f0c0de-0000-4000-8000-00000000cafe"
+    uri = f"http://localhost/works/{work_uuid}"
+    db_session.add(
+        Work(
+            id=44,
+            uuid=work_uuid,
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "Wizard and glass"},
+                "relation": [
+                    {
+                        "@type": "Relation",
+                        "relationship": {"@id": SERIES_RELATIONSHIP},
+                        "seriesEnumeration": "4",
+                        "associatedResource": {
+                            "@type": ["Series", "bflc:Uncontrolled"],
+                            "title": {"@type": "Title", "mainTitle": "The dark tower"},
+                            "status": [{"@id": TRANSCRIBED_STATUS}],
+                        },
+                    },
+                    {
+                        "@type": "Relation",
+                        "relationship": {"@id": SERIES_RELATIONSHIP},
+                        "seriesEnumeration": "4.",
+                        "associatedResource": {"@id": hub_uri},
+                    },
+                ],
+            },
+        )
+    )
+    db_session.commit()
+    return work_uuid, hub_uri
+
+
+TRANSCRIBED_STATUS = "http://id.loc.gov/vocabulary/mstatus/t"
+
+
+def test_get_work_html_reads_like_lcs_series_section(client, db_session):
+    work_uuid, hub_uri = add_dark_tower(db_session)
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    page = response.text
+    # one heading for both relations, since they share a relationship term
+    assert page.count("<h2>Series</h2>") == 1
+    # the transcribed statement, enumerated and unlinked
+    assert "<li>The dark tower 4</li>" in page
+    # the Hub that controls it, enumerated, named by its access point, linked
+    assert f'<li><a href="{hub_uri}">King, Stephen, 1947-. Dark tower 4.</a></li>' in (
+        page
+    )
+
+
+def test_get_work_html_leaves_a_transcribed_series_unlinked(client, db_session):
+    """A transcribed series statement has no uri of its own, so it cannot be a
+    link -- it is plain text, as it is on LC's page."""
+    work_uuid = "b3f0c0de-0000-4000-8000-00000000beef"
+    uri = f"https://bcld.info/works/{work_uuid}"
+    db_session.add(
+        Work(
+            id=42,
+            uuid=work_uuid,
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "A work in a series"},
+                "relation": {
+                    "@type": "Relation",
+                    "relationship": {"@id": SERIES_RELATIONSHIP},
+                    "associatedResource": {
+                        "@type": ["Series", "bflc:Uncontrolled"],
+                        "title": {"@type": "Title", "mainTitle": HUB_LABEL},
+                    },
+                },
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    page = response.text
+    assert "<h2>Series</h2>" in page
+    assert f"<li>{HUB_LABEL}</li>" in page
+    assert f'<a href="{HUB_LABEL}"' not in page
+
+
 if __name__ == "__main__":
     pytest.main()
+
+
+def test_get_work_html_dashes_every_multi_valued_field(client, db_session):
+    """Dashing is not a Hub-only treatment and not tied to particular fields:
+    any field holding more than one value gets it, and single-valued ones do
+    not. Admin Metadata is the exception -- see the test below."""
+    add_test_work(db_session)
+
+    page = client.get(f"/works/{test_work_uuid}", headers={"Accept": "text/html"}).text
+    fields = dict(re.findall(r"<h2>([^<]+)</h2>(.*?)</div>", page, re.DOTALL))
+
+    for label, block in fields.items():
+        if label in ("Admin Metadata", "Alternative Formats", "Blue Core Editors"):
+            continue
+        values = block.count("<li")
+        dashed = 'class="bc-bulleted"' in block
+        assert dashed == (values > 1), f"{label}: {values} value(s), dashed={dashed}"
+
+    # the fixture covers both sides of that rule
+    assert 'class="bc-bulleted"' in fields["Type"]  # Text, Monograph
+    assert 'class="bc-bulleted"' in fields["Subject"]
+    assert 'class="bc-bulleted"' not in fields["Title"]
+
+
+def test_get_work_html_leaves_admin_metadata_undashed(client, db_session):
+    """Provenance is a set of statements about one event, not a list of
+    alternatives, so it stays plain however many lines it runs to."""
+    add_test_work(db_session)
+
+    page = client.get(f"/works/{test_work_uuid}", headers={"Accept": "text/html"}).text
+    blocks = [
+        block
+        for label, block in re.findall(r"<h2>([^<]+)</h2>(.*?)</div>", page, re.DOTALL)
+        if label == "Admin Metadata"
+    ]
+
+    assert blocks, "fixture should carry admin metadata"
+    for block in blocks:
+        assert 'class="bc-bulleted"' not in block
+    assert any(block.count("<li") > 1 for block in blocks), "and more than one line"
+
+
+# ---------------------------------------------------------------------------
+# Sidebar naming and multi-term relationships, checked against LC's page for
+# work 23867197.
+# ---------------------------------------------------------------------------
+ONLINE_VERSION = "http://id.loc.gov/entities/relationships/onlineversion"
+OTHER_PHYSICAL = "http://id.loc.gov/vocabulary/relationship/otherphysicalformat"
+
+
+def test_get_work_html_names_an_instance_by_its_imprint(client, db_session):
+    """
+    LC's "Has Instance" reads "Hershey, PA: IGI Global, [2025]", not the title:
+    every Instance of a Work carries the Work's title, so only the imprint tells
+    two of them apart.
+    """
+    work_uuid = "8748735d-c211-4100-9048-168d04f9cfba"
+    work_uri = f"http://localhost/works/{work_uuid}"
+    work = Work(
+        id=51,
+        uuid=work_uuid,
+        uri=work_uri,
+        data={
+            "@id": work_uri,
+            "@type": "Work",
+            "title": {
+                "@type": "Title",
+                "mainTitle": "Minority voices from the academic superstructure",
+            },
+        },
+    )
+    db_session.add(work)
+    instance_uri = "http://localhost/instances/f669f974-4636-48e6-923a-d2ebe594d6c9"
+    db_session.add(
+        Instance(
+            id=52,
+            uuid="f669f974-4636-48e6-923a-d2ebe594d6c9",
+            uri=instance_uri,
+            work=work,
+            data={
+                "@id": instance_uri,
+                "@type": "Instance",
+                # the same title as its Work, which is exactly why it cannot be used
+                "title": {
+                    "@type": "Title",
+                    "mainTitle": "Minority voices from the academic superstructure",
+                },
+                "publicationStatement": "Hershey, PA: IGI Global, [2025]",
+            },
+        )
+    )
+    db_session.commit()
+
+    page = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"}).text
+
+    assert f'<a href="{instance_uri}">Hershey, PA: IGI Global, [2025]</a>' in page
+
+
+def test_get_work_html_assembles_an_imprint_without_a_statement(client, db_session):
+    """No bf:publicationStatement, so the provision activity's simple parts are
+    assembled into the same shape LC prints."""
+    work_uuid = "8748735d-0000-4000-8000-000000000051"
+    work_uri = f"http://localhost/works/{work_uuid}"
+    work = Work(
+        id=53,
+        uuid=work_uuid,
+        uri=work_uri,
+        data={"@id": work_uri, "@type": "Work", "title": {"mainTitle": "A work"}},
+    )
+    db_session.add(work)
+    instance_uri = "http://localhost/instances/f669f974-0000-4000-8000-000000000052"
+    db_session.add(
+        Instance(
+            id=54,
+            uuid="f669f974-0000-4000-8000-000000000052",
+            uri=instance_uri,
+            work=work,
+            data={
+                "@id": instance_uri,
+                "@type": "Instance",
+                "title": {"mainTitle": "A work"},
+                "provisionActivity": {
+                    "@type": ["ProvisionActivity", "Publication"],
+                    "bflc:simplePlace": "Hershey, PA",
+                    "bflc:simpleAgent": "IGI Global",
+                    "bflc:simpleDate": "[2025]",
+                },
+            },
+        )
+    )
+    db_session.commit()
+
+    page = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"}).text
+
+    assert "Hershey, PA: IGI Global, [2025]" in page
+
+
+PART_OF = "http://id.loc.gov/vocabulary/relationship/partof"
+HOLDING_OF = "http://id.loc.gov/entities/relationships/holdingof"
+PRINT_VERSION = "http://id.loc.gov/entities/relationships/printversion"
+
+
+def _work_relating_to(db_session, id_, uuid_, terms, target_uri, access_point):
+    db_session.add(
+        Work(
+            id=id_,
+            uuid=uuid_,
+            uri=target_uri,
+            data={"@id": target_uri, "@type": "Work", "bflc:aap": access_point},
+        )
+    )
+    uri = f"http://localhost/works/{uuid_}-src"
+    db_session.add(
+        Work(
+            id=id_ + 1,
+            uuid=f"{uuid_[:-1]}f",
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": "Work",
+                "title": {"mainTitle": "A work"},
+                "relation": {
+                    "@type": "Relation",
+                    "relationship": [{"@id": t} for t in terms],
+                    "associatedResource": {"@id": target_uri},
+                },
+            },
+        )
+    )
+    db_session.commit()
+    return f"{uuid_[:-1]}f"
+
+
+def test_get_work_html_heads_a_multi_term_relation_under_every_term(client, db_session):
+    """
+    One relation, two terms that mean different things, so it appears twice.
+
+    LC's work 23209928 lists a single partof/holdingof relation under "Part of"
+    and again under "Holding of", rather than choosing between them.
+    """
+    target = "http://localhost/works/491eb535-0ee1-43ae-957f-b03184faaa5b"
+    uuid_ = _work_relating_to(
+        db_session,
+        55,
+        "491eb535-0ee1-43ae-957f-b03184faaa5b",
+        [PART_OF, HOLDING_OF],
+        target,
+        "Clarke, Ida V. Silent film music cue sheets",
+    )
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "<h2>Part of</h2>" in page
+    assert "<h2>Holding of</h2>" in page
+    assert page.count(f'href="{target}"') == 2
+
+
+def test_get_work_html_drops_the_generic_format_beside_a_version(client, db_session):
+    """
+    "Print version" already says the thing is another physical format, so LC
+    shows only that -- unlike the partof/holdingof pair above, the two terms
+    here say the same thing at different precision.
+    """
+    target = "http://localhost/works/7a530842-5c36-452d-b16a-2b161059b620"
+    uuid_ = _work_relating_to(
+        db_session,
+        57,
+        "7a530842-5c36-452d-b16a-2b161059b620",
+        [OTHER_PHYSICAL, PRINT_VERSION],
+        target,
+        "AI and society",
+    )
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "<h2>Print version</h2>" in page
+    assert "<h2>Other physical format</h2>" not in page
+    assert page.count(f'href="{target}"') == 1

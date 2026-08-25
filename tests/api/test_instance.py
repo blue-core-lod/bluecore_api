@@ -1,5 +1,6 @@
 import json
 import pathlib
+import re
 from typing import Any
 
 import pytest
@@ -207,11 +208,15 @@ def test_get_instance_html(client, db_session):
     assert response.headers["Content-Type"].startswith("text/html")
 
 
-def test_get_instance_html_shows_the_works_title(client, db_session):
+def test_get_instance_html_names_the_work_by_its_access_point(client, db_session):
     """
-    The "Instance of" link names the Work by its title. bflc:aap is an authorized
-    access point ("Author, A. Title"), so leading with it showed a heading rather
-    than the title the Work's own page and the reverse "Has Instance" links use.
+    The "Instance of" link names the Work by its access point when it has one.
+
+    This reverses an earlier choice to lead with the title: catalogers compare
+    these pages against LC's, where a Work is written as its name/title heading
+    ("Author, A. Title"), and the same Work linked from a Hub, an Instance and a
+    search result has to read the same in all three. The title is still the
+    fallback for records carrying no access point.
     """
     work_uuid = "cd786d58-7adf-4f4e-aa40-3e0560330943"
     work_uri = f"https://bluecore.info/works/{work_uuid}"
@@ -253,9 +258,12 @@ def test_get_instance_html_shows_the_works_title(client, db_session):
     )
     assert response.status_code == 200
     assert "Instance of" in response.text
-    assert "REINGESTED 1" in response.text
-    # not the authorized access point, and not the Work's variant titles either
-    assert "Turkey and India" not in response.text
+    assert (
+        f'<a href="{work_uri}">\u00c7evik-Compi\u00e8gne, Burcu. Turkey and India</a>'
+        in response.text
+    )
+    # the access point stands in for the Work's titles, proper and variant both
+    assert "REINGESTED 1" not in response.text
     assert "One thousand best movies on DVD" not in response.text
 
 
@@ -454,3 +462,70 @@ def test_delete_instance_forbidden(client, db_session):
 
 if __name__ == "__main__":
     pytest.main()
+
+
+def test_get_instance_html_names_its_work_by_access_point(client, db_session):
+    """
+    A record reads the same wherever it is linked from. The Work whose Hub page
+    calls it "King, Stephen, 1947-. The waste lands" is named that here too,
+    not by its bare title.
+    """
+    from bluecore_models.models import Work
+
+    work_uuid = "68b1dc93-349c-498d-b1f4-98aadd8e7ac8"
+    work_uri = f"http://localhost/works/{work_uuid}"
+    access_point = "King, Stephen, 1947-. The waste lands"
+    work = Work(
+        id=71,
+        uuid=work_uuid,
+        uri=work_uri,
+        data={
+            "@id": work_uri,
+            "@type": "Work",
+            "title": {"@type": "Title", "mainTitle": "The waste lands"},
+            "bflc:aap": access_point,
+        },
+    )
+    db_session.add(work)
+    instance_uuid = "01dd2188-f212-469b-9e72-aa15e1449d72"
+    instance_uri = f"http://localhost/instances/{instance_uuid}"
+    db_session.add(
+        Instance(
+            id=72,
+            uuid=instance_uuid,
+            uri=instance_uri,
+            work=work,
+            data={
+                "@id": instance_uri,
+                "@type": "Instance",
+                "title": {"@type": "Title", "mainTitle": "The waste lands"},
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(
+        f"/instances/{instance_uuid}", headers={"Accept": "text/html"}
+    )
+
+    assert response.status_code == 200
+    assert f'<a href="{work_uri}">{access_point}</a>' in response.text
+
+    # The Instance carries no access point of its own, so the link back to it
+    # falls through to its title rather than showing an empty line.
+    work_page = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+    assert f'<a href="{instance_uri}">The waste lands</a>' in work_page.text
+
+
+def test_get_instance_html_dashes_its_list_like_fields(client, db_session):
+    """An Instance carries Identified by and Note, and both are dashed."""
+    add_test_instance(db_session)
+
+    page = client.get(
+        f"/instances/{test_instance_uuid}", headers={"Accept": "text/html"}
+    ).text
+    fields = dict(re.findall(r"<h2>([^<]+)</h2>(.*?)</div>", page, re.DOTALL))
+
+    assert 'class="bc-bulleted"' in fields["Identified by"]
+    for label in ("Title", "Extent"):
+        assert 'class="bc-bulleted"' not in fields[label], label

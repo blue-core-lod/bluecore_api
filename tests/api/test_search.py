@@ -2,7 +2,7 @@ import json
 import pathlib
 
 import pytest
-from bluecore_models.models import Profile, Work
+from bluecore_models.models import Hub, Profile, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -137,6 +137,29 @@ def add_data(db_session: Session):
     )
 
 
+test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
+test_hub_uri = f"https://bcld.info/hubs/{test_hub_uuid}"
+# A title sharing a distinctive word with the Work fixture, so one "all" search
+# turns up both and the results have to be grouped by kind.
+test_hub_title = "Chaesaeng enŏji kumae sirijŭ"
+
+
+def add_hub(db_session: Session):
+    db_session.add(
+        Hub(
+            id=2,
+            uuid=test_hub_uuid,
+            uri=test_hub_uri,
+            data={
+                "@id": test_hub_uri,
+                "@type": ["Work", "Hub"],
+                "title": {"@type": "Title", "mainTitle": test_hub_title},
+            },
+        ),
+    )
+    db_session.commit()
+
+
 def add_profiles(db_session: Session):
     with pathlib.Path("tests/blue-core-other-resources.json").open() as fo:
         eng = json.load(fo)
@@ -254,6 +277,67 @@ def test_search_instances(client: TestClient, db_session: Session):
         len(result["results"]) == 0
     )  # We didn't add any instances, so should return 0
     assert result["total"] == 0
+
+
+def test_search_hubs(client: TestClient, db_session: Session):
+    add_data(db_session)
+    add_hub(db_session)
+
+    response = client.get("/search/", params={"q": "sirijŭ", "type": "hubs"})
+    result = response.json()
+
+    assert result["total"] == 1
+    assert result["results"][0]["uri"] == test_hub_uri
+    assert result["results"][0]["type"] == "hubs"
+    assert (
+        result["links"]["first"]
+        == "https://bcld.info/api/search/?limit=20&offset=0&q=sirij%C5%AD&type=hubs"
+    )
+
+
+def test_search_all_includes_hubs(client: TestClient, db_session: Session):
+    """A Hub used to be invisible to the default search; "all" now covers it."""
+    add_data(db_session)
+    add_hub(db_session)
+
+    response = client.get("/search/", params={"q": "kumae"})
+    result = response.json()
+
+    assert result["total"] == 2
+    assert {r["uri"] for r in result["results"]} == {
+        test_work_bluecore_uri,
+        test_hub_uri,
+    }
+
+
+def test_search_html_groups_hubs_separately(client: TestClient, db_session: Session):
+    add_data(db_session)
+    add_hub(db_session)
+
+    response = client.get("/search", params={"q": "kumae"})
+
+    assert response.status_code == 200
+    page = response.text
+    assert "2 results" in page
+    # each kind under its own heading, Works before Hubs
+    assert page.index(">Works<") < page.index(">Hubs<")
+    assert f'href="{test_work_bluecore_uri}"' in page
+    assert f'href="{test_hub_uri}"' in page
+
+
+def test_search_html_hubs_only_still_gets_a_heading(
+    client: TestClient, db_session: Session
+):
+    add_data(db_session)
+    add_hub(db_session)
+
+    response = client.get("/search", params={"q": "kumae", "type": "hubs"})
+
+    assert response.status_code == 200
+    page = response.text
+    assert "1 result" in page
+    assert ">Hubs<" in page
+    assert f'href="{test_work_bluecore_uri}"' not in page
 
 
 def test_search_keyword_and_phrase(client: TestClient, db_session: Session):

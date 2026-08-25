@@ -8,7 +8,8 @@ from bluecore_api.app.utils.serialize.cbd import (
     cbd_jsonld,
     cbd_xml,
 )
-from bluecore_api.app.utils.serialize.html import (
+from bluecore_api.app.views.render import (
+    render_hub_html,
     render_instance_html,
     render_work_html,
 )
@@ -54,10 +55,12 @@ def as_cbd_xml(doc: ResourceBase, expand: bool) -> Response:
     )
 
 
-# Render Work or Instance as HTML view
-def as_html(doc: Instance | Work, request: Request) -> Response:
+# Render Hub, Work or Instance as HTML view
+def as_html(doc: Hub | Instance | Work, request: Request) -> Response:
     if isinstance(doc, Instance):
         return render_instance_html(doc, request)
+    if isinstance(doc, Hub):
+        return render_hub_html(doc, request)
     return render_work_html(doc, request)
 
 

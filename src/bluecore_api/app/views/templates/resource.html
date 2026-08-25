@@ -1,6 +1,6 @@
 {##############################################################################}
-{##  Resource template where `Show` view renders Works or Instances  ####}
-{########################################################################}
+{##  Resource template where `Show` view renders Hubs, Works or Instances  ####}
+{##############################################################################}
 
 {% extends "base.html" %}
 {% import "_fields.html" as f %}
@@ -11,7 +11,7 @@
     {% for field in fields %}
         {{ f.render_field(field) }}
     {% endfor %}
-    {{ f.alt_formats(resource_uri, is_work) }}
+    {{ f.alt_formats(resource_uri, is_work, is_hub) }}
 {% endblock %}
 
 {####  Sidebar Block Section  ####}

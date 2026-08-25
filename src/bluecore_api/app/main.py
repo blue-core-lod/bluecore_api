@@ -45,6 +45,7 @@ setup_logging()
 OpenAPI tag metadata. The order here is the order sections appear in the /docs and /redoc pages.
 """
 openapi_tags = [
+    {"name": "Hubs", "description": "BIBFRAME Hubs gathering related Works."},
     {"name": "Works", "description": "BIBFRAME Works."},
     {"name": "Instances", "description": "BIBFRAME Instances belonging to a Work."},
     {
@@ -57,7 +58,7 @@ openapi_tags = [
     },
     {
         "name": "Search",
-        "description": "Full-text and vector search for Works, Instances, Resources.",
+        "description": "Full-text and vector search for Works, Instances, Hubs, Resources.",
     },
     {
         "name": "Change Documents",
@@ -113,7 +114,7 @@ mcp = FastApiMCP(
 )
 mcp.mount_http()
 
-# Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/templating.py).
+# Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/views/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
