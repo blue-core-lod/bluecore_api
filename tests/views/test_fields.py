@@ -438,3 +438,40 @@ def test_classification_without_an_assigner_or_status_has_no_qualifiers():
 
     assert value["text"] == "DDC: 813/.54"
     assert "suffixes" not in value
+
+
+# --- blank nodes never become links -----------------------------------------
+
+
+def test_a_blank_node_agent_is_named_but_not_linked():
+    """LC's json-ld addresses a described-in-place node as "_:b7". It names
+    nothing outside the record, so it reads as text rather than a dead link."""
+    data = {
+        "@id": "https://bluecore.info/works/x",
+        "@type": "Work",
+        "contribution": {
+            "@type": "Contribution",
+            "agent": {"@id": "_:b7", "rdfs:label": "King, Stephen, 1947-"},
+        },
+    }
+
+    (value,) = build_fields(data, {})[0]["values"]
+
+    assert value["text"] == "King, Stephen, 1947-"
+    assert value["href"] is None
+
+
+def test_a_blank_node_classification_assigner_is_not_linked():
+    data = {
+        "@id": "https://bluecore.info/works/x",
+        "@type": "Work",
+        "classification": {
+            "@type": "ClassificationLcc",
+            "classificationPortion": "ML31",
+            "assigner": {"@id": "_:b3", "rdfs:label": "dlc"},
+        },
+    }
+
+    (value,) = build_fields(data, {})[0]["values"]
+
+    assert value["suffixes"] == [{"label": "Assigner", "text": "dlc", "href": None}]

@@ -141,7 +141,6 @@ def relation_sections(
         r
         for r in nodes.as_list(resource.data.get("relation"))
         if isinstance(r, dict) and not vocabulary.is_exempt_relation(r)
-
     ]
     if not relations:
         return []

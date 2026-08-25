@@ -136,6 +136,7 @@ EXTERNAL_RELATIONSHIPS = frozenset(
     }
 )
 
+
 def is_exempt_relation(relation: dict[str, Any]) -> bool:
     """True for a relation asserting an external identity rather than a link."""
     return any(
