@@ -6,6 +6,8 @@ from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
 
+from bluecore_api.app.utils.jsonld import inline_context
+
 JSONLD_CONTENT_TYPE = "application/ld+json"
 SINOPIA_CONTENT_TYPE = "application/vnd.sinopia+json"
 
@@ -19,6 +21,17 @@ async def _request_payload(request: Request) -> tuple[Any, str]:
 
     content_type = request.headers.get("content-type", "").split(";")[0].strip()
     return payload, content_type
+
+
+def _normalize_data(payload: Any) -> Any:
+    """Inline the Bluecore @context in a Sinopia-shaped body's 'data' string."""
+    if not (isinstance(payload, dict) and isinstance(payload.get("data"), str)):
+        return payload
+    try:
+        data = json.loads(payload["data"])
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=422, detail=f"Invalid JSON-LD data: {error}")
+    return {**payload, "data": json.dumps(inline_context(data))}
 
 
 def _validate_schema(schema: type[BaseModel], payload: Any) -> BaseModel:
@@ -46,7 +59,9 @@ def deserialize(schema: type[BaseModel]) -> Callable:
         # Raw JSON-LD (application/ld+json): the whole body is the graph, so wrap
         # it as the schema's 'data' string.
         if content_type == JSONLD_CONTENT_TYPE:
-            payload = {"data": json.dumps(payload)}
+            payload = {"data": json.dumps(inline_context(payload))}
+        else:
+            payload = _normalize_data(payload)
 
         # Sinopia (application/vnd.sinopia+json, or application/json for backwards
         # compatibility): already shaped like the schema
