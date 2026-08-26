@@ -40,6 +40,13 @@ class SearchType(StrEnum):
     ALL = auto()
 
 
+class SearchScope(StrEnum):
+    """Fields a resource search can be limited to."""
+
+    ALL = auto()
+    TITLE = auto()
+
+
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 CONTEXT_URL = BLUECORE_URL.rstrip("/") + "/api/context.jsonld"
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100
