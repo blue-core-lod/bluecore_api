@@ -381,6 +381,39 @@ def test_update_work(client, db_session):
     )
 
 
+def test_update_work_round_trips_downloaded_jsonld(client, db_session, monkeypatch):
+    """A Work fetched from the API can be sent straight back with its @context URL.
+
+    The serialized @context is a URL, so an unmodified round-trip used to make
+    rdflib resolve it over the network -- a 500 in development, where the URL is
+    only reachable from outside the container.
+    """
+
+    def no_network(*args, **kwargs):
+        raise AssertionError("attempted to resolve a remote context")
+
+    monkeypatch.setattr("rdflib._networking._urlopen", no_network)
+
+    create_response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger"},
+        json={"data": pathlib.Path("tests/blue-core-work.jsonld").read_text()},
+    )
+    assert create_response.status_code == 201
+    work_uuid = create_response.json()["uri"].split("/")[-1]
+
+    downloaded = client.get(f"/works/{work_uuid}.jsonld").json()
+    assert downloaded["@context"] == CONTEXT_URL
+
+    update_response = client.put(
+        f"/works/{work_uuid}",
+        headers={"X-User": "cataloger", "Content-Type": "application/ld+json"},
+        content=json.dumps(downloaded),
+    )
+
+    assert update_response.status_code == 200
+
+
 def test_get_work_embedding_returns_501(client):
     response = client.get("/works/some-uuid/embeddings")
     assert response.status_code == 501
