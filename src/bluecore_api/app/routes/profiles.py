@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from rdflib import RDF, Namespace, URIRef
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.jsonld import inline_context
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -114,7 +115,9 @@ async def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get
     db_profile = Profile(
         uuid=profile_uuid,
         uri=minted_uri,
-        data=_mint_resource_template(json.loads(profile.data), minted_uri),
+        data=_mint_resource_template(
+            inline_context(json.loads(profile.data)), minted_uri
+        ),
     )
     db.add(db_profile)
     db.commit()
@@ -137,7 +140,7 @@ async def update_profile(
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
     if profile.data is not None:
-        db_profile.data = json.loads(profile.data)
+        db_profile.data = inline_context(json.loads(profile.data))
     db.commit()
     db.refresh(db_profile)
     return db_profile
