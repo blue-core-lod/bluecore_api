@@ -1,0 +1,3367 @@
+[
+  {
+    "@context": {
+      "@vocab": "http://id.loc.gov/ontologies/bibframe/",
+      "bflc": "http://id.loc.gov/ontologies/bflc/",
+      "mads": "http://www.loc.gov/mads/rdf/v1#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+    },
+    "@id": "http://id.loc.gov/resources/works/24042045",
+    "@type": [
+      "Work",
+      "Text",
+      "Monograph"
+    ],
+    "bflc:aap": "Becker, Emma, 1988-. Le mal joli",
+    "bflc:aap-normalized": "beckeremma1988lemaljoli",
+    "adminMetadata": [
+      {
+        "@type": "AdminMetadata",
+        "agent": {
+          "@type": "Agent",
+          "code": "Fr-PaAMA"
+        },
+        "date": {
+          "@type": "http://www.w3.org/2001/XMLSchema#date",
+          "@value": "2024-07-04"
+        },
+        "status": {
+          "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+        }
+      },
+      {
+        "@type": "AdminMetadata",
+        "date": {
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "@value": "2025-03-12T08:27:48"
+        },
+        "descriptionModifier": {
+          "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+        },
+        "status": {
+          "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+        }
+      },
+      {
+        "@type": "AdminMetadata",
+        "agent": {
+          "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+        },
+        "date": {
+          "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "@value": "2025-03-13T01:59:54.733430-04:00"
+        },
+        "generationProcess": {
+          "@id": "https://github.com/lcnetdev/marc2bibframe2/releases/tag/v2.9.0-dev"
+        },
+        "status": {
+          "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+        }
+      },
+      {
+        "@type": "AdminMetadata",
+        "bflc:encodingLevel": {
+          "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+        },
+        "descriptionAuthentication": {
+          "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat"
+        },
+        "descriptionConventions": [
+          {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
+          },
+          {
+            "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
+          }
+        ],
+        "descriptionLanguage": {
+          "@id": "http://id.loc.gov/vocabulary/languages/eng"
+        },
+        "descriptionLevel": {
+          "@id": "http://id.loc.gov/ontologies/bibframe-2-4-0/"
+        },
+        "identifiedBy": {
+          "@type": "Local",
+          "assigner": {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+          },
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": "24042045"
+        },
+        "note": {
+          "@type": [
+            "Note",
+            "http://id.loc.gov/vocabulary/mnotetype/internal"
+          ],
+          "rdfs:label": "040  $aFr-PaAMA$beng$erda$cFr-PaAMA$dDLC"
+        }
+      }
+    ],
+    "classification": {
+      "@type": "ClassificationLcc",
+      "assigner": {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      },
+      "classificationPortion": "PQ2702.E298",
+      "itemPortion": "M36 2024",
+      "status": {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/uba"
+      }
+    },
+    "content": {
+      "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+    },
+    "contribution": {
+      "@type": [
+        "Contribution",
+        "PrimaryContribution"
+      ],
+      "agent": {
+        "@id": "http://id.loc.gov/rwo/agents/no2012149645"
+      },
+      "role": {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    },
+    "genreForm": {
+      "@id": "http://id.loc.gov/authorities/genreForms/gf2014026339"
+    },
+    "hasInstance": {
+      "@id": "http://id.loc.gov/resources/instances/24042045",
+      "@type": "Instance",
+      "adminMetadata": [
+        {
+          "@type": "AdminMetadata",
+          "agent": {
+            "@type": "Agent",
+            "code": "Fr-PaAMA"
+          },
+          "date": {
+            "@type": "http://www.w3.org/2001/XMLSchema#date",
+            "@value": "2024-07-04"
+          },
+          "status": {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+          }
+        },
+        {
+          "@type": "AdminMetadata",
+          "date": {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-03-12T08:27:48"
+          },
+          "descriptionModifier": {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+          },
+          "status": {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+          }
+        },
+        {
+          "@type": "AdminMetadata",
+          "agent": {
+            "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+          },
+          "date": {
+            "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+            "@value": "2025-03-13T01:59:54.733430-04:00"
+          },
+          "generationProcess": {
+            "@id": "https://github.com/lcnetdev/marc2bibframe2/releases/tag/v2.9.0-dev"
+          },
+          "status": {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+          }
+        },
+        {
+          "@type": "AdminMetadata",
+          "bflc:encodingLevel": {
+            "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+          },
+          "descriptionAuthentication": {
+            "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat"
+          },
+          "descriptionConventions": [
+            {
+              "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
+            },
+            {
+              "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
+            }
+          ],
+          "descriptionLanguage": {
+            "@id": "http://id.loc.gov/vocabulary/languages/eng"
+          },
+          "descriptionLevel": {
+            "@id": "http://id.loc.gov/ontologies/bibframe-2-4-0/"
+          },
+          "identifiedBy": {
+            "@type": "Local",
+            "assigner": {
+              "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+            },
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": "24042045"
+          },
+          "note": {
+            "@type": [
+              "Note",
+              "http://id.loc.gov/vocabulary/mnotetype/internal"
+            ],
+            "rdfs:label": "040  $aFr-PaAMA$beng$erda$cFr-PaAMA$dDLC"
+          }
+        }
+      ],
+      "carrier": {
+        "@id": "http://id.loc.gov/vocabulary/carriers/nc"
+      },
+      "dimensions": "21 cm",
+      "extent": {
+        "@type": "Extent",
+        "rdfs:label": "409 pages"
+      },
+      "identifiedBy": [
+        {
+          "@type": "Lccn",
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": "  2024384167"
+        },
+        {
+          "@type": "Isbn",
+          "qualifier": "paperback",
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": "9782226489784"
+        },
+        {
+          "@type": "Local",
+          "assigner": {
+            "@id": "http://id.loc.gov/vocabulary/organizations/frpaama"
+          },
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": "AAL08388212-0001"
+        }
+      ],
+      "instanceOf": {
+        "@id": "http://id.loc.gov/resources/works/24042045"
+      },
+      "issuance": {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      },
+      "media": {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/n"
+      },
+      "provisionActivity": {
+        "@type": [
+          "ProvisionActivity",
+          "Publication"
+        ],
+        "bflc:simpleAgent": "Albin Michel",
+        "bflc:simpleDate": "[2024]",
+        "bflc:simplePlace": "Paris",
+        "date": {
+          "@type": "http://id.loc.gov/datatypes/edtf",
+          "@value": "2024"
+        },
+        "place": {
+          "@id": "http://id.loc.gov/vocabulary/countries/fr"
+        }
+      },
+      "publicationStatement": "Paris: Albin Michel, [2024]",
+      "responsibilityStatement": "Emma Becker",
+      "title": {
+        "@type": "Title",
+        "bflc:nonSortNum": "3",
+        "mainTitle": "Le mal joli",
+        "subtitle": "roman"
+      }
+    },
+    "language": {
+      "@id": "http://id.loc.gov/vocabulary/languages/fre"
+    },
+    "title": {
+      "@type": "Title",
+      "bflc:nonSortNum": "3",
+      "mainTitle": "Le mal joli"
+    }
+  },
+  {
+    "@context": {
+      "@vocab": "http://id.loc.gov/ontologies/bibframe/",
+      "bflc": "http://id.loc.gov/ontologies/bflc/",
+      "mads": "http://www.loc.gov/mads/rdf/v1#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+    },
+    "@id": "http://id.loc.gov/resources/works/24113259",
+    "@type": [
+      "Work",
+      "Text",
+      "Monograph"
+    ],
+    "bflc:aap": "United States Congress. Senate. In the Senate of the United States. January 18, 1892. -- Referred to the Committee on Coast Defenses and ordered to be printed. Mr. Allen presented the following memorial of the Port Townsend Chamber of Commerce on the subject of coast defenses .",
+    "bflc:aap-normalized": "unitedstatescongresssenateinthesenateoftheunitedstatesjanuary181892referredtothecommitteeoncoastdefensesandorderedtobeprintedmrallenpresentedthefollowingmemorialoftheporttownsendchamberofcommerceonthesubjectofcoastdefenses",
+    "bflc:governmentPubType": {
+      "@id": "http://id.loc.gov/vocabulary/mgovtpubtype/f"
+    },
+    "content": {
+      "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+    },
+    "contribution": [
+      {
+        "@type": "Contribution",
+        "role": {
+          "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+        }
+      }
+    ],
+    "genreForm": [
+      {
+        "@id": "http://id.loc.gov/authorities/genreForms/gf2011026362"
+      }
+    ],
+    "hasInstance": {
+      "@id": "http://id.loc.gov/resources/instances/24113259",
+      "@type": "Instance",
+      "adminMetadata": [
+        {
+          "@type": "AdminMetadata",
+          "date": {
+            "@type": "http://www.w3.org/2001/XMLSchema#date",
+            "@value": "2025-01-17"
+          },
+          "status": {
+            "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+          }
+        }
+      ],
+      "carrier": {
+        "@id": "http://id.loc.gov/vocabulary/carriers/cr"
+      },
+      "extent": {
+        "@type": "Extent",
+        "rdfs:label": "1 online resource (5 pages)."
+      },
+      "instanceOf": {
+        "@id": "http://id.loc.gov/resources/works/24113259"
+      },
+      "issuance": {
+        "@id": "http://id.loc.gov/vocabulary/issuance/mono"
+      },
+      "media": {
+        "@id": "http://id.loc.gov/vocabulary/mediaTypes/c"
+      },
+      "provisionActivity": {
+        "@type": [
+          "ProvisionActivity",
+          "Publication"
+        ],
+        "bflc:simpleAgent": "U.S. Government Printing Office",
+        "bflc:simpleDate": "1892",
+        "bflc:simplePlace": "[Washington, D.C.]",
+        "date": {
+          "@type": "http://id.loc.gov/datatypes/edtf",
+          "@value": "1892"
+        },
+        "place": {
+          "@id": "http://id.loc.gov/vocabulary/countries/dcu"
+        }
+      },
+      "publicationStatement": "[Washington, D.C.]: U.S. Government Printing Office, 1892",
+      "title": {
+        "@type": "Title",
+        "mainTitle": "In the Senate of the United States. January 18, 1892. -- Referred to the Committee on Coast Defenses and ordered to be printed. Mr. Allen presented the following memorial of the Port Townsend Chamber of Commerce on the subject of coast defenses .."
+      }
+    },
+    "language": {
+      "@id": "http://id.loc.gov/vocabulary/languages/eng"
+    },
+    "subject": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects/sh85027424"
+      },
+      {
+        "@id": "http://id.loc.gov/authorities/subjects/sh85085159"
+      },
+      {
+        "@id": "http://id.loc.gov/authorities/subjects/sh85119483"
+      },
+      {
+        "@id": "http://id.loc.gov/authorities/subjects/sh85108969"
+      }
+    ]
+  },
+  {
+    "@id": "_:b56httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/descsource"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Created from auth."
+      }
+    ]
+  },
+  {
+    "@id": "_:b43httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/datasource"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/preferredCitation": [
+      {
+        "@value": "Gu\u00eda de la arquitectura del siglo XX. Espa\u00f1a, c1997."
+      }
+    ]
+  },
+  {
+    "@id": "_:b92httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guida all'architettura del Novecento. Spagna."
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/partName": [
+      {
+        "@value": "Spagna"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/hubs/6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work",
+      "http://id.loc.gov/ontologies/bibframe/Hub"
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap": [
+      {
+        "@value": "Pizza, Antonio. Guida all'architettura del Novecento. Spagna. Spanish"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "pizzaantonioguidaall'architetturadelnovecentospagnaspanish"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b9httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      },
+      {
+        "@id": "_:b15httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:b19httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1001 $aPizza, Antonio.$tGuida all'architettura del Novecento.$pSpagna.$lSpanish"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/spa"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b43httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      },
+      {
+        "@id": "_:b56httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:b48httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      },
+      {
+        "@id": "_:b52httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://purl.org/dc/terms/isPartOf": [
+      {
+        "@id": "http://id.loc.gov/resources/hubs"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/relation": [
+      {
+        "@id": "_:b62httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+      {
+        "@id": "_:b98httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      },
+      {
+        "@id": "_:b119httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      },
+      {
+        "@id": "_:b141httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Anglo-American cataloguing rules"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aacr"
+      }
+    ]
+  },
+  {
+    "@id": "_:b9httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guida all'architettura del Novecento. Spagna. Spanish"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/partName": [
+      {
+        "@value": "Spagna"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relationship/translationof",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Relationship"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "translation of"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "translationof"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b19httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution",
+      "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/n94084851"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+      }
+    ]
+  },
+  {
+    "@id": "_:b141httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+      {
+        "@id": "http://id.loc.gov/ontologies/bibframe-2-5-0/"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:b144httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b170httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ]
+  },
+  {
+    "@id": "_:b76httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution",
+      "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/n94084851"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/n94084851",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person",
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Pizza, Antonio"
+      },
+      {
+        "@value": "Pizza, Antonio"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1001 $aPizza, Antonio"
+      },
+      {
+        "@value": "1001 $aPizza, Antonio"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/eng",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "English"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "eng"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC-MRC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlcmrc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlcmrc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b98httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#date",
+        "@value": "2002-09-03"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/nnc"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/ctb",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role",
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "contributor"
+      },
+      {
+        "@value": "contributor"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "ctb"
+      },
+      {
+        "@value": "ctb"
+      }
+    ]
+  },
+  {
+    "@id": "_:b15httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/VariantTitle"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@language": "zxx-latn",
+        "@value": "Gu\u00eda de la arquitectura del siglo XX. Espa\u00f1a"
+      }
+    ]
+  },
+  {
+    "@id": "_:b62httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Relation"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/relationship": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relationship/translationof"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/associatedResource": [
+      {
+        "@id": "http://id.loc.gov/resources/hubs/12ae6208-b533-c157-3831-21e4e62f4c87"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/spa",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Spanish"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "spa"
+      }
+    ]
+  },
+  {
+    "@id": "_:b144httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "6cc04873-b992-2c23-8556-c4c684cd6f31"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/assigner": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b170httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/internal"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "040  $aNNC$beng$cNNC$eaacr"
+      }
+    ]
+  },
+  {
+    "@id": "_:b48httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Lccn"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "no2002080431"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/nnc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Columbia University"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "NNC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "nnc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-nnc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b119httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+      {
+        "@id": "https://github.com/lcnetdev/marc2bibframe2/tree/v2.10-dev"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2025-04-25T20:22:17.030256-04:00"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/c",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "changed"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "c"
+      }
+    ]
+  },
+  {
+    "@id": "_:b52httpc0liddOtlocdOtgovresourceshubs6cc04873-b992-2c23-8556-c4c684cd6f31",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/OclcNumber"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "oca05854033"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/n",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "new"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "n"
+      }
+    ]
+  },
+  {
+    "@id": "_:b135httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/n87134496"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/aut",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "author"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aut"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-ne",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/GeographicCoverage"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Netherlands"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-ne---"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/n87134496",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "M\u00e1\u010del, Otakar"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1001 $aM\u00e1\u010del, Otakar"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Organization",
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization",
+      "http://id.loc.gov/ontologies/bibframe/Organization",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress"
+      },
+      {
+        "@value": "United States, Library of Congress"
+      },
+      {
+        "@value": "United States, Library of Congress"
+      },
+      {
+        "@value": "United States, Library of Congress"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b277httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2011-03-04T07:31:45"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b165httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guide di architettura (Electa editrice)"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work",
+      "http://id.loc.gov/ontologies/bibframe/Text",
+      "http://id.loc.gov/ontologies/bibframe/Monograph"
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap": [
+      {
+        "@value": "Bergeijk, Herman van. Guida all'architettura del Novecento. Benelux"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "bergeijkhermanvanguidaall'architetturadelnovecentobenelux"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/ita"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/illustrativeContent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/millus/ill"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/supplementaryContent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/msupplcont/bibliography"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/msupplcont/index"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/geographicCoverage": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-be"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-ne"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-lu"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/temporalCoverage": [
+      {
+        "@type": "http://id.loc.gov/datatypes/edtf",
+        "@value": "190X/194X"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/edtf",
+        "@value": "194X/19-X"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/classification": [
+      {
+        "@id": "_:b56httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:b78httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "_:b135httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b94httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/content": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/relation": [
+      {
+        "@id": "_:b104httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "_:b150httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b130httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://purl.org/dc/terms/isPartOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/genreForm": [
+      {
+        "@id": "http://id.loc.gov/authorities/genreForms/gf2014026108"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/subject": [
+      {
+        "@id": "_:b190httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "http://id.loc.gov/authorities/subjects/sh85013135"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+      {
+        "@id": "_:b256httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "_:b277httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "_:b297httpc0liddOtlocdOtgovresourcesworks1215233"
+      },
+      {
+        "@id": "_:b319httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ]
+  },
+  {
+    "@id": "_:b130httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/lang"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Simultaneously published also in English and German."
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/menclvl/f",
+    "@type": [
+      "http://id.loc.gov/ontologies/bflc/EncodingLevel"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "full"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "f"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC-MRC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlcmrc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlcmrc"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/msupplcont/index",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/SupplementaryContent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "index"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "index"
+      }
+    ]
+  },
+  {
+    "@id": "_:b150httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Relation"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/relationship": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relationship/series"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/associatedResource": [
+      {
+        "@id": "http://id.loc.gov/resources/hubs/978e198c-081d-ad60-5128-648bfee15511"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/ctb",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "contributor"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/msupplcont/bibliography",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/SupplementaryContent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "bibliography"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "bibliography"
+      }
+    ]
+  },
+  {
+    "@id": "_:b190httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Topic",
+      "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Architecture--Benelux countries--History--20th century"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Architecture--Benelux countries--History--20th century"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#componentList": [
+      {
+        "@list": [
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh85006611"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh85013135-781"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh99005024"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh2002012476"
+          }
+        ]
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "architecturebeneluxcountrieshistory20thcentury"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/tr",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "traced"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "tr"
+      }
+    ]
+  },
+  {
+    "@id": "_:b126httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guide di architettura"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/c",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status",
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "changed"
+      },
+      {
+        "@value": "changed"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "c"
+      },
+      {
+        "@value": "c"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/contentTypes/txt",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Content"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "text"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "txt"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/n",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "new"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "n"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/genreForms/gf2014026108",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/GenreForm"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Guidebooks"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "155  $aGuidebooks"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/genreForms"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      }
+    ]
+  },
+  {
+    "@id": "_:b104httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Relation"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/relationship": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relationship/series"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/associatedResource": [
+      {
+        "@id": "_:b112httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh85013135",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Place"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Benelux countries"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "151  $aBenelux countries"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "el-----"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b360httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/internal"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "040  $aDLC$cDLC$dDLC"
+      }
+    ]
+  },
+  {
+    "@id": "_:b94httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guida all'architettura del Novecento. Benelux"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/uba",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "used by assigner"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "uba"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b172httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
+      {
+        "@value": "Milano: Electa, c1998"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh85013135-781",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Geographic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Benelux countries"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "181  $zBenelux countries"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/millus/ill",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Illustration"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "illustrations"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "ill"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh99005024",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Topic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "History"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "180  $xHistory"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b297httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+      {
+        "@id": "https://github.com/lcnetdev/marc2bibframe2/tree/v3.2-dev"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2026-05-13T03:40:10.795798-04:00"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-lu",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/GeographicCoverage"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Luxembourg"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-lu---"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/genreForms",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Source"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "LC Genre/Forms"
+      }
+    ]
+  },
+  {
+    "@id": "_:b172httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Guida all'architettura del Novecento"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/partName": [
+      {
+        "@value": "Benelux"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Anglo-American cataloguing rules"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aacr"
+      }
+    ]
+  },
+  {
+    "@id": "_:b112httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Series"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/t"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/tr"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b126httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/hubs/978e198c-081d-ad60-5128-648bfee15511",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Hub",
+      "http://id.loc.gov/ontologies/bibframe/Series"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Guide di architettura (Electa editrice)"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1300 $aGuide di architettura (Electa editrice)"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b165httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-be",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/GeographicCoverage"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Belgium"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-be---"
+      }
+    ]
+  },
+  {
+    "@id": "_:b334httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/assigner": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/t",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "transcribed"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "t"
+      }
+    ]
+  },
+  {
+    "@id": "_:b319httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+      {
+        "@id": "http://id.loc.gov/ontologies/bibframe-3-0-1/"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:b334httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "906  $a7$bcbc$corignew$d3$encip$f19$gy-gencatlg"
+      },
+      {
+        "@value": "955  $aoe08 02-01-99 to Cat.; jk00 02-10-99; lk19 04-21-99; jk01 04-28-99;jp85 05-10-99"
+      },
+      {
+        "@value": "955  $aLCAP batch update 2025-06-01-04:00: LCAPM-644, LCAPM-893"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d906": [
+      {
+        "@value": "=906     $a 7 $b cbc $c orignew $d 3 $e ncip $f 19 $g y-gencatlg"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d955": [
+      {
+        "@value": "=955     $a oe08 02-01-99 to Cat.; jk00 02-10-99; lk19 04-21-99; jk01 04-28-99;jp85 05-10-99"
+      },
+      {
+        "@value": "=955     $a LCAP batch update 2025-06-01-04:00: LCAPM-644, LCAPM-893"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b360httpc0liddOtlocdOtgovresourcesworks1215233"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d985": [
+      {
+        "@value": "=985     $e GAP"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relationship/series",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Relationship",
+      "http://id.loc.gov/ontologies/bibframe/Relationship"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "series"
+      },
+      {
+        "@value": "series"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "series"
+      },
+      {
+        "@value": "series"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/nr96010236",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Bergeijk, Herman van"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "10010$aBergeijk, Herman van"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/ita",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Italian"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "ita"
+      }
+    ]
+  },
+  {
+    "@id": "_:b256httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "1999-02-01T00:00:00"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b56httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ClassificationLcc"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/classificationPortion": [
+      {
+        "@value": "NA1138"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/itemPortion": [
+      {
+        "@value": ".B47 1998"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/assigner": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/uba"
+      }
+    ]
+  },
+  {
+    "@id": "_:b78httpc0liddOtlocdOtgovresourcesworks1215233",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution",
+      "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/nr96010236"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh2002012476",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Temporal"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "20th century"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "182  $y20th century"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh85006611",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Topic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Architecture"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "150  $aArchitecture"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b68httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution",
+      "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/no2009149961"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/aut"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/no2009149963",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Carbonia itinerari dell'architettura moderna"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1102 $aCarbonia itinerari dell'architettura moderna"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/works/15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Work",
+      "http://id.loc.gov/ontologies/bibframe/Text",
+      "http://id.loc.gov/ontologies/bibframe/Monograph"
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap": [
+      {
+        "@value": "Peghin, Giorgio. Carbonia, citt\u00e0 del Novecento : guida all'architettura moderna della citt\u00e0 di fondazione"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "peghingiorgiocarboniacitt\u00e0delnovecento:guidaall'architetturamodernadellacitt\u00e0difondazione"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/language": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/ita"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/languages/eng"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/illustrativeContent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/millus/ill"
+      },
+      {
+        "@id": "http://id.loc.gov/vocabulary/millus/map"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/supplementaryContent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/msupplcont/bibliography"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/geographicCoverage": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-it"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/classification": [
+      {
+        "@id": "_:b46httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/contribution": [
+      {
+        "@id": "_:b68httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b99httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b114httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b84httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/content": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b94httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/tableOfContents": [
+      {
+        "@id": "http://www.loc.gov/catdir/toc/casalini08/09761381.pdf"
+      }
+    ],
+    "http://purl.org/dc/terms/isPartOf": [
+      {
+        "@id": "http://id.loc.gov/resources/works"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+      {
+        "@id": "http://id.loc.gov/resources/instances/15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/subject": [
+      {
+        "@id": "_:b141httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b208httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b242httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+      {
+        "@id": "_:b276httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b295httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b315httpc0liddOtlocdOtgovresourcesworks15921662"
+      },
+      {
+        "@id": "_:b337httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/aut",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "author"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aut"
+      }
+    ]
+  },
+  {
+    "@id": "_:b173httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#GeographicElement"
+    ],
+    "http://www.loc.gov/mads/rdf/v1#elementValue": [
+      {
+        "@value": "Italy"
+      }
+    ]
+  },
+  {
+    "@id": "_:b208httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Topic",
+      "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Carbonia (Italy)--Buildings, structures, etc."
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Carbonia (Italy)--Buildings, structures, etc."
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#componentList": [
+      {
+        "@list": [
+          {
+            "@id": "http://id.loc.gov/rwo/agents/nr97004983"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh99004820"
+          }
+        ]
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "carbonia(italy)buildingsstructuresetc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b141httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Topic",
+      "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Architecture--Italy--Carbonia--History--20th century"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Architecture--Italy--Carbonia--History--20th century"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#componentList": [
+      {
+        "@list": [
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh85006611"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/names/nr97004983-781"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh99005024"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh2002012476"
+          }
+        ]
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "architectureitalycarboniahistory20thcentury"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/itfic",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Casalini Libri"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "ItFiC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "itfic"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Organization",
+      "http://id.loc.gov/ontologies/bibframe/Organization",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress"
+      },
+      {
+        "@value": "United States, Library of Congress"
+      },
+      {
+        "@value": "United States, Library of Congress"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b46httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/ClassificationLcc"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/classificationPortion": [
+      {
+        "@value": "NA1121.C367"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/itemPortion": [
+      {
+        "@value": "P44 2009"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/assigner": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/uba"
+      }
+    ]
+  },
+  {
+    "@id": "_:b295httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2009-12-01T13:27:30"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/millus/map",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Illustration"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "maps"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "map"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/eng",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "English"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "eng"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh99004820",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Topic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Buildings, structures, etc."
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "180  $xBuildings, structures, etc."
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Organization"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/code",
+        "@value": "DLC-MRC"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+        "@value": "dlcmrc"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+        "@value": "US-dlcmrc"
+      }
+    ]
+  },
+  {
+    "@id": "_:b382httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/internal"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "040  $aItFiC$cItFiC$dDLC"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/relators/ctb",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Role",
+      "http://id.loc.gov/ontologies/bibframe/Role"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "contributor"
+      },
+      {
+        "@value": "contributor"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "ctb"
+      },
+      {
+        "@value": "ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/resources/instances/15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Instance"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/title": [
+      {
+        "@id": "_:b133httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
+      {
+        "@value": "Milano: Skira"
+      }
+    ]
+  },
+  {
+    "@id": "_:b133httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Carbonia, citt\u00e0 del Novecento"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/subtitle": [
+      {
+        "@value": "guida all'architettura moderna della citt\u00e0 di fondazione"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/msupplcont/bibliography",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/SupplementaryContent"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "bibliography"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "bibliography"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/menclvl/4",
+    "@type": [
+      "http://id.loc.gov/ontologies/bflc/EncodingLevel"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "core"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "4"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/c",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status",
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "changed"
+      },
+      {
+        "@value": "changed"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "c"
+      },
+      {
+        "@value": "c"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/contentTypes/txt",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Content"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "text"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "txt"
+      }
+    ]
+  },
+  {
+    "@id": "_:b84httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Title"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+      {
+        "@value": "Carbonia, citt\u00e0 del Novecento : guida all'architettura moderna della citt\u00e0 di fondazione"
+      }
+    ]
+  },
+  {
+    "@id": "_:b315httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+      {
+        "@id": "https://github.com/lcnetdev/marc2bibframe2/tree/v3.2-dev"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2026-05-13T21:59:15.363426-04:00"
+      }
+    ]
+  },
+  {
+    "@id": "_:b168httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Geographic",
+      "http://www.loc.gov/mads/rdf/v1#Authority"
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Italy"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#elementList": [
+      {
+        "@list": [
+          {
+            "@id": "_:b173httpc0liddOtlocdOtgovresourcesworks15921662"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "@id": "_:b352httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Local"
+    ],
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+      {
+        "@value": "15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/assigner": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/n",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "new"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "n"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://www.loc.gov/mads/rdf/v1#MADSScheme",
+      "http://id.loc.gov/ontologies/bibframe/Source",
+      "http://id.loc.gov/ontologies/bibframe/Source"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      },
+      {
+        "@value": "LC Subject Headings"
+      },
+      {
+        "@language": "en",
+        "@value": "Library of Congress Subject Headings"
+      }
+    ]
+  },
+  {
+    "@id": "_:b181httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#GeographicElement"
+    ],
+    "http://www.loc.gov/mads/rdf/v1#elementValue": [
+      {
+        "@value": "Carbonia"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/uba",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Status"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "used by assigner"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "uba"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/millus/ill",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Illustration"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "illustrations"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "ill"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh99005024",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Topic",
+      "http://www.loc.gov/mads/rdf/v1#Topic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "History"
+      },
+      {
+        "@language": "en",
+        "@value": "History"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "180  $xHistory"
+      },
+      {
+        "@value": "180  $xHistory"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      },
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b276httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/status": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/date": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+        "@value": "2009-09-14T00:00:00"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/organizations/itfic"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/names/nr97004983-781",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#HierarchicalGeographic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Italy--Carbonia"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "181  $zItaly$zCarbonia"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#componentList": [
+      {
+        "@list": [
+          {
+            "@id": "_:b168httpc0liddOtlocdOtgovresourcesworks15921662"
+          },
+          {
+            "@id": "_:b176httpc0liddOtlocdOtgovresourcesworks15921662"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Anglo-American cataloguing rules"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "aacr"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/no2009149961",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Peghin, Giorgio"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1001 $aPeghin, Giorgio"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/geographicAreas/e-it",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/GeographicCoverage"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Italy"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-it---"
+      }
+    ]
+  },
+  {
+    "@id": "_:b242httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Topic",
+      "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Carbonia (Italy)--History"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Carbonia (Italy)--History"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#componentList": [
+      {
+        "@list": [
+          {
+            "@id": "http://id.loc.gov/rwo/agents/nr97004983"
+          },
+          {
+            "@id": "http://id.loc.gov/authorities/subjects/sh99005024"
+          }
+        ]
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+      {
+        "@value": "carbonia(italy)history"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "_:b337httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+      {
+        "@id": "http://id.loc.gov/ontologies/bibframe-3-0-1/"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/menclvl/4"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/descriptionConventions/aacr"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+      {
+        "@id": "_:b352httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "906  $a7$bcbc$ccopycat$du$encip$f20$gy-gencatlg"
+      },
+      {
+        "@value": "9250 $aacquire$b1 shelf copy$xpolicy default"
+      },
+      {
+        "@value": "955  $acl00 2009-09-25 item has been shipped$abd00 2009-12-01 item received; sent to CALM"
+      },
+      {
+        "@value": "955  $aLCAP batch update 2025-06-01-04:00: LCAPM-644"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d906": [
+      {
+        "@value": "=906     $a 7 $b cbc $c copycat $d u $e ncip $f 20 $g y-gencatlg"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d925": [
+      {
+        "@value": "=925  0  $a acquire $b 1 shelf copy $x policy default"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d955": [
+      {
+        "@value": "=955     $a cl00 2009-09-25 item has been shipped $a bd00 2009-12-01 item received; sent to CALM"
+      },
+      {
+        "@value": "=955     $a LCAP batch update 2025-06-01-04:00: LCAPM-644"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/note": [
+      {
+        "@id": "_:b382httpc0liddOtlocdOtgovresourcesworks15921662"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/descriptionAuthentication": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat"
+      }
+    ],
+    "http://id.loc.gov/ontologies/lclocal/d985": [
+      {
+        "@value": "=985     $a shelf ready $e CL-FY09"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/marcauthen/lccopycat",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/DescriptionAuthentication"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "LC Copy Cataloging"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@value": "lccopycat"
+      }
+    ]
+  },
+  {
+    "@id": "_:b94httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Note",
+      "http://id.loc.gov/vocabulary/mnotetype/lang"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Text in Italian and English."
+      }
+    ]
+  },
+  {
+    "@id": "_:b99httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/no2009149962"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/vocabulary/languages/ita",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Language"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Italian"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@value": "ita"
+      }
+    ]
+  },
+  {
+    "@id": "_:b114httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Contribution"
+    ],
+    "http://id.loc.gov/ontologies/bibframe/agent": [
+      {
+        "@id": "http://id.loc.gov/rwo/agents/no2009149963"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/role": [
+      {
+        "@id": "http://id.loc.gov/vocabulary/relators/ctb"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh2002012476",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Temporal"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "20th century"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "182  $y20th century"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/authorities/subjects/sh85006611",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Topic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@language": "en",
+        "@value": "Architecture"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "150  $aArchitecture"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/source": [
+      {
+        "@id": "http://id.loc.gov/authorities/subjects"
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/nr97004983",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Geographic",
+      "http://www.loc.gov/mads/rdf/v1#Geographic"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Carbonia (Italy)"
+      },
+      {
+        "@value": "Carbonia (Italy)"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "151  $aCarbonia (Italy)"
+      },
+      {
+        "@value": "151  $aCarbonia (Italy)"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bibframe/code": [
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-it---"
+      },
+      {
+        "@type": "http://id.loc.gov/datatypes/codes/gac",
+        "@value": "e-it---"
+      }
+    ]
+  },
+  {
+    "@id": "_:b176httpc0liddOtlocdOtgovresourcesworks15921662",
+    "@type": [
+      "http://www.loc.gov/mads/rdf/v1#Geographic",
+      "http://www.loc.gov/mads/rdf/v1#Authority"
+    ],
+    "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+      {
+        "@value": "Carbonia"
+      }
+    ],
+    "http://www.loc.gov/mads/rdf/v1#elementList": [
+      {
+        "@list": [
+          {
+            "@id": "_:b181httpc0liddOtlocdOtgovresourcesworks15921662"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "@id": "http://id.loc.gov/rwo/agents/no2009149962",
+    "@type": [
+      "http://id.loc.gov/ontologies/bibframe/Agent",
+      "http://id.loc.gov/ontologies/bibframe/Person"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Sanna, Antonella"
+      }
+    ],
+    "http://id.loc.gov/ontologies/bflc/marcKey": [
+      {
+        "@value": "1001 $aSanna, Antonella"
+      }
+    ]
+  }
+]
