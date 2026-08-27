@@ -27,7 +27,9 @@ class _Recorder:
         self.called = True
 
 
-async def _route(method: str, path: str) -> tuple[_Recorder, _Recorder]:
+async def _route(
+    method: str, path: str, headers: list[tuple[bytes, bytes]] | None = None
+) -> tuple[_Recorder, _Recorder]:
     """Send a request and see where the wrapper sends it.
 
     There are two possible destinations:
@@ -51,7 +53,11 @@ async def _route(method: str, path: str) -> tuple[_Recorder, _Recorder]:
 
     # This dict is the bare-minimum description of a web request that the wrapper
     # needs to make its decision: the HTTP method and the URL path.
-    await wrapper({"type": "http", "method": method, "path": path}, receive, send)
+    await wrapper(
+        {"type": "http", "method": method, "path": path, "headers": headers or []},
+        receive,
+        send,
+    )
     return inner, keycloak
 
 
@@ -79,11 +85,51 @@ async def test_get_prefix_path_bypasses_keycloak(prefix):
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH", "DELETE"])
 @pytest.mark.parametrize(
     "path",
-    ["/works/123", "/mcp", "/hubs/", "/resources/x", "/profiles/", "/profiles/x"],
+    ["/works/123", "/hubs/", "/resources/x", "/profiles/", "/profiles/x"],
 )
 async def test_mutating_methods_still_require_auth(method, path):
     """The bypass is GET-only; mutating verbs on allow-listed paths are protected."""
     inner, keycloak = await _route(method, path)
+    assert keycloak.called and not inner.called
+
+
+# --- The MCP mount ------------------------------------------------------------
+# MCP's Streamable HTTP transport POSTs everything, so a verb-based bypass would
+# lock anonymous clients out entirely. Instead a credential-free MCP request is
+# handed through to `mcp_permissions`, which gates on the JSON-RPC method.
+MCP_PATHS = sorted(BypassKeycloakForGet.MCP_PATHS)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["POST", "DELETE"])
+@pytest.mark.parametrize("path", MCP_PATHS)
+async def test_anonymous_mcp_request_bypasses_keycloak(method, path):
+    """No Authorization header means the mount's own gate decides, not Keycloak."""
+    inner, keycloak = await _route(method, path)
+    assert inner.called and not keycloak.called
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["POST", "DELETE"])
+@pytest.mark.parametrize("path", MCP_PATHS)
+async def test_mcp_request_with_credentials_still_hits_keycloak(method, path):
+    """A token is offered, so it gets verified — authenticated writes are unaffected."""
+    inner, keycloak = await _route(method, path, [(b"authorization", b"Bearer tok")])
+    assert keycloak.called and not inner.called
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("method", ["PUT", "PATCH"])
+async def test_other_mcp_verbs_still_require_auth(method):
+    """Only the verbs MCP actually uses are opened up."""
+    inner, keycloak = await _route(method, "/mcp")
+    assert keycloak.called and not inner.called
+
+
+@pytest.mark.asyncio
+async def test_anonymous_post_off_the_mcp_path_still_requires_auth():
+    """Control: the anonymous bypass is scoped to the MCP mount."""
+    inner, keycloak = await _route("POST", "/works/")
     assert keycloak.called and not inner.called
 
 
