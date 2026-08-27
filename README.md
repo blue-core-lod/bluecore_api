@@ -26,6 +26,7 @@ Next you will want to clone bluecore_api repository and create a `.env` file tha
 # service uris
 DATABASE_URL="postgresql://airflow:airflow@localhost/bluecore"
 BLUECORE_URL="http://localhost:3000/"
+API_URL="http://localhost:3000" # for the Blue Core Client: start-dev.sh serves the API at the bare root
 AIRFLOW_INTERNAL_URL="http://localhost:8080"
 KEYCLOAK_EXTERNAL_URL="http://localhost:8081/keycloak/"
 KEYCLOAK_INTERNAL_URL="http://localhost:8081/keycloak/"
@@ -90,45 +91,70 @@ For local development with the environment file created above:
 
 The application should then be available at http://localhost:3000
 
-## 💾 Load Data
+## 🧑‍💻 Blue Core Client
 
-If you want to try loading some data you can use the `bluecore` utility:
+Loading data and talking to the API by hand are both done with the [Blue Core Client]
+(`bluecore-client`), a command line tool and Python library published on PyPI. It used
+to live in this repository as a `bluecore` command; it now has its own repository.
 
 ```shell
-uv run bluecore --verbose load-url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
+uv tool install bluecore-client
 ```
 
-This will tell the Blue Core API to load the data at that URL into the database.
+It reads the same environment variable names as the API, so the `.env` created above is
+picked up when you run `bluecore` from this directory. If your `.env` predates this
+section, add the `API_URL` line from it — without that the client looks for the API under
+`/api`, which the development server doesn't use, and every command 404s. To confirm
+where it's pointed, and as whom:
+
+```shell
+bluecore whoami
+```
+
+`bluecore --help`, or `bluecore <command> --help`, covers the rest.
+
+## 💾 Load Data
+
+If you want to try loading some data:
+
+```shell
+bluecore --verbose load url https://raw.githubusercontent.com/blue-core-lod/bluecore_api/refs/heads/main/sample/batch.jsonld
+```
+
+This will tell the Blue Core API to load the data at that URL into the database. A local
+file works too, in JSON-LD, turtle, RDF/XML or N-Triples, as does a zip or tar.gz archive
+of RDF files:
+
+```shell
+bluecore load file sample/batch.jsonld
+```
 
 ## 📇 Load Profiles
 
-Resource profiles (e.g. Sinopia profiles) can be pulled from another bluecore
-instance and written directly into your local database (bypassing the API). By
-default the command pulls from `https://dev.bcld.info`:
+Resource profiles (e.g. Sinopia profiles) can be copied from another Blue Core instance
+into your local one. By default the command pulls from `https://dev.bcld.info`:
 
 ```shell
-uv run bluecore load-profiles
+bluecore load profiles
 ```
 
-To pull from a different instance, pass its host as an argument — the
-`/api/search/profile` path is appended automatically:
+To pull from a different instance, pass its host as an argument:
 
 ```shell
-uv run bluecore load-profiles https://stage.bcld.info
+bluecore load profiles https://stage.bcld.info
 ```
 
-Profiles are upserted by URI, so the command is safe to re-run. Use
-`--dry-run` to preview what would change without writing. This requires
-`DATABASE_URL` to point at your local Blue Core database (the same value
-used to run the API).
+Each profile is created through the API rather than written to the database directly, so
+your instance mints its own URI and rewrites the profile's resource template to match.
+Note that this creates profiles rather than updating existing ones, so running it twice
+loads two copies. Use `--dry-run` to see what would be loaded first.
 
 ## 📡 HTTP Requests
 
-To talk directly to the API you will need to pass along a Keycloak access token. During development you can get one by using the included `bluecore` command line tool:
+To talk directly to the API you will need to pass along a Keycloak access token. During development you can get one from the [Blue Core Client], which prints the token and nothing else:
 
 ```
-export TOKEN=`uv run bluecore token`
-curl --header "Authorization: Bearer ${TOKEN}" http://localhost:3000/change_documents/instances/page/1
+curl --header "Authorization: Bearer $(bluecore token)" http://localhost:3000/change_documents/instances/page/1
 ```
 
 ## 🧹 Linting
@@ -158,6 +184,7 @@ To run all of the tests:
 To drop into the Python debugger when a test fails add the following parameters to above command:
 - `uv run pytest -s --pdb` 
 
+[Blue Core Client]: https://github.com/blue-core-lod/bluecore-client
 [Blue Core Data Models]: https://github.com/blue-core-lod/bluecore-models
 [Blue Core Workflows]: https://github.com/blue-core-lod/bluecore-workflows
 [ruff]: https://docs.astral.sh/ruff/
