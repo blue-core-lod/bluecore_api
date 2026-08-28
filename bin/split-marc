@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Split a MARC file into smaller files of N records each."""
+
+import argparse
+import os
+import sys
+
+from pymarc import MARCReader
+
+
+def extract_record(file_path, control_number):
+    basename = os.path.splitext(os.path.basename(file_path))[0]
+    output_dir = os.path.join("./tmp", basename)
+    os.makedirs(output_dir, exist_ok=True)
+
+    with open(file_path, "rb") as fh:
+        reader = MARCReader(fh)
+        for record in reader:
+            if record is None:
+                continue
+            f001 = record.get_fields("001")
+            if f001 and f001[0].data.strip() == control_number:
+                out_path = os.path.join(output_dir, f"{control_number}.mrc")
+                with open(out_path, "wb") as out:
+                    out.write(record.as_marc())
+                print(f"Wrote {out_path}")
+                return
+
+    print(f"No record found with control number: {control_number}")
+
+
+def split(file_path, chunk_size):
+    basename = os.path.splitext(os.path.basename(file_path))[0]
+    output_dir = os.path.join("./tmp", basename)
+    os.makedirs(output_dir, exist_ok=True)
+
+    chunk = []
+    first_record_num = 1
+    record_num = 0
+    files_written = 0
+
+    with open(file_path, "rb") as fh:
+        reader = MARCReader(fh)
+        for record in reader:
+            if record is None:
+                continue
+            record_num += 1
+            chunk.append(record)
+
+            if len(chunk) == chunk_size:
+                files_written += write_chunk(
+                    output_dir, chunk, first_record_num, record_num
+                )
+                chunk = []
+                first_record_num = record_num + 1
+
+    if chunk:
+        files_written += write_chunk(
+            output_dir, chunk, first_record_num, record_num
+        )
+
+    print(f"Split {record_num:,} records into {files_written} files in {output_dir}/")
+
+
+def write_chunk(output_dir, records, first, last):
+    filename = f"{first}_{last}.mrc"
+    path = os.path.join(output_dir, filename)
+    with open(path, "wb") as out:
+        for record in records:
+            out.write(record.as_marc())
+    return 1
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Split a MARC file into smaller files")
+    parser.add_argument("file", help="Path to the MARC file")
+    parser.add_argument(
+        "-n", type=int, help="Number of records per output file"
+    )
+    parser.add_argument(
+        "-c", metavar="CONTROL_NUMBER", help="Extract a single record by control number"
+    )
+    args = parser.parse_args()
+
+    if not os.path.isfile(args.file):
+        print(f"Error: {args.file} not found", file=sys.stderr)
+        sys.exit(1)
+
+    if not args.n and not args.c:
+        parser.error("at least one of -n or -c is required")
+
+    if args.n and args.c:
+        parser.error("-n and -c cannot be used together")
+
+    if args.c:
+        extract_record(args.file, args.c)
+    else:
+        if args.n < 1:
+            print("Error: -n must be at least 1", file=sys.stderr)
+            sys.exit(1)
+        split(args.file, args.n)
