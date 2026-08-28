@@ -2,7 +2,7 @@ import json
 import pathlib
 
 import pytest
-from bluecore_models.models import Hub, Profile, Work
+from bluecore_models.models import Hub, Instance, Profile, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -180,6 +180,55 @@ def add_profiles(db_session: Session):
     db_session.commit()
 
 
+def add_scoped_search_data(db_session: Session):
+    """Add title values plus a non-title value that scoped tests can tell apart."""
+    db_session.add(
+        Work(
+            id=70,
+            uuid="00000000-0000-0000-0000-000000000070",
+            uri="https://bcld.info/works/00000000-0000-0000-0000-000000000070",
+            data={
+                "@id": "https://bcld.info/works/00000000-0000-0000-0000-000000000070",
+                "@type": "Work",
+                "title": [
+                    {
+                        "@type": "Title",
+                        "mainTitle": "primaryscope",
+                        "subtitle": "subtitlescope",
+                    },
+                    {"@type": "VariantTitle", "mainTitle": "variantscope"},
+                    {"@type": "ParallelTitle", "mainTitle": "parallelscope"},
+                ],
+                "note": {"label": "notescope"},
+            },
+        )
+    )
+    db_session.commit()
+
+
+def add_each_searchable_resource_type(db_session: Session):
+    """Add a Work, Instance, and Hub that share one title search term."""
+    models = (Work, Instance, Hub)
+    names = ("works", "instances", "hubs")
+    resources = []
+    for id_, (model, name) in enumerate(zip(models, names, strict=True), start=71):
+        uri = f"https://bcld.info/{name}/00000000-0000-0000-0000-0000000000{id_}"
+        resources.append(
+            model(
+                id=id_,
+                uuid=f"00000000-0000-0000-0000-0000000000{id_}",
+                uri=uri,
+                data={
+                    "@id": uri,
+                    "@type": model.__name__,
+                    "title": {"@type": "Title", "mainTitle": "alltypestitle"},
+                },
+            )
+        )
+    db_session.add_all(resources)
+    db_session.commit()
+
+
 def test_search(client: TestClient, db_session: Session):
     add_data(db_session)
 
@@ -192,6 +241,86 @@ def test_search(client: TestClient, db_session: Session):
         result["links"]["first"]
         == "https://bcld.info/api/search/?limit=20&offset=0&q=kumae+chedo+mit&type=all"
     )
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "primaryscope",
+        "variantscope",
+        "parallelscope",
+        "subtitlescope",
+    ],
+)
+def test_title_scope_searches_supported_title_values(
+    client: TestClient, db_session: Session, query: str
+):
+    add_scoped_search_data(db_session)
+
+    response = client.get("/search/", params={"q": query, "scope": "title"})
+    result = response.json()
+
+    assert response.status_code == 200
+    assert result["total"] == 1
+    assert result["results"][0]["type"] == "works"
+    assert result["links"]["first"].endswith(f"&q={query}&type=all&scope=title")
+
+
+def test_title_scope_searches_expanded_jsonld(client: TestClient, db_session: Session):
+    add_data(db_session)
+
+    response = client.get(
+        "/search/", params={"q": "Renewable energy policy", "scope": "title"}
+    )
+    result = response.json()
+
+    assert response.status_code == 200
+    assert result["total"] == 1
+    assert result["results"][0]["uri"] == test_work_bluecore_uri
+
+
+def test_title_scope_excludes_non_title_values(client: TestClient, db_session: Session):
+    add_scoped_search_data(db_session)
+
+    scoped = client.get("/search/", params={"q": "notescope", "scope": "title"}).json()
+    unscoped = client.get("/search/", params={"q": "notescope"}).json()
+
+    assert scoped["total"] == 0
+    assert unscoped["total"] == 1
+
+
+def test_title_scope_includes_all_resource_types(
+    client: TestClient, db_session: Session
+):
+    add_each_searchable_resource_type(db_session)
+
+    result = client.get(
+        "/search/", params={"q": "alltypestitle", "scope": "title"}
+    ).json()
+
+    assert result["total"] == 3
+    assert {resource["type"] for resource in result["results"]} == {
+        "works",
+        "instances",
+        "hubs",
+    }
+
+
+def test_search_html_can_scope_to_titles(client: TestClient, db_session: Session):
+    add_scoped_search_data(db_session)
+
+    response = client.get("/search", params={"q": "variantscope", "scope": "title"})
+
+    assert response.status_code == 200
+    assert "1 result" in response.text
+    assert '<select name="scope" aria-label="Search scope">' in response.text
+    assert '<option value="title" selected>' in response.text
+
+
+def test_search_rejects_unknown_scope(client: TestClient):
+    response = client.get("/search/", params={"q": "anything", "scope": "isbn"})
+
+    assert response.status_code == 422
 
 
 def test_search_html(client: TestClient, db_session: Session):

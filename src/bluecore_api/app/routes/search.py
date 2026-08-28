@@ -24,6 +24,7 @@ from bluecore_api.app.views.templating import templates
 from bluecore_api.constants import (
     CONTEXT_URL,
     DEFAULT_SEARCH_PAGE_LENGTH,
+    SearchScope,
     SearchType,
 )
 from bluecore_api.database import get_db
@@ -138,6 +139,50 @@ SEARCH_GROUPS: list[tuple[type[ResourceBase], str]] = [
     (Hub, "Hubs"),
 ]
 
+# Each scope points directly to its indexed model column. Any future scopes
+# only needs another enum value, indexed column, and entry here.
+SEARCH_VECTORS = {
+    SearchScope.ALL: ResourceBase.data_vector,
+    SearchScope.TITLE: ResourceBase.title_vector,
+}
+
+
+def apply_resource_search(
+    stmt: Select, q: str, scope: SearchScope
+) -> tuple[Select, bool]:
+    """Apply the chosen field scope and a stable relevance order to a query.
+
+    The boolean tells callers whether there was search text, so they can build
+    links without repeating the matching logic.
+    """
+    search_query = search_tsquery(q)
+    if search_query is None:
+        return stmt.order_by(ResourceBase.id), False
+
+    search_vector = SEARCH_VECTORS[scope]
+    # Break ties on rank with the primary key so equally-ranked results keep a
+    # stable, repeatable order across identical searches.
+    stmt = stmt.where(search_query.op("@@")(search_vector)).order_by(
+        func.ts_rank(search_vector, search_query).desc(),
+        ResourceBase.id,
+    )
+    return stmt, True
+
+
+def search_params(
+    q: str, type: SearchType, scope: SearchScope, has_search_query: bool
+) -> dict[str, str]:
+    """The parameters a next/prev link needs to repeat the current search.
+    Both endpoints build their links here, so the two cannot drift apart.
+    """
+    params: dict[str, str] = {}
+    if has_search_query:
+        params["q"] = q
+    params["type"] = str(type)
+    if scope != SearchScope.ALL:
+        params["scope"] = str(scope)
+    return params
+
 
 def generate_links(
     verb: str, slice_size: int, limit: int, offset: int, query: str = ""
@@ -182,6 +227,7 @@ async def search(
     offset: int = 0,
     q: str = "",
     type: SearchType = SearchType.ALL,
+    scope: SearchScope = SearchScope.ALL,
 ) -> dict[str, Any]:
     """
     Search for Works, Instances and Hubs.
@@ -193,19 +239,8 @@ async def search(
     Otherwise, it will use "english" language for the full-text search.
     """
     stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
-    search_query = search_tsquery(q)
-    if search_query is not None:
-        # Break ties on rank with the primary key so equally-ranked results keep a
-        # stable, repeatable order across identical searches.
-        stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
-            ResourceBase.id,
-        )
-        params: dict[str, str] = {"q": q, "type": type}
-        links_query = f"&{urlencode(params)}"
-    else:
-        stmt = stmt.order_by(ResourceBase.id)
-        links_query = f"&type={type}"
+    stmt, has_search_query = apply_resource_search(stmt, q, scope)
+    links_query = f"&{urlencode(search_params(q, type, scope, has_search_query))}"
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
     stmt = stmt.offset(offset).limit(limit)
@@ -234,6 +269,7 @@ async def search_html(
     offset: int = 0,
     q: str = "",
     type: SearchType = SearchType.ALL,
+    scope: SearchScope = SearchScope.ALL,
 ) -> HTMLResponse:
     """Public, HTML search for BIBFRAME Works, Instances and Hubs.
 
@@ -241,16 +277,7 @@ async def search_html(
     JSON `GET /search/`) and renders the ``search_results.html`` template.
     """
     stmt = select(ResourceBase).where(ResourceBase.type.in_(get_types(type)))
-    search_query = search_tsquery(q)
-    if search_query is not None:
-        # Break ties on rank with the primary key so equally-ranked results keep a
-        # stable, repeatable order across identical searches.
-        stmt = stmt.where(search_query.op("@@")(ResourceBase.data_vector)).order_by(
-            func.ts_rank(ResourceBase.data_vector, search_query).desc(),
-            ResourceBase.id,
-        )
-    else:
-        stmt = stmt.order_by(ResourceBase.id)
+    stmt, has_search_query = apply_resource_search(stmt, q, scope)
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
@@ -277,7 +304,11 @@ async def search_html(
     base = str(request.url_for("search_html"))
 
     def page_url(new_offset: int) -> str:
-        params = {"q": q, "type": str(type), "limit": limit, "offset": new_offset}
+        params: dict[str, str | int] = {
+            **search_params(q, type, scope, has_search_query),
+            "limit": limit,
+            "offset": new_offset,
+        }
         return f"{base}?{urlencode(params)}"
 
     pagination = {
@@ -294,6 +325,7 @@ async def search_html(
         {
             "search_q": q,
             "search_type": str(type),
+            "search_scope": str(scope),
             "total": total,
             "groups": groups,
             "results": None,

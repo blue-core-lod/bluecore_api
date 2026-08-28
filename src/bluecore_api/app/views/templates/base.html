@@ -57,6 +57,15 @@
                     BIBFRAME Hubs
                 </option>
             </select>
+            {#### Limit matching to selected resource fields. ####}
+            <select name="scope" aria-label="Search scope">
+                <option value="all"{% if not search_scope or search_scope == 'all' %} selected{% endif %}>
+                    All fields
+                </option>
+                <option value="title"{% if search_scope == 'title' %} selected{% endif %}>
+                    Title
+                </option>
+            </select>
             <input type="search" name="q" value="{{ search_q|default('', true) }}" placeholder="Start typing…">
             <button type="submit">Search</button>
         </form>

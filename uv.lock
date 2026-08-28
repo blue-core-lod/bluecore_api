@@ -88,7 +88,7 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.27.0"
+version = "0.27.1"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
@@ -121,7 +121,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.28.0" },
+    { name = "bluecore-models", specifier = ">=0.28.1" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -151,7 +151,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.28.0"
+version = "0.28.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -160,9 +160,9 @@ dependencies = [
     { name = "rdflib" },
     { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/12/e9/904b3d6806a26b3f44738e70fad68662cf3f7f362c234de6feece70b7986/bluecore_models-0.28.0.tar.gz", hash = "sha256:8a24883602c444426b0f01480e555ba4fdcffb681f48ddc49ce639740d726920", size = 158894, upload-time = "2026-08-25T18:01:26.287Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/48/86/65037888309817fae8818cff881257f7105abd54699da5200dd682337823/bluecore_models-0.28.1.tar.gz", hash = "sha256:b09aa73cd12f1dca37902d2edd86364ef49f8de10b18d3dee89ab5830fa03b3b", size = 163017, upload-time = "2026-08-26T20:25:56.172Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/5a/395142cdce66b1682eb3534692be8fa0c79ca278204c6edeb3a43ce29d4b/bluecore_models-0.28.0-py3-none-any.whl", hash = "sha256:b2e0f747505d480902c32810e6c4f011b1ddac6271c6c9305e4f8e9c544ae3db", size = 53429, upload-time = "2026-08-25T18:01:25.002Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/f4/ab99e10e6dfe4033cc9e5781b6054760129c3149a5953072ca0274f0c178/bluecore_models-0.28.1-py3-none-any.whl", hash = "sha256:94e749d21dc6d3d062925243363b16e80aa62c9c4d272ee1e98d7b3d3ef19b53", size = 55367, upload-time = "2026-08-26T20:25:54.929Z" },
 ]
 
 [[package]]
