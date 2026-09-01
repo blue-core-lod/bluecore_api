@@ -44,7 +44,7 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
             session.query(OtherResource).where(OtherResource.uri.in_(cited)).all()
         ):
             try:
-                graph += load_jsonld(other.data)
+                graph += load_jsonld(other.data)  # ty: ignore[invalid-argument-type]
             except Exception:
                 logger.exception("Failed to load OtherResource %s", other.uri)
                 continue

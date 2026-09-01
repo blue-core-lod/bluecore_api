@@ -59,8 +59,8 @@ def _instance_label(data: dict[str, Any]) -> str:
 def _record_label(record: ResourceBase) -> str:
     """The text that names a record in a link, whichever page the link is on."""
     if isinstance(record, Instance):
-        return _instance_label(record.data)
-    return nodes.access_point(record.data)
+        return _instance_label(record.data)  # ty: ignore[invalid-argument-type]
+    return nodes.access_point(record.data)  # ty: ignore[invalid-argument-type]
 
 
 def record_link(record: ResourceBase) -> dict[str, Any]:
@@ -119,7 +119,9 @@ def linked_records(resource: ResourceBase, key: str) -> list[dict[str, Any]]:
     since the data holds nothing but a uuid.
     """
     candidates = [
-        n for n in nodes.as_list(resource.data.get(key)) if isinstance(n, dict)
+        n
+        for n in nodes.as_list(resource.data.get(key))  # ty: ignore[unresolved-attribute]
+        if isinstance(n, dict)
     ]
     records = _records_by_uri(
         resource, [u for n in candidates if (u := nodes.link_uri(n.get("@id")))]
@@ -139,7 +141,7 @@ def relation_sections(
     """
     relations = [
         r
-        for r in nodes.as_list(resource.data.get("relation"))
+        for r in nodes.as_list(resource.data.get("relation"))  # ty: ignore[unresolved-attribute]
         if isinstance(r, dict) and not vocabulary.is_exempt_relation(r)
     ]
     if not relations:

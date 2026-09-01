@@ -100,7 +100,7 @@ async def create_instance(
             raise HTTPException(
                 status_code=404, detail=f"Work {instance.work_id} not found"
             )
-        graph += load_jsonld(db_work.data)
+        graph += load_jsonld(db_work.data)  # ty: ignore[invalid-argument-type]
         instance_subject = next(graph.subjects(RDF.type, BF.Instance))
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
     result_graph = save_graph(
@@ -111,7 +111,7 @@ async def create_instance(
     doc = db.query(Instance).filter(Instance.uri == instance_uri).first()
 
     if doc:
-        doc.data["@context"] = CONTEXT_URL
+        doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
     return doc
 
 
@@ -142,13 +142,13 @@ async def update_instance(
                 raise HTTPException(
                     status_code=404, detail=f"Work {instance.work_id} not found"
                 )
-            graph += load_jsonld(db_work.data)
+            graph += load_jsonld(db_work.data)  # ty: ignore[invalid-argument-type]
             instance_subject = next(graph.subjects(RDF.type, BF.Instance))
             graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Instance)
         db.refresh(db_instance)
 
-        db_instance.data["@context"] = CONTEXT_URL
+        db_instance.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
 
     return db_instance
 

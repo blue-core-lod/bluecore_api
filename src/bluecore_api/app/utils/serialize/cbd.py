@@ -34,14 +34,14 @@ def top_level_resource(elem) -> bool:
 def reorder_work_types(work_data: dict[str, Any]) -> dict[str, Any]:
     """Reorder work types to ensure 'Work' is first"""
     if isinstance(work_data.get("@type"), list):
-        work_data["@type"].sort(key=lambda x: x != BibframeType.WORK)  # type: ignore
+        work_data["@type"].sort(key=lambda x: x != BibframeType.WORK)
     return work_data
 
 
 def reorder_instance_types(instance_data: dict[str, Any]) -> dict[str, Any]:
     """Reorder instance types to ensure 'Instance' is first"""
     if isinstance(instance_data.get("@type"), list):
-        instance_data["@type"].sort(key=lambda x: x != BibframeType.INSTANCE)  # type: ignore
+        instance_data["@type"].sort(key=lambda x: x != BibframeType.INSTANCE)
     return instance_data
 
 
@@ -59,7 +59,7 @@ def related_works(work: Work) -> list[Work]:
     """
     uris = {
         item["@id"]
-        for relation in _as_list(work.data.get("relation"))
+        for relation in _as_list(work.data.get("relation"))  # ty: ignore[unresolved-attribute]
         if isinstance(relation, dict)
         for item in _as_list(relation.get("associatedResource"))
         if isinstance(item, dict) and str(item.get("@id", "")).startswith("http")
@@ -129,8 +129,8 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     """
     # The xml serialization uses the first @type to determine the root element,
     # so 'Work'/'Instance' has to come first in the list of types.
-    instance.data = reorder_instance_types(instance.data)
-    instance_graph: Graph = load_jsonld(instance.data)
+    instance.data = reorder_instance_types(instance.data)  # ty: ignore[invalid-argument-type, invalid-assignment]
+    instance_graph: Graph = load_jsonld(instance.data)  # ty: ignore[invalid-argument-type]
     instance_graph = expand_resource_as_graph(instance, instance_graph)
 
     work = instance.work

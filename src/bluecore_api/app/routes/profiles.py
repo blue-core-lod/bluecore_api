@@ -5,7 +5,7 @@ from uuid import uuid4
 from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld, replace_uri
 from fastapi import APIRouter, Depends, HTTPException, Response
-from rdflib import RDF, Namespace, URIRef
+from rdflib import RDF, IdentifiedNode, Namespace, URIRef
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import inline_context
@@ -39,7 +39,8 @@ def _mint_resource_template(data, minted_uri: str):
     graph = load_jsonld(data)
     minted = URIRef(minted_uri)
     for old in set(graph.subjects(RDF.type, SINOPIA.ResourceTemplate)):
-        replace_uri(graph, old, minted)
+        if isinstance(old, IdentifiedNode):
+            replace_uri(graph, old, minted)
     # Guarantee the assertion exists even when the data arrived without one.
     graph.add((minted, RDF.type, SINOPIA.ResourceTemplate))
     # Serialize as expanded JSON-LD (a list of nodes with full-URI keys), not

@@ -11,9 +11,9 @@ def _fresh_mcp_transport():
     from bluecore_api.app.main import mcp
 
     transport = mcp._http_transport
-    transport._manager_started = False
-    transport._session_manager = None
-    transport._manager_task = None
+    transport._manager_started = False  # ty: ignore[invalid-assignment]
+    transport._session_manager = None  # ty: ignore[invalid-assignment]
+    transport._manager_task = None  # ty: ignore[invalid-assignment]
     yield
 
 

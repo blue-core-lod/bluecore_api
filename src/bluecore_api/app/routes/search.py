@@ -209,7 +209,7 @@ def generate_links(
 def create_count_query(query: Select[tuple[ResourceBase | OtherResource]]):
     query = query.order_by(None).options(noload("*"))
 
-    return query.with_only_columns(  # type: ignore[union-attr]
+    return query.with_only_columns(
         func.count(),
         maintain_column_froms=True,
     )

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 from bluecore_models.models.version import CURRENT_USER_ID
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -12,7 +12,7 @@ from bluecore_api.schemas.schemas import ExportResponseSchema, ExportSchema
 
 endpoints = APIRouter()
 
-EXPORT_EXAMPLES = {
+EXPORT_EXAMPLES: dict[str, Any] = {
     "by_instance_uri": {
         "summary": "Export by Bluecore instance URI",
         "description": "instance_uri is required; local_id is optional and may "
@@ -47,7 +47,7 @@ async def export_to_lsp(
     Triggers Workflows DAG for exporting Instance and Work to an insitution's
     Library Services Platform (LSP) like FOLIO or Alma.
     """
-    user_uid = CURRENT_USER_ID.get()
+    user_uid = CURRENT_USER_ID.get() or ""
 
     try:
         workflow_id = await workflow.export_instance(

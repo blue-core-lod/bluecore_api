@@ -90,7 +90,7 @@ async def create_work(
     work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
     doc = db.query(Work).filter(Work.uri == work_uri).first()
     if doc:
-        doc.data["@context"] = CONTEXT_URL
+        doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
     return doc
 
 
@@ -115,7 +115,7 @@ async def update_work(
         graph = load_jsonld(json.loads(work.data))
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Work)
         db.refresh(db_work)
-        db_work.data["@context"] = CONTEXT_URL
+        db_work.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
 
     return db_work
 

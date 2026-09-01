@@ -9,4 +9,4 @@ from bluecore_api.app.views import nodes
 
 def resource_title(resource: Hub | Instance | Work) -> str:
     """A display title for a Hub, Work or Instance."""
-    return nodes.title_of(resource.data)
+    return nodes.title_of(resource.data)  # ty: ignore[invalid-argument-type]

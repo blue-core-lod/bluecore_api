@@ -24,7 +24,7 @@ from bluecore_api.app.utils.serialize.cbd import (
 from bluecore_api.constants import BibframeType
 
 
-def add_work(client: TestClient, db_session: Session) -> Work:
+def add_work(client: TestClient, db_session: Session) -> Work | None:
     original_graph = init_graph()
     original_graph.parse(
         data=pathlib.Path("tests/cbd-work.jsonld").read_text(), format="json-ld"
@@ -95,8 +95,9 @@ def test_reorder_instance_types():
 
 def test_cbd(client: TestClient, db_session: Session):
     work = add_work(client, db_session)
-    work_id: int = work.id
-    admin_metadata: list = work.data["adminMetadata"]
+    work_id: int = work.id  # ty: ignore[unresolved-attribute]
+    assert work is not None
+    admin_metadata: list = work.data["adminMetadata"]  # ty: ignore[invalid-argument-type]
     work_derived_from: str = next(
         admin_md["derivedFrom"]["@id"]
         for admin_md in admin_metadata
@@ -136,7 +137,7 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
 
     # persist the graph to the database
     bc_graph = BluecoreGraph(graph)
-    bc_graph.save(sessionmaker)
+    bc_graph.save(sessionmaker)  # ty: ignore[invalid-argument-type]
 
     assert (
         URIRef("http://id.loc.gov/authorities/subjects/sh85065889")
@@ -149,7 +150,7 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
 
     # determine its local path
     instance_uri = next(instance_graph.subjects(RDF.type, BF.Instance))
-    uuid = instance_uri.split("/")[-1]
+    uuid = str(instance_uri).split("/")[-1]
 
     response = client.get(f"/instances/{uuid}.cbd.jsonld")
     response_graph = Graph()
@@ -168,6 +169,7 @@ def test_cbd_other_resources(client: TestClient, db_session: Session):
     )
 
     instance = db_session.query(Instance).filter(Instance.uuid == uuid).first()
+    assert instance is not None
     cbd_graph = generate_cbd_graph(instance)
     cbd_xml = generate_cbd_xml(cbd_graph)
     # This record has two Works, each with an Instance, and they reference each

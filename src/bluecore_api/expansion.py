@@ -10,7 +10,7 @@ def expand_resource_graph(db_resource: Instance | Work) -> list:
     Takes a Bluecore Work or Instance and iterates through the entity's
     other resources and adds the other resource RDF to the entity's graph.
     """
-    expanded_graph = load_jsonld(db_resource.data)
+    expanded_graph = load_jsonld(db_resource.data)  # ty: ignore[invalid-argument-type]
     expanded_graph = expand_resource_as_graph(db_resource, expanded_graph)
     return json.loads(expanded_graph.serialize(format="json-ld"))
 
