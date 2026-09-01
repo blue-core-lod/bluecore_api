@@ -5,7 +5,7 @@ the OtherResources we hold, or from the tables below when we hold nothing.
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from bluecore_models.models import Hub, Instance, OtherResource, Work
 from bluecore_models.namespaces import MADS
@@ -30,7 +30,7 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
     for row in resource.other_resources:
         other = row.other_resource
         try:
-            graph += load_jsonld(other.data)
+            graph += load_jsonld(cast(dict[str, Any], other.data))
         except Exception:
             logger.exception("Failed to load OtherResource %s", other.uuid)
             continue
@@ -44,7 +44,7 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
             session.query(OtherResource).where(OtherResource.uri.in_(cited)).all()
         ):
             try:
-                graph += load_jsonld(other.data)  # ty: ignore[invalid-argument-type]
+                graph += load_jsonld(cast(dict[str, Any], other.data))
             except Exception:
                 logger.exception("Failed to load OtherResource %s", other.uri)
                 continue

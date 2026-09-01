@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from typing import Any, cast
 
 from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Instance, Work
@@ -100,7 +101,7 @@ async def create_instance(
             raise HTTPException(
                 status_code=404, detail=f"Work {instance.work_id} not found"
             )
-        graph += load_jsonld(db_work.data)  # ty: ignore[invalid-argument-type]
+        graph += load_jsonld(cast(dict[str, Any], db_work.data))
         instance_subject = next(graph.subjects(RDF.type, BF.Instance))
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
     result_graph = save_graph(
@@ -142,7 +143,7 @@ async def update_instance(
                 raise HTTPException(
                     status_code=404, detail=f"Work {instance.work_id} not found"
                 )
-            graph += load_jsonld(db_work.data)  # ty: ignore[invalid-argument-type]
+            graph += load_jsonld(cast(dict[str, Any], db_work.data))
             instance_subject = next(graph.subjects(RDF.type, BF.Instance))
             graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Instance)

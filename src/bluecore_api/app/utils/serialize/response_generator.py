@@ -1,4 +1,5 @@
 import json
+from typing import Any, cast
 
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
 from bluecore_models.utils.graph import load_jsonld
@@ -21,7 +22,7 @@ from bluecore_api.schemas.schemas import HubSchema, InstanceSchema, WorkSchema
 def create_response(
     doc: ResourceBase, expand: bool, format: str, return_type: str
 ) -> Response:
-    graph = load_jsonld(doc.data)  # ty: ignore[invalid-argument-type]
+    graph = load_jsonld(cast(dict[str, Any], doc.data))
     if expand:
         graph = expand_resource_as_graph(doc, graph)
     return Response(

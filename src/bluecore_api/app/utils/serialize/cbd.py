@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Any
+from typing import Any, cast
 
 from bluecore_models.models import Instance, Work
 from bluecore_models.utils.graph import CONTEXT, load_jsonld
@@ -129,8 +129,8 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     """
     # The xml serialization uses the first @type to determine the root element,
     # so 'Work'/'Instance' has to come first in the list of types.
-    instance.data = reorder_instance_types(instance.data)  # ty: ignore[invalid-argument-type, invalid-assignment]
-    instance_graph: Graph = load_jsonld(instance.data)  # ty: ignore[invalid-argument-type]
+    instance.data = reorder_instance_types(cast(dict[str, Any], instance.data))  # ty: ignore[invalid-assignment]
+    instance_graph: Graph = load_jsonld(cast(dict[str, Any], instance.data))
     instance_graph = expand_resource_as_graph(instance, instance_graph)
 
     work = instance.work
