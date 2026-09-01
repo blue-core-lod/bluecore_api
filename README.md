@@ -184,6 +184,11 @@ To run all of the tests:
 To drop into the Python debugger when a test fails add the following parameters to above command:
 - `uv run pytest -s --pdb` 
 
+## Type Checking
+
+Bluecore API uses [ty]
+- `uv run ty check`
+
 [Blue Core Client]: https://github.com/blue-core-lod/bluecore-client
 [Blue Core Data Models]: https://github.com/blue-core-lod/bluecore-models
 [Blue Core Workflows]: https://github.com/blue-core-lod/bluecore-workflows

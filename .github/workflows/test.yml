@@ -1,5 +1,5 @@
 name: Test
-on: 
+on:
   - push
 jobs:
   build:
@@ -25,6 +25,9 @@ jobs:
 
       - name: Lint
         run: uv run ruff check
+
+      - name: Type Checking
+        run: uv run ty check
 
       - name: Run tests
         run: uv run pytest
