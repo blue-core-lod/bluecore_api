@@ -229,3 +229,33 @@ async def test_marc2bibframe_invalid_xml_returns_422(client):
         content=b"this is not xml at all!!",
     )
     assert resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# POST /marc2bibframe — Blue Core policy
+# ---------------------------------------------------------------------------
+
+DLC = "http://id.loc.gov/vocabulary/organizations/dlc"
+CBC = "http://id.loc.gov/vocabulary/organizations/cbc"
+ASSIGNER = "http://id.loc.gov/ontologies/bibframe/assigner"
+
+
+@pytest.mark.asyncio
+async def test_marc2bibframe_rewrites_the_dlc_assigner_to_cbc(client):
+    """Blue Core records are assigned by CBC, whatever the MARC says.
+
+    The bluecore-workflows marc2bf DAG applies the same rewrite, so the two
+    routes into Blue Core agree.
+    """
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=MARCXML,
+    )
+    assert resp.status_code == 200
+
+    assigners = {
+        ref.get("@id") for node in resp.json() for ref in (node.get(ASSIGNER) or [])
+    }
+    assert CBC in assigners
+    assert DLC not in assigners
