@@ -1,12 +1,8 @@
-from importlib.resources import files
-from io import BytesIO
-
-import rdflib
+from bluecore_models.utils.marc import replace_dlc_assigner
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from lxml import etree
-from pymarc import MARCReader
-from pymarc.marcxml import record_to_xml
+from marc_bibframe import marc_to_marcxml, marcxml_to_graph
 
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -15,34 +11,17 @@ from bluecore_api.middleware.bluecore_check_permissions import (
 
 endpoints = APIRouter()
 
-_COLLECTION_OPEN = (
-    b'<?xml version="1.0" encoding="UTF-8"?>'
-    b'<collection xmlns="http://www.loc.gov/MARC21/slim">'
-)
-_COLLECTION_CLOSE = b"</collection>"
-
-# Compile the LC marc2bibframe2 XSLT once at import time.
-_XSL_PATH = files("bluecore_api").joinpath("xsl/marc2bibframe2.xsl")
-_MARC2BF_TRANSFORM = etree.XSLT(etree.parse(str(_XSL_PATH)))
-
-
-def _marc_bytes_to_marcxml(marc_bytes: bytes) -> bytes:
-    """Convert raw binary MARC bytes to MARCXML bytes."""
-    parts = [_COLLECTION_OPEN]
-    reader = MARCReader(BytesIO(marc_bytes))
-    for record in reader:
-        parts.append(record_to_xml(record, namespace=False))
-    parts.append(_COLLECTION_CLOSE)
-    return b"".join(parts)
-
 
 def _marcxml_to_bibframe_jsonld(marcxml_bytes: bytes) -> str:
-    """Apply the LC marc2bibframe2 XSLT to MARCXML and return BIBFRAME as JSON-LD."""
-    doc = etree.fromstring(marcxml_bytes)
-    rdfxml_bytes = etree.tostring(_MARC2BF_TRANSFORM(doc))
-    g = rdflib.Graph()
-    g.parse(data=rdfxml_bytes, format="xml")
-    return g.serialize(format="json-ld")
+    """Convert MARCXML to Blue Core BIBFRAME as JSON-LD.
+
+    marc-bibframe does the conversion; replace_dlc_assigner then applies the
+    one piece of Blue Core policy that MARC-derived BIBFRAME needs, so this
+    endpoint and the bluecore-workflows marc2bf DAG produce the same thing.
+    """
+    graph = marcxml_to_graph(marcxml_bytes)
+    replace_dlc_assigner(graph)
+    return graph.serialize(format="json-ld")
 
 
 @endpoints.post(
@@ -80,7 +59,7 @@ async def marc2xml(
         raise HTTPException(status_code=422, detail="Empty MARC payload.")
 
     try:
-        marcxml_bytes = _marc_bytes_to_marcxml(marc_bytes)
+        marcxml_bytes = marc_to_marcxml(marc_bytes)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=422, detail=f"Failed to parse MARC data: {exc}")
 
@@ -99,7 +78,11 @@ async def marc2bibframe(
     file: UploadFile = File(None),
 ):
     """
-    Convert MARC to BIBFRAME JSON-LD using the LC marc2bibframe2 stylesheet.
+    Convert MARC to BIBFRAME JSON-LD, with Blue Core policy applied.
+
+    The conversion is the Library of Congress marc2bibframe2 stylesheet, via
+    the marc-bibframe package. Blue Core then names CBC rather than DLC as the
+    assigner of identifiers derived from the record.
 
     Accepts either:
     - Multipart form-data with a ``file`` field containing MARCXML or binary MARC21.
@@ -132,7 +115,7 @@ async def marc2bibframe(
     # If the payload looks like binary MARC21 (not XML), convert to MARCXML first.
     if not raw_bytes.lstrip().startswith(b"<"):
         try:
-            raw_bytes = _marc_bytes_to_marcxml(raw_bytes)
+            raw_bytes = marc_to_marcxml(raw_bytes)
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(
                 status_code=422, detail=f"Failed to parse MARC data: {exc}"
