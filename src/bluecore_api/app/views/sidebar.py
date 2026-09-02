@@ -4,7 +4,7 @@ Has Instance, Instance of, and a section per relationship term. The Hub-Work lin
 is a foreign key, set at ingest from bf:expressionOf, so it is read from there.
 """
 
-from typing import Any
+from collections.abc import Mapping
 from urllib.parse import urlparse
 
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
@@ -14,7 +14,7 @@ from bluecore_api.app.views import nodes, vocabulary
 
 
 def add_section(
-    sidebar: list[dict[str, Any]], label: str, values: list[dict[str, Any]]
+    sidebar: list[dict[str, object]], label: str, values: list[dict[str, object]]
 ) -> None:
     """Adds values under a heading, reusing that heading if it is already open.
 
@@ -24,12 +24,14 @@ def add_section(
     """
     for section in sidebar:
         if section["label"] == label:
-            section["values"] = nodes.dedupe(section["values"] + values)
+            existing = section["values"]
+            combined = (existing if isinstance(existing, list) else []) + values
+            section["values"] = nodes.dedupe(combined)
             return
     sidebar.append({"label": label, "values": values})
 
 
-def _instance_label(data: dict[str, Any]) -> str:
+def _instance_label(data: Mapping[str, object]) -> str:
     """Names an Instance by its imprint: "Hershey, PA: IGI Global, [2025]".
 
     Every Instance of a Work repeats that Work's title, so the title cannot tell
@@ -63,7 +65,7 @@ def _record_label(record: ResourceBase) -> str:
     return nodes.access_point(record.data)  # ty: ignore[invalid-argument-type]
 
 
-def record_link(record: ResourceBase) -> dict[str, Any]:
+def record_link(record: ResourceBase) -> dict[str, object]:
     """Builds every sidebar link, so a record reads the same on every page.
 
     Instances are named by their imprint, everything else by its access point.
@@ -72,8 +74,8 @@ def record_link(record: ResourceBase) -> dict[str, Any]:
 
 
 def _relation_value(
-    node: dict[str, Any], enumeration: str, records: dict[str, ResourceBase]
-) -> dict[str, Any] | None:
+    node: Mapping[str, object], enumeration: str, records: dict[str, ResourceBase]
+) -> dict[str, object] | None:
     """One line under a relation's heading, linked when there is somewhere to go.
 
     Ingestion leaves only a bare uri behind, so a record we hold is named from
@@ -111,7 +113,7 @@ def _records_by_uri(resource: ResourceBase, uris: list[str]) -> dict[str, Resour
     }
 
 
-def linked_records(resource: ResourceBase, key: str) -> list[dict[str, Any]]:
+def linked_records(resource: ResourceBase, key: str) -> list[dict[str, object]]:
     """Sidebar values for a key that points straight at other records by uri.
 
     Covers both ends of the Hub-Work pair -- expressionOf going up and
@@ -132,7 +134,7 @@ def linked_records(resource: ResourceBase, key: str) -> list[dict[str, Any]]:
 
 def relation_sections(
     resource: Hub | Work, label_map: dict[str, str]
-) -> list[dict[str, Any]]:
+) -> list[dict[str, object]]:
     """Groups a record's bf:relation into one sidebar section per relationship.
 
     A Work's Series section holds both the series as printed and the Hub that
@@ -165,7 +167,7 @@ def relation_sections(
             .all()
         }
 
-    sections: dict[str, list[dict[str, Any]]] = {}
+    sections: dict[str, list[dict[str, object]]] = {}
     for relation in relations:
         labels = vocabulary.relationship_labels(relation, label_map)
         enumeration = nodes.scalar(relation.get("seriesEnumeration", "")).strip()

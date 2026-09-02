@@ -69,13 +69,13 @@ def test_reorder_work_types():
     test_data = {
         "@type": ["Monograph", "Work", "Text"],
     }
-    got = reorder_work_types(test_data)
+    got = reorder_work_types(test_data)  # ty: ignore[invalid-argument-type]
     assert got["@type"] == ["Work", "Monograph", "Text"]
 
     test_data = {
         "@type": ["Work", "Monograph"],
     }
-    got = reorder_work_types(test_data)
+    got = reorder_work_types(test_data)  # ty: ignore[invalid-argument-type]
     assert got["@type"] == ["Work", "Monograph"]
 
 
@@ -83,13 +83,13 @@ def test_reorder_instance_types():
     test_data = {
         "@type": ["Physical", "Instance", "Text"],
     }
-    got = reorder_instance_types(test_data)
+    got = reorder_instance_types(test_data)  # ty: ignore[invalid-argument-type]
     assert got["@type"] == ["Instance", "Physical", "Text"]
 
     test_data = {
         "@type": ["Instance", "Physical"],
     }
-    got = reorder_instance_types(test_data)
+    got = reorder_instance_types(test_data)  # ty: ignore[invalid-argument-type]
     assert got["@type"] == ["Instance", "Physical"]
 
 

@@ -3,7 +3,7 @@
 FIELD_ORDER sets position, FIELD_LABELS sets wording, NON_FIELD_KEYS withholds.
 """
 
-from typing import Any
+from collections.abc import Mapping
 
 from bluecore_api.app.views import nodes, vocabulary
 
@@ -12,7 +12,7 @@ from bluecore_api.app.views import nodes, vocabulary
 STUB_STATUS = "http://id.loc.gov/vocabulary/mstatus/incmp"
 
 
-def _is_stub_status(value: Any) -> bool:
+def _is_stub_status(value: object) -> bool:
     """Whether a bf:status value is the one we record on a stub."""
     return any(
         isinstance(item, dict) and item.get("@id") == STUB_STATUS
@@ -115,9 +115,9 @@ FIELD_LABELS: dict[str, str] = {
 }
 
 
-def node_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def node_values(node: object, label_map: dict[str, str]) -> list[dict[str, object]]:
     """Generic rendering of a field's value(s) into display dicts."""
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         href = nodes.node_href(item)
         text = vocabulary.resolve_label(href, nodes.label_text(item), label_map)
@@ -138,14 +138,16 @@ def _identifier_url(bf_type: str, ident: str) -> str | None:
     return None
 
 
-def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def _identifier_values(
+    node: object, label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """An identifier written as "Issn: 1435-5655", led by the kind of number.
 
     The number is the link text where a registry page exists, so the kind stays
     outside the link; a qualifier or status trails it, since that is what tells
     two identical-looking numbers apart.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             continue
@@ -178,13 +180,15 @@ def _identifier_values(node: Any, label_map: dict[str, str]) -> list[dict[str, A
     return values
 
 
-def _contribution_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def _contribution_values(
+    node: object, label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """Each Contribution renders as its agent, optionally with the role.
 
     The Contribution node has no label of its own; the names are in the nested
     "agent" and "role" nodes.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
@@ -220,14 +224,14 @@ def _classification_kind(local_name: str) -> str:
 
 
 def _classification_extras(
-    item: dict[str, Any], label_map: dict[str, str]
-) -> list[dict[str, Any]]:
+    item: Mapping[str, object], label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """The assigner and status LC prints after a call number, each linked.
 
     The assigner shows its code ("dlc") the way LC does, rather than the
     organization's full name; the status shows its vocabulary label.
     """
-    extras: list[dict[str, Any]] = []
+    extras: list[dict[str, object]] = []
     for label, key in (("Assigner", "assigner"), ("Status", "status")):
         node = item.get(key)
         href = nodes.link_uri(node.get("@id")) if isinstance(node, dict) else None
@@ -243,14 +247,14 @@ def _classification_extras(
 
 
 def _classification_values(
-    node: Any, label_map: dict[str, str]
-) -> list[dict[str, Any]]:
+    node: object, label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """A call number written the way LC writes it.
 
     "LCC: ML31 .C595 (Assigner: dlc) (Status: used by assigner)" -- the kind,
     the number itself, then whoever assigned it and how far it is trusted.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
@@ -278,12 +282,14 @@ def _classification_values(
     return values
 
 
-def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def _provision_values(
+    node: object, label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """A provision activity written as "Publication: New York 1991".
 
     Led by its kind, then whichever of place, date and statement it carries.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
@@ -308,12 +314,12 @@ def _provision_values(node: Any, label_map: dict[str, str]) -> list[dict[str, An
     return values
 
 
-def _derived_from_values(key: str, node: Any) -> list[dict[str, Any]]:
+def _derived_from_values(key: str, node: object) -> list[dict[str, object]]:
     """Link a derivedFrom to its source record instead of showing a bare number.
 
     The label stays outside the link, so the line reads as a label plus a link.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         href = item.get("@id") if isinstance(item, dict) else item
         if not isinstance(href, str) or not href.startswith("http"):
@@ -328,13 +334,13 @@ def _derived_from_values(key: str, node: Any) -> list[dict[str, Any]]:
     return values
 
 
-def _note_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def _note_values(node: object, label_map: dict[str, str]) -> list[dict[str, object]]:
     """A note led by its kind: "description source: Created from auth.".
 
     The kind is a second @type beside bf:Note, and it is what tells otherwise
     similar notes apart.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
@@ -352,16 +358,16 @@ def _note_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
     return values
 
 
-def _admin_metadata_fields(node: Any) -> list[dict[str, Any]]:
+def _admin_metadata_fields(node: object) -> list[dict[str, object]]:
     """Each AdminMetadata block becomes its own 'Admin Metadata' field.
 
     Sub-properties show as-is, raw MARC included, pending the metadata group.
     """
-    fields: list[dict[str, Any]] = []
+    fields: list[dict[str, object]] = []
     for block in nodes.as_list(node):
         if not isinstance(block, dict):
             continue
-        values: list[dict[str, Any]] = []
+        values: list[dict[str, object]] = []
         for key, val in block.items():
             if key in ("@id", "@type"):
                 continue
@@ -412,7 +418,7 @@ AUTHORITY_URI_TAGS: tuple[tuple[str, str], ...] = (
 )
 
 
-def _scheme_tag(item: Any, href: str | None) -> str:
+def _scheme_tag(item: object, href: str | None) -> str:
     """The authority a term belongs to, as LC prints it: LCSH, GND, FAST.
 
     An LC scheme uri names its own tag, so that family needs no listing. Anything
@@ -433,13 +439,15 @@ def _scheme_tag(item: Any, href: str | None) -> str:
     return ""
 
 
-def _authority_values(node: Any, label_map: dict[str, str]) -> list[dict[str, Any]]:
+def _authority_values(
+    node: object, label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """A controlled term with the authority it came from: "Periodicals (LCGFT)".
 
     The tag sits outside the link, and it is what separates the several
     same-named headings a record can carry from different vocabularies.
     """
-    values: list[dict[str, Any]] = []
+    values: list[dict[str, object]] = []
     for item in nodes.as_list(node):
         href = nodes.node_href(item)
         text = vocabulary.resolve_label(href, nodes.label_text(item), label_map)
@@ -452,8 +460,8 @@ def _authority_values(node: Any, label_map: dict[str, str]) -> list[dict[str, An
 
 
 def _field(
-    label: str, key: str, data: dict[str, Any], label_map: dict[str, str]
-) -> dict[str, Any] | None:
+    label: str, key: str, data: Mapping[str, object], label_map: dict[str, str]
+) -> dict[str, object] | None:
     """Builds one field -- a heading and its values -- or None if it is empty.
 
     Most keys render generically; the few with a shape of their own, like
@@ -493,16 +501,16 @@ def _field_label(key: str) -> str:
 
 
 def build_fields(
-    data: dict[str, Any],
+    data: Mapping[str, object],
     label_map: dict[str, str],
     field_order: tuple[str, ...] = FIELD_ORDER,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, object]]:
     """The fields FIELD_ORDER names, in that order, then whatever else the record has.
 
     FIELD_ORDER is not a filter: dropping a key from it moves that field to the
     end, not off the page. Only NON_FIELD_KEYS withholds anything.
     """
-    fields: list[dict[str, Any]] = []
+    fields: list[dict[str, object]] = []
     for key in field_order:
         built = _field(_field_label(key), key, data, label_map)
         if built:
@@ -520,13 +528,18 @@ def build_fields(
     return fields
 
 
-def mark_bulleted(fields: list[dict[str, Any]]) -> None:
+def mark_bulleted(fields: list[dict[str, object]]) -> None:
     """Marks fields holding more than one value, so the template bullets (dashes) them.
 
     A single value reads as a statement, so LC leaves it plain and so do we.
     """
     for field in fields:
-        if field["label"] not in UNBULLETED_LABELS and len(field["values"]) > 1:
+        values = field["values"]
+        if (
+            field["label"] not in UNBULLETED_LABELS
+            and isinstance(values, list)
+            and len(values) > 1
+        ):
             field["bullets"] = True
 
 
@@ -536,7 +549,9 @@ IMPLIED_WORK_TYPES = frozenset({"Work"})
 IMPLIED_HUB_TYPES = frozenset({"Work"})
 
 
-def extra_types(data: dict[str, Any], implied: frozenset[str]) -> list[dict[str, Any]]:
+def extra_types(
+    data: Mapping[str, object], implied: frozenset[str]
+) -> list[dict[str, object]]:
     """The types to list under the Type heading, minus any the caller skips.
 
     A Work is typed bf:Work, bf:Text and bf:Monograph all at once. The page
@@ -550,7 +565,7 @@ def extra_types(data: dict[str, Any], implied: frozenset[str]) -> list[dict[str,
 
 
 def insert_type_field(
-    fields: list[dict[str, Any]], types: list[dict[str, Any]]
+    fields: list[dict[str, object]], types: list[dict[str, object]]
 ) -> None:
     """Add the Type field to `fields`, just below the last title heading.
 
@@ -567,7 +582,7 @@ def insert_type_field(
     fields.insert(after_titles, {"label": "Type", "values": types})
 
 
-def is_stub(data: dict[str, Any]) -> bool:
+def is_stub(data: Mapping[str, object]) -> bool:
     """Whether this record is a placeholder waiting for its own description."""
     return any(
         isinstance(block, dict) and _is_stub_status(block.get("status"))

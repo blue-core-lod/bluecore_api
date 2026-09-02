@@ -5,15 +5,15 @@ the OtherResources we hold, or from the tables below when we hold nothing.
 """
 
 import logging
-from typing import Any, cast
+from collections.abc import Mapping
 
 from bluecore_models.models import Hub, Instance, OtherResource, Work
 from bluecore_models.namespaces import MADS
-from bluecore_models.utils.graph import load_jsonld
 from rdflib import Graph, URIRef
 from rdflib.namespace import RDFS
 from sqlalchemy.orm import object_session
 
+from bluecore_api.app.utils.jsonld import load_jsonld_from_model
 from bluecore_api.app.views import nodes
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
     for row in resource.other_resources:
         other = row.other_resource
         try:
-            graph += load_jsonld(cast(dict[str, Any], other.data))
+            graph += load_jsonld_from_model(other.data)
         except Exception:
             logger.exception("Failed to load OtherResource %s", other.uuid)
             continue
@@ -44,7 +44,7 @@ def build_label_map(resource: Hub | Instance | Work) -> dict[str, str]:
             session.query(OtherResource).where(OtherResource.uri.in_(cited)).all()
         ):
             try:
-                graph += load_jsonld(cast(dict[str, Any], other.data))
+                graph += load_jsonld_from_model(other.data)
             except Exception:
                 logger.exception("Failed to load OtherResource %s", other.uri)
                 continue
@@ -129,7 +129,7 @@ EXTERNAL_RELATIONSHIPS = frozenset(
 )
 
 
-def is_exempt_relation(relation: dict[str, Any]) -> bool:
+def is_exempt_relation(relation: Mapping[str, object]) -> bool:
     """True for a relation asserting an external identity rather than a link."""
     return any(
         term.get("@id") in EXTERNAL_RELATIONSHIPS
@@ -183,7 +183,7 @@ def _drop_redundant_format(terms: list[tuple[str, str]]) -> list[tuple[str, str]
 
 
 def relationship_labels(
-    relation: dict[str, Any], label_map: dict[str, str]
+    relation: Mapping[str, object], label_map: dict[str, str]
 ) -> list[str]:
     """Every heading a relation belongs under, one per bf:relationship term.
 

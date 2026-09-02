@@ -3,8 +3,6 @@
 One entry point per type: main column from `fields`, sidebar from `sidebar`.
 """
 
-from typing import Any
-
 from bluecore_models.models import Hub, Instance, Work
 from fastapi import Request, Response
 
@@ -27,7 +25,7 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
     main_fields = fields.build_fields(data, label_map)  # ty: ignore[invalid-argument-type]
     fields.mark_bulleted(main_fields)
 
-    sidebar_sections: list[dict[str, Any]] = []
+    sidebar_sections: list[dict[str, object]] = []
     work = instance.work
     if work is not None:
         sidebar_sections.append(
@@ -72,7 +70,7 @@ def render_work_html(work: Work, request: Request) -> Response:
     )
     fields.mark_bulleted(main_fields)
 
-    sidebar_sections: list[dict[str, Any]] = []
+    sidebar_sections: list[dict[str, object]] = []
     expressed = sidebar.linked_records(work, "expressionOf")
     if expressed:
         sidebar.add_section(sidebar_sections, "Expression Of", expressed)
@@ -80,7 +78,7 @@ def render_work_html(work: Work, request: Request) -> Response:
     if instance_values:
         sidebar.add_section(sidebar_sections, "Has Instance", instance_values)
     for section in sidebar.relation_sections(work, label_map):
-        sidebar.add_section(sidebar_sections, section["label"], section["values"])
+        sidebar.add_section(sidebar_sections, str(section["label"]), section["values"])  # ty: ignore[invalid-argument-type]
     if "seriesStatement" in data:  # ty: ignore[unsupported-operator]
         # merges with the Series heading a bf:relation may already have opened,
         # rather than showing the reader the same heading twice
@@ -121,22 +119,23 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
     )
     fields.mark_bulleted(main_fields)
 
-    sidebar_sections: list[dict[str, Any]] = []
+    sidebar_sections: list[dict[str, object]] = []
     expressions = sidebar.linked_records(hub, "hasExpression")
     if expressions:
         sidebar.add_section(sidebar_sections, "Has Expression", expressions)
     for section in sidebar.relation_sections(hub, label_map):
-        sidebar.add_section(sidebar_sections, section["label"], section["values"])
+        sidebar.add_section(sidebar_sections, str(section["label"]), section["values"])  # ty: ignore[invalid-argument-type]
 
     # A described Hub names its Works above, so the foreign key catches only the
     # ones it does not -- a Work ingested after the Hub was described -- without
     # repeating anything already linked.
-    linked = {
-        value["href"]
-        for section in sidebar_sections
-        for value in section["values"]
-        if value["href"]
-    }
+    linked: set[object] = set()
+    for section in sidebar_sections:
+        section_values = section["values"]
+        if isinstance(section_values, list):
+            for val in section_values:
+                if isinstance(val, dict) and val.get("href"):
+                    linked.add(val["href"])
     work_values = nodes.dedupe(
         [
             sidebar.record_link(work)

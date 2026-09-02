@@ -115,7 +115,7 @@ def test_add_section_folds_into_an_open_section_of_the_same_name():
     """A transcribed seriesStatement and a bf:relation both belong under Series."""
     sidebar = [{"label": "Series", "values": [{"text": "a", "href": None}]}]
 
-    add_section(sidebar, "Series", [{"text": "b", "href": None}])
+    add_section(sidebar, "Series", [{"text": "b", "href": None}])  # ty: ignore[invalid-argument-type]
 
     assert len(sidebar) == 1
     assert [v["text"] for v in sidebar[0]["values"]] == ["a", "b"]
@@ -124,7 +124,7 @@ def test_add_section_folds_into_an_open_section_of_the_same_name():
 def test_add_section_drops_a_value_already_in_the_section():
     sidebar = [{"label": "Series", "values": [{"text": "a", "href": None}]}]
 
-    add_section(sidebar, "Series", [{"text": "a", "href": None}])
+    add_section(sidebar, "Series", [{"text": "a", "href": None}])  # ty: ignore[invalid-argument-type]
 
     assert len(sidebar[0]["values"]) == 1
 
@@ -132,7 +132,7 @@ def test_add_section_drops_a_value_already_in_the_section():
 def test_add_section_appends_a_new_heading():
     sidebar = [{"label": "Series", "values": [{"text": "a", "href": None}]}]
 
-    add_section(sidebar, "Has Instance", [{"text": "b", "href": None}])
+    add_section(sidebar, "Has Instance", [{"text": "b", "href": None}])  # ty: ignore[invalid-argument-type]
 
     assert [s["label"] for s in sidebar] == ["Series", "Has Instance"]
 
