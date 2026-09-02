@@ -1,6 +1,5 @@
 import json
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Mapping
 
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -12,7 +11,7 @@ JSONLD_CONTENT_TYPE = "application/ld+json"
 SINOPIA_CONTENT_TYPE = "application/vnd.sinopia+json"
 
 
-async def _request_payload(request: Request) -> tuple[Any, str]:
+async def _request_payload(request: Request) -> tuple[object, str]:
     """Read the JSON body and normalized request media type."""
     try:
         payload = await request.json()
@@ -23,7 +22,7 @@ async def _request_payload(request: Request) -> tuple[Any, str]:
     return payload, content_type
 
 
-def _normalize_data(payload: Any) -> Any:
+def _normalize_data(payload: object) -> object:
     """Inline the Bluecore @context in a Sinopia-shaped body's 'data' string."""
     if not (isinstance(payload, dict) and isinstance(payload.get("data"), str)):
         return payload
@@ -34,7 +33,7 @@ def _normalize_data(payload: Any) -> Any:
     return {**payload, "data": json.dumps(inline_context(data))}
 
 
-def _validate_schema(schema: type[BaseModel], payload: Any) -> BaseModel:
+def _validate_schema(schema: type[BaseModel], payload: object) -> BaseModel:
     """Validate payload as a FastAPI request body."""
     try:
         return schema.model_validate(payload)
@@ -72,8 +71,8 @@ def deserialize(schema: type[BaseModel]) -> Callable:
 
 
 def request_body_openapi(
-    schema: type[BaseModel], jsonld_example: dict[str, Any]
-) -> dict:
+    schema: type[BaseModel], jsonld_example: Mapping[str, object]
+) -> dict[str, object]:
     """
     Document both accepted request bodies for a create/update endpoint.
 

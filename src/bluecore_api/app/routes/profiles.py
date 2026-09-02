@@ -141,7 +141,7 @@ async def update_profile(
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
     if profile.data is not None:
-        db_profile.data = inline_context(json.loads(profile.data))
+        db_profile.data = inline_context(json.loads(profile.data))  # ty: ignore[invalid-assignment]
     db.commit()
     db.refresh(db_profile)
     return db_profile

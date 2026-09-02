@@ -73,7 +73,7 @@ def test_label_map_survives_an_unreadable_other_resource(monkeypatch):
     def explode(_data):
         raise ValueError("unparseable json-ld")
 
-    monkeypatch.setattr(vocabulary, "load_jsonld", explode)
+    monkeypatch.setattr(vocabulary, "load_jsonld_from_model", explode)
 
     assert build_label_map(work) == {}
 

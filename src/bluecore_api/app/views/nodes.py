@@ -10,7 +10,7 @@ The bottom layer: it knows nothing about fields, sidebars or vocabularies.
 """
 
 import re
-from typing import Any
+from collections.abc import Mapping
 from urllib.parse import urlparse
 
 from bluecore_api.constants import BLUECORE_URL
@@ -24,7 +24,7 @@ RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
 LC_ID_HOST = "id.loc.gov"
 
 
-def rdf_value(node: dict[str, Any]) -> Any:
+def rdf_value(node: Mapping[str, object]) -> object:
     """The rdf:value of a node, under whichever of the two key spellings it uses."""
     for key in RDF_VALUE_KEYS:
         if key in node:
@@ -32,7 +32,7 @@ def rdf_value(node: dict[str, Any]) -> Any:
     return None
 
 
-def as_list(value: Any) -> list:
+def as_list(value: object) -> list:
     """Wraps a value in a list unless it already is one, so callers can loop.
 
     Stored JSON-LD holds one title as a bare node and two as a list, and most
@@ -43,7 +43,7 @@ def as_list(value: Any) -> list:
     return value if isinstance(value, list) else [value]
 
 
-def scalar(value: Any) -> str:
+def scalar(value: object) -> str:
     """Flattens whatever a key holds -- text, a wrapped literal, a list -- to plain text."""
     if isinstance(value, str):
         return value
@@ -56,7 +56,7 @@ def scalar(value: Any) -> str:
     return str(value) if value is not None else ""
 
 
-def label_text(node: Any) -> str:
+def label_text(node: object) -> str:
     """The best readable label a node offers, trying each place one can hide.
 
     Titles, labels and codes all name a node in different records, so they are
@@ -112,7 +112,7 @@ def _is_bluecore(uri: str | None) -> bool:
     )
 
 
-def value(text: str, href: str | None = None) -> dict[str, Any]:
+def value(text: str, href: str | None = None) -> dict[str, object]:
     """One line for the page: its text, and a link if it has somewhere to go.
 
     Every rendered value passes through here, so the templates can count on the
@@ -121,7 +121,7 @@ def value(text: str, href: str | None = None) -> dict[str, Any]:
     return {"text": text, "href": href, "internal": _is_bluecore(href)}
 
 
-def referenced_uris(node: Any, found: set[str]) -> None:
+def referenced_uris(node: object, found: set[str]) -> None:
     """Collects every uri a record mentions, however deeply nested, into `found`.
 
     Used to look up the vocabulary terms a record only references.
@@ -138,7 +138,7 @@ def referenced_uris(node: Any, found: set[str]) -> None:
             referenced_uris(item, found)
 
 
-def link_uri(value: Any) -> str | None:
+def link_uri(value: object) -> str | None:
     """A uri worth linking to, or None.
 
     Blank-node ids like "_:b25" are strings but address nothing outside the
@@ -149,7 +149,7 @@ def link_uri(value: Any) -> str | None:
     return None
 
 
-def node_href(item: Any) -> str | None:
+def node_href(item: object) -> str | None:
     """Where a value should link to: its own uri, or the locator it points at.
 
     Supplementary content has no uri of its own -- only an electronicLocator.
@@ -201,16 +201,20 @@ def source_record_url(uri: str) -> str:
     return f"https://{LC_ID_HOST}{path}.html"
 
 
-def dedupe(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def dedupe(values: list[dict[str, object]]) -> list[dict[str, object]]:
     """Drop values that would render identically, keeping the original order.
 
     Records often repeat the same title or contribution.
     """
     seen: set[tuple[str, str, str | None]] = set()
-    unique: list[dict[str, Any]] = []
+    unique: list[dict[str, object]] = []
     for v in values:
         # the prefix counts: "Isbn: 123" and "Lccn: 123" are different lines
-        key = (v.get("prefix", ""), v["text"], v["href"])
+        key = (
+            str(v.get("prefix", "")),
+            str(v["text"]),
+            str(v["href"]) if v["href"] else None,
+        )
         if key in seen:
             continue
         seen.add(key)
@@ -218,13 +222,13 @@ def dedupe(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return unique
 
 
-def split_titles(node: Any) -> tuple[list[Any], list[Any]]:
+def split_titles(node: object) -> tuple[list[object], list[object]]:
     """Split bf:title into the title proper and any variants.
 
     A variant is any subtype of bf:Title; an untyped node counts as the proper one.
     """
-    primary: list[Any] = []
-    variant: list[Any] = []
+    primary: list[object] = []
+    variant: list[object] = []
     for item in as_list(node):
         if isinstance(item, dict):
             types = [id_tail(t) for t in as_list(item.get("@type"))]
@@ -234,7 +238,7 @@ def split_titles(node: Any) -> tuple[list[Any], list[Any]]:
     return primary, variant
 
 
-def title_of(data: dict[str, Any]) -> str:
+def title_of(data: Mapping[str, object]) -> str:
     """The one title that names a record, for a heading or a link.
 
     Falls back to the access point, then to any plain label, so authorities and
@@ -259,7 +263,7 @@ def capitalize(text: str) -> str:
     return text[:1].upper() + text[1:]
 
 
-def access_point(data: dict[str, Any]) -> str:
+def access_point(data: Mapping[str, object]) -> str:
     """The name LC writes a record under: "King, Stephen, 1947-. Dark tower".
 
     Held in bflc:aap or rdfs:label depending on the source; the title is a fallback.
