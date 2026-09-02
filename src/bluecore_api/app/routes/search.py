@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlencode
 
 from bluecore_models.models import (
@@ -345,19 +345,23 @@ async def search_profile(
     q: str = "",
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
+    nested: Literal["include", "exclude"] = "include",
 ) -> dict[str, Any]:
     """
     Search for profiles in the resource base.
     """
     stmt = select(Profile)
+    if nested == "exclude":
+        stmt = stmt.where(Profile.is_nested.is_(False))
 
     search_query = search_tsquery(q)
+    params: dict[str, str] = {}
     if search_query is not None:
         stmt = stmt.where(search_query.op("@@")(Profile.data_vector))
-        params: dict[str, str] = {"q": q}
-        links_query = f"&{urlencode(params)}"
-    else:
-        links_query = ""
+        params["q"] = q
+    if nested == "exclude":
+        params["nested"] = nested
+    links_query = f"&{urlencode(params)}" if params else ""
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
 
