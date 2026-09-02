@@ -1,12 +1,17 @@
 import pytest
 from pymarc import Field, Record, Subfield
+from pymarc.field import Indicators
 
 
 def _make_marc_bytes() -> bytes:
     """Return a minimal binary MARC21 record as bytes."""
     record = Record()
     record.add_field(
-        Field(tag="245", indicators=["1", "0"], subfields=[Subfield("a", "Test title")])
+        Field(
+            tag="245",
+            indicators=Indicators("1", "0"),
+            subfields=[Subfield("a", "Test title")],
+        )
     )
     return record.as_marc()
 
@@ -81,11 +86,19 @@ async def test_marc2xml_raw_body(client):
 async def test_marc2xml_multiple_records(client):
     record_a = Record()
     record_a.add_field(
-        Field(tag="245", indicators=["1", "0"], subfields=[Subfield("a", "Title A")])
+        Field(
+            tag="245",
+            indicators=Indicators("1", "0"),
+            subfields=[Subfield("a", "Title A")],
+        )
     )
     record_b = Record()
     record_b.add_field(
-        Field(tag="245", indicators=["1", "0"], subfields=[Subfield("a", "Title B")])
+        Field(
+            tag="245",
+            indicators=Indicators("1", "0"),
+            subfields=[Subfield("a", "Title B")],
+        )
     )
     multi_marc = record_a.as_marc() + record_b.as_marc()
 

@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import UTC, datetime
-from typing import Any
 
 from bluecore_models.models import BibframeOtherResources, OtherResource
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -73,7 +72,7 @@ async def read_other_resources(
     total = db.query(OtherResource).count()
     for doc in db_other_resources:
         add_context_to_data(doc)
-    payload: dict[str, Any] = {"resources": db_other_resources, "total": total}
+    payload: dict[str, object] = {"resources": db_other_resources, "total": total}
     payload["links"] = _generate_links(len(db_other_resources), limit, offset)
     return payload
 

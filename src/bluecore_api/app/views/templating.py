@@ -16,6 +16,6 @@ SINOPIA_BASE_URL = os.environ.get("SINOPIA_BASE_URL", "https://dev.bcld.info/sin
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
-templates.env.globals["BLUECORE_URL"] = BLUECORE_URL
-templates.env.globals["MARVA_BASE_URL"] = MARVA_BASE_URL
-templates.env.globals["SINOPIA_BASE_URL"] = SINOPIA_BASE_URL
+templates.env.globals["BLUECORE_URL"] = BLUECORE_URL  # ty: ignore[invalid-assignment]
+templates.env.globals["MARVA_BASE_URL"] = MARVA_BASE_URL  # ty: ignore[invalid-assignment]
+templates.env.globals["SINOPIA_BASE_URL"] = SINOPIA_BASE_URL  # ty: ignore[invalid-assignment]

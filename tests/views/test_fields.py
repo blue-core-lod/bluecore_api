@@ -114,7 +114,7 @@ def test_identifier_values_skips_non_dict_items():
 
 def _fields(data):
     return {
-        field["label"]: [v["text"] for v in field["values"]]
+        field["label"]: [v["text"] for v in field["values"]]  # ty: ignore[not-iterable]
         for field in build_fields(data, {})
     }
 
@@ -175,7 +175,7 @@ def test_a_record_with_only_variant_titles_still_has_a_heading():
 
 def _admin_values(block):
     fields = _admin_metadata_fields(block)
-    return [v for f in fields for v in f["values"]]
+    return [v for f in fields for v in f["values"]]  # ty: ignore[not-iterable]
 
 
 def test_derived_from_links_the_identifier():
@@ -232,7 +232,7 @@ def test_a_property_no_list_names_still_gets_a_section():
 
     assert "Something brand new" in _labels(fields)
     values = next(f for f in fields if f["label"] == "Something brand new")["values"]
-    assert values[0]["text"] == "a value we have never seen"
+    assert values[0]["text"] == "a value we have never seen"  # ty: ignore[not-subscriptable]
 
 
 def test_named_properties_keep_their_place_and_the_rest_follow():
@@ -301,8 +301,8 @@ def test_supplementary_content_is_named_by_its_note_and_linked_to_its_locator():
     fields = build_fields(data, {})
 
     field = next(f for f in fields if f["label"] == "Supplementary content")
-    assert field["values"][0]["text"] == "Contributor biographical information"
-    assert field["values"][0]["href"] == locator
+    assert field["values"][0]["text"] == "Contributor biographical information"  # ty: ignore[not-subscriptable]
+    assert field["values"][0]["href"] == locator  # ty: ignore[not-subscriptable]
 
 
 def test_every_ordered_key_gets_a_readable_heading():
@@ -340,7 +340,7 @@ def test_dropping_title_from_the_list_does_not_hide_it():
     fields = build_fields(data, {}, without_title)
     title = next(f for f in fields if f["label"] == "Title")
     # the title proper, still not mixed in with the variants
-    assert [v["text"] for v in title["values"]] == ["Wizard and glass"]
+    assert [v["text"] for v in title["values"]] == ["Wizard and glass"]  # ty: ignore[not-iterable]
     assert "Other Titles (e.g. Variant)" in _labels(fields)
 
     # and with neither title entry declared it still reaches the page
@@ -415,7 +415,7 @@ def test_classification_reads_the_way_lc_writes_it():
         },
     }
 
-    (value,) = build_fields(data, {UBA: "used by assigner"})[0]["values"]
+    (value,) = build_fields(data, {UBA: "used by assigner"})[0]["values"]  # ty: ignore[not-iterable]
 
     assert value["text"] == "LCC: ML31 .C595"
     assert value["suffixes"] == [
@@ -434,7 +434,7 @@ def test_classification_without_an_assigner_or_status_has_no_qualifiers():
         },
     }
 
-    (value,) = build_fields(data, {})[0]["values"]
+    (value,) = build_fields(data, {})[0]["values"]  # ty: ignore[not-iterable]
 
     assert value["text"] == "DDC: 813/.54"
     assert "suffixes" not in value
@@ -455,7 +455,7 @@ def test_a_blank_node_agent_is_named_but_not_linked():
         },
     }
 
-    (value,) = build_fields(data, {})[0]["values"]
+    (value,) = build_fields(data, {})[0]["values"]  # ty: ignore[not-iterable]
 
     assert value["text"] == "King, Stephen, 1947-"
     assert value["href"] is None
@@ -472,7 +472,7 @@ def test_a_blank_node_classification_assigner_is_not_linked():
         },
     }
 
-    (value,) = build_fields(data, {})[0]["values"]
+    (value,) = build_fields(data, {})[0]["values"]  # ty: ignore[not-iterable]
 
     assert value["suffixes"] == [{"label": "Assigner", "text": "dlc", "href": None}]
 
@@ -543,7 +543,7 @@ def test_an_untagged_term_keeps_its_label_and_link():
         "subject": {"@id": unknown, "rdfs:label": "Video games"},
     }
 
-    (value,) = build_fields(data, {})[0]["values"]
+    (value,) = build_fields(data, {})[0]["values"]  # ty: ignore[not-iterable]
 
     assert value["text"] == "Video games"
     assert value["href"] == unknown

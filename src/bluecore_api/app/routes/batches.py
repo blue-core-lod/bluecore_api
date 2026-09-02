@@ -57,6 +57,8 @@ def _xml_to_jsonld_and_save(
 )
 async def create_batch(batch: BatchCreateSchema):
     """Create a batch from a URI (unchanged behavior)."""
+    if not batch.uri:
+        raise HTTPException(status_code=422, detail="uri is required")
     user_uid = CURRENT_USER_ID.get()  # => "anonymous" if no token
     try:
         workflow_id = await workflow.create_batch_from_uri(
@@ -93,7 +95,8 @@ async def create_batch_file(
 
         # Case A: multipart file present -> PASS THROUGH (legacy)
         if file and getattr(file, "filename", None):
-            batch_file = f"{uuid4()}/{file.filename}"
+            filename = file.filename or "upload"
+            batch_file = f"{uuid4()}/{filename}"
             batch_path = upload_root / batch_file
             batch_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -105,7 +108,7 @@ async def create_batch_file(
             workflow_id = await workflow.create_batch_from_uri(
                 file_location,
                 user_uid=user_uid,
-                dag_id=_dag_for_filename(file.filename),
+                dag_id=_dag_for_filename(filename),
             )
             return {"uri": file_location, "workflow_id": workflow_id}
 

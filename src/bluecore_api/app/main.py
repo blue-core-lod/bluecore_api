@@ -132,8 +132,8 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
 async def scope_mapper(claim_auth: list) -> list:
-    """Role mapper"""
-    permissions = claim_auth.get("roles", [])
+    """Role mapper — keycloak middleware passes the decoded claim as a dict at runtime."""
+    permissions = claim_auth.get("roles", [])  # ty: ignore[unresolved-attribute]
     return permissions
 
 
@@ -145,9 +145,9 @@ else:
     keycloak_config = KeycloakConfiguration(
         use_introspection_endpoint=os.getenv("USE_KEYCLOAK_INTROSPECTION", "false")
         == "true",
-        url=os.getenv("KEYCLOAK_INTERNAL_URL"),
+        url=os.getenv("KEYCLOAK_INTERNAL_URL", ""),
         realm="bluecore",
-        client_id=os.getenv("API_KEYCLOAK_CLIENT_ID"),
+        client_id=os.getenv("API_KEYCLOAK_CLIENT_ID", ""),
         authorization_method=AuthorizationMethod.CLAIM,
         authorization_claim="realm_access",
     )

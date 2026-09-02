@@ -1,9 +1,9 @@
 import json
 
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
-from bluecore_models.utils.graph import load_jsonld
 from fastapi import HTTPException, Request, Response
 
+from bluecore_api.app.utils.jsonld import load_jsonld_from_model
 from bluecore_api.app.utils.serialize.cbd import (
     cbd_jsonld,
     cbd_xml,
@@ -21,7 +21,7 @@ from bluecore_api.schemas.schemas import HubSchema, InstanceSchema, WorkSchema
 def create_response(
     doc: ResourceBase, expand: bool, format: str, return_type: str
 ) -> Response:
-    graph = load_jsonld(doc.data)
+    graph = load_jsonld_from_model(doc.data)
     if expand:
         graph = expand_resource_as_graph(doc, graph)
     return Response(
@@ -93,8 +93,8 @@ def as_vnd_sinopia_json(doc: ResourceBase, expand: bool) -> Response:
 
 def jsonld(doc: ResourceBase, expand: bool) -> HubSchema | InstanceSchema | WorkSchema:
     if expand:
-        doc.data = expand_resource_graph(doc)
-    doc.data["@context"] = CONTEXT_URL
+        doc.data = expand_resource_graph(doc)  # ty: ignore[invalid-assignment]
+    doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
 
     if isinstance(doc, Instance):
         return InstanceSchema.model_validate(doc)

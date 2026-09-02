@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 AIRFLOW_USER = os.environ.get("AIRFLOW_WWW_USER_USERNAME")
 AIRFLOW_PASSWORD = os.environ.get("AIRFLOW_WWW_USER_PASSWORD")
-AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL").rstrip("/")
+AIRFLOW_INTERNAL_URL = os.environ.get("AIRFLOW_INTERNAL_URL", "").rstrip("/")
 
 
 async def create_batch_from_uri(

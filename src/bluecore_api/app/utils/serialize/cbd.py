@@ -1,14 +1,15 @@
 import copy
 import json
-from typing import Any
+from collections.abc import Callable
 
 from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import CONTEXT, load_jsonld
+from bluecore_models.utils.graph import CONTEXT
 from fastapi import HTTPException
 from lxml import etree
 from rdflib import Graph, Namespace
 from sqlalchemy.orm import object_session
 
+from bluecore_api.app.utils.jsonld import load_jsonld_from_model, model_data_as_dict
 from bluecore_api.constants import BibframeType
 from bluecore_api.expansion import expand_resource_as_graph
 
@@ -31,21 +32,23 @@ def top_level_resource(elem) -> bool:
     return any(elem.tag.endswith(bf_type) for bf_type in TOP_LEVEL_TYPES)
 
 
-def reorder_work_types(work_data: dict[str, Any]) -> dict[str, Any]:
+def reorder_work_types(work_data: dict[str, object]) -> dict[str, object]:
     """Reorder work types to ensure 'Work' is first"""
-    if isinstance(work_data.get("@type"), list):
-        work_data["@type"].sort(key=lambda x: x != BibframeType.WORK)  # type: ignore
+    types = work_data.get("@type")
+    if isinstance(types, list):
+        types.sort(key=lambda x: x != BibframeType.WORK)
     return work_data
 
 
-def reorder_instance_types(instance_data: dict[str, Any]) -> dict[str, Any]:
+def reorder_instance_types(instance_data: dict[str, object]) -> dict[str, object]:
     """Reorder instance types to ensure 'Instance' is first"""
-    if isinstance(instance_data.get("@type"), list):
-        instance_data["@type"].sort(key=lambda x: x != BibframeType.INSTANCE)  # type: ignore
+    types = instance_data.get("@type")
+    if isinstance(types, list):
+        types.sort(key=lambda x: x != BibframeType.INSTANCE)
     return instance_data
 
 
-def _as_list(value: Any) -> list:
+def _as_list(value: object) -> list:
     if value is None:
         return []
     return value if isinstance(value, list) else [value]
@@ -57,9 +60,10 @@ def related_works(work: Work) -> list[Work]:
     edition of a printed book. LC's CBD includes them, so ours does too. Only
     ones with a uri: anything LC described in place is already in this graph.
     """
+    data = model_data_as_dict(work.data)
     uris = {
         item["@id"]
-        for relation in _as_list(work.data.get("relation"))
+        for relation in _as_list(data.get("relation"))
         if isinstance(relation, dict)
         for item in _as_list(relation.get("associatedResource"))
         if isinstance(item, dict) and str(item.get("@id", "")).startswith("http")
@@ -91,11 +95,13 @@ INSTANCE_THUMBNAIL = frozenset(
     {"@id", "@type", "title", "identifiedBy", "publicationStatement", "extent"}
 )
 
+type _Reorder = Callable[[dict[str, object]], dict[str, object]]
+
 
 def add_resource(
     graph: Graph,
     resource: Instance | Work,
-    reorder,
+    reorder: _Reorder,
     keep: frozenset[str] | None = None,
 ) -> Graph:
     """
@@ -105,7 +111,7 @@ def add_resource(
     a thumbnail names the resource rather than describing it. The data is copied
     first so the record we were handed keeps the shape it has in the database.
     """
-    data = dict(reorder(resource.data))
+    data = dict(reorder(model_data_as_dict(resource.data)))
     if keep is not None:
         data = {key: value for key, value in data.items() if key in keep}
     data["@context"] = CONTEXT
@@ -129,8 +135,8 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     """
     # The xml serialization uses the first @type to determine the root element,
     # so 'Work'/'Instance' has to come first in the list of types.
-    instance.data = reorder_instance_types(instance.data)
-    instance_graph: Graph = load_jsonld(instance.data)
+    instance.data = reorder_instance_types(model_data_as_dict(instance.data))  # ty: ignore[invalid-assignment]
+    instance_graph: Graph = load_jsonld_from_model(instance.data)
     instance_graph = expand_resource_as_graph(instance, instance_graph)
 
     work = instance.work

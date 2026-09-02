@@ -91,7 +91,7 @@ async def create_hub(
     hub_uri = str(next(result_graph.subjects(RDF.type, BF.Hub)))
     doc = db.query(Hub).filter(Hub.uri == hub_uri).first()
     if doc:
-        doc.data["@context"] = CONTEXT_URL
+        doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
     return doc
 
 
@@ -116,7 +116,7 @@ async def update_hub(
         graph = load_jsonld(json.loads(hub.data))
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Hub)
         db.refresh(db_hub)
-        db_hub.data["@context"] = CONTEXT_URL
+        db_hub.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
 
     return db_hub
 

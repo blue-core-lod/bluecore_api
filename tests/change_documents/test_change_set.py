@@ -38,8 +38,9 @@ def update_works(db: Session, start_index: int) -> None:
     for i in (1, 2):
         index = i + start_index
         work = db.query(Work).filter(Work.id == index).first()
+        assert work is not None
         # using the ** splat here preserves the existing @id and @type
-        work.data = {**work.data, "title": f"jon_works_{index}_update"}
+        work.data = {**work.data, "title": f"jon_works_{index}_update"}  # ty: ignore[invalid-assignment, invalid-argument-type]
     db.commit()
 
 
@@ -67,8 +68,8 @@ def update_instances(db: Session) -> None:
     instances = db.query(Instance).all()
     for instance in instances:
         # using the ** splat here preserves the existing @id and @type
-        instance.data = {
-            **instance.data,
+        instance.data = {  # ty: ignore[invalid-assignment]
+            **instance.data,  # ty: ignore[invalid-argument-type]
             "title": f"jon_instances_{instance.id}_update",
         }
 

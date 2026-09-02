@@ -1,6 +1,5 @@
 import os
 import re
-from typing import Any
 from urllib.parse import urlencode
 
 from bluecore_models.models import (
@@ -209,7 +208,7 @@ def generate_links(
 def create_count_query(query: Select[tuple[ResourceBase | OtherResource]]):
     query = query.order_by(None).options(noload("*"))
 
-    return query.with_only_columns(  # type: ignore[union-attr]
+    return query.with_only_columns(
         func.count(),
         maintain_column_froms=True,
     )
@@ -228,7 +227,7 @@ async def search(
     q: str = "",
     type: SearchType = SearchType.ALL,
     scope: SearchScope = SearchScope.ALL,
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """
     Search for Works, Instances and Hubs.
     It transforms the query string to be compatible with PostgreSQL full-text search.
@@ -345,7 +344,7 @@ async def search_profile(
     q: str = "",
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
-) -> dict[str, Any]:
+) -> dict[str, object]:
     """
     Search for profiles in the resource base.
     """

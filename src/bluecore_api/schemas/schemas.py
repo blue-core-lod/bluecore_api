@@ -1,6 +1,5 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -17,7 +16,7 @@ class ErrorResponse(BaseModel):
 class ResourceBaseSchema(BaseModel):
     id: int | None
     type: str
-    data: dict[str, Any]
+    data: dict[str, object]
     uri: str | None
     uuid: UUID | None
     created_at: datetime | None
@@ -44,7 +43,7 @@ class InstanceUpdateSchema(BaseModel):
 
 class OtherResourceSchema(BaseModel):
     id: int
-    data: dict[str, Any] | list[Any]
+    data: dict[str, object] | list[object]
     uri: str | None = None
 
 
@@ -62,7 +61,7 @@ class ProfileSchema(BaseModel):
     id: int
     uuid: UUID | None = None
     uri: str | None = None
-    data: dict[str, Any] | list[Any]
+    data: dict[str, object] | list[object]
 
     model_config = ConfigDict(from_attributes=True)
 
