@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -96,15 +97,92 @@ _mcp_write_permission = CheckPermissions(
     ["create", "update"], match_strategy=MatchStrategy.OR
 )
 
+"""
+JSON-RPC methods that are part of connecting and looking around rather than
+doing anything. A client cannot get as far as calling a tool without these, so
+gating them would leave it staring at a server with zero tools.
+"""
+_PUBLIC_MCP_METHODS = frozenset(
+    {
+        "initialize",
+        "notifications/initialized",
+        "notifications/cancelled",
+        "ping",
+        "tools/list",
+        "resources/list",
+        "resources/templates/list",
+        "prompts/list",
+    }
+)
+
+
+async def _peek_jsonrpc(request: Request):
+    """
+    Read the JSON-RPC body and put it back.
+
+    The MCP mount pulls the request off the raw ASGI `receive` channel rather
+    than through `Request.body()`, so a body consumed here is a body the mount
+    never sees. Replay it once, then hand the channel back so the mount still
+    notices a client disconnect.
+    """
+    body = await request.body()
+    original_receive = request.receive
+    replayed = False
+
+    async def receive():
+        nonlocal replayed
+        if not replayed:
+            replayed = True
+            return {"type": "http.request", "body": body, "more_body": False}
+        return await original_receive()
+
+    request._receive = receive
+
+    try:
+        return json.loads(body)
+    except ValueError:
+        return None
+
+
+def _is_public_mcp_message(message) -> bool:
+    """A single JSON-RPC message that an anonymous caller may send."""
+    if not isinstance(message, dict):
+        return False
+    method = message.get("method")
+    if method in _PUBLIC_MCP_METHODS:
+        return True
+    if method == "tools/call":
+        name = (message.get("params") or {}).get("name")
+        # Defined below: the tool list can only be built once the mount exists,
+        # and the mount needs `mcp_permissions` to be defined first.
+        return name in _MCP_READ_ONLY_TOOLS
+    return False
+
 
 async def mcp_permissions(request: Request, auth=Depends(get_auth)):
     """
     Auth for the MCP mount.
-    GET /mcp (the SSE/discovery stream) is public it's and bypassed upstream by
-    BypassKeycloakForGet, so get_auth is None here
+
+    MCP's Streamable HTTP transport POSTs everything, so the HTTP verb says
+    nothing about whether a message changes data -- `get_work` and `delete_work`
+    arrive identically. Decide on the JSON-RPC method instead: connecting,
+    listing, and calling a read-only tool are public (matching the REST API's
+    public GETs); anything else needs create/update.
+
+    GET (the server-to-client stream) and DELETE (ending your own session) carry
+    no JSON-RPC body and change nothing, so they are public too.
     """
-    if request.method == "GET":
+    if request.method in ("GET", "DELETE"):
         return
+
+    message = await _peek_jsonrpc(request)
+    # A batch is public only if every message in it is.
+    if isinstance(message, list) and message:
+        if all(_is_public_mcp_message(m) for m in message):
+            return
+    elif _is_public_mcp_message(message):
+        return
+
     _mcp_write_permission(user=None, auth=auth or [])
 
 
@@ -113,6 +191,19 @@ mcp = FastApiMCP(
     auth_config=AuthConfig(dependencies=[Depends(mcp_permissions)]),
 )
 mcp.mount_http()
+
+"""
+Tools backed by a GET endpoint, which by definition cannot change anything.
+Derived from the mount's own operation map rather than hand-listed, so a new
+endpoint can't drift out of step with the check -- and so a misleading name
+can't fool it: `get_works` is a POST that creates a Work, and is correctly
+absent here.
+"""
+_MCP_READ_ONLY_TOOLS = frozenset(
+    name
+    for name, operation in mcp.operation_map.items()
+    if operation.get("method", "").upper() == "GET"
+)
 
 # Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/views/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

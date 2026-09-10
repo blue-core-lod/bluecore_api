@@ -52,6 +52,20 @@ def _with_api_root(paths: set[str]) -> set[str]:
 class BypassKeycloakForGet:
     """Add specific GET paths to bypass keycloak authentication"""
 
+    """
+    The MCP mount. Unlike the REST API, MCP's Streamable HTTP transport sends
+    *every* client message as a POST -- `initialize`, `tools/list` and every
+    `tools/call`, read or write alike -- so a verb-based bypass would gate the
+    read-only tools behind create/update just as tightly as `delete_work`. An
+    MCP request that offers no credentials is therefore handed to the mount, and
+    `mcp_permissions` decides on the JSON-RPC method instead. Anything carrying
+    an Authorization header still goes through Keycloak, so authenticated writes
+    are unaffected. DELETE is included because it only ends the caller's own
+    session; it changes no data.
+    """
+    MCP_PATHS = _with_api_root({"/mcp"})
+    MCP_ANONYMOUS_METHODS = frozenset({"POST", "DELETE"})
+
     EXACT_PATHS = _with_api_root(
         {
             "/",
@@ -82,17 +96,36 @@ class BypassKeycloakForGet:
         self.inner_app = app
         self.keycloak_middleware = keycloak_middleware
 
+    def _is_anonymous_mcp_request(self, scope) -> bool:
+        """
+        A credential-free MCP message, which `mcp_permissions` gates by JSON-RPC
+        method rather than HTTP verb.
+
+        This looks at the header rather than the body on purpose: reading a body
+        at the ASGI level means buffering it and replaying `receive`, which the
+        dependency is a much better place to do.
+        """
+        if scope["method"] not in self.MCP_ANONYMOUS_METHODS:
+            return False
+        if not any(scope["path"].startswith(p) for p in self.MCP_PATHS):
+            return False
+        return not any(name == b"authorization" for name, _ in scope.get("headers", []))
+
     async def __call__(self, scope, receive, send):
         method = scope["method"]
         path = scope["path"]
 
         if (
-            method == "GET"
-            and (
-                path in self.EXACT_PATHS
-                or any(path.startswith(prefix) for prefix in self.PREFIX_PATHS)
+            (
+                method == "GET"
+                and (
+                    path in self.EXACT_PATHS
+                    or any(path.startswith(prefix) for prefix in self.PREFIX_PATHS)
+                )
             )
-        ) or method == "OPTIONS":
+            or method == "OPTIONS"
+            or self._is_anonymous_mcp_request(scope)
+        ):
             await self.inner_app(scope, receive, send)
         else:
             await self.keycloak_middleware(scope, receive, send)
