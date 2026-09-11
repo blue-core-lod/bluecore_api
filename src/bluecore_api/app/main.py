@@ -23,6 +23,7 @@ from bluecore_models.utils.graph import CONTEXT
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
 from bluecore_api.app.routes.convert import endpoints as convert_endpoints
 from bluecore_api.app.routes.export import endpoints as export_routes
+from bluecore_api.app.routes.health import endpoints as health_routes
 from bluecore_api.app.routes.hubs import endpoints as hub_routes
 from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
@@ -67,6 +68,7 @@ openapi_tags = [
     {"name": "Batches", "description": "Bulk ingestion via Airflow."},
     {"name": "Export", "description": "Resource export."},
     {"name": "Convert", "description": "Format conversion utilities."},
+    {"name": "Health", "description": "Service health check."},
 ]
 
 """Init base app"""
@@ -113,6 +115,10 @@ mcp = FastApiMCP(
     auth_config=AuthConfig(dependencies=[Depends(mcp_permissions)]),
 )
 mcp.mount_http()
+
+# Registered after the MCP mount so the health check stays out of the tool list;
+# it's for load balancers and deploy checks, not for MCP clients.
+base_app.include_router(health_routes, tags=["Health"])
 
 # Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/views/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

@@ -59,6 +59,7 @@ class BypassKeycloakForGet:
             "/context.jsonld",
             "/openapi.json",
             "/favicon.ico",
+            "/health",
         }
     )
 

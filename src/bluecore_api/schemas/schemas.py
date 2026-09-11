@@ -130,6 +130,11 @@ class SearchProfileResultSchema(BaseModel):
     total: int
 
 
+class HealthSchema(BaseModel):
+    status: str
+    version: str
+
+
 class ExportSchema(BaseModel):
     instance_uri: str
     local_id: str | None = None
