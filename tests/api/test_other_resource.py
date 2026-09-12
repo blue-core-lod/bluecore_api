@@ -152,7 +152,9 @@ def test_read_slice_offset(client, db_session):
     assert returned_payload["links"]["prev"].endswith("?limit=5&offset=0")
     assert "next" not in returned_payload["links"]
     first_document = returned_payload["resources"][0]["data"]
-    assert first_document["rdfs:label"] == "A label for 6"
+    # a bare string or a one-element list, depending on which bluecore-models
+    # framed the record
+    assert first_document["rdfs:label"] in ("A label for 6", ["A label for 6"])
 
 
 def test_delete_other_resource(client, db_session, other_graph):
