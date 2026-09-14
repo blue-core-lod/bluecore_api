@@ -165,10 +165,8 @@ def _identifier_values(
             value["external"] = True
 
         qualifier = nodes.scalar(item.get("qualifier", "")).strip()
-        status = item.get("status")
-        status_href = (
-            nodes.link_uri(status.get("@id")) if isinstance(status, dict) else None
-        )
+        status = nodes.first_node(item.get("status"))
+        status_href = nodes.link_uri(status.get("@id")) if status else None
         status_text = vocabulary.resolve_label(
             status_href, nodes.label_text(status) if status else "", label_map
         )
@@ -193,15 +191,13 @@ def _contribution_values(
         if not isinstance(item, dict):
             values.append(nodes.value(nodes.label_text(item)))
             continue
-        agent = item.get("agent")
-        agent_href = (
-            nodes.link_uri(agent.get("@id")) if isinstance(agent, dict) else None
-        )
+        agent = nodes.first_node(item.get("agent"))
+        agent_href = nodes.link_uri(agent.get("@id")) if agent else None
         agent_text = vocabulary.resolve_label(
             agent_href, nodes.label_text(agent) if agent else "", label_map
         )
-        role = item.get("role")
-        role_href = nodes.link_uri(role.get("@id")) if isinstance(role, dict) else None
+        role = nodes.first_node(item.get("role"))
+        role_href = nodes.link_uri(role.get("@id")) if role else None
         role_text = vocabulary.resolve_label(
             role_href, nodes.label_text(role) if role else "", label_map
         )
@@ -298,10 +294,8 @@ def _provision_values(
             t for t in nodes.as_list(item.get("@type")) if "ProvisionActivity" not in t
         ]
         kind = nodes.id_tail(types[0]) if types else "Provision"
-        place = item.get("place")
-        place_href = (
-            nodes.link_uri(place.get("@id")) if isinstance(place, dict) else None
-        )
+        place = nodes.first_node(item.get("place"))
+        place_href = nodes.link_uri(place.get("@id")) if place else None
         parts = [
             vocabulary.resolve_label(
                 place_href, nodes.label_text(place) if place else "", label_map
@@ -428,8 +422,8 @@ def _scheme_tag(item: object, href: str | None) -> str:
     An authority in neither is tagged with nothing, and the term renders with its
     label and link intact -- only the parenthesised marker is missing.
     """
-    source = item.get("source") if isinstance(item, dict) else None
-    source_id = source.get("@id") if isinstance(source, dict) else None
+    source = nodes.first_node(item.get("source")) if isinstance(item, dict) else None
+    source_id = source.get("@id") if source else None
     if source_id and "Schemes/" in source_id:
         return nodes.id_tail(source_id).upper()
     for uri in (source_id, href):

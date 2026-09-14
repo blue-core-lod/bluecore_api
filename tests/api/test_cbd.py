@@ -98,8 +98,14 @@ def test_cbd(client: TestClient, db_session: Session):
     work_id: int = work.id  # ty: ignore[unresolved-attribute]
     assert work is not None
     admin_metadata: list = work.data["adminMetadata"]  # ty: ignore[invalid-argument-type]
+    # derivedFrom is a bare node or a one-element list, depending on which
+    # bluecore-models framed the record; accept either.
     work_derived_from: str = next(
-        admin_md["derivedFrom"]["@id"]
+        (
+            derived[0]
+            if isinstance(derived := admin_md["derivedFrom"], list)
+            else derived
+        )["@id"]
         for admin_md in admin_metadata
         if "derivedFrom" in admin_md
     )
