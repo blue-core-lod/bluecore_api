@@ -16,6 +16,11 @@ HUB_UUID = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
 
 ORIGINAL_TITLE = "first title"
 UPDATED_TITLE = "second title"
+# bluecore-models >=0.30.0 frames every property as a list, even a single value
+# (frame_jsonld -> _as_arrays). The seeds below stay scalar -- framing happens
+# on write -- so reads have to expect the wrapped form.
+FRAMED_ORIGINAL_TITLE = [ORIGINAL_TITLE]
+FRAMED_UPDATED_TITLE = [UPDATED_TITLE]
 
 
 def add_work(db: Session, *, id: int = 1, uuid: str = WORK_UUID) -> Work:
@@ -112,7 +117,7 @@ def test_version_timestamp_round_trips_to_a_fetch(
     response = client.get(f"/works/{WORK_UUID}/version/{oldest}")
 
     assert response.status_code == 200
-    assert response.json()["data"]["title"] == ORIGINAL_TITLE
+    assert response.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
 
 
 def test_version_can_be_fetched_by_integer_id(
@@ -127,7 +132,7 @@ def test_version_can_be_fetched_by_integer_id(
     response = client.get(f"/works/{WORK_UUID}/version/{versions[0]['id']}")
 
     assert response.status_code == 200
-    assert response.json()["data"]["title"] == ORIGINAL_TITLE
+    assert response.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
 
 
 def test_newest_version_matches_the_live_resource(
@@ -142,7 +147,7 @@ def test_newest_version_matches_the_live_resource(
         f"/works/{WORK_UUID}", headers={"Accept": "application/vnd.sinopia+json"}
     ).json()
 
-    assert newest["data"]["title"] == UPDATED_TITLE
+    assert newest["data"]["title"] == FRAMED_UPDATED_TITLE
     assert newest["data"] == live["data"]
 
 
@@ -236,7 +241,7 @@ def test_instance_versions(client: TestClient, db_session: Session) -> None:
     payload = client.get(f"/instances/{INSTANCE_UUID}/version/{versions[0]['id']}")
     assert payload.status_code == 200
     assert payload.json()["work_id"] == work_id
-    assert payload.json()["data"]["title"] == ORIGINAL_TITLE
+    assert payload.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
 
 
 def test_hub_versions(client: TestClient, db_session: Session) -> None:
