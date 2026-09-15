@@ -43,6 +43,32 @@ def as_list(value: object) -> list:
     return value if isinstance(value, list) else [value]
 
 
+def first_node(value: object) -> dict | None:
+    """The first node a property holds, whether it holds one or a list of them.
+
+    For the callers that want one nested resource rather than a loop: the agent
+    of a contribution, the place of a provision activity, the source of an
+    identifier. Those were written as
+
+        agent.get("@id") if isinstance(agent, dict) else None
+
+    which quietly returns None once the same property arrives as a one-element
+    list, because a list is not a dict. Nothing raises. The name still renders,
+    because label_text() does handle lists -- so the text appears and only the
+    link goes missing, which is the worst way for this to fail and the reason
+    this is a named helper rather than an isinstance check repeated at each site.
+
+    Tolerates both shapes deliberately. bluecore-models is moving to making every
+    property a list, and the two shapes coexist until every row has been
+    re-framed; a record restored from an older backup will be the old shape long
+    after that.
+    """
+    for item in as_list(value):
+        if isinstance(item, dict):
+            return item
+    return None
+
+
 def scalar(value: object) -> str:
     """Flattens whatever a key holds -- text, a wrapped literal, a list -- to plain text."""
     if isinstance(value, str):
