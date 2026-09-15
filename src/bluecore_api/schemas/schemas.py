@@ -144,3 +144,13 @@ class ExportResponseSchema(BaseModel):
     instance_uri: str
     local_id: str | None = None
     workflow_id: str
+
+
+class VersionSchema(BaseModel):
+    id: int
+    timestamp: str
+    user: str | None = None
+
+
+class VersionListSchema(BaseModel):
+    versions: Sequence[VersionSchema]
