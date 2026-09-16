@@ -65,7 +65,12 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
     Versions.jsx:setVersions(key, newVersions.reverse())
     """
     rows = db.execute(
-        select(Version.id, Version.created_at, Version.keycloak_user_id)
+        select(
+            Version.id,
+            Version.created_at,
+            Version.keycloak_user_id,
+            Version.keycloak_username,
+        )
         .where(Version.resource_id == resource.id)
         .order_by(Version.created_at, Version.id)
     ).all()
@@ -74,7 +79,10 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
             VersionSchema(
                 id=row.id,
                 timestamp=format_timestamp(row.created_at),
-                user=row.keycloak_user_id,
+                # keycloak_username is only populated for versions written
+                # through the HTTP layer after it was added, so fall back to the
+                # GUID rather than showing the editor a blank author.
+                user=row.keycloak_username or row.keycloak_user_id,
             )
             for row in rows
         ]
