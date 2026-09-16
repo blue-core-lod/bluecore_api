@@ -88,6 +88,68 @@ def test_version_list_omits_the_jsonld_payload(
     assert "data" not in entry
 
 
+@pytest.fixture
+def user_context():
+    """
+    Set the context vars add_version() reads when it writes a Version, and
+    restore them afterwards so the vars do not leak between tests.
+    """
+    from bluecore_models.models.version import CURRENT_USER_ID, CURRENT_USERNAME
+
+    tokens = []
+
+    def _set(uid: str | None = None, username: str | None = None) -> None:
+        tokens.append((CURRENT_USER_ID, CURRENT_USER_ID.set(uid)))
+        tokens.append((CURRENT_USERNAME, CURRENT_USERNAME.set(username)))
+
+    yield _set
+
+    for var, token in reversed(tokens):
+        var.reset(token)
+
+
+UID = "8f3c1a2e-4b5d-4c6d-8e7f-0a1b2c3d4e5f"
+
+
+def test_version_user_is_the_username_when_recorded(
+    client: TestClient, db_session: Session, user_context
+) -> None:
+    # The whole point of keycloak_username: catalogers see a name, not a GUID.
+    user_context(uid=UID, username="jgreben")
+    add_work(db_session)
+
+    response = client.get(f"/works/{WORK_UUID}/versions")
+
+    assert response.json()["versions"][0]["user"] == "jgreben"
+
+
+def test_version_user_falls_back_to_the_uid(
+    client: TestClient, db_session: Session, user_context
+) -> None:
+    # preferred_username is absent from some tokens, so a uid with no username
+    # is a normal case rather than an edge one. A GUID beats a blank author.
+    user_context(uid=UID, username=None)
+    add_work(db_session)
+
+    response = client.get(f"/works/{WORK_UUID}/versions")
+
+    assert response.json()["versions"][0]["user"] == UID
+
+
+def test_version_user_falls_back_to_unknown(
+    client: TestClient, db_session: Session
+) -> None:
+    # Batch ingest and migrations write versions with no user context at all,
+    # leaving both columns NULL. VersionSchema.user is a plain str, so the
+    # route has to supply something rather than emitting a null the editor
+    # would interpolate verbatim as "by null".
+    add_work(db_session)
+
+    response = client.get(f"/works/{WORK_UUID}/versions")
+
+    assert response.json()["versions"][0]["user"] == "unknown"
+
+
 def test_version_timestamp_is_utc_designated(
     client: TestClient, db_session: Session
 ) -> None:

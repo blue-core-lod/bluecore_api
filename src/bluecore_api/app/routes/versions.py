@@ -63,6 +63,10 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
     otherwise a resource with a lot of edits would push a large
     amount of data to the editor. order_by is set to match sinopia_editor
     Versions.jsx:setVersions(key, newVersions.reverse())
+
+    Ordering on created_at alone is deterministic because
+    UNIQUE (resource_id, created_at) admits at most one row per pair, and it
+    lets Postgres walk that constraint's index instead of sorting.
     """
     rows = db.execute(
         select(
@@ -72,7 +76,7 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
             Version.keycloak_username,
         )
         .where(Version.resource_id == resource.id)
-        .order_by(Version.created_at, Version.id)
+        .order_by(Version.created_at)
     ).all()
     return VersionListSchema(
         versions=[
@@ -80,9 +84,10 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
                 id=row.id,
                 timestamp=format_timestamp(row.created_at),
                 # keycloak_username is only populated for versions written
-                # through the HTTP layer after it was added, so fall back to the
-                # GUID rather than showing the editor a blank author.
-                user=row.keycloak_username or row.keycloak_user_id,
+                # through the HTTP layer after it was added, and non-HTTP
+                # writers (batch ingest, migrations) set neither field, so fall
+                # back rather than handing the editor a blank or null author.
+                user=row.keycloak_username or row.keycloak_user_id or "unknown",
             )
             for row in rows
         ]
@@ -102,10 +107,10 @@ def version_or_404(db: Session, resource: ResourceBase, version_id: str) -> Vers
     else:
         stmt = stmt.where(Version.created_at == parse_timestamp(version_id))
     """
-    (resource_id, created_at) is not unique yet, so take the newest match on a
-    deterministic order — .one() would raise a 500 on a duplicate timestamp.
+    UNIQUE (resource_id, created_at) means either predicate matches at most one
+    row, so there is no tie to break.
     """
-    version = db.execute(stmt.order_by(Version.id.desc())).scalars().first()
+    version = db.execute(stmt).scalars().one_or_none()
     if version is None:
         raise HTTPException(
             status_code=404,
