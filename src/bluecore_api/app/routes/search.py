@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Literal
 from urllib.parse import urlencode
 
 from bluecore_models.models import (
@@ -7,6 +8,7 @@ from bluecore_models.models import (
     Instance,
     OtherResource,
     Profile,
+    ProfileNesting,
     ResourceBase,
     Work,
 )
@@ -344,19 +346,29 @@ async def search_profile(
     q: str = "",
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
+    nested: Literal["include", "exclude"] = "include",
 ) -> dict[str, object]:
     """
     Search for profiles in the resource base.
     """
     stmt = select(Profile)
+    if nested == "exclude":
+        # Nested when some other template names this one's template id.
+        nested_by_another = (
+            select(ProfileNesting.id)
+            .where(ProfileNesting.child_template_id == Profile.template_id)
+            .where(ProfileNesting.parent_id != Profile.id)
+        )
+        stmt = stmt.where(~nested_by_another.exists())
 
     search_query = search_tsquery(q)
+    params: dict[str, str] = {}
     if search_query is not None:
         stmt = stmt.where(search_query.op("@@")(Profile.data_vector))
-        params: dict[str, str] = {"q": q}
-        links_query = f"&{urlencode(params)}"
-    else:
-        links_query = ""
+        params["q"] = q
+    if nested == "exclude":
+        params["nested"] = nested
+    links_query = f"&{urlencode(params)}" if params else ""
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
 
