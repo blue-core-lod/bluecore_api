@@ -559,5 +559,97 @@ def test_search_profile_limit(client: TestClient, db_session: Session):
     assert result["total"] == 2
 
 
+SINOPIA = "http://sinopia.io/vocabulary/"
+
+
+def _template(resource_id: str, nests: str | None = None) -> list[dict]:
+    """Expanded JSON-LD for a Sinopia template, optionally nesting another.
+
+    Matches how Sinopia serializes these: the template's own id is a literal,
+    while a reference to a nested template is an IRI reference.
+    """
+    doc: list[dict] = [
+        {
+            "@id": f"https://bcld.info/profiles/{resource_id}",
+            "@type": [f"{SINOPIA}ResourceTemplate"],
+            f"{SINOPIA}hasResourceId": [{"@value": resource_id, "@language": "en"}],
+        }
+    ]
+    if nests:
+        doc.append(
+            {
+                "@id": "_:attributes",
+                "@type": [f"{SINOPIA}ResourcePropertyTemplate"],
+                f"{SINOPIA}hasResourceTemplateId": [{"@id": nests}],
+            }
+        )
+    return doc
+
+
+def add_nested_profiles(db_session: Session):
+    """A top-level template plus the template it nests.
+
+    is_nested is derived by bluecore-models on write, so it cannot be set by
+    hand here -- the data has to express the nesting.
+    """
+    db_session.add(
+        Profile(
+            uri="https://api.sinopia.io/profiles/nested",
+            data=_template("test:Nested"),
+        ),
+    )
+    db_session.commit()
+    db_session.add(
+        Profile(
+            uri="https://api.sinopia.io/profiles/top-level",
+            data=_template("test:TopLevel", nests="test:Nested"),
+        ),
+    )
+    db_session.commit()
+
+
+def test_search_profile_includes_nested_by_default(
+    client: TestClient, db_session: Session
+):
+    """The default must not change: the editor resolves nested templates by id
+    through this endpoint, so filtering them out unasked would break loading a
+    nested resource."""
+    add_nested_profiles(db_session)
+
+    response = client.get("/search/profile", params={})
+    result = response.json()
+    assert result["total"] == 2
+    uris = {hit["uri"] for hit in result["results"]}
+    assert "https://api.sinopia.io/profiles/nested" in uris
+
+
+def test_search_profile_can_exclude_nested(client: TestClient, db_session: Session):
+    add_nested_profiles(db_session)
+
+    response = client.get("/search/profile", params={"nested": "exclude"})
+    result = response.json()
+    assert result["total"] == 1
+    assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/top-level"
+
+
+def test_search_profile_rejects_unknown_nested_value(
+    client: TestClient, db_session: Session
+):
+    response = client.get("/search/profile", params={"nested": "sometimes"})
+    assert response.status_code == 422
+
+
+def test_search_profile_exclude_nested_survives_pagination(
+    client: TestClient, db_session: Session
+):
+    """Paging links must keep the filter, or page two quietly reintroduces the
+    nested templates page one dropped."""
+    add_nested_profiles(db_session)
+
+    response = client.get("/search/profile", params={"nested": "exclude", "limit": 1})
+    links = response.json()["links"]
+    assert "nested=exclude" in links["first"]
+
+
 if __name__ == "__main__":
     pytest.main()
