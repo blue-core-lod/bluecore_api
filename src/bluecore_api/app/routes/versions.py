@@ -65,8 +65,10 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
     Versions.jsx:setVersions(key, newVersions.reverse())
 
     Ordering on created_at alone is deterministic because
-    UNIQUE (resource_id, created_at) admits at most one row per pair, and it
-    lets Postgres walk that constraint's index instead of sorting.
+    UNIQUE (resource_id, created_at) admits at most one row per pair, so the
+    id tiebreaker could never break a tie. The constraint's index can also
+    return rows already ordered, though Postgres usually prefers a bitmap
+    scan plus a cheap sort at these row counts.
     """
     rows = db.execute(
         select(
