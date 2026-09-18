@@ -357,7 +357,7 @@ async def search_profile(
         nested_by_another = (
             select(ProfileNesting.id)
             .where(ProfileNesting.child_template_id == Profile.template_id)
-            .where(ProfileNesting.parent_id != Profile.id)
+            .where(ProfileNesting.parent_profile_id != Profile.id)
         )
         stmt = stmt.where(~nested_by_another.exists())
 
