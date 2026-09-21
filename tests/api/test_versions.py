@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 
 import pytest
-from bluecore_models.models import Hub, Instance, Work
+from bluecore_models.models import Hub, Instance, Profile, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,7 @@ WORK_UUID = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
 OTHER_WORK_UUID = "9c1a2b3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d"
 INSTANCE_UUID = "5c1d0a6e-1f2b-4c3d-9e8f-7a6b5c4d3e2f"
 HUB_UUID = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"
+PROFILE_UUID = "2b4f6a8c-0d1e-4f2a-9b3c-5d6e7f8a9b0c"
 
 ORIGINAL_TITLE = "first title"
 UPDATED_TITLE = "second title"
@@ -165,21 +167,21 @@ def test_version_timestamp_is_utc_designated(
     assert datetime.fromisoformat(timestamp.removesuffix("Z"))
 
 
-def test_version_timestamp_round_trips_to_a_fetch(
+def test_timestamp_is_no_longer_a_version_identifier(
     client: TestClient, db_session: Session
 ) -> None:
-    # The editor echoes the string it was given straight back into the URL, so
-    # formatting and parsing have to agree exactly.
+    # Versions used to be addressable by their ISO timestamp, because
+    # sinopia_editor echoed back the string the list handed it. The editor now
+    # sends the integer id, so the timestamp is display-only and the path param
+    # rejects it. The list still reports it -- see the utc test above.
     work = add_work(db_session)
     update_work(db_session, work)
 
     versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
-    oldest = versions[0]["timestamp"]
 
-    response = client.get(f"/works/{WORK_UUID}/version/{oldest}")
+    response = client.get(f"/works/{WORK_UUID}/version/{versions[0]['timestamp']}")
 
-    assert response.status_code == 200
-    assert response.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
+    assert response.status_code == 422
 
 
 def test_version_can_be_fetched_by_integer_id(
@@ -269,14 +271,14 @@ def test_version_of_another_resource_is_not_reachable(
     assert response.status_code == 404
 
 
-def test_malformed_version_identifier_is_400(
+def test_malformed_version_identifier_is_422(
     client: TestClient, db_session: Session
 ) -> None:
     add_work(db_session)
 
-    response = client.get(f"/works/{WORK_UUID}/version/not-a-timestamp")
+    response = client.get(f"/works/{WORK_UUID}/version/not-an-integer")
 
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_instance_versions(client: TestClient, db_session: Session) -> None:
@@ -327,22 +329,150 @@ def test_hub_versions(client: TestClient, db_session: Session) -> None:
     assert payload.json()["type"] == "hubs"
 
 
+def profile_document(label: str, uuid: str = PROFILE_UUID) -> list[dict]:
+    """
+    Expanded JSON-LD: a list of nodes with full-URI keys. That is the shape
+    Profiles are stored in -- set_jsonld() skips framing for them -- so it is
+    also the shape their versions come back in.
+    """
+    return [
+        {
+            "@id": f"https://bcld.info/profiles/{uuid}",
+            "@type": ["http://sinopia.io/vocabulary/ResourceTemplate"],
+            "http://www.w3.org/2000/01/rdf-schema#label": [{"@value": label}],
+        }
+    ]
+
+
+def add_profile(db: Session, *, id: int = 4, uuid: str = PROFILE_UUID) -> Profile:
+    profile = Profile(
+        id=id,
+        uuid=uuid,
+        uri=f"https://bcld.info/profiles/{uuid}",
+        data=profile_document(ORIGINAL_TITLE, uuid),
+    )
+    db.add(profile)
+    db.commit()
+    return profile
+
+
+def update_profile(db: Session, profile: Profile, label: str = UPDATED_TITLE) -> None:
+    # Reassigning .data is what marks the row dirty, which is what makes
+    # add_version() write a second row.
+    profile.data = profile_document(label, str(profile.uuid))  # ty: ignore[invalid-assignment]
+    db.commit()
+
+
+def test_profile_versions_lists_create_then_update(
+    client: TestClient, db_session: Session
+) -> None:
+    # Profile inherits ResourceBase and has its own after_insert/after_update
+    # hooks calling add_version(), so profile history was already being written
+    # before these endpoints existed.
+    profile = add_profile(db_session)
+    update_profile(db_session, profile)
+
+    response = client.get(f"/profiles/{PROFILE_UUID}/versions")
+
+    assert response.status_code == 200
+    versions = response.json()["versions"]
+    assert len(versions) == 2
+    assert versions[0]["id"] < versions[1]["id"]
+    assert versions[0]["timestamp"] < versions[1]["timestamp"]
+
+
+def test_profile_version_is_returned_exactly_as_stored(
+    client: TestClient, db_session: Session
+) -> None:
+    # Unlike Works, Hubs and Instances, a Profile snapshot gets no @context
+    # injected and stays a list: sinopia_editor parses profiles by hand with
+    # full-URI predicate lookups and does not honor a @context.
+    profile = add_profile(db_session)
+    update_profile(db_session, profile)
+
+    versions = client.get(f"/profiles/{PROFILE_UUID}/versions").json()["versions"]
+    payload = client.get(f"/profiles/{PROFILE_UUID}/version/{versions[0]['id']}").json()
+
+    assert payload["data"] == profile_document(ORIGINAL_TITLE)
+    # A dict-shaped payload, or one carrying @context, would mean the framed
+    # resource branch had claimed a Profile.
+    assert isinstance(payload["data"], list)
+    assert set(payload) == {"id", "uuid", "uri", "data"}
+    assert payload["uuid"] == PROFILE_UUID
+    assert payload["uri"] == f"https://bcld.info/profiles/{PROFILE_UUID}"
+
+
+def test_newest_profile_version_matches_the_live_profile(
+    client: TestClient, db_session: Session
+) -> None:
+    profile = add_profile(db_session)
+    update_profile(db_session, profile)
+
+    versions = client.get(f"/profiles/{PROFILE_UUID}/versions").json()["versions"]
+    newest = client.get(f"/profiles/{PROFILE_UUID}/version/{versions[-1]['id']}").json()
+    live = client.get(f"/profiles/{PROFILE_UUID}").json()
+
+    assert newest["data"] == live["data"]
+
+
+def test_profile_versions_are_written_through_the_http_layer(
+    client: TestClient, db_session: Session
+) -> None:
+    # The PUT route reassigns .data, which is what marks the row dirty and makes
+    # add_version() write a second row -- the path the editor actually takes.
+    add_profile(db_session)
+
+    client.put(
+        f"/profiles/{PROFILE_UUID}",
+        headers={"X-User": "cataloger"},
+        json={"data": json.dumps(profile_document(UPDATED_TITLE))},
+    )
+
+    versions = client.get(f"/profiles/{PROFILE_UUID}/versions").json()["versions"]
+    assert len(versions) == 2
+
+
+def test_versions_of_unknown_profile_are_404(client: TestClient) -> None:
+    response = client.get("/profiles/00000000-0000-0000-0000-000000009999/versions")
+
+    assert response.status_code == 404
+
+
+def test_profile_version_of_another_profile_is_not_reachable(
+    client: TestClient, db_session: Session
+) -> None:
+    other_uuid = "7c8d9e0f-1a2b-4c3d-8e9f-0a1b2c3d4e5f"
+    add_profile(db_session, id=4, uuid=PROFILE_UUID)
+    other = add_profile(db_session, id=5, uuid=other_uuid)
+    update_profile(db_session, other)
+
+    stolen_id = client.get(f"/profiles/{other_uuid}/versions").json()["versions"][0][
+        "id"
+    ]
+
+    response = client.get(f"/profiles/{PROFILE_UUID}/version/{stolen_id}")
+
+    assert response.status_code == 404
+
+
 def test_version_endpoints_are_public_gets(
     client: TestClient, keycloak_client: TestClient, db_session: Session
 ) -> None:
-    # /works/ is already a BypassKeycloakForGet prefix, so the nested version
-    # paths inherit it. That is implicit -- assert it so a change to
-    # PREFIX_PATHS cannot lock the editor out without failing a test.
+    # /works/ and /profiles/ are already BypassKeycloakForGet prefixes, so the
+    # nested version paths inherit it. That is implicit -- assert it so a change
+    # to PREFIX_PATHS cannot lock the editor out without failing a test.
     add_work(db_session)
+    add_profile(db_session)
 
-    listed = keycloak_client.get(f"/works/{WORK_UUID}/versions")
-    assert listed.status_code == 200
+    for path, uuid in (("works", WORK_UUID), ("profiles", PROFILE_UUID)):
+        listed = keycloak_client.get(f"/{path}/{uuid}/versions")
+        assert listed.status_code == 200
 
-    version_id = listed.json()["versions"][0]["id"]
-    assert (
-        keycloak_client.get(f"/works/{WORK_UUID}/version/{version_id}").status_code
-        == 200
-    )
+        version_id = listed.json()["versions"][0]["id"]
+        assert (
+            keycloak_client.get(f"/{path}/{uuid}/version/{version_id}").status_code
+            == 200
+        )
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, cast
 from uuid import UUID
 
-from bluecore_models.models import Hub, Instance, ResourceBase, Version, Work
+from bluecore_models.models import Hub, Instance, Profile, ResourceBase, Version, Work
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -12,6 +12,7 @@ from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
     HubSchema,
     InstanceSchema,
+    ProfileSchema,
     VersionListSchema,
     VersionSchema,
     WorkSchema,
@@ -20,11 +21,7 @@ from bluecore_api.schemas.schemas import (
 endpoints = APIRouter()
 
 VERSION_ID = Path(
-    description=(
-        "Either the integer version id or the ISO 8601 timestamp, both as "
-        "returned by the versions list. Example: 42 or "
-        "2026-09-14T13:26:35.238471Z"
-    )
+    description="The integer version id, as returned by the versions list. Example: 42"
 )
 
 
@@ -33,19 +30,8 @@ def format_timestamp(value: datetime) -> str:
     versions.created_at is a naive column holding UTC wall-clock time. JavaScript
     parses an ISO date-time string with no offset as *local* time, so without an
     explicit Z the editor's "N hours ago" labels drift by the viewer's UTC offset.
-    Microseconds are kept so the string round-trips losslessly back to lookup.
     """
     return value.replace(tzinfo=None).isoformat() + "Z"
-
-
-def parse_timestamp(value: str) -> datetime:
-    """Inverse of format_timestamp. Naive, to match the column."""
-    try:
-        return datetime.fromisoformat(value.removesuffix("Z")).replace(tzinfo=None)
-    except ValueError:
-        raise HTTPException(
-            status_code=400, detail=f"Invalid version identifier: {value}"
-        )
 
 
 def resource_or_404(db: Session, model: type[ResourceBase], uuid: str) -> ResourceBase:
@@ -96,22 +82,17 @@ def version_list(db: Session, resource: ResourceBase) -> VersionListSchema:
     )
 
 
-def version_or_404(db: Session, resource: ResourceBase, version_id: str) -> Version:
-    stmt = select(Version).where(Version.resource_id == resource.id)
+def version_or_404(db: Session, resource: ResourceBase, version_id: int) -> Version:
     """
-    Resolve one version by either identifier the list endpoint hands out.
-    sinopia_editor provides the `timestamp` string it was given.
-    `version_id` exists for MCP and other clients, which can receive both
-    fields and should prefer the integer — shorter and no format to get wrong.
+    Resolve one version by the integer id the list endpoint hands out. The
+    resource_id predicate is a boundary, not an optimisation: without it any
+    version id would resolve under any resource's URL.
     """
-    if version_id.isdigit():
-        stmt = stmt.where(Version.id == int(version_id))
-    else:
-        stmt = stmt.where(Version.created_at == parse_timestamp(version_id))
-    """
-    UNIQUE (resource_id, created_at) means either predicate matches at most one
-    row, so there is no tie to break.
-    """
+    stmt = (
+        select(Version)
+        .where(Version.resource_id == resource.id)
+        .where(Version.id == version_id)
+    )
     version = db.execute(stmt).scalars().one_or_none()
     if version is None:
         raise HTTPException(
@@ -123,10 +104,29 @@ def version_or_404(db: Session, resource: ResourceBase, version_id: str) -> Vers
 
 def version_payload(
     resource: ResourceBase, version: Version
-) -> HubSchema | InstanceSchema | WorkSchema:
+) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
+    resource_uuid = cast(UUID | None, resource.uuid)
+    if isinstance(resource, Profile):
+        """
+        A Profile's snapshot is handed back exactly as stored: its data is
+        expanded JSON-LD (a list of nodes keyed by full URI) rather than the
+        framed object the resources below hold, and it carries no @context
+        because sinopia_editor parses profiles by hand and does not honor one
+        -- see _mint_resource_template in routes/profiles.py. Injecting a
+        @context here would also mean mutating a list as if it were a dict.
+
+        ProfileSchema has no updated_at to carry the snapshot's own timestamp,
+        which matches the live GET /profiles/{uuid}; the caller already holds
+        it from the list endpoint.
+        """
+        return ProfileSchema(
+            id=resource.id,
+            uuid=resource_uuid,
+            uri=resource.uri,
+            data=cast(dict[str, object] | list[object], version.data),
+        )
     data = dict(cast(dict[str, object], version.data))
     data["@context"] = CONTEXT_URL
-    resource_uuid = cast(UUID | None, resource.uuid)
     if isinstance(resource, Instance):
         return InstanceSchema(
             id=resource.id,
@@ -180,9 +180,9 @@ async def read_hub_versions(
 )
 async def read_hub_version(
     hub_uuid: str,
-    version_id: Annotated[str, VERSION_ID],
+    version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | WorkSchema:
+) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
     """Return one historical version of a Hub as stored JSON-LD."""
     resource = resource_or_404(db, Hub, hub_uuid)
     return version_payload(resource, version_or_404(db, resource, version_id))
@@ -208,9 +208,9 @@ async def read_work_versions(
 )
 async def read_work_version(
     work_uuid: str,
-    version_id: Annotated[str, VERSION_ID],
+    version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | WorkSchema:
+) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
     """Return one historical version of a Work as stored JSON-LD."""
     resource = resource_or_404(db, Work, work_uuid)
     return version_payload(resource, version_or_404(db, resource, version_id))
@@ -236,9 +236,37 @@ async def read_instance_versions(
 )
 async def read_instance_version(
     instance_uuid: str,
-    version_id: Annotated[str, VERSION_ID],
+    version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | WorkSchema:
+) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
     """Return one historical version of an Instance as stored JSON-LD."""
     resource = resource_or_404(db, Instance, instance_uuid)
+    return version_payload(resource, version_or_404(db, resource, version_id))
+
+
+@endpoints.get(
+    "/profiles/{profile_uuid}/versions",
+    response_model=VersionListSchema,
+    operation_id="get_profile_versions",
+)
+async def read_profile_versions(
+    profile_uuid: str,
+    db: Session = Depends(get_db),
+) -> VersionListSchema:
+    """List every stored version of a Profile, oldest first."""
+    return version_list(db, resource_or_404(db, Profile, profile_uuid))
+
+
+@endpoints.get(
+    "/profiles/{profile_uuid}/version/{version_id}",
+    response_model=ProfileSchema,
+    operation_id="get_profile_version",
+)
+async def read_profile_version(
+    profile_uuid: str,
+    version_id: Annotated[int, VERSION_ID],
+    db: Session = Depends(get_db),
+) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
+    """Return one historical version of a Profile as stored JSON-LD."""
+    resource = resource_or_404(db, Profile, profile_uuid)
     return version_payload(resource, version_or_404(db, resource, version_id))
