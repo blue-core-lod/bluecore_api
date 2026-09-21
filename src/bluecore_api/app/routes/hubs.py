@@ -66,6 +66,7 @@ async def get_hub_embedding(hub_uuid: str):
 
 @endpoints.post(
     "/hubs/{hub_uuid}/embeddings",
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     operation_id="new_hub_embedding",
     status_code=201,
 )

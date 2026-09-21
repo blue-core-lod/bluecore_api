@@ -86,6 +86,11 @@ base_app = FastAPI(
         "filter": True,  # Add a search box to filter operations by name
         "defaultModelsExpandDepth": 0,  # Start the "Schemas" section collapsed
     },
+    swagger_ui_init_oauth={
+        "clientId": os.getenv("API_KEYCLOAK_CLIENT_ID", ""),
+        "usePkceWithAuthorizationCodeGrant": True,
+        "scopes": "openid profile email",
+    },
 )
 base_app.include_router(hub_routes, tags=["Hubs"])
 base_app.include_router(work_routes, tags=["Works"])
@@ -204,3 +209,57 @@ async def favicon():
 async def context_jsonld():
     # Sinopia rejects both a bare mapping anda non-JSON-LD media type.
     return JSONResponse({"@context": CONTEXT}, media_type="application/ld+json")
+
+"""
+Error responses for any operation that carries a security requirement.
+
+FastAPI derives the requirement itself from the SecurityBase in the route's
+dependency tree (see middleware/bluecore_check_permissions.py), but it can't 
+know which failures that implies. Attaching them by inspecting the finished 
+schema keeps new routes covered without repeating `responses=` on every 
+    decorator.
+"""
+_UNAUTHORIZED_RESPONSE = {
+    "description": "Missing or invalid Keycloak bearer token.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {"detail": {"type": "string"}},
+            },
+            "example": {"detail": "Not authenticated"},
+        }
+    },
+}
+
+_FORBIDDEN_RESPONSE = {
+    "description": "Token lacks the required realm role, or holds a forbidden one.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {"detail": {"type": "string"}},
+            },
+            "example": {"detail": "Access denied."},
+        }
+    },
+}
+
+_default_openapi = base_app.openapi
+
+def openapi_with_auth_responses():
+    if base_app.openapi_schema:
+        return base_app.openapi_schema
+    # _default_openapi() builds and caches base_app.openapi_schema; we mutate
+    # that same dict in place, so the injection is cached along with it.
+    schema = _default_openapi()
+    for operations in schema["paths"].values():
+        for operation in operations.values():
+            if not isinstance(operation, dict) or not operation.get("security"):
+                continue
+            responses = operation.setdefault("responses", {})
+            responses.setdefault("401", _UNAUTHORIZED_RESPONSE)
+            responses.setdefault("403", _FORBIDDEN_RESPONSE)
+    return schema
+
+base_app.openapi = openapi_with_auth_responses  # ty: ignore
