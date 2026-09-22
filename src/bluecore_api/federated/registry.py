@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from bluecore_api.federated.base import SearchSource
 from bluecore_api.federated.config import enabled_source_ids
 from bluecore_api.federated.sources.bluecore import BlueCoreSource
+from bluecore_api.federated.sources.loc import LibraryOfCongressSource
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class SourceContext:
 
 SOURCE_FACTORIES: dict[str, Callable[[SourceContext], SearchSource]] = {
     BlueCoreSource.id: lambda ctx: BlueCoreSource(ctx.db),
+    LibraryOfCongressSource.id: lambda ctx: LibraryOfCongressSource(ctx.http),
 }
 
 

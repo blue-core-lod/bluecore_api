@@ -4,12 +4,33 @@ Stage 1 covers the Blue Core source only, so these tests establish the shape
 and, most importantly, that GET /search/ is untouched by any of it.
 """
 
+import json
+import pathlib
+
+import httpx
 import pytest
 from bluecore_models.models import Hub, Instance, Work
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 TITLE = "federatedtesttitle"
+
+
+@pytest.fixture(autouse=True)
+def local_only(monkeypatch):
+    """Default every test here to the local source.
+
+    Without this a test that forgets to register a response would reach out to
+    the real id.loc.gov, which is both flaky in CI and exactly the kind of
+    unattributed traffic this feature is supposed to avoid. Tests that want the
+    remote source opt in with `with_loc`.
+    """
+    monkeypatch.setenv("FEDERATED_SEARCH_SOURCES", "bluecore")
+
+
+@pytest.fixture
+def with_loc(monkeypatch):
+    monkeypatch.setenv("FEDERATED_SEARCH_SOURCES", "bluecore,loc")
 
 
 @pytest.fixture
@@ -136,3 +157,112 @@ def test_plain_search_endpoint_is_unchanged(client: TestClient, searchable: None
         payload["links"]["first"]
         == f"https://bcld.info/api/search/?limit=20&offset=0&q={TITLE}&type=all"
     )
+
+
+# --- With the Library of Congress source ---------------------------------------
+def _loc_payload() -> dict:
+    with pathlib.Path("tests/loc-suggest2-works.json").open() as fo:
+        return json.load(fo)
+
+
+def test_both_sources_get_their_own_group(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    httpx_mock.add_response(json=_loc_payload())
+
+    payload = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}
+    ).json()
+
+    assert [g["id"] for g in payload["sources"]] == ["bluecore", "loc"]
+    assert _group(payload, "bluecore")["total_is_exact"] is True
+    assert _group(payload, "loc")["total_is_exact"] is False
+    # The top-level total sums the groups and says so: an LC record already
+    # copied into Blue Core is counted on both sides.
+    assert payload["total"] == 1 + 190
+    assert payload["total_is_estimate"] is True
+
+
+def test_narrowing_to_bluecore_makes_no_outbound_request(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    client.get("/search/federated", params={"q": TITLE, "sources": "bluecore"})
+
+    assert httpx_mock.get_requests() == []
+
+
+def test_outbound_requests_identify_us(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """id.loc.gov's robots.txt warns it blocks clients it cannot identify, and
+    a block would land on every id.loc.gov user at the institution."""
+    httpx_mock.add_response(json=_loc_payload())
+
+    client.get("/search/federated", params={"q": TITLE, "type": "works"})
+
+    user_agent = httpx_mock.get_requests()[0].headers["user-agent"]
+    assert user_agent.startswith("BlueCore-API/")
+    assert "bcld.info" in user_agent
+
+
+def test_a_timed_out_source_degrades_the_page_not_the_request(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """The most important test here.
+
+    If a dead source came back as an empty result set, a cataloger would read
+    it as "no such record exists" and hand-catalogue a duplicate. The failure
+    has to be visible and the other sources have to survive it.
+    """
+    httpx_mock.add_exception(httpx.ReadTimeout("slow"))
+
+    response = client.get("/search/federated", params={"q": TITLE, "type": "works"})
+    payload = response.json()
+
+    assert response.status_code == 200
+    assert payload["partial"] is True
+
+    loc = _group(payload, "loc")
+    assert loc["status"] == "error"
+    assert loc["results"] == []
+    assert "Could not reach" in loc["error"]
+
+    bluecore = _group(payload, "bluecore")
+    assert bluecore["status"] == "ok"
+    assert len(bluecore["results"]) == 1
+
+
+def test_an_upstream_error_is_reported_in_words_a_cataloger_can_read(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    httpx_mock.add_response(status_code=503)
+
+    payload = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}
+    ).json()
+
+    loc = _group(payload, "loc")
+    assert loc["status"] == "error"
+    assert loc["error"] == "Library of Congress returned HTTP 503."
+    assert "Traceback" not in loc["error"]
+
+
+def test_external_results_carry_provenance_not_a_blue_core_identity(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    httpx_mock.add_response(json=_loc_payload())
+
+    payload = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}
+    ).json()
+
+    result = _group(payload, "loc")["results"][0]
+    assert result["source"] == "loc"
+    # The real LC URI, never a Blue Core proxy URL dressed up as one: a client
+    # that copied from `uri` must not silently succeed against the wrong thing.
+    assert result["uri"] == "http://id.loc.gov/resources/works/13337906"
+    assert result["id"] is None
+    assert result["uuid"] is None
+    # Stage 5 fills this in; until then it is explicitly "we did not look".
+    assert result["local_uri"] is None
+    assert result["data"]["title"][0]["mainTitle"] == "Moby-Dick, or, The whale"

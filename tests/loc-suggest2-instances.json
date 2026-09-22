@@ -1,0 +1,94 @@
+{
+  "_comment": "Recorded 2026-09-22 from https://id.loc.gov/resources/instances/suggest2/?q=melville+moby&searchtype=keyword&count=3&offset=0",
+  "q": "melville moby*",
+  "count": 204,
+  "pagesize": 3,
+  "start": 0,
+  "sortmethod": "rank",
+  "searchtype": "keyword",
+  "directory": "/resources/instances/",
+  "hits": [
+    {
+      "suggestLabel": "Cohen, Hennig A concordance to Melville's Moby Dick [Glassboro? N.J.]: Melville Society",
+      "uri": "http://id.loc.gov/resources/instances/4627529",
+      "aLabel": "Cohen, Hennig A concordance to Melville's Moby Dick [Glassboro? N.J.]: Melville Society",
+      "vLabel": "",
+      "sLabel": "",
+      "code": "",
+      "token": "4627529",
+      "rank": "16237",
+      "more": {
+        "varianttitles": [],
+        "rdftypes": [
+          "Instance"
+        ],
+        "collections": [],
+        "identifiers": [
+          "78005602",
+          "78005602"
+        ],
+        "notes": [
+          "Includes indexes.",
+          "040 $aDLC$cDLC$dDLC"
+        ],
+        "lastmods": [
+          "1995-07-20"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Shelden, Michael Melville in love : the secret life of Herman Melville and the muse of Moby-Dick New York: Ecco, an imprint of HarperCollins Publishers, [2016]",
+      "uri": "http://id.loc.gov/resources/instances/19545558",
+      "aLabel": "Shelden, Michael Melville in love : the secret life of Herman Melville and the muse of Moby-Dick New York: Ecco, an imprint of HarperCollins Publishers, [2016]",
+      "vLabel": "",
+      "sLabel": "",
+      "code": "",
+      "token": "19545558",
+      "rank": "14987",
+      "more": {
+        "varianttitles": [],
+        "rdftypes": [
+          "Instance"
+        ],
+        "collections": [],
+        "identifiers": [
+          "2017303308",
+          "ocn922910332",
+          "2017303308"
+        ],
+        "notes": [
+          "illustrations, map",
+          "Includes bibliographical references (pages [251]-271).",
+          "040 $aBTCTA$beng$cBTCTA$erda$dYDXCP$dBDX$dOCLCQ$dZQP$dOCLCO$dCPL$dOCLCO$dIK2$dOCLCQ$dOCP$dVP@$dIMD$dOCLCO$dUAB$dGTA$dCOO$dOCLCO$dBUR$dUBY$dDEBBG$dOCLCO$dGL3$dOCLCA$dOCLCF$dDLC"
+        ],
+        "lastmods": [
+          "2020-01-03"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891 Melville's Moby Dick New York: The Macmillan company, 1924",
+      "uri": "http://id.loc.gov/resources/instances/10135794",
+      "aLabel": "Melville, Herman, 1819-1891 Melville's Moby Dick New York: The Macmillan company, 1924",
+      "vLabel": "",
+      "sLabel": "",
+      "code": "",
+      "token": "10135794",
+      "rank": "14987",
+      "more": {
+        "varianttitles": [],
+        "rdftypes": [
+          "Instance"
+        ],
+        "collections": [],
+        "identifiers": [
+          "24023602",
+          "24023602"
+        ],
+        "lastmods": [
+          "2023-08-21"
+        ]
+      }
+    }
+  ]
+}

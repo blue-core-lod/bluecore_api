@@ -1,0 +1,186 @@
+{
+  "_comment": "Recorded 2026-09-22 from https://id.loc.gov/resources/works/suggest2/?q=melville+moby&searchtype=keyword&count=3&offset=0",
+  "q": "melville moby*",
+  "count": 190,
+  "pagesize": 3,
+  "start": 0,
+  "sortmethod": "rank",
+  "searchtype": "keyword",
+  "directory": "/resources/works/",
+  "hits": [
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Moby-Dick, or, The whale",
+      "uri": "http://id.loc.gov/resources/works/13337906",
+      "aLabel": "Melville, Herman, 1819-1891. Moby-Dick, or, The whale",
+      "vLabel": "Melville, Herman, 1819-1891. Moby-Dick",
+      "sLabel": "",
+      "code": "",
+      "token": "13337906",
+      "rank": "23803",
+      "more": {
+        "aaps": [
+          "Melville, Herman, 1819-1891. Moby-Dick, or, The whale"
+        ],
+        "varianttitles": [
+          "Moby-Dick",
+          "Whale"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891",
+          "Quirk, Tom, 1946-"
+        ],
+        "rdftypes": [
+          "Work",
+          "Text",
+          "Monograph"
+        ],
+        "collections": [],
+        "genres": [
+          "Psychological fiction",
+          "Sea stories",
+          "Adventure stories",
+          "Fiction"
+        ],
+        "languages": [
+          "English"
+        ],
+        "pubdates": [
+          "2003"
+        ],
+        "identifiers": [
+          "2003272426"
+        ],
+        "lcc": "",
+        "subjects": [
+          "Ahab, Captain (Fictitious character)",
+          "Whaling ships",
+          "Ship captains",
+          "Mentally ill",
+          "Shipwrecks",
+          "Whaling",
+          "Sailors",
+          "Whales"
+        ],
+        "instance": "http://id.loc.gov/resources/instances/13337906",
+        "lastmods": [
+          "2023-02-01"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Moby-Dick, or, The whale",
+      "uri": "http://id.loc.gov/resources/works/12461152",
+      "aLabel": "Melville, Herman, 1819-1891. Moby-Dick, or, The whale",
+      "vLabel": "Melville, Herman, 1819-1891. Moby-Dick",
+      "sLabel": "",
+      "code": "",
+      "token": "12461152",
+      "rank": "23803",
+      "more": {
+        "aaps": [
+          "Melville, Herman, 1819-1891. Moby-Dick, or, The whale"
+        ],
+        "varianttitles": [
+          "Moby-Dick",
+          "Whale"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891",
+          "麥爾維爾, 1819-1891",
+          "麥爾維爾, 1819-1891",
+          "Hayford, Harrison",
+          "Parker, Hershel",
+          "Tanselle, G. Thomas (George Thomas), 1934-"
+        ],
+        "rdftypes": [
+          "Work",
+          "Text",
+          "Monograph"
+        ],
+        "collections": [],
+        "genres": [
+          "Psychological fiction",
+          "Sea stories",
+          "Adventure stories",
+          "Fiction"
+        ],
+        "languages": [
+          "English"
+        ],
+        "pubdates": [
+          "2001"
+        ],
+        "identifiers": [
+          "2001044114"
+        ],
+        "lcc": "",
+        "subjects": [
+          "Ahab, Captain (Fictitious character)",
+          "Whaling ships",
+          "Ship captains",
+          "Mentally ill",
+          "Whaling",
+          "Whales"
+        ],
+        "instance": "http://id.loc.gov/resources/instances/12461152",
+        "lastmods": [
+          "2023-02-01"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Moby Dick, or, The whale",
+      "uri": "http://id.loc.gov/resources/works/in00024281753",
+      "aLabel": "Melville, Herman, 1819-1891. Moby Dick, or, The whale",
+      "vLabel": "Melville, Herman, 1819-1891. Moby Dick",
+      "sLabel": "",
+      "code": "",
+      "token": "in00024281753",
+      "rank": "23803",
+      "more": {
+        "aaps": [
+          "Melville, Herman, 1819-1891. Moby Dick, or, The whale"
+        ],
+        "varianttitles": [
+          "Moby Dick",
+          "Whale"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891",
+          "Kent, Rockwell, 1882-1971"
+        ],
+        "rdftypes": [
+          "Work",
+          "Text",
+          "Monograph"
+        ],
+        "collections": [],
+        "genres": [
+          "Fiction"
+        ],
+        "languages": [
+          "mlang:eng"
+        ],
+        "pubdates": [
+          "2026"
+        ],
+        "identifiers": [
+          "2025942940"
+        ],
+        "subjects": [
+          "Ahab, Captain (Fictitious character)",
+          "Whaling ships",
+          "Ship captains",
+          "Mentally ill",
+          "Whaling",
+          "Whales",
+          "Sea stories"
+        ],
+        "instance": "http://id.loc.gov/resources/instances/in00024281753",
+        "lastmods": [
+          "2026-07-20"
+        ]
+      }
+    }
+  ]
+}

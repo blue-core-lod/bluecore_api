@@ -1,0 +1,11 @@
+{
+  "_comment": "Recorded 2026-09-22 from https://id.loc.gov/resources/works/suggest2/?q=zzzznotathing&searchtype=keyword&count=3&offset=0",
+  "q": "zzzznotathing*",
+  "count": 0,
+  "pagesize": 3,
+  "start": 0,
+  "sortmethod": "rank",
+  "searchtype": "keyword",
+  "directory": "/resources/works/",
+  "hits": []
+}

@@ -1,0 +1,165 @@
+{
+  "_comment": "Recorded 2026-09-22 from https://id.loc.gov/resources/hubs/suggest2/?q=melville+moby&searchtype=keyword&count=3&offset=0",
+  "q": "melville moby*",
+  "count": 30,
+  "pagesize": 3,
+  "start": 0,
+  "sortmethod": "rank",
+  "searchtype": "keyword",
+  "directory": "/resources/hubs/",
+  "hits": [
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Novels. Selections",
+      "uri": "http://id.loc.gov/resources/hubs/09ebf9a4-26a0-576b-20d4-3c71d6255c07",
+      "aLabel": "Melville, Herman, 1819-1891. Novels. Selections",
+      "vLabel": "Melville, Herman, 1819-1891. Melville's short novels",
+      "sLabel": "",
+      "code": "",
+      "token": "09ebf9a4-26a0-576b-20d4-3c71d6255c07",
+      "rank": "13216",
+      "more": {
+        "marcKeys": [
+          "1001 $aMelville, Herman,$d1819-1891.$tNovels.$kSelections"
+        ],
+        "aaps": [
+          "Melville, Herman, 1819-1891. Novels. Selections"
+        ],
+        "varianttitles": [
+          "Melville's short novels",
+          "Redburn, his first voyage ; White-jacket, or, The world in a man-of-war ; Moby-Dick, or, The whale",
+          "Romances of Herman Melville",
+          "Seven novels",
+          "Shorter novels of Herman Melville"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891"
+        ],
+        "rdftypes": [
+          "Work",
+          "Hub"
+        ],
+        "collections": [],
+        "identifiers": [
+          "n 82140619",
+          "oca00836748",
+          "n 82140619"
+        ],
+        "sources": [
+          "data found: His Redburn, his first voyage ; White-jacket, or, The world in a man-of-war ; Moby-Dick, or, The whale, c1983",
+          "data found: Romances of Herman Melville, 1931",
+          "data found: Melville's short novels, 2001",
+          "data found: CIP t.p.",
+          "data found: Seven novels, 2008",
+          "data found: t.p.",
+          "data found: Shorter novels of Herman Melville, 1978"
+        ],
+        "notes": [
+          "His Redburn, his first voyage ; White-jacket, or, The world in a man-of-war ; Moby-Dick, or, The whale, c1983",
+          "Romances of Herman Melville, 1931",
+          "CIP t.p.",
+          "t.p.",
+          "Shorter novels of Herman Melville, 1978",
+          "Created from auth.",
+          "040 $aDLC$beng$erda$cDLC$dOrU$dDLC$dNNCU-C"
+        ],
+        "lastmods": [
+          "2016-01-09"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Moby Dick. Selections. Spanish",
+      "uri": "http://id.loc.gov/resources/hubs/42312872-9a10-be54-cb7f-b257af45fe3b",
+      "aLabel": "Melville, Herman, 1819-1891. Moby Dick. Selections. Spanish",
+      "vLabel": "Melville, Herman, 1819-1891. Moby Dick, Moby Dick",
+      "sLabel": "",
+      "code": "",
+      "token": "42312872-9a10-be54-cb7f-b257af45fe3b",
+      "rank": "12343",
+      "more": {
+        "marcKeys": [
+          "1001 $aMelville, Herman,$d1819-1891.$tMoby Dick.$kSelections.$lSpanish"
+        ],
+        "aaps": [
+          "Melville, Herman, 1819-1891. Moby Dick. Selections. Spanish"
+        ],
+        "varianttitles": [
+          "Moby Dick, Moby Dick"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891"
+        ],
+        "rdftypes": [
+          "Work",
+          "Hub"
+        ],
+        "collections": [],
+        "languages": [
+          "Spanish"
+        ],
+        "identifiers": [
+          "no2019108025",
+          "oca12285856",
+          "no2019108025"
+        ],
+        "sources": [
+          "data found: Melville, Herman. Moby Dick, Moby Dick, 2017",
+          "data found: title page verso (adaptación de la obra original, Mariana Alatorre)"
+        ],
+        "notes": [
+          "title page verso (adaptación de la obra original, Mariana Alatorre)",
+          "Created from auth.",
+          "040 $aNN$beng$erda$cNN"
+        ],
+        "lastmods": [
+          "2019-07-24"
+        ]
+      }
+    },
+    {
+      "suggestLabel": "Melville, Herman, 1819-1891. Moby Dick",
+      "uri": "http://id.loc.gov/resources/hubs/7229f3f2-7e30-fe0a-793c-ae57f630c00e",
+      "aLabel": "Melville, Herman, 1819-1891. Moby Dick",
+      "vLabel": "Melville, Herman, 1819-1891. Whale",
+      "sLabel": "",
+      "code": "",
+      "token": "7229f3f2-7e30-fe0a-793c-ae57f630c00e",
+      "rank": "12092",
+      "more": {
+        "marcKeys": [
+          "1001 $aMelville, Herman,$d1819-1891.$tMoby Dick"
+        ],
+        "aaps": [
+          "Melville, Herman, 1819-1891. Moby Dick"
+        ],
+        "varianttitles": [
+          "Whale",
+          "Moby Dick, or, The whale"
+        ],
+        "contributors": [
+          "Melville, Herman, 1819-1891"
+        ],
+        "rdftypes": [
+          "Work",
+          "Hub"
+        ],
+        "collections": [],
+        "identifiers": [
+          "n 88282472",
+          "n 88282472"
+        ],
+        "sources": [
+          "data found: His Moby Dick, or, The whale, 1985"
+        ],
+        "notes": [
+          "His Moby Dick, or, The whale, 1985",
+          "Created from auth.",
+          "040 $aDLC$beng$erda$cDLC$dDLC"
+        ],
+        "lastmods": [
+          "2014-06-23"
+        ]
+      }
+    }
+  ]
+}

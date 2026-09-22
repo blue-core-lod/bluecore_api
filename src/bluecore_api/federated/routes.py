@@ -144,8 +144,13 @@ def _group(
         status = SourceStatus.ERROR
         error = f"{source.label} could not be searched."
 
-    logger.exception(
-        "Federated source %s failed after %sms", source.id, elapsed_ms, exc_info=outcome
+    # Not logger.exception: this runs outside the except block, on an outcome
+    # gather() handed back rather than raised.
+    logger.error(
+        "Federated source %s failed after %sms",
+        source.id,
+        elapsed_ms,
+        exc_info=outcome,
     )
     return FederatedSourceSchema(
         id=source.id,
