@@ -56,6 +56,7 @@ class BypassKeycloakForGet:
         {
             "/",
             "/docs",
+            "/docs/oauth2-redirect",
             "/context.jsonld",
             "/openapi.json",
             "/favicon.ico",
