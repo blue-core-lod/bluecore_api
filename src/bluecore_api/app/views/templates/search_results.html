@@ -46,8 +46,19 @@
     {% if groups is not none %}
         {% for g in groups %}
             <section class="bc-results-group">
-                <h2 class="bc-results-heading">{{ g.label }}</h2>
-                {{ result_list(g.results) }}
+                {####  Label and count stay on one line: tests match on ">Works<".  ####}
+                <h2 class="bc-results-heading">{{ g.label }}{% if g.count is defined and g.count is not none %} <span class="bc-muted">({{ g.count }})</span>{% endif %}</h2>
+                {####  A failed source has to read differently from one with no
+                      matches: read as "no results", a timeout becomes a
+                      hand-catalogued duplicate.  ####}
+                {% if g.error %}
+                    <p class="bc-muted bc-results-error">&#9888; {{ g.error }}</p>
+                {% elif g.results %}
+                    {{ result_list(g.results) }}
+                {% else %}
+                    <p class="bc-muted">No results.</p>
+                {% endif %}
+                {% if g.note %}<p class="bc-muted">{{ g.note }}</p>{% endif %}
             </section>
         {% else %}
             <p class="bc-muted">No results.</p>

@@ -362,3 +362,45 @@ def test_provenance_matches_across_http_and_https(
 
     results = {r["uri"]: r for r in _group(payload, "loc")["results"]}
     assert results[LOC_WORK_URI]["local_uri"] == copied_uri
+
+
+# --- HTML view -----------------------------------------------------------------
+HTML = {"Accept": "text/html"}
+
+
+def test_html_shows_a_section_per_source(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """Makes the feature demonstrable in a browser with no editor changes."""
+    httpx_mock.add_response(json=_loc_payload())
+
+    response = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}, headers=HTML
+    )
+
+    assert response.headers["content-type"].startswith("text/html")
+    body = response.text
+    assert "Blue Core" in body
+    assert "Library of Congress" in body
+    # Titles come out of the same helper the rest of the HTML views use.
+    assert "Moby-Dick, or, The whale" in body
+
+
+def test_html_says_a_source_failed_rather_than_showing_nothing(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    httpx_mock.add_response(status_code=503)
+
+    body = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}, headers=HTML
+    ).text
+
+    assert "Library of Congress returned HTTP 503." in body
+    # And the working source is still on the page.
+    assert TITLE in body
+
+
+def test_json_is_still_the_default(client: TestClient, searchable: None, httpx_mock):
+    response = client.get("/search/federated", params={"q": TITLE})
+
+    assert response.headers["content-type"].startswith("application/json")

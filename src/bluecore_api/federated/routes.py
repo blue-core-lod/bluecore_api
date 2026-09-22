@@ -15,10 +15,12 @@ import time
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.routes.search import search_params, search_tsquery
+from bluecore_api.app.views.nodes import title_of
+from bluecore_api.app.views.templating import templates
 from bluecore_api.constants import (
     BLUECORE_URL,
     DEFAULT_SEARCH_PAGE_LENGTH,
@@ -207,6 +209,61 @@ def _unsupported(source: SearchSource, query: FederatedQuery) -> FederatedSource
     )
 
 
+def wants_html(request: Request) -> bool:
+    """Follows the codebase's negotiation idiom: an explicit Accept: text/html
+    gets the human page (app/utils/serializer.py:50)."""
+    for raw in request.headers.get("accept", "").split(","):
+        media_type = raw.split(";")[0].strip()
+        if media_type == "text/html":
+            return True
+        if media_type in ("application/json", "application/ld+json"):
+            return False
+    return False
+
+
+def _html(
+    request: Request, body: FederatedSearchResultSchema, query: FederatedQuery
+) -> HTMLResponse:
+    """Render the grouped results with the existing search template.
+
+    Worth the handful of lines: it makes the whole feature demonstrable in a
+    browser without touching sinopia_editor, so evaluating the idea does not
+    have to wait on client work.
+    """
+    groups = [
+        {
+            "label": source.label,
+            "count": source.total,
+            "error": source.error,
+            "note": source.note,
+            "results": [
+                {"uri": result.local_uri or result.uri, "title": title_of(result.data)}
+                for result in source.results
+            ],
+        }
+        for source in body.sources
+    ]
+    return templates.TemplateResponse(
+        request,
+        "search_results.html",
+        {
+            "search_q": query.q,
+            "search_type": str(query.type),
+            "search_scope": str(query.scope),
+            "total": body.total,
+            "groups": groups,
+            "results": None,
+            "pagination": {
+                "start": query.offset + 1 if body.total else 0,
+                "end": query.offset + sum(len(s.results) for s in body.sources),
+                "total": body.total,
+                "prev_url": None,
+                "next_url": None,
+            },
+        },
+    )
+
+
 @endpoints.get(
     "/search/federated",
     response_model=FederatedSearchResultSchema,
@@ -227,7 +284,7 @@ async def search_federated(
             "configured set, never add to it."
         ),
     ),
-) -> JSONResponse:
+) -> Response:
     """Search Blue Core and external BIBFRAME sources at once.
 
     Results are grouped by source rather than merged into one ranked list: the
@@ -283,5 +340,8 @@ async def search_federated(
 
     # Every source failing is still worth a full body: the client needs to show
     # which ones died, not a bare error.
+    if wants_html(request):
+        return _html(request, body, query)
+
     status_code = 200 if answered or not groups else 502
     return JSONResponse(content=body.model_dump(mode="json"), status_code=status_code)
