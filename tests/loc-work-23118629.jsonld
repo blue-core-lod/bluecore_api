@@ -1,0 +1,894 @@
+[
+ {
+  "@id": "http://id.loc.gov/vocabulary/mstatus/n",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Status"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "new"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "n"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/authorities/genreForms/gf2014026339",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/GenreForm"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@language": "en",
+    "@value": "Fiction"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "155  $aFiction"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/authorities/genreForms"
+   }
+  ]
+ },
+ {
+  "@id": "_:b214httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/status": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/date": [
+   {
+    "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+    "@value": "2024-09-25T17:04:18"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/descriptionModifier": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/mstatus/uba",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Status"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "used by assigner"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "uba"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/relators/aut",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Role"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "author"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "aut"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/rwo/agents/n79099184",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Agent",
+   "http://id.loc.gov/ontologies/bibframe/Person"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "Pynchon, Thomas"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "1001 $aPynchon, Thomas"
+   }
+  ]
+ },
+ {
+  "@id": "_:b129httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Topic",
+   "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "Administration of estates--California"
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+   {
+    "@value": "Administration of estates--California"
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#componentList": [
+   {
+    "@list": [
+     {
+      "@id": "http://id.loc.gov/authorities/subjects/sh85000899"
+     },
+     {
+      "@id": "http://id.loc.gov/rwo/agents/n79041717-781"
+     }
+    ]
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+   {
+    "@value": "administrationofestatescalifornia"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ]
+ },
+ {
+  "@id": "_:b50httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/ClassificationDdc"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/classificationPortion": [
+   {
+    "@value": "813/.54"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "_:b54httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/edition": [
+   {
+    "@value": "full"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/assigner": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/rwo/agents/n79041717-781",
+  "@type": [
+   "http://www.loc.gov/mads/rdf/v1#Geographic"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "California"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "181  $zCalifornia"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/authorities/genreForms",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Source"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "LC Genre/Forms"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/maudience",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Source"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "MARC Audience"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/organizations/dlc",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Organization",
+   "http://id.loc.gov/ontologies/bibframe/Agent"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "United States, Library of Congress"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/code",
+    "@value": "DLC"
+   },
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+    "@value": "dlc"
+   },
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+    "@value": "US-dlc"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/authorities/subjects/sh85081530",
+  "@type": [
+   "http://www.loc.gov/mads/rdf/v1#Topic"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@language": "en",
+    "@value": "Married women"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "150  $aMarried women"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ]
+ },
+ {
+  "@id": "_:b193httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/status": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/n"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/date": [
+   {
+    "@type": "http://www.w3.org/2001/XMLSchema#date",
+    "@value": "2023-05-08"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/agent": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+   }
+  ]
+ },
+ {
+  "@id": "_:b256httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/descriptionLevel": [
+   {
+    "@id": "http://id.loc.gov/ontologies/bibframe-2-6-0/"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/encodingLevel": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/menclvl/f"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/descriptionConventions": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd"
+   },
+   {
+    "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/identifiedBy": [
+   {
+    "@id": "_:b271httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "906  $a7$bcbc$corigres$d2$encip$f20$gy-gencatlg"
+   },
+   {
+    "@value": "9250 $aacquire$b1 shelf copy$xpolicy default"
+   },
+   {
+    "@value": "955  $bxn11 2023-05-08 z-processor to USPRLL$ixk02 2024-09-25$bxk02 2024-09-25 to CMD"
+   },
+   {
+    "@value": "955  $aLCAP batch update 2025-06-02-04:00: LCAPM-893"
+   }
+  ],
+  "http://id.loc.gov/ontologies/lclocal/d906": [
+   {
+    "@value": "=906     $a 7 $b cbc $c origres $d 2 $e ncip $f 20 $g y-gencatlg"
+   }
+  ],
+  "http://id.loc.gov/ontologies/lclocal/d925": [
+   {
+    "@value": "=925  0  $a acquire $b 1 shelf copy $x policy default"
+   }
+  ],
+  "http://id.loc.gov/ontologies/lclocal/d955": [
+   {
+    "@value": "=955     $b xn11 2023-05-08 z-processor to USPRLL $i xk02 2024-09-25 $b xk02 2024-09-25 to CMD"
+   },
+   {
+    "@value": "=955     $a LCAP batch update 2025-06-02-04:00: LCAPM-893"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/descriptionLanguage": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/languages/eng"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/note": [
+   {
+    "@id": "_:b313httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/descriptionAuthentication": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/marcauthen/pcc"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/resources/instances/23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Instance"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/title": [
+   {
+    "@id": "_:b109httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/publicationStatement": [
+   {
+    "@value": "New York, NY: Harper, an imprint of HarperCollins Publishers, 2023"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/resources/works/23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Work",
+   "http://id.loc.gov/ontologies/bibframe/Text",
+   "http://id.loc.gov/ontologies/bibframe/Monograph"
+  ],
+  "http://id.loc.gov/ontologies/bflc/aap": [
+   {
+    "@value": "Pynchon, Thomas. The crying of lot 49"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+   {
+    "@value": "pynchonthomasthecryingoflot49"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/language": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/languages/eng"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/originDate": [
+   {
+    "@type": "http://id.loc.gov/datatypes/edtf",
+    "@value": "1965"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/intendedAudience": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/maudience/adu"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/classification": [
+   {
+    "@id": "_:b28httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b50httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/contribution": [
+   {
+    "@id": "_:b70httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/title": [
+   {
+    "@id": "_:b86httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b92httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/content": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/contentTypes/txt"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/summary": [
+   {
+    "@id": "_:b102httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://purl.org/dc/terms/isPartOf": [
+   {
+    "@id": "http://id.loc.gov/resources/works"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/hasInstance": [
+   {
+    "@id": "http://id.loc.gov/resources/instances/23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/genreForm": [
+   {
+    "@id": "http://id.loc.gov/authorities/genreForms/gf2014026339"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/subject": [
+   {
+    "@id": "_:b129httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b161httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/adminMetadata": [
+   {
+    "@id": "_:b193httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b214httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b234httpc0liddOtlocdOtgovresourcesworks23118629"
+   },
+   {
+    "@id": "_:b256httpc0liddOtlocdOtgovresourcesworks23118629"
+   }
+  ]
+ },
+ {
+  "@id": "_:b92httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/VariantTitle"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+   {
+    "@value": "Crying of lot forty-nine"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/menclvl/f",
+  "@type": [
+   "http://id.loc.gov/ontologies/bflc/EncodingLevel"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "full"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "f"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/descriptionConventions/rda",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "Resource description and access"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "rda"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/languages/eng",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Language"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@language": "en",
+    "@value": "English"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@type": "http://www.w3.org/2001/XMLSchema#string",
+    "@value": "eng"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/descriptionConventions/isbd",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/DescriptionConventions"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "ISBD: International standard bibliographic description"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "isbd"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Agent",
+   "http://id.loc.gov/ontologies/bibframe/Organization"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "United States, Library of Congress, Network Development and MARC Standards Office"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/code",
+    "@value": "DLC-MRC"
+   },
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/normalized",
+    "@value": "dlcmrc"
+   },
+   {
+    "@type": "http://id.loc.gov/datatypes/orgs/iso15511",
+    "@value": "US-dlcmrc"
+   }
+  ]
+ },
+ {
+  "@id": "_:b313httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Note",
+   "http://id.loc.gov/vocabulary/mnotetype/internal"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "040  $aDLC$beng$cDLC$erda$dDLC"
+   }
+  ]
+ },
+ {
+  "@id": "_:b234httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/AdminMetadata"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/status": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/c"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/agent": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlcmrc"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/generationProcess": [
+   {
+    "@id": "https://github.com/lcnetdev/marc2bibframe2/releases/tag/v3.0.0"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/date": [
+   {
+    "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+    "@value": "2026-03-13T06:36:33.694155-04:00"
+   }
+  ]
+ },
+ {
+  "@id": "_:b86httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Title"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+   {
+    "@value": "The crying of lot 49"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/nonSortNum": [
+   {
+    "@value": "4"
+   }
+  ]
+ },
+ {
+  "@id": "_:b28httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/ClassificationLcc"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/classificationPortion": [
+   {
+    "@value": "PS3566.Y55"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/itemPortion": [
+   {
+    "@value": "C79 2023"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/assigner": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/status": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/mstatus/uba"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/mstatus/c",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Status"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "changed"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "c"
+   }
+  ]
+ },
+ {
+  "@id": "_:b271httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Local"
+  ],
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#value": [
+   {
+    "@value": "23118629"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/assigner": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/organizations/dlc"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/contentTypes/txt",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Content"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "text"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "txt"
+   }
+  ]
+ },
+ {
+  "@id": "_:b161httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Topic",
+   "http://www.loc.gov/mads/rdf/v1#ComplexSubject"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "Married women--California"
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#authoritativeLabel": [
+   {
+    "@value": "Married women--California"
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#componentList": [
+   {
+    "@list": [
+     {
+      "@id": "http://id.loc.gov/authorities/subjects/sh85081530"
+     },
+     {
+      "@id": "http://id.loc.gov/rwo/agents/n79041717-781"
+     }
+    ]
+   }
+  ],
+  "http://www.loc.gov/mads/rdf/v1#isMemberOfMADSScheme": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/aap-normalized": [
+   {
+    "@value": "marriedwomencalifornia"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/marcauthen/pcc",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/DescriptionAuthentication"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "Program for Cooperative Cataloging"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "pcc"
+   }
+  ]
+ },
+ {
+  "@id": "_:b109httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Title"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/mainTitle": [
+   {
+    "@value": "The crying of lot 49"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/subtitle": [
+   {
+    "@value": "a novel"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/nonSortNum": [
+   {
+    "@value": "4"
+   }
+  ]
+ },
+ {
+  "@id": "_:b70httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Contribution",
+   "http://id.loc.gov/ontologies/bibframe/PrimaryContribution"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/agent": [
+   {
+    "@id": "http://id.loc.gov/rwo/agents/n79099184"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/role": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/relators/aut"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/authorities/subjects/sh85000899",
+  "@type": [
+   "http://www.loc.gov/mads/rdf/v1#Topic"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@language": "en",
+    "@value": "Administration of estates"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bflc/marcKey": [
+   {
+    "@value": "150 0$aAdministration of estates"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/authorities/subjects"
+   }
+  ]
+ },
+ {
+  "@id": "_:b54httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Source"
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "23/eng/20240925"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/authorities/subjects",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Source",
+   "http://www.loc.gov/mads/rdf/v1#MADSScheme"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "LC Subject Headings"
+   },
+   {
+    "@language": "en",
+    "@value": "Library of Congress Subject Headings"
+   }
+  ]
+ },
+ {
+  "@id": "http://id.loc.gov/vocabulary/maudience/adu",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/IntendedAudience"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "adult"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/code": [
+   {
+    "@value": "adu"
+   }
+  ],
+  "http://id.loc.gov/ontologies/bibframe/source": [
+   {
+    "@id": "http://id.loc.gov/vocabulary/maudience"
+   }
+  ]
+ },
+ {
+  "@id": "_:b102httpc0liddOtlocdOtgovresourcesworks23118629",
+  "@type": [
+   "http://id.loc.gov/ontologies/bibframe/Summary"
+  ],
+  "http://www.w3.org/2000/01/rdf-schema#label": [
+   {
+    "@value": "\"When her ex-lover, wealthy real-estate tycoon Pierce Inverarity, dies and designates her the coexecutor of his estate, California housewife Oedipa Maas is thrust into a paranoid mystery of metaphors, symbols, and the United States Postal Service. Traveling across Southern California, she meets some extremely interesting characters--including a teenage rock band called the Paranoids, a right-wing historian and critic of the postal system, and a former child actor with whom she has an affair--and begins to unravel conspiracies she suddenly sees all around her. Written in 1966, The Crying of Lot 49 demonstrates the piquant wit and power of invention that are the hallmarks of Pynchon's acclaimed works. It is the shortest of his novels, and widely held to be the benchmark of this literary lion's career.\"-- Amazon."
+   }
+  ]
+ }
+]

@@ -34,6 +34,7 @@ from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.versions import endpoints as version_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.change_documents.routes import change_documents
+from bluecore_api.federated.external import endpoints as external_routes
 from bluecore_api.federated.http import new_client
 from bluecore_api.federated.routes import endpoints as federated_routes
 from bluecore_api.middleware.keycloak_auth import (
@@ -69,6 +70,13 @@ openapi_tags = [
     {
         "name": "Search",
         "description": "Full-text and vector search for Works, Instances, Hubs, Resources.",
+    },
+    {
+        "name": "External Resources",
+        "description": (
+            "Fetch a record from an external BIBFRAME source for editing. "
+            "Nothing is persisted until it is saved."
+        ),
     },
     {
         "name": "Federated Search",
@@ -158,6 +166,7 @@ mcp.mount_http()
 # mcp.mount_http() once it has stabilized.
 base_app.include_router(health_routes, tags=["Health"])
 base_app.include_router(federated_routes, tags=["Federated Search"])
+base_app.include_router(external_routes, tags=["External Resources"])
 
 # Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/views/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

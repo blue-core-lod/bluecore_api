@@ -73,6 +73,7 @@ class BypassKeycloakForGet:
             "/profiles/",
             "/change_documents/",
             "/search",
+            "/external/",
             "/cbd",
             "/static/",
             "/mcp",
