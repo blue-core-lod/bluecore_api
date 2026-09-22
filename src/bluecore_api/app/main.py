@@ -1,5 +1,7 @@
 import os
 import sys
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,6 +34,7 @@ from bluecore_api.app.routes.search import endpoints as search_routes
 from bluecore_api.app.routes.versions import endpoints as version_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.change_documents.routes import change_documents
+from bluecore_api.federated.http import new_client
 from bluecore_api.middleware.keycloak_auth import (
     BypassKeycloakForGet,
     CompatibleFastAPI,
@@ -76,9 +79,27 @@ openapi_tags = [
     {"name": "Health", "description": "Service health check."},
 ]
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """One outbound HTTP client for the process, shared by federated search.
+
+    Requires BypassKeycloakForGet to pass lifespan scopes through; without that
+    fix uvicorn reports the lifespan protocol as unsupported and this never runs
+    in the deployed stack. federated.http.client_for falls back to a
+    per-request client wherever there is no lifespan (e.g. ASGITransport tests).
+    """
+    app.state.http_client = new_client()
+    try:
+        yield
+    finally:
+        await app.state.http_client.aclose()
+
+
 """Init base app"""
 base_app = FastAPI(
     root_path="/api",
+    lifespan=lifespan,
     dependencies=[Depends(set_user_context)],
     openapi_tags=openapi_tags,
     swagger_ui_parameters={

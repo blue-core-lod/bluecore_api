@@ -84,6 +84,15 @@ class BypassKeycloakForGet:
         self.keycloak_middleware = keycloak_middleware
 
     async def __call__(self, scope, receive, send):
+        # Only http scopes carry a method and a path. Lifespan (and websocket)
+        # scopes have to pass straight through: reading scope["method"] on a
+        # lifespan scope raises KeyError, which uvicorn swallows as "ASGI
+        # 'lifespan' protocol appears unsupported", so startup and shutdown
+        # handlers would silently never run in the deployed stack.
+        if scope["type"] != "http":
+            await self.inner_app(scope, receive, send)
+            return
+
         method = scope["method"]
         path = scope["path"]
 

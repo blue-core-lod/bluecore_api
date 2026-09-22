@@ -211,15 +211,10 @@ def keycloak_client(app):
     """
     from bluecore_api.middleware.keycloak_auth import BypassKeycloakForGet
 
+    # No non-http shim needed: the wrapper passes lifespan straight through.
     bypass = BypassKeycloakForGet(app=app, keycloak_middleware=_StubKeycloak(app))
 
-    async def stack(scope, receive, send):
-        if scope["type"] == "http":
-            await bypass(scope, receive, send)
-        else:
-            await app(scope, receive, send)
-
-    with TestClient(stack) as kk_client:
+    with TestClient(bypass) as kk_client:
         yield kk_client
 
 

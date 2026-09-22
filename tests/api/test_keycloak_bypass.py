@@ -106,3 +106,25 @@ async def test_options_always_bypasses(path):
     """OPTIONS (CORS preflight) is always public, regardless of path."""
     inner, keycloak = await _route("OPTIONS", path)
     assert inner.called and not keycloak.called
+
+
+# --- Non-http scopes ----------------------------------------------------------
+@pytest.mark.asyncio
+@pytest.mark.parametrize("scope_type", ["lifespan", "websocket"])
+async def test_non_http_scope_passes_through(scope_type):
+    """A lifespan scope has no "method" key. If the wrapper reads one it raises
+    KeyError, uvicorn reports "ASGI 'lifespan' protocol appears unsupported" and
+    carries on, so startup/shutdown handlers never run in the deployed stack
+    (but do run under TestClient and DEVELOPER_MODE). Anything hung off the app
+    lifespan depends on this passing through untouched."""
+    inner, keycloak = _Recorder(), _Recorder()
+    wrapper = BypassKeycloakForGet(app=inner, keycloak_middleware=keycloak)
+
+    async def receive():
+        return {}
+
+    async def send(message):
+        return None
+
+    await wrapper({"type": scope_type}, receive, send)
+    assert inner.called and not keycloak.called
