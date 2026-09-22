@@ -210,6 +210,7 @@ async def context_jsonld():
     # Sinopia rejects both a bare mapping anda non-JSON-LD media type.
     return JSONResponse({"@context": CONTEXT}, media_type="application/ld+json")
 
+
 """
 Error responses for any operation that carries a security requirement.
 
@@ -247,6 +248,7 @@ _FORBIDDEN_RESPONSE = {
 
 _default_openapi = base_app.openapi
 
+
 def openapi_with_auth_responses():
     if base_app.openapi_schema:
         return base_app.openapi_schema
@@ -261,5 +263,6 @@ def openapi_with_auth_responses():
             responses.setdefault("401", _UNAUTHORIZED_RESPONSE)
             responses.setdefault("403", _FORBIDDEN_RESPONSE)
     return schema
+
 
 base_app.openapi = openapi_with_auth_responses  # ty: ignore
