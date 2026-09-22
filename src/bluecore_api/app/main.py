@@ -35,6 +35,7 @@ from bluecore_api.app.routes.versions import endpoints as version_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.federated.http import new_client
+from bluecore_api.federated.routes import endpoints as federated_routes
 from bluecore_api.middleware.keycloak_auth import (
     BypassKeycloakForGet,
     CompatibleFastAPI,
@@ -68,6 +69,13 @@ openapi_tags = [
     {
         "name": "Search",
         "description": "Full-text and vector search for Works, Instances, Hubs, Resources.",
+    },
+    {
+        "name": "Federated Search",
+        "description": (
+            "Search Blue Core and external BIBFRAME sources together, grouped "
+            "by source."
+        ),
     },
     {
         "name": "Change Documents",
@@ -143,9 +151,13 @@ mcp = FastApiMCP(
 )
 mcp.mount_http()
 
-# Registered after the MCP mount so the health check stays out of the tool list;
-# it's for load balancers and deploy checks, not for MCP clients.
+# Registered after the MCP mount so these stay out of the tool list.
+# Health is for load balancers and deploy checks, not for MCP clients.
+# Federated search egresses to third parties and can partially fail, and its
+# envelope is still settling -- promote it by moving this line above
+# mcp.mount_http() once it has stabilized.
 base_app.include_router(health_routes, tags=["Health"])
+base_app.include_router(federated_routes, tags=["Federated Search"])
 
 # Serve CSS/images for HTML views. Templates reference these at `{{ BLUECORE_URL }}static/...` (see app/views/templating.py).
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
