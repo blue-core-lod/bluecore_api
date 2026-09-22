@@ -157,6 +157,23 @@ To talk directly to the API you will need to pass along a Keycloak access token.
 curl --header "Authorization: Bearer $(bluecore token)" http://localhost:3000/change_documents/instances/page/1
 ```
 
+### Authenticating in Swagger UI
+
+`/docs` shows which routes require a token: protected operations carry a padlock and
+document their 401 and 403 responses. The **Authorize** button runs a Keycloak login,
+so you can exercise writes from the browser instead of pasting a token.
+
+Two things have to line up for that button to work:
+
+- `KEYCLOAK_EXTERNAL_URL` must point at the Keycloak your *browser* can reach.
+  `KEYCLOAK_INTERNAL_URL` is what the server uses to validate tokens, and under
+  Docker the two are different hostnames.
+- The `bluecore_api` Keycloak client must list `<BLUECORE_URL>api/docs/oauth2-redirect`
+  among its valid redirect URIs, and the origin serving `/docs` among its web origins.
+
+If they don't, the spec still documents authentication correctly — only the in-browser
+login fails, and the `curl` form above still works.
+
 ## 🧹 Linting
 
 Bluecore API uses [ruff]
