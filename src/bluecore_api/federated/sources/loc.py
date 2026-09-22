@@ -18,6 +18,7 @@ tests/loc-suggest2-*.json:
    output is Postgres tsquery syntax (:* & <->) that would be sent literally.
 """
 
+import asyncio
 import logging
 from datetime import UTC, datetime
 from typing import Any
@@ -31,6 +32,7 @@ from bluecore_api.federated.base import (
     FederatedSearchError,
     SourceResults,
 )
+from bluecore_api.federated.cache import cached
 from bluecore_api.federated.config import (
     loc_base_url,
     loc_directories,
@@ -52,6 +54,12 @@ DIRECTORIES: dict[SearchType, str] = {
 # The endpoint's own limit already caps at 100, but asking id.loc.gov for a
 # hundred rows a search is the impolite direction.
 MAX_COUNT = 25
+
+# A hard ceiling on how much of id.loc.gov we hold open at once, across every
+# request this process is serving. A traffic spike should queue here rather
+# than arrive there all at once.
+MAX_CONCURRENT_REQUESTS = 4
+_egress = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
 
 def _first_str(values: object) -> str | None:
@@ -247,14 +255,28 @@ class LibraryOfCongressSource:
             "offset": query.offset,
         }
 
+    async def _fetch(self, url: str, params: dict[str, str | int]) -> Any:
+        async with _egress:
+            response = await self.http.get(url, params=params)
+        if response.status_code == 429:
+            # Say so plainly rather than retrying: a retry doubles the load on
+            # a service that has just told us to back off.
+            retry_after = response.headers.get("retry-after", "")
+            suffix = f" Retry after {retry_after}s." if retry_after else ""
+            raise FederatedSearchError(f"{self.label} is rate limiting us.{suffix}")
+        response.raise_for_status()
+        return response.json()
+
     async def _search_directory(
         self, directory: str, query: FederatedQuery
     ) -> SourceResults:
         url = self._url(directory)
+        params = self._params(query)
         try:
-            response = await self.http.get(url, params=self._params(query))
-            response.raise_for_status()
-            payload = response.json()
+            payload = await cached(
+                str(httpx.URL(url, params=params)),
+                lambda: self._fetch(url, params),
+            )
         except httpx.HTTPStatusError as error:
             raise FederatedSearchError(
                 f"{self.label} returned HTTP {error.response.status_code}."

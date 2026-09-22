@@ -26,6 +26,7 @@ from bluecore_api.constants import (
     SearchType,
 )
 from bluecore_api.database import get_db
+from bluecore_api.derived_from import find_by_derived_from
 from bluecore_api.federated.base import (
     FederatedQuery,
     FederatedResult,
@@ -104,6 +105,36 @@ async def _run(
             return await source.search(query)
     finally:
         timings[source.id] = int((time.monotonic() - started) * 1000)
+
+
+async def _annotate_already_held(
+    db: Session, outcomes: list[SourceResults | BaseException]
+) -> None:
+    """Fill in local_uri on external hits we already hold a copy of.
+
+    Without this, the first thing federated search does is manufacture
+    duplicates: a cataloger sees an LC record, copies it, and Blue Core ends up
+    with two resources derived from the same work with no relationship between
+    them. Knowing before the copy turns that into the cataloger's choice.
+
+    One indexed query for the whole response. Runs after the fan-out rather
+    than alongside it because it shares the request's Session, which is not
+    thread-safe.
+    """
+    external = [
+        result
+        for outcome in outcomes
+        if isinstance(outcome, SourceResults)
+        for result in outcome.results
+        if result.local_uri is None
+    ]
+    if not external:
+        return
+
+    uris = list({result.uri for result in external})
+    held = await asyncio.to_thread(find_by_derived_from, db, uris)
+    for result in external:
+        result.local_uri = held.get(result.uri)
 
 
 def _group(
@@ -225,6 +256,8 @@ async def search_federated(
             *(_run(source, query, timings) for source in runnable),
             return_exceptions=True,
         )
+
+    await _annotate_already_held(db, list(outcomes))
 
     groups = [
         _group(source, query, has_search_query, outcome, timings.get(source.id, 0))

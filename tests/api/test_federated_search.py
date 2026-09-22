@@ -266,3 +266,99 @@ def test_external_results_carry_provenance_not_a_blue_core_identity(
     # Stage 5 fills this in; until then it is explicitly "we did not look".
     assert result["local_uri"] is None
     assert result["data"]["title"][0]["mainTitle"] == "Moby-Dick, or, The whale"
+
+
+# --- Caching and "already in Blue Core" ----------------------------------------
+LOC_WORK_URI = "http://id.loc.gov/resources/works/13337906"
+
+
+def test_repeat_searches_make_one_outbound_request(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """Politeness, and the metric that makes the cost argument.
+
+    LC serves these with cache-control: public, max-age=2419200, so a short
+    local TTL is conservative.
+    """
+    httpx_mock.add_response(json=_loc_payload(), is_reusable=True)
+
+    for _ in range(3):
+        client.get("/search/federated", params={"q": TITLE, "type": "works"})
+
+    assert len(httpx_mock.get_requests()) == 1
+
+
+def test_an_external_hit_we_already_hold_is_flagged(
+    client: TestClient, db_session: Session, with_loc: None, httpx_mock
+):
+    """Without this, the first thing federated search does is manufacture
+    duplicates: two catalogers copy the same LC work and Blue Core ends up with
+    two unrelated resources derived from it."""
+    httpx_mock.add_response(json=_loc_payload())
+    copied_uri = "https://bcld.info/works/00000000-0000-0000-0000-000000000095"
+    db_session.add(
+        Work(
+            id=95,
+            uuid="00000000-0000-0000-0000-000000000095",
+            uri=copied_uri,
+            data={
+                "@id": copied_uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "Moby-Dick"},
+                "adminMetadata": [
+                    {
+                        "@type": "AdminMetadata",
+                        "derivedFrom": {"@id": LOC_WORK_URI},
+                    }
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    payload = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}
+    ).json()
+
+    results = {r["uri"]: r for r in _group(payload, "loc")["results"]}
+    assert results[LOC_WORK_URI]["local_uri"] == copied_uri
+    # Every other hit is explicitly "we looked and we do not have it".
+    others = [r for uri, r in results.items() if uri != LOC_WORK_URI]
+    assert others and all(r["local_uri"] is None for r in others)
+
+
+def test_provenance_matches_across_http_and_https(
+    client: TestClient, db_session: Session, with_loc: None, httpx_mock
+):
+    """id.loc.gov searches return http:// URIs but redirect browsers to
+    https://, so which form got stored depends on how the record arrived."""
+    httpx_mock.add_response(json=_loc_payload())
+    copied_uri = "https://bcld.info/works/00000000-0000-0000-0000-000000000096"
+    db_session.add(
+        Work(
+            id=96,
+            uuid="00000000-0000-0000-0000-000000000096",
+            uri=copied_uri,
+            data={
+                "@id": copied_uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "Moby-Dick"},
+                "adminMetadata": [
+                    {
+                        "@type": "AdminMetadata",
+                        "derivedFrom": {
+                            "@id": LOC_WORK_URI.replace("http://", "https://")
+                        },
+                    }
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    payload = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}
+    ).json()
+
+    results = {r["uri"]: r for r in _group(payload, "loc")["results"]}
+    assert results[LOC_WORK_URI]["local_uri"] == copied_uri
