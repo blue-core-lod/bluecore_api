@@ -54,6 +54,28 @@ property the whole approach rests on.
 `bluecore_uri` says whether Blue Core already holds a copy derived from this
 record, so a client can offer to open that instead of making a second one.
 
+### `GET /search/federated/metrics`
+
+Live counters for the experiment. Aggregate only -- no query text, nothing
+about who searched.
+
+```
+curl -s localhost:3000/search/federated/metrics | jq
+```
+
+The number to watch is `distinct_external_records_fetched`: records catalogers
+actually opened, set against the ~47M a bulk load would bring in. If that stays
+in the thousands over a few months, the ratio is the argument.
+
+Per-process and reset on restart, like the cache. The durable record is the
+`federated.search` and `federated.fetch` log lines.
+
+Note what cannot be counted yet: whether an opened record was ultimately
+**saved**. The editor posts a blank-node subject, so nothing on the write path
+knows which external record a new resource came from -- see the provenance
+decision below. `distinct_external_records_fetched` is therefore an upper bound
+on records kept, and a fair measure of records touched.
+
 ## Configuration
 
 | Variable | Default | |

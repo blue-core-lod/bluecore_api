@@ -29,6 +29,7 @@ from bluecore_api.constants import (
 )
 from bluecore_api.database import get_db
 from bluecore_api.derived_from import find_by_derived_from
+from bluecore_api.federated import metrics
 from bluecore_api.federated.base import (
     FederatedQuery,
     FederatedResult,
@@ -43,6 +44,7 @@ from bluecore_api.federated.registry import (
     UnknownSourceError,
     resolve_sources,
 )
+from bluecore_api.federated.sources.bluecore import BlueCoreSource
 from bluecore_api.schemas.federated import (
     FederatedLinksSchema,
     FederatedResultSchema,
@@ -325,6 +327,13 @@ async def search_federated(
     order = {source.id: i for i, source in enumerate(chosen)}
     groups.sort(key=lambda g: order[g.id])
 
+    metrics.record_search(
+        outcomes={g.id: str(g.status) for g in groups},
+        external_uris=[
+            r.uri for g in groups if g.id != BlueCoreSource.id for r in g.results
+        ],
+    )
+
     answered = [g for g in groups if g.status is SourceStatus.OK]
     body = FederatedSearchResultSchema(
         q=q,
@@ -345,3 +354,20 @@ async def search_federated(
 
     status_code = 200 if answered or not groups else 502
     return JSONResponse(content=body.model_dump(mode="json"), status_code=status_code)
+
+
+@endpoints.get(
+    "/search/federated/metrics",
+    operation_id="search_federated_metrics",
+)
+async def search_federated_metrics() -> dict[str, object]:
+    """Live counters for the federated search experiment.
+
+    Per-process and reset on restart -- the durable record is the
+    federated.search and federated.fetch log lines. Aggregate counts only, no
+    query text and nothing about who searched.
+
+    distinct_external_records_fetched is the number to compare against the size
+    of the corpus a bulk load would bring in.
+    """
+    return metrics.snapshot()

@@ -186,18 +186,20 @@ def client(mocker, db_session, app):
 
 
 @pytest.fixture(autouse=True)
-def clear_federated_cache():
-    """Federated search caches upstream responses in module-level state.
+def clear_federated_state():
+    """Federated search keeps its cache and counters in module-level state.
 
     Cleared around every test: otherwise a test that asserts on outbound
     requests passes alone and fails once another test has warmed the same key,
     which is the worst kind of flake to chase.
     """
-    from bluecore_api.federated import cache
+    from bluecore_api.federated import cache, metrics
 
     cache.clear()
+    metrics.reset()
     yield
     cache.clear()
+    metrics.reset()
 
 
 class _StubKeycloak:

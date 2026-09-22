@@ -212,3 +212,16 @@ def test_the_route_is_public(
     response = keycloak_client.get("/external/resources", params={"uri": REQUESTED_URI})
 
     assert response.status_code == 200
+
+
+def test_opening_a_record_is_counted(client: TestClient, httpx_mock, lc_work):
+    """Distinct records opened is the number the dump decision turns on."""
+    from bluecore_api.federated import metrics
+
+    httpx_mock.add_response(json=lc_work, is_reusable=True)
+
+    client.get("/external/resources", params={"uri": REQUESTED_URI})
+    client.get("/external/resources", params={"uri": WORK_URI})
+
+    # The same record under both schemes is one record, not two.
+    assert metrics.snapshot()["distinct_external_records_fetched"] == 1

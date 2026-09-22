@@ -23,6 +23,7 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from bluecore_api.federated import metrics
 from bluecore_api.federated.config import cache_ttl_seconds
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ async def cached(key: str, fetch: Callable[[], Awaitable[Any]]) -> Any:
     the length of a TTL.
     """
     hit, value = _get(key)
+    metrics.record_cache(hit=hit)
     if hit:
         return value
 

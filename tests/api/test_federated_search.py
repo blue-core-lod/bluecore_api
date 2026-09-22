@@ -404,3 +404,36 @@ def test_json_is_still_the_default(client: TestClient, searchable: None, httpx_m
     response = client.get("/search/federated", params={"q": TITLE})
 
     assert response.headers["content-type"].startswith("application/json")
+
+
+# --- Experiment counters --------------------------------------------------------
+def test_metrics_count_what_the_experiment_needs(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """The deciding number is distinct external records actually opened, set
+    against the size of the corpus a bulk load would bring in."""
+    httpx_mock.add_response(json=_loc_payload(), is_reusable=True)
+
+    client.get("/search/federated", params={"q": TITLE, "type": "works"})
+    client.get("/search/federated", params={"q": TITLE, "type": "works"})
+
+    counts = client.get("/search/federated/metrics").json()
+    assert counts["searches"] == 2
+    assert counts["source_outcomes"] == {"bluecore:ok": 2, "loc:ok": 2}
+    # Three distinct LC records, seen twice: the count is of records, not rows.
+    assert counts["distinct_external_records_seen"] == 3
+    # Nobody opened one, so nothing has been touched.
+    assert counts["distinct_external_records_fetched"] == 0
+    # The second search was served from cache.
+    assert counts["upstream_cache_hit_rate"] == 0.5
+
+
+def test_a_failed_source_is_counted_as_such(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    httpx_mock.add_response(status_code=503)
+
+    client.get("/search/federated", params={"q": TITLE, "type": "works"})
+
+    counts = client.get("/search/federated/metrics").json()
+    assert counts["source_outcomes"] == {"bluecore:ok": 1, "loc:error": 1}
