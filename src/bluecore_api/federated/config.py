@@ -10,7 +10,7 @@ import os
 
 DEFAULT_SOURCES = "bluecore,loc"
 DEFAULT_LOC_BASE_URL = "https://id.loc.gov"
-DEFAULT_LOC_DIRECTORIES = "works"
+DEFAULT_LOC_DIRECTORIES = "works,instances,hubs"
 DEFAULT_TIMEOUT_SECONDS = 5.0
 DEFAULT_CACHE_TTL_SECONDS = 600.0
 DEFAULT_MAX_EXTERNAL_OFFSET = 200
@@ -39,10 +39,12 @@ def loc_base_url() -> str:
 def loc_directories() -> list[str]:
     """Which id.loc.gov resource directories a type=all search covers.
 
-    Defaults to works alone: type=all is the editor's default, and fanning out
-    to three directories would triple our traffic to a site whose robots.txt
-    warns it blocks irresponsible clients. Works hits already carry their
-    instance URI in more.instance.
+    All three, because searching the Library of Congress is something a
+    cataloger opts into per search rather than the default source -- so an
+    "everything at LC" search costing three requests is defensible where the
+    same fan-out on every search would not be. Narrow it here if that traffic
+    ever becomes a problem; works hits alone still carry their instance URI in
+    more.instance.
     """
     return _csv(os.environ.get("LOC_SEARCH_DIRECTORIES", DEFAULT_LOC_DIRECTORIES))
 

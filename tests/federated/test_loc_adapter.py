@@ -135,30 +135,35 @@ async def test_deep_paging_is_refused_without_a_request(httpx_mock, source):
 
 
 @pytest.mark.asyncio
-async def test_type_all_covers_works_only_by_default(httpx_mock, source):
-    """type=all is the editor's default; three directory requests per search
-    would triple our traffic for marginal recall."""
-    httpx_mock.add_response(json=payload("works"))
-
-    results = await source.search(query(type=SearchType.ALL))
-
-    assert len(httpx_mock.get_requests()) == 1
-    assert httpx_mock.get_requests()[0].url.path == "/resources/works/suggest2/"
-    assert results.note == "Library of Congress results cover Works."
-
-
-@pytest.mark.asyncio
-async def test_type_all_can_be_widened(httpx_mock, monkeypatch, source):
-    monkeypatch.setenv("LOC_SEARCH_DIRECTORIES", "works,instances,hubs")
+async def test_type_all_covers_every_directory(httpx_mock, source):
+    """Searching LC is opted into per search rather than being the default
+    source, so an all-types search may cost one request per directory."""
     for name in ("works", "instances", "hubs"):
         httpx_mock.add_response(json=payload(name))
 
     results = await source.search(query(type=SearchType.ALL))
 
-    assert len(httpx_mock.get_requests()) == 3
+    paths = sorted(str(r.url.path) for r in httpx_mock.get_requests())
+    assert paths == [
+        "/resources/hubs/suggest2/",
+        "/resources/instances/suggest2/",
+        "/resources/works/suggest2/",
+    ]
     assert results.note is None
     # Totals are summed across the directories that were asked.
     assert results.total == 190 + 204 + 30
+
+
+@pytest.mark.asyncio
+async def test_type_all_can_be_narrowed(httpx_mock, monkeypatch, source):
+    """The escape hatch if that traffic ever matters."""
+    monkeypatch.setenv("LOC_SEARCH_DIRECTORIES", "works")
+    httpx_mock.add_response(json=payload("works"))
+
+    results = await source.search(query(type=SearchType.ALL))
+
+    assert len(httpx_mock.get_requests()) == 1
+    assert results.note == "Library of Congress results cover Works."
 
 
 # --- Mapping ------------------------------------------------------------------

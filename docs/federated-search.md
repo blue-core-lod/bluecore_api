@@ -82,7 +82,7 @@ on records kept, and a fair measure of records touched.
 |---|---|---|
 | `FEDERATED_SEARCH_SOURCES` | `bluecore,loc` | Enabled sources, in response order. The `sources=` parameter may only narrow this. |
 | `LOC_BASE_URL` | `https://id.loc.gov` | |
-| `LOC_SEARCH_DIRECTORIES` | `works` | Which suggest2 directories a `type=all` search covers. |
+| `LOC_SEARCH_DIRECTORIES` | `works,instances,hubs` | Which suggest2 directories a `type=all` search covers. |
 | `FEDERATED_SEARCH_TIMEOUT` | `5.0` | Per-source wall-clock budget. |
 | `FEDERATED_SEARCH_CACHE_TTL` | `600` | |
 | `FEDERATED_SEARCH_MAX_EXTERNAL_OFFSET` | `200` | |

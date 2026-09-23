@@ -211,10 +211,8 @@ class LibraryOfCongressSource:
     def directories_for(self, type_: SearchType) -> list[str]:
         """Which suggest2 directories one search covers.
 
-        type=all is the editor's default, so fanning out to all three would
-        triple our traffic to a service whose robots.txt warns it blocks
-        irresponsible clients -- and works hits already carry their instance
-        URI. LOC_SEARCH_DIRECTORIES widens it for anyone who wants that.
+        LOC_SEARCH_DIRECTORIES narrows this if the traffic of an all-types
+        search ever matters; see federated.config.loc_directories.
         """
         if type_ is SearchType.ALL:
             configured = loc_directories()
