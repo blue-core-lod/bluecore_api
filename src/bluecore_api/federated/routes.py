@@ -12,6 +12,7 @@ Blue Core envelope.
 import asyncio
 import logging
 import time
+from collections import defaultdict
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -29,7 +30,7 @@ from bluecore_api.constants import (
 )
 from bluecore_api.database import get_db
 from bluecore_api.derived_from import find_by_derived_from
-from bluecore_api.federated import metrics
+from bluecore_api.federated import breaker, metrics
 from bluecore_api.federated.base import (
     FederatedQuery,
     FederatedResult,
@@ -103,10 +104,24 @@ async def _run(
     than being caught here, so every source fails the same way; the finally
     clause means a source that blew up still reports its elapsed time.
     """
+    if breaker.is_open(source.id):
+        timings[source.id] = 0
+        raise breaker.CircuitOpenError(
+            f"{source.label} is not responding and is being skipped for now."
+        )
+
     started = time.monotonic()
     try:
         async with asyncio.timeout(source_timeout_seconds()):
-            return await source.search(query)
+            results = await source.search(query)
+    except Exception:
+        # Not BaseException: a cancelled request is not the source's fault and
+        # must not count against it.
+        breaker.record_failure(source.id)
+        raise
+    else:
+        breaker.record_success(source.id)
+        return results
     finally:
         timings[source.id] = int((time.monotonic() - started) * 1000)
 
@@ -135,8 +150,17 @@ async def _annotate_already_held(
     if not external:
         return
 
-    uris = list({result.uri for result in external})
-    held = await asyncio.to_thread(find_by_derived_from, db, uris)
+    # Grouped by type because the backing index leads with it: one seekable
+    # query per type beats one index-wide scan for everything.
+    by_type: dict[str, set[str]] = defaultdict(set)
+    for result in external:
+        by_type[result.type].add(result.uri)
+
+    held: dict[str, str] = {}
+    for resource_type, uris in by_type.items():
+        held |= await asyncio.to_thread(
+            find_by_derived_from, db, list(uris), resource_type
+        )
     for result in external:
         result.local_uri = held.get(result.uri)
 
@@ -167,6 +191,16 @@ def _group(
             note=outcome.note,
             links=_links(query, len(outcome.results), has_search_query),
             results=[_to_schema(r) for r in outcome.results],
+        )
+
+    if isinstance(outcome, breaker.CircuitOpenError):
+        # Not an error this time round -- we chose not to ask.
+        return FederatedSourceSchema(
+            id=source.id,
+            label=source.label,
+            status=SourceStatus.UNAVAILABLE,
+            error=str(outcome),
+            elapsed_ms=elapsed_ms,
         )
 
     if isinstance(outcome, TimeoutError):

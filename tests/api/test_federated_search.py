@@ -500,3 +500,27 @@ def test_html_does_not_label_our_own_records_as_already_held(
     body = client.get("/search/federated", params={"q": TITLE}, headers=HTML).text
 
     assert "already in Blue Core" not in body
+
+
+def test_a_persistently_failing_source_stops_being_asked(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock, monkeypatch
+):
+    """Otherwise an outage costs every search the full timeout, on a page a
+    cataloger is waiting for."""
+    monkeypatch.setenv("FEDERATED_SEARCH_BREAKER_THRESHOLD", "2")
+    monkeypatch.setenv("FEDERATED_SEARCH_BREAKER_COOLDOWN", "300")
+    httpx_mock.add_response(status_code=503, is_reusable=True)
+
+    for _ in range(3):
+        payload = client.get(
+            "/search/federated", params={"q": TITLE, "type": "works"}
+        ).json()
+
+    # Two attempts, then skipped without asking.
+    assert len(httpx_mock.get_requests()) == 2
+
+    loc = _group(payload, "loc")
+    assert loc["status"] == "unavailable"
+    assert "being skipped" in loc["error"]
+    # And the working source is untouched throughout.
+    assert _group(payload, "bluecore")["status"] == "ok"

@@ -32,6 +32,9 @@ class SourceStatus(StrEnum):
     TIMEOUT = auto()
     ERROR = auto()
     UNSUPPORTED = auto()
+    # Skipped without asking, because it has been failing. Distinct from ERROR:
+    # nothing went wrong on this request.
+    UNAVAILABLE = auto()
 
 
 class FederatedResultSchema(BaseModel):

@@ -87,6 +87,8 @@ on records kept, and a fair measure of records touched.
 | `FEDERATED_SEARCH_CACHE_TTL` | `600` | |
 | `FEDERATED_SEARCH_MAX_EXTERNAL_OFFSET` | `200` | |
 | `FEDERATED_ALLOWED_HOSTS` | `id.loc.gov` | Hosts `/external/resources` may fetch. |
+| `FEDERATED_SEARCH_BREAKER_THRESHOLD` | `3` | Consecutive failures before a source is skipped. |
+| `FEDERATED_SEARCH_BREAKER_COOLDOWN` | `60` | Seconds to skip it before probing again. |
 
 ## What id.loc.gov actually does
 
@@ -199,6 +201,20 @@ queries against a documented JSON API that LC serves with
 `access-control-allow-origin: *`. Worth writing to LC before this goes live, to
 say what we are doing and ask what rate they are comfortable with.
 
+## Measured: the "already in Blue Core" lookup
+
+The provenance lookup was supposed to stay under 100ms p95 for a page of
+results. Against the 84k rows loaded above it first came in at **243ms p95**,
+and the reason is worth recording: the backing index is `(type, derivedFrom)`,
+and the bulk helper did not constrain `type`. Without a predicate on the
+index's leading column Postgres cannot seek, so it scanned the whole index --
+around 1,600 buffers to resolve two URIs. bluecore-models' own minter filters
+by class, which is why the same index performs there.
+
+Adding the type predicate takes it to **1.1ms p95**, a 200x difference, and it
+would only have grown worse with the corpus. A test pins the behaviour so the
+predicate cannot be quietly dropped.
+
 ## Known gaps
 
 - **Provenance on save is not wired up.** `local_uri` and `bluecore_uri` tell a
@@ -206,8 +222,6 @@ say what we are doing and ask what rate they are comfortable with.
   subject, so `save_graph` writes no `bf:derivedFrom` and the dedup never fires.
   Adding it inverts the failure rather than removing it — see the note below.
   This needs a decision before real cataloging is enabled.
-- No circuit breaker. A source that is down costs its 5s budget on every search
-  rather than failing fast.
 - Share-VDE is not implemented. The adapter Protocol is the whole answer, but
   there is no usable public API today: `lookup.ld4l.org`'s linked-data
   authorities — including the three ShareVDE entries already in sinopia_editor's

@@ -15,6 +15,8 @@ DEFAULT_TIMEOUT_SECONDS = 5.0
 DEFAULT_CACHE_TTL_SECONDS = 600.0
 DEFAULT_MAX_EXTERNAL_OFFSET = 200
 DEFAULT_ALLOWED_HOSTS = "id.loc.gov"
+DEFAULT_BREAKER_THRESHOLD = 3
+DEFAULT_BREAKER_COOLDOWN_SECONDS = 60.0
 
 
 def _csv(value: str) -> list[str]:
@@ -78,4 +80,20 @@ def allowed_external_hosts() -> frozenset[str]:
     """
     return frozenset(
         _csv(os.environ.get("FEDERATED_ALLOWED_HOSTS", DEFAULT_ALLOWED_HOSTS))
+    )
+
+
+def breaker_threshold() -> int:
+    """Consecutive failures before a source is skipped."""
+    return int(
+        os.environ.get("FEDERATED_SEARCH_BREAKER_THRESHOLD", DEFAULT_BREAKER_THRESHOLD)
+    )
+
+
+def breaker_cooldown_seconds() -> float:
+    """How long to skip it before trying one request again."""
+    return float(
+        os.environ.get(
+            "FEDERATED_SEARCH_BREAKER_COOLDOWN", DEFAULT_BREAKER_COOLDOWN_SECONDS
+        )
     )

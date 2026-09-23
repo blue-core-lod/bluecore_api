@@ -220,7 +220,7 @@ async def external_resource(
         payload = await fetch_jsonld(http, uri)
 
     subject, data, type_ = frame_for_editing(uri, payload)
-    held = find_by_derived_from(db, [subject])
+    held = find_by_derived_from(db, [subject], type_)
     metrics.record_fetch(subject, already_held=subject in held)
 
     return ExternalResourceSchema(
