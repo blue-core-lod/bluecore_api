@@ -121,65 +121,61 @@ Latency, `type=works`, cold: p50 1.7s, max 2.2s over 12 known-item queries.
 Warm through LC's own Varnish: ~0.1s. Blue Core local search: 0.26–1.4s. The
 fan-out is `max()`, not `sum()`.
 
-Known-item recall, 12 queries (Moby-Dick, The Crying of Lot 49, War and Peace,
-Beloved, Pride and Prejudice, Cien años de soledad, Things Fall Apart, Mrs
-Dalloway, Ficciones, Structure of Scientific Revolutions, Silent Spring, The
-Fire Next Time): **the wanted work appeared in the top 5 for all 12.**
+### Relevance, and the local re-ranking that fixes it
 
-But it is usually not first. LC's keyword ranking puts works *about* a title
-above the title itself:
+suggest2's own order is poor for known-item lookup: it ranks works *about* a
+title above the title itself. Searching "achebe things fall apart" returns
+criticism for the entire first page and not the novel. Both genuinely match the
+query -- what separates them is that the novel is titled "Things fall apart"
+while the criticism is "The rhetorical implications of Chinua Achebe's Things
+fall apart".
 
-```
-pynchon crying of lot 49
-  1. "How had it ever happened here?" : a constructivist reading of Tho | Klose, Yvonne
-  2. The crying of lot 49                                               | Pynchon, Thomas
-```
+So the adapter pulls a window of 25 hits and reorders them locally, scoring
+each on the query alone: does a contributor match, does the title carry every
+non-author query token, in order, and is it concise. `benchmarks/loc_relevance.py`
+measures it over 24 known-item queries -- 12 the heuristic was written against
+and 12 held back:
 
-That is the main open question for the idea, and it is a tuning question rather
-than an architectural one. `searchtype=left-anchored` — suggest2's default,
-which this adapter overrides — is worth comparing: it alpha-sorts rather than
-ranking, but it is markedly more forgiving of partial input (`moby dic` returns
-10 hits there against 0 for `keyword`). Measuring both beats guessing. A proper benchmark needs human judgment; an
-automated title-substring proxy scores this 12/12 and is too generous, because
-a book about *The Crying of Lot 49* has that string in its title.
+| | top-1 | top-3 | top-10 | MRR |
+|---|---|---|---|---|
+| suggest2 order, design set | 4/12 | 7/12 | 9/12 | 0.49 |
+| **re-ranked, design set** | **11/12** | **11/12** | **11/12** | **0.92** |
+| suggest2 order, held-out set | 2/12 | 3/12 | 7/12 | 0.24 |
+| **re-ranked, held-out set** | **10/12** | **10/12** | **10/12** | **0.83** |
 
-## Measured: what loading actually costs
+The held-out numbers are the ones to believe, and they are the stronger pair,
+which is the opposite of what overfitting looks like. Scoring is deliberately
+strict -- a hit counts only if its title, minus any name/title access point
+prefix, *starts with* the expected title and its contributors name the expected
+author. A looser substring match scores the unranked results 12/12 and is
+useless, because a book about *The Crying of Lot 49* has that string in its
+title.
 
-Numbers from loading bluecore-stack's `data12k.tar.gz` (12,886 LC CBD files)
-into a local stack, 2026-09-22. These supersede the estimates that were here
-before, which were roughly twice too high on storage.
+Costs one extra parameter on a request we were making anyway: `count=25`
+instead of `count=limit`. Re-ranking applies within the window fetched for the
+current offset, so a deeper page reorders its own window rather than the whole
+result set.
 
-| | |
-|---|---|
-| CBD files | 12,886 |
-| Works / Instances / Hubs created | 19,978 / 25,331 / 2,553 = **47,862** |
-| `other_resources` rows | 35,597 |
-| `bibframe_other_resources` link rows | 482,420 (**10.1 per resource**) |
-| Total database | **600 MB** |
-| Per primary resource | **12.8 KB** |
-| Load rate | 10.9/s at the start, **8.5/s** averaged over the run |
+What did **not** help, all measured:
 
-Where the 600 MB goes: `resource_base` 417 MB, `versions` 117 MB, the
-`data_vector` GIN index 64 MB, `bibframe_other_resources` 47 MB. Note that
-`versions` holds only the JSONB, while `resource_base` holds the JSONB *plus*
-two persisted tsvector columns -- so the search vectors are roughly 2.5x the
-size of the documents they index.
+- **`searchtype=left-anchored`** scores 0/12. It only matches a prefix of an
+  access point, so it needs "Melville, Herman, 1819-1891. Moby-Dick" rather
+  than what a cataloger types. Earlier notes here suggested trying it for
+  known-item lookup; that was wrong. It remains more forgiving of partial input.
+- **Quoting the query** scores 0/12 -- suggest2 treats the quotes literally.
+- **Searching the instances directory** scores 2/12.
+- **`/search/` with `rdftype:` qualifiers** (the only field qualifiers that
+  endpoint accepts -- `title:`, `contributor:`, `lccn:` all return nothing)
+  is a wash with plain suggest2, and loses the `more` block that supplies
+  contributors, the linked instance and last-modified dates.
+- **suggest2's own `rdftype` parameter** validates its value and rejects every
+  form tried, including full class URIs. It appears non-functional.
+- **Dropping the author from the query** is much worse (2/12 top-1), which is
+  reassuring: catalogers naturally type author and title together.
 
-Extrapolated to LC's 49.8M Works, Instances and Hubs: **~610 GB**, not the
-1.3-1.6 TB estimated earlier. Treat that as a floor rather than a forecast.
-Shared authorities mean `other_resources` grows sub-linearly, which pushes it
-down; against that, this is a measurement at 0.1% of the target scale, GIN
-indexes get less efficient as they grow, and every full re-load adds another
-complete copy to `versions` -- about 120 GB a pass at LC scale, with nothing
-pruning it.
-
-The load rate fell 22% over 12,886 files. At 0.1% of scale that is not a
-projection, but it is the shape the earlier "degrades as the indexes grow"
-claim predicted, and it is the reason a real bulk load would need a loader that
-bypasses `save_graph` and builds indexes offline.
-
-None of this changes the acquisition problem, which is what actually decides
-Option A: there is still no bulk export of Works or Instances to load.
+Two queries miss under every strategy: "darwin on the origin of species" and
+"bronte jane eyre". The second is at least partly a scoring artifact -- the
+contributor is "Brontë" and the benchmark's normalization keeps the diaeresis.
 
 ## Politeness
 

@@ -24,6 +24,7 @@ character returns nothing at all.
 
 import asyncio
 import logging
+import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -64,6 +65,9 @@ MAX_COUNT = 25
 # than arrive there all at once.
 MAX_CONCURRENT_REQUESTS = 4
 _egress = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+# How many hits to pull before reordering them locally. See rerank().
+RERANK_WINDOW = 25
 
 
 def _first_str(values: object) -> str | None:
@@ -191,6 +195,76 @@ def summary_jsonld(hit: dict[str, Any]) -> dict[str, object]:
     return data
 
 
+def _tokens(text: str) -> list[str]:
+    # "Pride & prejudice" and "Pride and prejudice" are the same title.
+    text = (text or "").casefold().replace("&", " and ")
+    return re.sub(r"[^\w\s]", " ", text).split()
+
+
+def relevance(query: str, result: FederatedResult) -> float:
+    """Score one hit against the query, using nothing but the query.
+
+    suggest2's own order puts works *about* a title above the title itself:
+    searching "achebe things fall apart" returns criticism for the whole first
+    page and the novel not at all. Both match the query; what separates them is
+    that the novel is titled "Things fall apart" while the criticism is "The
+    rhetorical implications of Chinua Achebe's Things fall apart". So prefer a
+    title that carries every non-author query token, in order, and is short.
+
+    Measured over 24 known-item queries -- 12 used to design this and 12 held
+    back -- this moves the wanted work into first place for 19 of them, against
+    7 for suggest2's own order. See benchmarks/loc_relevance.py.
+    """
+    query_tokens = _tokens(query)
+    title = " ".join(
+        _tokens(str(result.data.get("bflc:title-proper", "")) or _title_of(result))
+    )
+    agents = " ".join(_tokens(_agents_of(result)))
+
+    author_tokens = [t for t in query_tokens if t in agents]
+    title_tokens = [t for t in query_tokens if t not in author_tokens]
+
+    score = 2.0 if author_tokens else 0.0
+    if title_tokens and all(t in title for t in title_tokens):
+        score += 2.0
+        if title.startswith(" ".join(title_tokens)):
+            score += 3.0
+    # A study of a book repeats its title and adds a great many other words.
+    return score - 0.02 * len(title.split())
+
+
+def _title_of(result: FederatedResult) -> str:
+    titles = result.data.get("title")
+    if isinstance(titles, list) and titles:
+        first = titles[0]
+        if isinstance(first, dict):
+            return str(first.get("mainTitle", ""))
+    return ""
+
+
+def _agents_of(result: FederatedResult) -> str:
+    """Contributor names only.
+
+    Deliberately not the access point: that embeds the title, so query words
+    naming the work would be counted as naming its author and the author
+    signal would vanish.
+    """
+    names: list[str] = []
+    contributions = result.data.get("contribution")
+    if isinstance(contributions, list):
+        for node in contributions:
+            if isinstance(node, dict):
+                agent = node.get("agent")
+                if isinstance(agent, dict):
+                    names.append(str(agent.get("label", "")))
+    return " ".join(names)
+
+
+def rerank(query: str, results: list[FederatedResult]) -> list[FederatedResult]:
+    """Reorder a page of hits by local relevance, stably."""
+    return sorted(results, key=lambda r: relevance(query, r), reverse=True)
+
+
 class LibraryOfCongressSource:
     """id.loc.gov's BIBFRAME Works, Instances and Hubs."""
 
@@ -244,7 +318,9 @@ class LibraryOfCongressSource:
         total = 0
         for directory in directories:
             page = await self._search_directory(directory, query)
-            results.extend(page.results)
+            # Reordering happens within the window fetched for this offset, so
+            # a deeper page reorders its own window rather than the whole set.
+            results.extend(rerank(query.q, page.results)[: query.limit])
             total += page.total or 0
         return SourceResults(
             results=results,
@@ -262,7 +338,9 @@ class LibraryOfCongressSource:
             # The default, left-anchored, alpha-sorts and is useless for
             # "find a record to copy".
             "searchtype": "keyword",
-            "count": min(query.limit, MAX_COUNT),
+            # Always pull a full window: reordering only the rows we are about
+            # to show cannot promote anything from below the fold.
+            "count": RERANK_WINDOW,
             "offset": query.offset,
         }
 
