@@ -93,10 +93,17 @@ def title_from(hit: dict[str, Any]) -> str:
     """
     a_label = hit.get("aLabel") or hit.get("suggestLabel") or ""
     contributor = _first_str(hit.get("more", {}).get("contributors"))
-    if contributor:
-        prefix = f"{contributor}. "
-        if a_label.startswith(prefix):
-            return a_label[len(prefix) :]
+    if contributor and a_label.startswith(contributor):
+        rest = a_label[len(contributor) :]
+        # The separator is ". " normally, but a heading that already ends in a
+        # period ("Magida, Arthur J.") leaves just the space behind. Matching
+        # on contributor + ". " misses every one of those.
+        for separator in (". ", " "):
+            if rest.startswith(separator):
+                rest = rest[len(separator) :]
+                break
+        if rest:
+            return rest
 
     v_label = hit.get("vLabel") or ""
     if v_label and len(v_label) < len(a_label):

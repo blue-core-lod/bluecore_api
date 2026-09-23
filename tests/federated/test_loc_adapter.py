@@ -302,3 +302,25 @@ async def test_a_hit_with_no_uri_is_a_typed_error_not_a_keyerror(httpx_mock, sou
 
     with pytest.raises(FederatedSearchError, match="no URI"):
         await source.search(query())
+
+
+def test_title_strips_a_contributor_that_already_ends_in_a_period():
+    """Real case from id.loc.gov: the heading "Magida, Arthur J." ends in a
+    period, so the separator is a bare space, not ". ". Building the prefix as
+    contributor + ". " misses every heading ending in an initial."""
+    hit = {
+        "aLabel": "Magida, Arthur J. Two wheels to freedom",
+        "vLabel": "Magida, Arthur J. Story of a young Jew, wartime resistance",
+        "more": {"contributors": ["Magida, Arthur J."]},
+    }
+    assert title_from(hit) == "Two wheels to freedom"
+
+
+def test_title_survives_an_access_point_that_is_only_the_contributor():
+    """Nothing left after stripping means the heading is all we have."""
+    hit = {
+        "aLabel": "Magida, Arthur J.",
+        "vLabel": "",
+        "more": {"contributors": ["Magida, Arthur J."]},
+    }
+    assert title_from(hit) == "Magida, Arthur J."
