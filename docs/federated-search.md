@@ -97,9 +97,16 @@ written from a reasonable reading of the docs:
 1. **Paging uses `offset`, not `start`.** `start=21` is accepted and ignored —
    the response still echoes `"start": 1` and returns page one.
 2. **`rank` is not a relevance score.** It is a static per-access-point weight.
-3. **The last query token is right-truncated upstream** (`melville moby` is
-   echoed as `melville moby*`), so the query must not go through `format_query`,
-   whose tsquery operators would be sent literally.
+3. **The query is echoed back with a trailing `*`, but do not rely on it.**
+   `melville moby` comes back as `melville moby*`, yet `moby dic*` finds
+   nothing while `moby dick*` finds 390 and `moby di*` finds 2 — so it is not
+   a plain prefix match over the term index. Either way the query must not go
+   through `format_query`, whose tsquery operators would be sent literally.
+
+Neither pool tolerates a typo. `searchtype=keyword` matches tokens exactly, with
+no fuzzy fallback and no did-you-mean, so `nmoby dick` returns zero; Blue Core's
+own `to_tsquery` ANDs the terms and misses too. Worth knowing before a cataloger
+reads an empty page as "no such record exists".
 
 Also: `.cbd.jsonld` exists for **instances only** — a work returns 403 for it,
 so the copy path uses the plain `.jsonld`.
@@ -129,8 +136,10 @@ pynchon crying of lot 49
 ```
 
 That is the main open question for the idea, and it is a tuning question rather
-than an architectural one — worth trying `searchtype=left-anchored` for
-known-item lookups, or quoting. A proper benchmark needs human judgment; an
+than an architectural one. `searchtype=left-anchored` — suggest2's default,
+which this adapter overrides — is worth comparing: it alpha-sorts rather than
+ranking, but it is markedly more forgiving of partial input (`moby dic` returns
+10 hits there against 0 for `keyword`). Measuring both beats guessing. A proper benchmark needs human judgment; an
 automated title-substring proxy scores this 12/12 and is too generous, because
 a book about *The Crying of Lot 49* has that string in its title.
 

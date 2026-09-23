@@ -12,10 +12,14 @@ tests/loc-suggest2-*.json:
    all came back with exactly 23803; it is a static per-access-point weight.
    It is kept for ordering within this source and nothing else.
 
-3. The query's last token is right-truncated for you: q=melville moby comes
-   back echoed as "melville moby*". So the query goes through urlencode and
-   nothing else -- in particular never through search.py's format_query, whose
-   output is Postgres tsquery syntax (:* & <->) that would be sent literally.
+3. The query is echoed back with a trailing "*", but that is not a prefix
+   match you can lean on: "moby dick*" finds 390 works while "moby dic*" finds
+   none. Treat the query as opaque -- urlencode it and nothing else, and never
+   put it through search.py's format_query, whose output is Postgres tsquery
+   syntax (:* & <->) that would be sent literally.
+
+There is no fuzzy matching and no did-you-mean either, so a single mistyped
+character returns nothing at all.
 """
 
 import asyncio
