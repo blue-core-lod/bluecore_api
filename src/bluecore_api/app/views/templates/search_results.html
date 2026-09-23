@@ -10,7 +10,13 @@
 {% macro result_list(items) -%}
     <ul class="bc-results">
         {% for r in items %}
-            <li><a href="{{ r.uri }}">{{ r.title }}</a></li>
+            <li>
+                <a href="{{ r.uri }}">{{ r.title }}</a>
+                {####  An external record we already hold links to our copy, so
+                      it has to say so -- a link that quietly goes somewhere
+                      else is worse than no annotation at all.  ####}
+                {% if r.already_held %}<span class="bc-muted">&mdash; already in Blue Core</span>{% endif %}
+            </li>
         {% endfor %}
     </ul>
 {%- endmacro %}

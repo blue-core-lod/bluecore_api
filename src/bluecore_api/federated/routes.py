@@ -239,7 +239,15 @@ def _html(
             "error": source.error,
             "note": source.note,
             "results": [
-                {"uri": result.local_uri or result.uri, "title": title_of(result.data)}
+                {
+                    "uri": result.local_uri or result.uri,
+                    "title": title_of(result.data),
+                    # Only meaningful for an external hit: a Blue Core result
+                    # is trivially already in Blue Core.
+                    "already_held": bool(
+                        result.local_uri and result.source != BlueCoreSource.id
+                    ),
+                }
                 for result in source.results
             ],
         }

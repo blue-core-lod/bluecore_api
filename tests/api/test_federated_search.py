@@ -461,3 +461,42 @@ def test_searching_again_from_the_federated_page_stays_federated(
 
     # root_path prefixes it, the same way the local search form is built.
     assert 'action="/api/search/federated"' in body
+
+
+def test_html_says_when_an_external_hit_is_already_held(
+    client: TestClient, db_session: Session, with_loc: None, httpx_mock
+):
+    """The link points at our copy, so the page has to say why."""
+    httpx_mock.add_response(json=_loc_payload())
+    copied_uri = "https://bcld.info/works/00000000-0000-0000-0000-000000000098"
+    db_session.add(
+        Work(
+            id=98,
+            uuid="00000000-0000-0000-0000-000000000098",
+            uri=copied_uri,
+            data={
+                "@id": copied_uri,
+                "@type": "Work",
+                "title": {"@type": "Title", "mainTitle": "Moby-Dick"},
+                "adminMetadata": [
+                    {"@type": "AdminMetadata", "derivedFrom": {"@id": LOC_WORK_URI}}
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    body = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}, headers=HTML
+    ).text
+
+    assert "already in Blue Core" in body
+    assert f'href="{copied_uri}"' in body
+
+
+def test_html_does_not_label_our_own_records_as_already_held(
+    client: TestClient, searchable: None
+):
+    body = client.get("/search/federated", params={"q": TITLE}, headers=HTML).text
+
+    assert "already in Blue Core" not in body
