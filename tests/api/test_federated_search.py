@@ -437,3 +437,27 @@ def test_a_failed_source_is_counted_as_such(
 
     counts = client.get("/search/federated/metrics").json()
     assert counts["source_outcomes"] == {"bluecore:ok": 1, "loc:error": 1}
+
+
+def test_the_local_search_page_offers_a_way_in(client: TestClient, searchable: None):
+    """The only route into federated search from the UI. Without it the
+    experiment measures people who already knew the URL."""
+    body = client.get("/search", params={"q": TITLE}).text
+
+    assert "Also search the Library of Congress" in body
+    assert f"/search/federated?q={TITLE}&amp;type=all" in body
+
+
+def test_searching_again_from_the_federated_page_stays_federated(
+    client: TestClient, searchable: None, with_loc: None, httpx_mock
+):
+    """base.html is shared, so without an override the header form would throw
+    a cataloger back to the local-only search on their next query."""
+    httpx_mock.add_response(json=_loc_payload())
+
+    body = client.get(
+        "/search/federated", params={"q": TITLE, "type": "works"}, headers=HTML
+    ).text
+
+    # root_path prefixes it, the same way the local search form is built.
+    assert 'action="/api/search/federated"' in body

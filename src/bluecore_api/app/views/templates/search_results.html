@@ -42,6 +42,15 @@
         {% endif %}
     </div>
 
+    {####  The only route into federated search. Shown whatever the local hit
+          count is: a cataloger who found one local record may still want to
+          know the Library of Congress has three hundred.  ####}
+    {% if federated_url %}
+        <p class="bc-muted bc-federated-link">
+            <a href="{{ federated_url }}">Also search the Library of Congress &rarr;</a>
+        </p>
+    {% endif %}
+
     {####  Search Results in list ####}
     {% if groups is not none %}
         {% for g in groups %}

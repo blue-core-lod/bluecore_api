@@ -38,7 +38,7 @@
 
     {####  Search Option Dropdown Section  ####}
     <div class="bc-hero">
-        <form class="bc-search" action="{{ request.url_for('search_html').path }}" method="get" role="search">
+        <form class="bc-search" action="{{ search_action or request.url_for('search_html').path }}" method="get" role="search">
             <select name="type" aria-label="Resource type">
                 {####  Search BIBFRAME All Resources  ####}
                 <option value="all"{% if not search_type or search_type == 'all' %} selected{% endif %}>

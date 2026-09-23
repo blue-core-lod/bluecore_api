@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, noload
+from starlette.routing import NoMatchFound
 
 from bluecore_api.app.views.search_display import (
     resource_title,
@@ -260,6 +261,25 @@ async def search(
     }
 
 
+def federated_url(
+    request: Request, q: str, type: SearchType, scope: SearchScope
+) -> str | None:
+    """Link to the same search run against external sources too.
+
+    Resolved by route name rather than imported, so search.py keeps no
+    dependency on the federated package -- and returns None rather than failing
+    the page if that router is not registered.
+    """
+    try:
+        base = request.url_for("search_federated")
+    except NoMatchFound:
+        return None
+    params = {"q": q, "type": str(type)}
+    if scope != SearchScope.ALL:
+        params["scope"] = str(scope)
+    return f"{base.path}?{urlencode(params)}"
+
+
 @endpoints.get("/search", response_class=HTMLResponse, include_in_schema=False)
 async def search_html(
     request: Request,
@@ -329,6 +349,7 @@ async def search_html(
             "groups": groups,
             "results": None,
             "pagination": pagination,
+            "federated_url": federated_url(request, q, type, scope),
         },
     )
 

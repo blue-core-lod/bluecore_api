@@ -249,6 +249,9 @@ def _html(
         request,
         "search_results.html",
         {
+            # Otherwise the shared header form would throw a cataloger back
+            # to the local-only search on their next query.
+            "search_action": request.url_for("search_federated").path,
             "search_q": query.q,
             "search_type": str(query.type),
             "search_scope": str(query.scope),
