@@ -15,14 +15,9 @@ import httpx
 import pytest
 
 from bluecore_api.constants import SearchScope, SearchType
-from bluecore_api.federated.base import (
-    FederatedQuery,
-    FederatedResult,
-    FederatedSearchError,
-)
+from bluecore_api.federated.base import FederatedQuery, FederatedSearchError
 from bluecore_api.federated.sources.loc import (
     LibraryOfCongressSource,
-    rerank,
     summary_jsonld,
     title_from,
 )
@@ -329,76 +324,3 @@ def test_title_survives_an_access_point_that_is_only_the_contributor():
         "more": {"contributors": ["Magida, Arthur J."]},
     }
     assert title_from(hit) == "Magida, Arthur J."
-
-
-# --- Local re-ranking -----------------------------------------------------------
-def _result(title: str, contributor: str = "") -> FederatedResult:
-    data: dict[str, object] = {
-        "title": [{"@type": "Title", "mainTitle": title}],
-        "bflc:aap": f"{contributor}. {title}" if contributor else title,
-    }
-    if contributor:
-        data["contribution"] = [
-            {
-                "@type": "PrimaryContribution",
-                "agent": {"@type": "Agent", "label": contributor},
-            }
-        ]
-    return FederatedResult(
-        source="loc",
-        source_label="Library of Congress",
-        uri=f"http://id.loc.gov/resources/works/{abs(hash(title)) % 10**6}",
-        type="works",
-        data=data,
-    )
-
-
-def test_rerank_lifts_the_work_above_studies_of_it():
-    """suggest2's own order returns criticism for the whole first page of
-    "achebe things fall apart" and the novel not at all. Both match; the novel
-    is the one whose title is just the title."""
-    hits = [
-        _result(
-            "The rhetorical implications of Chinua Achebe's Things fall apart",
-            "Egar, Emmanuel Edame",
-        ),
-        _result("Chinua Achebe's Things fall apart : a casebook", "Okpewho, Isidore"),
-        _result("Things fall apart", "Achebe, Chinua"),
-    ]
-
-    ordered = rerank("achebe things fall apart", hits)
-
-    assert _title_of_result(ordered[0]) == "Things fall apart"
-
-
-def test_rerank_prefers_the_matching_author():
-    hits = [
-        _result("Moby Dick", "Ray, Trevor"),
-        _result("Moby-Dick, or, The whale", "Melville, Herman, 1819-1891"),
-    ]
-
-    ordered = rerank("melville moby dick", hits)
-
-    assert "Melville" in str(ordered[0].data["bflc:aap"])
-
-
-def test_rerank_treats_ampersand_and_and_alike():
-    hits = [
-        _result("Jane Austen's pride and prejudice : a sourcebook", "Wang, Jack"),
-        _result("Pride & prejudice", "Austen, Jane, 1775-1817"),
-    ]
-
-    ordered = rerank("austen pride and prejudice", hits)
-
-    assert _title_of_result(ordered[0]) == "Pride & prejudice"
-
-
-def test_rerank_is_stable_when_nothing_distinguishes_hits():
-    hits = [_result("Same title"), _result("Same title")]
-    assert rerank("same title", hits) == hits
-
-
-def _title_of_result(result: FederatedResult) -> str:
-    titles = result.data["title"]
-    assert isinstance(titles, list)
-    return titles[0]["mainTitle"]

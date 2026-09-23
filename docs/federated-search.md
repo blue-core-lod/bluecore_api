@@ -123,42 +123,36 @@ Latency, `type=works`, cold: p50 1.7s, max 2.2s over 12 known-item queries.
 Warm through LC's own Varnish: ~0.1s. Blue Core local search: 0.26–1.4s. The
 fan-out is `max()`, not `sum()`.
 
-### Relevance, and the local re-ranking that fixes it
+### Relevance: suggest2's order is weak for known-item lookup
 
-suggest2's own order is poor for known-item lookup: it ranks works *about* a
-title above the title itself. Searching "achebe things fall apart" returns
-criticism for the entire first page and not the novel. Both genuinely match the
-query -- what separates them is that the novel is titled "Things fall apart"
-while the criticism is "The rhetorical implications of Chinua Achebe's Things
-fall apart".
+It ranks works *about* a title above the title itself. Searching "achebe things
+fall apart" returns criticism for the entire first page and not the novel;
+"ellison invisible man" leads with CliffsNotes. Both genuinely match the query.
 
-So the adapter pulls a window of 25 hits and reorders them locally, scoring
-each on the query alone: does a contributor match, does the title carry every
-non-author query token, in order, and is it concise. `benchmarks/loc_relevance.py`
-measures it over 24 known-item queries -- 12 the heuristic was written against
-and 12 held back:
+`benchmarks/loc_relevance.py` measures this over 24 known-item queries (author
+plus title), 12 used while writing the comparison heuristic and 12 held back:
 
-| | top-1 | top-3 | top-10 | MRR |
+| suggest2's own order | top-1 | top-3 | top-10 | MRR |
 |---|---|---|---|---|
-| suggest2 order, design set | 4/12 | 7/12 | 9/12 | 0.49 |
-| **re-ranked, design set** | **11/12** | **11/12** | **11/12** | **0.92** |
-| suggest2 order, held-out set | 2/12 | 3/12 | 7/12 | 0.24 |
-| **re-ranked, held-out set** | **10/12** | **10/12** | **10/12** | **0.83** |
+| design set | 4/12 | 7/12 | 9/12 | 0.49 |
+| held-out set | 2/12 | 3/12 | 7/12 | 0.24 |
 
-The held-out numbers are the ones to believe, and they are the stronger pair,
-which is the opposite of what overfitting looks like. Scoring is deliberately
-strict -- a hit counts only if its title, minus any name/title access point
-prefix, *starts with* the expected title and its contributors name the expected
-author. A looser substring match scores the unranked results 12/12 and is
-useless, because a book about *The Crying of Lot 49* has that string in its
-title.
+Scoring is deliberately strict: a hit counts only if its title, minus any
+name/title access point prefix, *starts with* the expected title and its
+contributors name the expected author. A looser substring match scores this
+12/12 and is useless, because a book about *The Crying of Lot 49* has that
+string in its title.
 
-Costs one extra parameter on a request we were making anyway: `count=25`
-instead of `count=limit`. Re-ranking applies within the window fetched for the
-current offset, so a deeper page reorders its own window rather than the whole
-result set.
+**The adapter returns this order unchanged.** The benchmark also reports a
+locally reordered column -- prefer a concise title carrying every non-author
+query token, in order -- which reaches 11/12 and 10/12 top-1 on the two sets.
+That reordering is a yardstick, not a proposal, and is deliberately not in the
+request path. The deficiency is upstream relevance, and patching it with a
+client-side heuristic would make a corpus Blue Core may need to index itself
+look better than it is. The implementation, if it is ever wanted, is in commit
+`b28f3a5`.
 
-What did **not** help, all measured:
+What else was measured and did **not** help:
 
 - **`searchtype=left-anchored`** scores 0/12. It only matches a prefix of an
   access point, so it needs "Melville, Herman, 1819-1891. Moby-Dick" rather
@@ -172,12 +166,13 @@ What did **not** help, all measured:
   contributors, the linked instance and last-modified dates.
 - **suggest2's own `rdftype` parameter** validates its value and rejects every
   form tried, including full class URIs. It appears non-functional.
-- **Dropping the author from the query** is much worse (2/12 top-1), which is
-  reassuring: catalogers naturally type author and title together.
+- **Dropping the author from the query** is much worse, which is reassuring:
+  catalogers naturally type author and title together.
 
-Two queries miss under every strategy: "darwin on the origin of species" and
-"bronte jane eyre". The second is at least partly a scoring artifact -- the
-contributor is "Brontë" and the benchmark's normalization keeps the diaeresis.
+The benchmark covers one query shape. Identifier lookups (ISBN, LCCN), series,
+non-Latin script and ambiguous common titles are untested, as is a control run
+against id.loc.gov's own web interface that would separate LC's relevance from
+our use of it.
 
 ## Politeness
 
@@ -203,9 +198,8 @@ say what we are doing and ask what rate they are comfortable with.
 
 ## Measured: the "already in Blue Core" lookup
 
-The provenance lookup was supposed to stay under 100ms p95 for a page of
-results. Against the 84k rows loaded above it first came in at **243ms p95**,
-and the reason is worth recording: the backing index is `(type, derivedFrom)`,
+Against the 84k rows loaded above, the provenance lookup first came in at
+**243ms p95** for a page of results, and the reason is worth recording: the backing index is `(type, derivedFrom)`,
 and the bulk helper did not constrain `type`. Without a predicate on the
 index's leading column Postgres cannot seek, so it scanned the whole index --
 around 1,600 buffers to resolve two URIs. bluecore-models' own minter filters
@@ -214,6 +208,10 @@ by class, which is why the same index performs there.
 Adding the type predicate takes it to **1.1ms p95**, a 200x difference, and it
 would only have grown worse with the corpus. A test pins the behaviour so the
 predicate cannot be quietly dropped.
+
+Worth noting for its own sake: this is the second place where the index's
+leading column decided everything, and it is invisible until there is data in
+the table.
 
 ## Known gaps
 
