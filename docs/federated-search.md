@@ -143,6 +143,44 @@ ranking, but it is markedly more forgiving of partial input (`moby dic` returns
 automated title-substring proxy scores this 12/12 and is too generous, because
 a book about *The Crying of Lot 49* has that string in its title.
 
+## Measured: what loading actually costs
+
+Numbers from loading bluecore-stack's `data12k.tar.gz` (12,886 LC CBD files)
+into a local stack, 2026-09-22. These supersede the estimates that were here
+before, which were roughly twice too high on storage.
+
+| | |
+|---|---|
+| CBD files | 12,886 |
+| Works / Instances / Hubs created | 19,978 / 25,331 / 2,553 = **47,862** |
+| `other_resources` rows | 35,597 |
+| `bibframe_other_resources` link rows | 482,420 (**10.1 per resource**) |
+| Total database | **600 MB** |
+| Per primary resource | **12.8 KB** |
+| Load rate | 10.9/s at the start, **8.5/s** averaged over the run |
+
+Where the 600 MB goes: `resource_base` 417 MB, `versions` 117 MB, the
+`data_vector` GIN index 64 MB, `bibframe_other_resources` 47 MB. Note that
+`versions` holds only the JSONB, while `resource_base` holds the JSONB *plus*
+two persisted tsvector columns -- so the search vectors are roughly 2.5x the
+size of the documents they index.
+
+Extrapolated to LC's 49.8M Works, Instances and Hubs: **~610 GB**, not the
+1.3-1.6 TB estimated earlier. Treat that as a floor rather than a forecast.
+Shared authorities mean `other_resources` grows sub-linearly, which pushes it
+down; against that, this is a measurement at 0.1% of the target scale, GIN
+indexes get less efficient as they grow, and every full re-load adds another
+complete copy to `versions` -- about 120 GB a pass at LC scale, with nothing
+pruning it.
+
+The load rate fell 22% over 12,886 files. At 0.1% of scale that is not a
+projection, but it is the shape the earlier "degrades as the indexes grow"
+claim predicted, and it is the reason a real bulk load would need a loader that
+bypasses `save_graph` and builds indexes offline.
+
+None of this changes the acquisition problem, which is what actually decides
+Option A: there is still no bulk export of Works or Instances to load.
+
 ## Politeness
 
 `id.loc.gov/robots.txt` says `Crawl-delay: 3` and warns that access may be
