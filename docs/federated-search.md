@@ -9,6 +9,11 @@ external record for editing without storing it. Built to answer one question:
 Short answer: no, not for that reason. What follows is what was built and what
 was measured.
 
+![How a cataloger finds and copies a record: Sinopia Editor asks the Blue Core
+API, which searches its own index and id.loc.gov at the same time; copying
+fetches the record through the API but stores nothing; the record becomes a
+Blue Core row only when the cataloger saves.](federated-search.svg)
+
 ## Endpoints
 
 ### `GET /search/federated`
