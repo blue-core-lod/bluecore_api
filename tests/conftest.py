@@ -187,19 +187,18 @@ def client(mocker, db_session, app):
 
 @pytest.fixture(autouse=True)
 def clear_federated_state():
-    """Federated search keeps its cache, counters and circuit breakers in
-    module-level state.
+    """Federated search keeps its cache and circuit breakers in module-level
+    state.
 
     Cleared around every test: otherwise a test that asserts on outbound
     requests passes alone and fails once another test has warmed the same key
     or tripped the same breaker, which is the worst kind of flake to chase --
     and this suite runs in random order.
     """
-    from bluecore_api.federated import breaker, cache, metrics
+    from bluecore_api.federated import breaker, cache
 
     def clear_all():
         cache.clear()
-        metrics.reset()
         breaker.reset()
 
     clear_all()

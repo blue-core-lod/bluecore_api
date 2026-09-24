@@ -25,7 +25,6 @@ from sqlalchemy.orm import Session
 from bluecore_api.constants import CONTEXT_URL
 from bluecore_api.database import get_db
 from bluecore_api.derived_from import find_by_derived_from, uri_variants
-from bluecore_api.federated import metrics
 from bluecore_api.federated.cache import cached
 from bluecore_api.federated.config import allowed_external_hosts
 from bluecore_api.federated.http import client_for
@@ -221,7 +220,6 @@ async def external_resource(
 
     subject, data, type_ = frame_for_editing(uri, payload)
     held = find_by_derived_from(db, [subject], type_)
-    metrics.record_fetch(subject, already_held=subject in held)
 
     return ExternalResourceSchema(
         uri=subject,

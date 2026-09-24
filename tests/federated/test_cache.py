@@ -106,22 +106,3 @@ async def test_oldest_entries_are_evicted(monkeypatch):
         await cache.cached(key, fetch)
 
     assert cache.stats()["entries"] == 2
-
-
-@pytest.mark.asyncio
-async def test_hits_and_misses_are_counted():
-    """The hit rate is one of the numbers the experiment is meant to produce."""
-    from bluecore_api.federated import metrics
-
-    metrics.reset()
-
-    async def fetch():
-        return "value"
-
-    await cache.cached("k", fetch)
-    await cache.cached("k", fetch)
-
-    counts = metrics.snapshot()
-    assert counts["upstream_cache_misses"] == 1
-    assert counts["upstream_cache_hits"] == 1
-    assert counts["upstream_cache_hit_rate"] == 0.5

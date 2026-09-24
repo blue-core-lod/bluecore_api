@@ -59,28 +59,6 @@ property the whole approach rests on.
 `bluecore_uri` says whether Blue Core already holds a copy derived from this
 record, so a client can offer to open that instead of making a second one.
 
-### `GET /search/federated/metrics`
-
-Live counters for the experiment. Aggregate only -- no query text, nothing
-about who searched.
-
-```
-curl -s localhost:3000/search/federated/metrics | jq
-```
-
-The number to watch is `distinct_external_records_fetched`: records catalogers
-actually opened, set against the ~47M a bulk load would bring in. If that stays
-in the thousands over a few months, the ratio is the argument.
-
-Per-process and reset on restart, like the cache. The durable record is the
-`federated.search` and `federated.fetch` log lines.
-
-Note what cannot be counted yet: whether an opened record was ultimately
-**saved**. The editor posts a blank-node subject, so nothing on the write path
-knows which external record a new resource came from -- see the provenance
-decision below. `distinct_external_records_fetched` is therefore an upper bound
-on records kept, and a fair measure of records touched.
-
 ## Configuration
 
 | Variable | Default | |
@@ -134,8 +112,8 @@ It ranks works *about* a title above the title itself. Searching "achebe things
 fall apart" returns criticism for the entire first page and not the novel;
 "ellison invisible man" leads with CliffsNotes. Both genuinely match the query.
 
-`benchmarks/loc_relevance.py` measures this over 24 known-item queries (author
-plus title), 12 used while writing the comparison heuristic and 12 held back:
+Measured over 24 known-item queries (author plus title), 12 used while writing
+a comparison heuristic and 12 held back:
 
 | suggest2's own order | top-1 | top-3 | top-10 | MRR |
 |---|---|---|---|---|
@@ -148,11 +126,10 @@ contributors name the expected author. A looser substring match scores this
 12/12 and is useless, because a book about *The Crying of Lot 49* has that
 string in its title.
 
-**The adapter returns this order unchanged.** The benchmark also reports a
-locally reordered column -- prefer a concise title carrying every non-author
-query token, in order -- which reaches 11/12 and 10/12 top-1 on the two sets.
-That reordering is a yardstick, not a proposal, and is deliberately not in the
-request path. The deficiency is upstream relevance, and patching it with a
+**The adapter returns this order unchanged.** Reordering the hits locally --
+prefer a concise title carrying every non-author query token, in order --
+reaches 11/12 and 10/12 top-1 on the two sets. That is a yardstick, not a
+proposal, and is deliberately not in the request path. The deficiency is upstream relevance, and patching it with a
 client-side heuristic would make a corpus Blue Core may need to index itself
 look better than it is. The implementation, if it is ever wanted, is in commit
 `b28f3a5`.
@@ -174,7 +151,7 @@ What else was measured and did **not** help:
 - **Dropping the author from the query** is much worse, which is reassuring:
   catalogers naturally type author and title together.
 
-The benchmark covers one query shape. Identifier lookups (ISBN, LCCN), series,
+These figures cover one query shape. Identifier lookups (ISBN, LCCN), series,
 non-Latin script and ambiguous common titles are untested, as is a control run
 against id.loc.gov's own web interface that would separate LC's relevance from
 our use of it.
@@ -220,6 +197,10 @@ the table.
 
 ## Known gaps
 
+- **Nothing counts how much of LC catalogers actually touch.** The ratio of
+  records opened to the size of the corpus a bulk load would bring in is the
+  strongest evidence for or against loading, and it can only be gathered while
+  the feature is in use. Instrumenting it is a small, separate change.
 - **Provenance on save is not wired up.** `local_uri` and `bluecore_uri` tell a
   client we already hold a copy, but the editor's copy path posts a blank-node
   subject, so `save_graph` writes no `bf:derivedFrom` and the dedup never fires.
