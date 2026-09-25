@@ -214,9 +214,6 @@ body {
   font-size: 22px;
   font-weight: 700;
   margin: 0 0 28px;
-  /* flex so the stub flag centres on the heading text without magic numbers */
-  display: flex;
-  align-items: center;
 }
 
 /* Field blocks (indented under the heading, like the mockups) */
@@ -361,11 +358,6 @@ body {
   color: #b45309;
   cursor: help;
   vertical-align: -0.15em;
-}
-
-/* It leads the heading and trails a field value, so the gap swaps sides. */
-.bc-doctype .bc-stub {
-  margin-right: 6px;
 }
 
 .bc-list-value .bc-stub {
