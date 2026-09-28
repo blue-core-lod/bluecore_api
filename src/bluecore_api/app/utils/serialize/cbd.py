@@ -1,6 +1,6 @@
 import copy
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from bluecore_models.models import Instance, Work
 from bluecore_models.utils.graph import CONTEXT
@@ -170,15 +170,21 @@ def generate_cbd_graph(instance: Instance) -> Graph:
     return instance_graph
 
 
-def generate_cbd_xml(graph: Graph):
+def generate_cbd_xml(graph: Graph, primary_uris: Sequence[str] = ()):
     """
     Generate CBD XML representation.
     The pretty-xml format generates all other resources at the same level as Work/Instance(s).
     Marva cannot parse this format properly.
     This method reorders the XML so that the related resources are nested within Work/Instance(s).
 
+    rdflib serializes subjects in no fixed order, and Marva loads the first
+    top-level Work and Instance it finds. So the top-level resources are put in
+    a stable order: primary_uris first, as given, then the rest sorted by uri.
+
     Args:
         graph (Graph): CBD graph
+        primary_uris (Sequence[str]): uris of the resources to put first, e.g. the
+            requested Instance and its Work
 
     Returns:
         lxml root element for the CBD XML
@@ -206,6 +212,17 @@ def generate_cbd_xml(graph: Graph):
             continue
         root.remove(elem)
 
+    primary = {uri: position for position, uri in enumerate(primary_uris)}
+
+    def position(elem) -> tuple[int, str]:
+        about = elem.xpath("@rdf:about", namespaces=XPATH_NAMESPACES)
+        uri = str(about[0]) if about else ""
+        return primary.get(uri, len(primary)), uri
+
+    # appending an element lxml already holds moves it to the end
+    for elem in sorted(root, key=position):
+        root.append(elem)
+
     return root
 
 
@@ -226,5 +243,5 @@ def cbd_xml(instance: Instance) -> str:
         )
 
     instance_graph = generate_cbd_graph(instance)
-    instance_root = generate_cbd_xml(instance_graph)
+    instance_root = generate_cbd_xml(instance_graph, [instance.uri, instance.work.uri])
     return etree.tostring(instance_root, encoding="utf-8").decode("utf-8")

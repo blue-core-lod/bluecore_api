@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.cbd import (
     XPATH_NAMESPACES,
+    cbd_xml,
     generate_cbd_graph,
     generate_cbd_xml,
     related_works,
@@ -390,6 +391,47 @@ def test_cbd_leaves_the_related_records_untouched(
 
     assert "@context" not in work_b.data
     assert "@context" not in instance_b.data
+
+
+def _top_level_uris(root) -> list[str]:
+    return [elem.xpath("@rdf:about", namespaces=XPATH_NAMESPACES)[0] for elem in root]
+
+
+def test_cbd_xml_puts_the_requested_instance_and_its_work_first(
+    client: TestClient, db_session: Session
+):
+    """
+    Marva loads the first top-level Instance and Work in the document, and rdflib
+    serializes them in no fixed order. The related pair's uris sort ahead of the
+    requested pair's here, so a plain sort would put them first.
+    """
+    work_c, instance_c = _pair(db_session, "c")
+    work_d, instance_d = _pair(db_session, "d", related_uri=work_c.uri)
+    db_session.commit()
+
+    root = etree.fromstring(cbd_xml(instance_d).encode("utf-8"))
+
+    assert _top_level_uris(root) == [
+        instance_d.uri,
+        work_d.uri,
+        instance_c.uri,
+        work_c.uri,
+    ]
+
+
+def test_generate_cbd_xml_sorts_the_rest_by_uri(
+    client: TestClient, db_session: Session
+):
+    """Without primary uris every top-level resource is sorted by uri."""
+    work_e, instance_e = _pair(db_session, "e")
+    work_f, instance_f = _pair(db_session, "f", related_uri=work_e.uri)
+    db_session.commit()
+
+    root = generate_cbd_xml(generate_cbd_graph(instance_f))
+
+    assert _top_level_uris(root) == sorted(
+        [work_e.uri, instance_e.uri, work_f.uri, instance_f.uri]
+    )
 
 
 if __name__ == "__main__":
