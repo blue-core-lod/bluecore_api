@@ -63,7 +63,7 @@ By default Alembic uses the migrations bundled with the installed `bluecore-mode
 script_location = ../bluecore-models/src/bluecore_models/migrations
 prepend_sys_path = .
 version_path_separator = os
-sqlalchemy.url = postgresql+psycopg2://airflow:airflow@localhost/bluecore
+sqlalchemy.url = postgresql+psycopg://airflow:airflow@localhost/bluecore
 ```
 
 ## 📂 Uploads Directory
