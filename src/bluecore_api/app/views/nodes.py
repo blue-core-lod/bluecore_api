@@ -264,6 +264,20 @@ def split_titles(node: object) -> tuple[list[object], list[object]]:
     return primary, variant
 
 
+def subtitles(node: object) -> list[object]:
+    """The subtitles bf:title carries, in reading order.
+
+    A subtitle is a property of a title node rather than a node of its own, so it
+    cannot be picked out by type the way split_titles picks out variants. Only the
+    title proper is read: a variant's subtitle belongs with its variant.
+    """
+    found: list[object] = []
+    for item in split_titles(node)[0]:
+        if isinstance(item, dict):
+            found.extend(as_list(item.get("subtitle")))
+    return found
+
+
 def title_of(data: Mapping[str, object]) -> str:
     """The one title that names a record, for a heading or a link.
 
