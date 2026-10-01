@@ -20,15 +20,15 @@ def _is_stub_status(value: object) -> bool:
     )
 
 
-# A pseudo-key, because bf:title feeds two headings: the title proper and the
-# variants, as LC separates them.
+# Pseudo-keys, because bf:title feeds three headings: the title proper, the
+# subtitle and the variants, as LC separates them.
 VARIANT_TITLE_KEY = "title:variant"
-SUB_TITLE_KEY = "title:variant"
+SUB_TITLE_KEY = "title:subtitle"
 
 VARIANT_TITLE_LABEL = "Other Titles (e.g. Variant)"
-SUB_TITLE_LABEL = "Sub Title"
+SUB_TITLE_LABEL = "Subtitle"
 
-# The two headings bf:title feeds, so Type can be inserted after both of them.
+# The headings bf:title feeds, so Type can be inserted after all of them.
 TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL, SUB_TITLE_LABEL})
 
 # The order fields appear in, following LC's; one sequence for all three record
@@ -36,8 +36,8 @@ TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL, SUB_TITLE_LABEL})
 # renders -- a key missing from here still gets a section, just at the end.
 FIELD_ORDER: tuple[str, ...] = (
     "title",
-    VARIANT_TITLE_KEY,
     SUB_TITLE_KEY,
+    VARIANT_TITLE_KEY,
     # Type is inserted after the titles by _insert_type_field
     "contribution",
     "subject",
@@ -104,6 +104,7 @@ UNBULLETED_LABELS = frozenset(
 # Headings for keys that humanize oddly or that LC words differently.
 FIELD_LABELS: dict[str, str] = {
     VARIANT_TITLE_KEY: VARIANT_TITLE_LABEL,
+    SUB_TITLE_KEY: SUB_TITLE_LABEL,
     "bflc:aap": "Authorized Access Point",
     "bflc:marcKey": "MARC Key",
     "genreForm": "Genre Form",
@@ -466,6 +467,9 @@ def _field(
     """
     if key == VARIANT_TITLE_KEY:
         values = node_values(nodes.split_titles(data.get("title"))[1], label_map)
+        return {"label": label, "values": nodes.dedupe(values)} if values else None
+    if key == SUB_TITLE_KEY:
+        values = node_values(nodes.subtitles(data.get("title")), label_map)
         return {"label": label, "values": nodes.dedupe(values)} if values else None
     if key not in data:
         return None

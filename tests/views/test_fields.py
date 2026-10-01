@@ -170,6 +170,51 @@ def test_a_record_with_only_variant_titles_still_has_a_heading():
     assert title_of(data) == "Only Variant"
 
 
+def test_subtitle_gets_its_own_heading():
+    """A subtitle is a property of the title node, not a title node of its own."""
+    data = {
+        "title": {
+            "@type": "Title",
+            "mainTitle": "Blue light hours",
+            "subtitle": "a novel",
+        }
+    }
+    fields = _fields(data)
+    assert fields["Title"] == ["Blue light hours"]
+    assert fields["Subtitle"] == ["a novel"]
+
+
+def test_subtitle_arrives_as_a_list():
+    """Expanded JSON-LD wraps every literal in a list, subtitles included."""
+    data = {
+        "title": [
+            {
+                "@type": ["Title"],
+                "mainTitle": ["Blue light hours"],
+                "subtitle": ["a novel"],
+            }
+        ]
+    }
+    assert _fields(data)["Subtitle"] == ["a novel"]
+
+
+def test_a_title_without_a_subtitle_has_no_heading():
+    assert "Subtitle" not in _fields(VARIANT_AND_PRIMARY)
+
+
+def test_subtitle_is_not_filled_with_variant_titles():
+    """Variants belong under Other Titles; they are not subtitles."""
+    data = {
+        "title": [
+            {"@type": "Title", "mainTitle": "Proper", "subtitle": "a novel"},
+            {"@type": "VariantTitle", "mainTitle": "Variant"},
+        ]
+    }
+    fields = _fields(data)
+    assert fields["Subtitle"] == ["a novel"]
+    assert fields["Other Titles (e.g. Variant)"] == ["Variant"]
+
+
 # --- derivedFrom -------------------------------------------------------------
 
 
