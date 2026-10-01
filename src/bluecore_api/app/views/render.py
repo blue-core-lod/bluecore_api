@@ -50,7 +50,6 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
             "resource_uri": instance.uri,
             "is_work": False,
             "is_hub": False,
-            "is_stub": fields.is_stub(data),  # ty: ignore[invalid-argument-type]
         },
     )
 
@@ -99,7 +98,6 @@ def render_work_html(work: Work, request: Request) -> Response:
             "resource_uri": work.uri,
             "is_work": True,
             "is_hub": False,
-            "is_stub": fields.is_stub(data),  # ty: ignore[invalid-argument-type]
         },
     )
 
@@ -157,6 +155,5 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
             "resource_uri": hub.uri,
             "is_work": False,
             "is_hub": True,
-            "is_stub": fields.is_stub(data),  # ty: ignore[invalid-argument-type]
         },
     )

@@ -65,6 +65,7 @@ async def get_work_embedding(work_uuid: str):
 
 @endpoints.post(
     "/works/{work_uuid}/embeddings",
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
     operation_id="new_work_embedding",
     status_code=201,
 )

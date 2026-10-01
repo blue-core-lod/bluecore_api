@@ -1,4 +1,4 @@
-from bluecore_models.models.version import CURRENT_USER_ID
+from bluecore_models.models.version import CURRENT_USER_ID, CURRENT_USERNAME
 from fastapi import FastAPI, Request
 from fastapi_keycloak_middleware import get_auth, get_user
 
@@ -56,6 +56,7 @@ class BypassKeycloakForGet:
         {
             "/",
             "/docs",
+            "/docs/oauth2-redirect",
             "/context.jsonld",
             "/openapi.json",
             "/favicon.ico",
@@ -103,7 +104,11 @@ async def set_user_context(request: Request):
     """
     Store the current user's UID in CURRENT_USER_ID for Version.before_insert and
     log uid, username, email, first/last name for console log.
+
+    The username goes into CURRENT_USERNAME so add_version persists it too. The
+    UID is the JWT 'sub' claim, an opaque GUID; catalogers need to see a name.
     """
     uid, username, email, given_name, family_name = get_keycloak_user_info(request)
     CURRENT_USER_ID.set(uid)
+    CURRENT_USERNAME.set(username)
     log_user_info(uid, username, email, given_name, family_name, request)

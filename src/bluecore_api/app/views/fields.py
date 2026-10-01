@@ -574,11 +574,3 @@ def insert_type_field(
         if field["label"] in TITLE_LABELS:
             after_titles = position + 1
     fields.insert(after_titles, {"label": "Type", "values": types})
-
-
-def is_stub(data: Mapping[str, object]) -> bool:
-    """Whether this record is a placeholder waiting for its own description."""
-    return any(
-        isinstance(block, dict) and _is_stub_status(block.get("status"))
-        for block in nodes.as_list(data.get("adminMetadata"))
-    )

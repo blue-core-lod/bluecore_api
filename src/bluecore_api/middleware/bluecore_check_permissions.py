@@ -1,5 +1,41 @@
-from fastapi import Depends, HTTPException, status
+import os
+
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi_keycloak_middleware import FastApiUser, MatchStrategy, get_auth, get_user
+
+KEYCLOAK_EXTERNAL_URL = os.getenv(
+    "KEYCLOAK_EXTERNAL_URL", "http://localhost/keycloak"
+).rstrip("/")
+
+_openid_connect_url = f"{KEYCLOAK_EXTERNAL_URL}/realms/bluecore/protocol/openid-connect"
+
+"""
+Documents Keycloak in the OpenAPI spec and drives the /docs Authorize button.
+
+auto_error must stay False. The scheme sits in the dependency tree of every
+protected route, and with auto_error=True FastAPI would reject any request
+without an Authorization header before the route runs -- which would break both
+DEVELOPER_MODE and the test suite, neither of which sends one.
+"""
+keycloak_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl=f"{_openid_connect_url}/auth",
+    tokenUrl=f"{_openid_connect_url}/token",
+    refreshUrl=f"{_openid_connect_url}/token",
+    scheme_name="Keycloak",
+    scopes={
+        "openid": "Authenticate with Keycloak",
+        "profile": "Read the caller's name and username",
+        "email": "Read the caller's email address",
+    },
+    description=(
+        "Keycloak bearer token from the `bluecore` realm. Authorization uses the "
+        "`realm_access.roles` claim: `create`, `update`, and `export` grant write "
+        "access, and `cataloger-read-only` denies it. Outside Swagger UI, get a "
+        "token with `bluecore token` and send it as `Authorization: Bearer <token>`."
+    ),
+    auto_error=False,
+)
 
 
 class BluecoreCheckPermissions:
@@ -36,7 +72,12 @@ class BluecoreCheckPermissions:
         self,
         user: FastApiUser = Depends(get_user),
         auth: list[str] | None = Depends(get_auth),
+        token: str | None = Security(keycloak_scheme),
     ) -> FastApiUser:
+        # `token` is unused here (already validated by KeycloakMiddleware) but is
+        # declared so that FastAPI finds SecurityBase in the dependency tree for
+        # generating the OpenAPI security specification
+
         # Ensure the user is authenticated
         if not user or not user.is_authenticated:
             raise HTTPException(
