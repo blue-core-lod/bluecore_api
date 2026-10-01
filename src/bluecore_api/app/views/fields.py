@@ -23,11 +23,13 @@ def _is_stub_status(value: object) -> bool:
 # A pseudo-key, because bf:title feeds two headings: the title proper and the
 # variants, as LC separates them.
 VARIANT_TITLE_KEY = "title:variant"
+SUB_TITLE_KEY = "title:variant"
 
 VARIANT_TITLE_LABEL = "Other Titles (e.g. Variant)"
+SUB_TITLE_LABEL = "Sub Title"
 
 # The two headings bf:title feeds, so Type can be inserted after both of them.
-TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL})
+TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL, SUB_TITLE_LABEL})
 
 # The order fields appear in, following LC's; one sequence for all three record
 # types, since a record skips the keys it does not carry. It does NOT decide what
@@ -35,6 +37,7 @@ TITLE_LABELS = frozenset({"Title", VARIANT_TITLE_LABEL})
 FIELD_ORDER: tuple[str, ...] = (
     "title",
     VARIANT_TITLE_KEY,
+    SUB_TITLE_KEY,
     # Type is inserted after the titles by _insert_type_field
     "contribution",
     "subject",
