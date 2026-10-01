@@ -82,7 +82,7 @@ async def read_other_resources(
     response_model=OtherResourceSchema,
     operation_id="get_resource",
 )
-async def read_other_resource(resource_id: str, db: Session = Depends(get_db)):
+async def read_other_resource(resource_id: int, db: Session = Depends(get_db)):
     db_other_resource = (
         db.query(OtherResource).filter(OtherResource.id == resource_id).first()
     )
@@ -126,7 +126,7 @@ async def create_other_resource(
     operation_id="update_other_resource",
 )
 async def update_other_resource(
-    resource_id: str,
+    resource_id: int,
     other_resource: OtherResourceUpdateSchema,
     db: Session = Depends(get_db),
 ):
@@ -156,7 +156,7 @@ async def update_other_resource(
     operation_id="delete_other_resource",
 )
 async def delete_other_resource(
-    resource_id: str,
+    resource_id: int,
     db: Session = Depends(get_db),
 ):
     db_other_resource = (

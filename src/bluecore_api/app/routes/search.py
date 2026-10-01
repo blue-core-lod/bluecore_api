@@ -205,7 +205,9 @@ def generate_links(
 
 
 # Borrowed from https://github.com/uriyyo/fastapi-pagination/blob/main/fastapi_pagination/ext/sqlalchemy.py
-def create_count_query(query: Select[tuple[ResourceBase | OtherResource]]):
+def create_count_query(
+    query: Select[tuple[ResourceBase]] | Select[Profile] | Select[tuple[OtherResource]],
+):
     query = query.order_by(None).options(noload("*"))
 
     return query.with_only_columns(
