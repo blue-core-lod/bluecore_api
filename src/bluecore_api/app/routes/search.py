@@ -8,7 +8,6 @@ from bluecore_models.models import (
     Instance,
     OtherResource,
     Profile,
-    ProfileNesting,
     ResourceBase,
     Work,
 )
@@ -355,13 +354,11 @@ async def search_profile(
     """
     stmt = select(Profile)
     if nested == "exclude":
-        # Nested when some other template names this one's template id.
-        nested_by_another = (
-            select(ProfileNesting.id)
-            .where(ProfileNesting.child_template_id == Profile.template_id)
-            .where(ProfileNesting.parent_profile_id != Profile.id)
-        )
-        stmt = stmt.where(~nested_by_another.exists())
+        # is_nested is a correlated NOT EXISTS over profile_relations, so this
+        # stays one statement and the count and paging below still work. The
+        # self-nesting case is a CHECK constraint on that table, so there is
+        # nothing to exclude for it here.
+        stmt = stmt.where(~Profile.is_nested)
 
     search_query = search_tsquery(q)
     params: dict[str, str] = {}

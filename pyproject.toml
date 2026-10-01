@@ -5,7 +5,7 @@ description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "bluecore-models>=0.33.0",
+  "bluecore-models>=0.34.0", # models.ProfileRelation, Profile.is_nested
   "fastapi[standard]",
   "sqlalchemy",
   "pgvector",

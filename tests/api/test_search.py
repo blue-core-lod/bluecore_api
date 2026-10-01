@@ -562,11 +562,16 @@ def test_search_profile_limit(client: TestClient, db_session: Session):
 SINOPIA = "http://sinopia.io/vocabulary/"
 
 
-def _template(resource_id: str, nests: str | None = None) -> list[dict]:
-    """Expanded JSON-LD for a Sinopia template, optionally nesting another.
+NESTED_URI = "https://api.sinopia.io/profiles/nested"
+TOP_LEVEL_URI = "https://api.sinopia.io/profiles/top-level"
 
-    Matches how Sinopia serializes these: the template's own id is a literal,
-    while a reference to a nested template is an IRI reference.
+
+def _profile(resource_id: str, nests: str | None = None) -> list[dict]:
+    """Expanded JSON-LD for a Sinopia profile, optionally nesting another.
+
+    Matches how Sinopia serializes these, and the two predicates differ in
+    form: the profile's own id is a literal, while a reference to a nested
+    profile is an IRI reference holding that profile's URI.
     """
     doc: list[dict] = [
         {
@@ -587,22 +592,22 @@ def _template(resource_id: str, nests: str | None = None) -> list[dict]:
 
 
 def add_nested_profiles(db_session: Session):
-    """A top-level template plus the template it nests.
+    """A top-level profile plus the profile it nests.
 
-    is_nested is derived by bluecore-models on write, so it cannot be set by
-    hand here -- the data has to express the nesting.
+    The nesting has to be expressed in the data: bluecore-models lifts the
+    reference into profile_relations on write, and Profile.is_nested derives
+    from that table on read, so neither can be set by hand.
+
+    The reference is the nested profile's URI, not its hasResourceId. Only a
+    URI resolves to a row, so an id string here would record no relation and
+    the exclude test would silently pass two results instead of one.
     """
-    db_session.add(
-        Profile(
-            uri="https://api.sinopia.io/profiles/nested",
-            data=_template("test:Nested"),
-        ),
-    )
+    db_session.add(Profile(uri=NESTED_URI, data=_profile("test:Nested")))
     db_session.commit()
     db_session.add(
         Profile(
-            uri="https://api.sinopia.io/profiles/top-level",
-            data=_template("test:TopLevel", nests="test:Nested"),
+            uri=TOP_LEVEL_URI,
+            data=_profile("test:TopLevel", nests=NESTED_URI),
         ),
     )
     db_session.commit()
@@ -620,7 +625,7 @@ def test_search_profile_includes_nested_by_default(
     result = response.json()
     assert result["total"] == 2
     uris = {hit["uri"] for hit in result["results"]}
-    assert "https://api.sinopia.io/profiles/nested" in uris
+    assert NESTED_URI in uris
 
 
 def test_search_profile_can_exclude_nested(client: TestClient, db_session: Session):
@@ -629,7 +634,7 @@ def test_search_profile_can_exclude_nested(client: TestClient, db_session: Sessi
     response = client.get("/search/profile", params={"nested": "exclude"})
     result = response.json()
     assert result["total"] == 1
-    assert result["results"][0]["uri"] == "https://api.sinopia.io/profiles/top-level"
+    assert result["results"][0]["uri"] == TOP_LEVEL_URI
 
 
 def test_search_profile_rejects_unknown_nested_value(
