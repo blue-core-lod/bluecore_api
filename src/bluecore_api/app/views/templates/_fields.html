@@ -74,6 +74,9 @@
     {% set marva_note = "Marva loads Instances, not Hubs. Open one of the Works this Hub gathers and load one of its Instances into Marva instead."
                         if is_hub else
                         "Marva loads Instances, not Works. Open one of this Work's Instances and load that into Marva instead." %}
+    {% set export_note = "Only Instances can be exported. Open one of the Works this Hub gathers and export one of its Instances instead."
+                         if is_hub else
+                         "Only Instances can be exported. Open one of this Work's Instances and export that instead." %}
     <div class="bc-field bc-formats">
         {####  Works/Instances File Format Download Section  ####}
         <h2>Alternative Formats</h2>
@@ -86,7 +89,7 @@
         </ul>
 
         {####  Editors (Marva/Sinopia Redirect) Section  ####}
-        <h2>Blue Core Editors</h2>
+        <h2>Blue Core Actions</h2>
         <ul>
             {#### DISABLE Marva and notifies user if a Work or Hub is rendered; ELSE enable Marva link ####}
             {% if is_work or is_hub %}
@@ -107,6 +110,40 @@
             {% endif %}
             {####  Redirect to Sinopia Editor with Resource  ####}
             <li><a href="{{ SINOPIA_BASE_URL }}?resource={{ resource_uri|urlencode }}">Load to Sinopia</a></li>
+            {#### DISABLE Export for a Work or Hub; ELSE POST the Instance to /export (see static/js/export.js) ####}
+            {% if is_work or is_hub %}
+                <li class="bc-editor-row">
+                    <span class="bc-link-disabled" aria-disabled="true">Export to Catalog</span>
+                    <span class="bc-tooltip" tabindex="0" role="note" aria-label="{{ export_note }}">
+                        {{ _alert_icon() }}
+                        <span class="bc-tooltip-text" role="tooltip">
+                            {{ export_note }}
+                        </span>
+                    </span>
+                </li>
+            {% else %}
+                <li>
+                    <button type="button" id="bc-export" class="bc-link-button"
+                            data-instance-uri="{{ resource_uri }}"
+                            data-export-url="{{ request.url_for('export_to_lsp').path }}"
+                            data-keycloak-url="{{ KEYCLOAK_EXTERNAL_URL }}"
+                            data-keycloak-realm="bluecore"
+                            data-keycloak-client-id="{{ KEYCLOAK_CLIENT_ID }}">Export to Catalog</button>
+                </li>
+            {% endif %}
         </ul>
     </div>
+    {% if not (is_work or is_hub) %}
+        {#### keycloak-js loads from jsDelivr; the browser refuses it unless its bytes match the hash. ####}
+        {#### .github/workflows/dependency-updates.yml rewrites these two lines -- keep their shape.  ####}
+        {% set keycloak_js_url = "https://cdn.jsdelivr.net/npm/keycloak-js@26.2.4/lib/keycloak.js" %}
+        {% set keycloak_js_integrity = "sha384-H/s0CjiTzSWrUEPhnUduI9XFNHARQjaXpB7aJ3R48Rw0Mm8vomuZ4phg1N3152xi" %}
+        <script type="importmap">
+            {
+                "imports": {"keycloak-js": "{{ keycloak_js_url }}"},
+                "integrity": {"{{ keycloak_js_url }}": "{{ keycloak_js_integrity }}"}
+            }
+        </script>
+        <script type="module" src="{{ request.url_for('static_files', path='js/export.js').path }}"></script>
+    {% endif %}
 {%- endmacro %}

@@ -3,7 +3,8 @@
 {##############################################################################}
 
 {% extends "base.html" %}
-{% import "_fields.html" as f %}
+{#### with context: alt_formats builds URLs with request.url_for ####}
+{% import "_fields.html" as f with context %}
 
 {####  Content Block Section  ####}
 {% block content %}
@@ -16,16 +17,27 @@
 
 {####  Sidebar Block Section  ####}
 {% block sidebar %}
-    {% if sidebar %}
-        <aside class="bc-sidebar">
-            {% for field in sidebar %}
-                <h2>{{ field.label }}</h2>
-                <ul>
-                    {% for v in field['values'] %}
-                        <li>{{ f.render_value(v) }}</li>
+    {#### Only Instances export (see alt_formats), so only they carry the export notice ####}
+    {% set exportable = not (is_work or is_hub) %}
+    {% if sidebar or exportable %}
+        {#### Right-hand column: the sidebar, with the export notice beneath it ####}
+        <div class="bc-side">
+            {% if sidebar %}
+                <aside class="bc-sidebar">
+                    {% for field in sidebar %}
+                        <h2>{{ field.label }}</h2>
+                        <ul>
+                            {% for v in field['values'] %}
+                                <li>{{ f.render_value(v) }}</li>
+                            {% endfor %}
+                        </ul>
                     {% endfor %}
-                </ul>
-            {% endfor %}
-        </aside>
+                </aside>
+            {% endif %}
+            {% if exportable %}
+                {#### Export success/error message, filled in by static/js/export.js ####}
+                <p id="bc-export-notice" class="bc-notice" role="status" aria-live="polite" hidden></p>
+            {% endif %}
+        </div>
     {% endif %}
 {% endblock %}

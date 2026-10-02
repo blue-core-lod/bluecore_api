@@ -1,7 +1,8 @@
 """Shared Jinja2 templating setup for the HTML views.
 
 Templates reference absolute URLs built from:
-`TEMPLATES_DIR` `BLUECORE_URL`, `MARVA_BASE_URL`, `SINOPIA_BASE_URL`.
+`TEMPLATES_DIR` `BLUECORE_URL`, `MARVA_BASE_URL`, `SINOPIA_BASE_URL`,
+`KEYCLOAK_EXTERNAL_URL`, `KEYCLOAK_CLIENT_ID`.
 These values are exposed as Jinja globals so every template can use them.
 """
 
@@ -12,6 +13,10 @@ from fastapi.templating import Jinja2Templates
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 MARVA_BASE_URL = os.environ.get("MARVA_BASE_URL", "https://dev.bcld.info/marva/")
 SINOPIA_BASE_URL = os.environ.get("SINOPIA_BASE_URL", "https://dev.bcld.info/sinopia/")
+KEYCLOAK_EXTERNAL_URL = os.environ.get(
+    "KEYCLOAK_EXTERNAL_URL", "http://localhost/keycloak"
+).rstrip("/")
+KEYCLOAK_CLIENT_ID = os.environ.get("API_KEYCLOAK_CLIENT_ID", "bluecore_api")
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
@@ -19,3 +24,5 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals["BLUECORE_URL"] = BLUECORE_URL  # ty: ignore[invalid-assignment]
 templates.env.globals["MARVA_BASE_URL"] = MARVA_BASE_URL  # ty: ignore[invalid-assignment]
 templates.env.globals["SINOPIA_BASE_URL"] = SINOPIA_BASE_URL  # ty: ignore[invalid-assignment]
+templates.env.globals["KEYCLOAK_EXTERNAL_URL"] = KEYCLOAK_EXTERNAL_URL  # ty: ignore[invalid-assignment]
+templates.env.globals["KEYCLOAK_CLIENT_ID"] = KEYCLOAK_CLIENT_ID  # ty: ignore[invalid-assignment]

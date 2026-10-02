@@ -192,6 +192,10 @@ def test_get_work_html(client, db_session):
     assert "BIBFRAME Work" in response.text
     # The view links to the alternative RDF serializations.
     assert f"{test_work_bluecore_uri}.ttl" in response.text
+    # Only Instances export, so a Work gets the disabled label, not the button.
+    assert 'id="bc-export"' not in response.text
+    assert 'id="bc-export-notice"' not in response.text
+    assert "Only Instances can be exported." in response.text
 
     # An unrecognized format (e.g. `.html`, `.xml`) falls through to the default
     # serialization, which is the HTML view.
