@@ -200,6 +200,19 @@ def test_get_instance_html(client, db_session):
     assert "BIBFRAME Instance" in response.text
     # The view links to the alternative RDF serializations.
     assert f"{test_instance_bluecore_uri}.ttl" in response.text
+    # An Instance can be exported: the button carries the URI POSTed to /export.
+    assert 'id="bc-export"' in response.text
+    assert f'data-instance-uri="{test_instance_bluecore_uri}"' in response.text
+    assert 'data-export-url="/api/export/"' in response.text
+    # The export notice sits in the right-hand column, beneath the sidebar.
+    assert (
+        response.text.index('class="bc-side"')
+        < response.text.index('class="bc-sidebar"')
+        < response.text.index('id="bc-export-notice"')
+    )
+    # keycloak-js comes from the CDN only through the hash-pinned import map.
+    assert '<script type="importmap">' in response.text
+    assert '"integrity": {"https://cdn.jsdelivr.net/npm/keycloak-js@' in response.text
 
     # An unrecognized format (e.g. `.html`, `.xml`) falls through to the default
     # serialization, which is the HTML view.

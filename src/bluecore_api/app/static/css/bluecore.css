@@ -274,15 +274,30 @@ body {
 /*############################################################################*/
 /*#######  Resource View: Sidebar Section  #######*/
 /*################################################*/
+/* Right-hand column of the flex layout: the sidebar, with the export notice
+   beneath it. It owns the column's sizing so the notice can stack under the
+   sidebar instead of becoming a third column. */
+.bc-side {
+  /* A short "Instance of" title would otherwise squeeze the sidebar, and the
+     notice with it, into a narrow strip; both stretch to this width. */
+  min-width: 300px;
+  max-width: 550px;
+  flex-shrink: 0;
+  margin-top: 58px;
+}
+
+/* An Instance with no sidebar: keep the column (and its gap) out of the
+   layout until a notice appears. */
+.bc-side:not(:has(.bc-sidebar)):has(.bc-notice[hidden]) {
+  display: none;
+}
+
 .bc-sidebar {
   min-width: auto;
-  max-width: 550px;
   min-height: auto;
-  flex-shrink: 0;
   background: var(--bc-sidebar-bg);
   padding: 32px 10px 18px;
   border-radius: 4px;
-  margin-top: 58px;
   border: 1px solid var(--bc-border);
 }
 
@@ -343,6 +358,41 @@ body {
   border-radius: 4px;
   padding: 1px;
   background-color: var(--bc-muted-bg);
+}
+
+/* "Export to Catalog" is an action (POST), so a <button>, dressed as a link */
+.bc-link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--bc-link);
+  cursor: pointer;
+}
+
+.bc-link-button:hover {
+  text-decoration: underline;
+}
+
+/* Export request result, under the sidebar: green on success, red on error.
+   width: 0 + min-width: 100% fills the column without the long message
+   widening it past the sidebar. */
+.bc-notice {
+  width: 0;
+  min-width: 100%;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border: 1px solid #15803d;
+  border-radius: 4px;
+  background: #f0fdf4;
+  color: #14532d;
+  overflow-wrap: anywhere;
+}
+
+.bc-notice-error {
+  border-color: #b91c1c;
+  background: #fef2f2;
+  color: #7f1d1d;
 }
 
 
@@ -504,7 +554,9 @@ body {
     flex-direction: column;
     padding-left: 20px;
   }
+  .bc-side,
   .bc-sidebar {
+    min-width: 0;
     max-width: 100%;
     width: 100%;
     min-height: auto;

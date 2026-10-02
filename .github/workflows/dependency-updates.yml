@@ -29,10 +29,49 @@ jobs:
       - name: Update dependencies
         run: uv lock --upgrade
 
+      # keycloak-js loads from jsDelivr via the import map in _fields.html, so
+      # uv never sees it. Bump it within KEYCLOAK_JS_MAJOR and recompute the
+      # integrity hash, or the browser refuses the new file. Raise the major
+      # only alongside a Keycloak server major upgrade in bluecore-stack.
+      - name: Update keycloak-js pin
+        env:
+          KEYCLOAK_JS_MAJOR: 26
+          TEMPLATE: src/bluecore_api/app/views/templates/_fields.html
+        run: |
+          set -euo pipefail
+          current=$(grep -oP 'keycloak-js@\K[0-9]+\.[0-9]+\.[0-9]+' "$TEMPLATE")
+          registry=$(curl -fsS https://registry.npmjs.org/keycloak-js)
+          latest=$(echo "$registry" \
+            | jq -r --arg major "$KEYCLOAK_JS_MAJOR" '.versions | keys[] | select(test("^" + $major + "\\.[0-9]+\\.[0-9]+$"))' \
+            | sort -V | tail -1)
+          if [ "$current" = "$latest" ]; then
+            echo "keycloak-js $current is current"
+            exit 0
+          fi
+
+          # Hash the file from the npm tarball, checked against the registry's
+          # sha512, then confirm jsDelivr serves the same bytes.
+          workdir=$(mktemp -d)
+          tarball=$(echo "$registry" | jq -r --arg v "$latest" '.versions[$v].dist.tarball')
+          expected=$(echo "$registry" | jq -r --arg v "$latest" '.versions[$v].dist.integrity')
+          curl -fsS "$tarball" -o "$workdir/pkg.tgz"
+          actual="sha512-$(openssl dgst -sha512 -binary "$workdir/pkg.tgz" | base64 -w0)"
+          [ "$actual" = "$expected" ] || { echo "tarball integrity mismatch"; exit 1; }
+          tar xzf "$workdir/pkg.tgz" -C "$workdir" package/lib/keycloak.js
+          sri="sha384-$(openssl dgst -sha384 -binary "$workdir/package/lib/keycloak.js" | base64 -w0)"
+          cdn="sha384-$(curl -fsSL "https://cdn.jsdelivr.net/npm/keycloak-js@$latest/lib/keycloak.js" | openssl dgst -sha384 -binary | base64 -w0)"
+          [ "$sri" = "$cdn" ] || { echo "jsDelivr bytes differ from npm"; exit 1; }
+
+          sed -i -E \
+            -e "s|keycloak-js@[0-9]+\.[0-9]+\.[0-9]+/lib/keycloak\.js|keycloak-js@$latest/lib/keycloak.js|" \
+            -e "s|keycloak_js_integrity = \"[^\"]*\"|keycloak_js_integrity = \"$sri\"|" \
+            "$TEMPLATE"
+          echo "keycloak-js $current -> $latest"
+
       - name: Check for dependency changes
         id: check_changes
         run: |
-          if git diff --quiet uv.lock; then
+          if git diff --quiet uv.lock src/bluecore_api/app/views/templates/_fields.html; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -78,6 +117,7 @@ jobs:
             Weekly automated dependency updates.
 
             - Updated `uv.lock` via `uv lock --upgrade`
+            - Updated the keycloak-js pin and integrity hash in `_fields.html`, if a newer release exists
             - Bumped patch version to `${{ steps.bump_version.outputs.new_version }}`
           commit-message: 'Update dependencies and bump patch version to ${{ steps.bump_version.outputs.new_version }}'
           labels: dependencies
