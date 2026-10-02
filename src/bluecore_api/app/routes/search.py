@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Literal
 from urllib.parse import urlencode
 
 from bluecore_models.models import (
@@ -346,19 +347,27 @@ async def search_profile(
     q: str = "",
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
+    nested: Literal["include", "exclude"] = "include",
 ) -> dict[str, object]:
     """
     Search for profiles in the resource base.
     """
     stmt = select(Profile)
+    if nested == "exclude":
+        # is_nested is a correlated NOT EXISTS over profile_relations, so this
+        # stays one statement and the count and paging below still work. The
+        # self-nesting case is a CHECK constraint on that table, so there is
+        # nothing to exclude for it here.
+        stmt = stmt.where(~Profile.is_nested)
 
     search_query = search_tsquery(q)
+    params: dict[str, str] = {}
     if search_query is not None:
         stmt = stmt.where(search_query.op("@@")(Profile.data_vector))
-        params: dict[str, str] = {"q": q}
-        links_query = f"&{urlencode(params)}"
-    else:
-        links_query = ""
+        params["q"] = q
+    if nested == "exclude":
+        params["nested"] = nested
+    links_query = f"&{urlencode(params)}" if params else ""
     count_query = create_count_query(stmt)
     total = db.scalar(count_query)
 
