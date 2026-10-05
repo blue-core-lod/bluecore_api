@@ -14,7 +14,7 @@ from bluecore_models.models import (
 from bluecore_models.utils.search import normalize_symbols
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import Select, func, select
+from sqlalchemy import ColumnElement, Select, func, literal, or_, select
 from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.views.search_display import (
@@ -151,10 +151,17 @@ def apply_resource_search(
     stmt: Select, q: str, scope: SearchScope
 ) -> tuple[Select, bool]:
     """Apply the chosen field scope and a stable relevance order to a query.
+    The Identifier scope does an exact identifier lookup with the search text.
 
     The boolean tells callers whether there was search text, so they can build
     links without repeating the matching logic.
     """
+    if scope == SearchScope.IDENTIFIER:
+        if not q.strip():
+            return stmt.order_by(ResourceBase.id), False
+        stmt = stmt.where(identifier_match(q))
+        return stmt.order_by(ResourceBase.id), True
+
     search_query = search_tsquery(q)
     if search_query is None:
         return stmt.order_by(ResourceBase.id), False
@@ -167,6 +174,46 @@ def apply_resource_search(
         ResourceBase.id,
     )
     return stmt, True
+
+
+# The only identifier schemes that are indexed. A prefix from this list (like
+# "isbn:") limits an identifier search to that one scheme.
+IDENTIFIER_SCHEMES = ["isbn", "issn", "lccn", "doi"]
+
+
+def identifier_match(identifier: str) -> ColumnElement[bool]:
+    """Build the condition that finds records with the identifier a user typed.
+    The text is cleaned up inside the query by the same database function that
+    fills the identifiers column, so what a user types lines up with what is stored.
+
+    - "isbn:9780140449112" only matches ISBNs
+    - "9780140449112" matches that value as an ISBN, ISSN, LCCN or DOI
+    """
+    identifier = identifier.strip()
+    prefix, colon, value = identifier.partition(":")
+    scheme = prefix.strip().lower()
+
+    if colon and scheme in IDENTIFIER_SCHEMES:
+        # Clean up the value, then put the scheme back in front of each result
+        # ("isbn:9780140449112"), because only those match this one scheme
+        cleaned_value = func.unnest(
+            func.bluecore_identifier_values(scheme, value)
+        ).column_valued("cleaned_value")
+        prefixed_values = select(literal(f"{scheme}:") + cleaned_value)
+        return ResourceBase.identifiers.overlap(
+            func.array(prefixed_values.scalar_subquery())
+        )
+
+    # No prefix: clean up the text as each scheme would, and match the values
+    # that are stored without a scheme
+    return or_(
+        *(
+            ResourceBase.identifiers.overlap(
+                func.bluecore_identifier_values(each_scheme, identifier)
+            )
+            for each_scheme in IDENTIFIER_SCHEMES
+        )
+    )
 
 
 def search_params(
@@ -233,6 +280,9 @@ async def search(
 ) -> dict[str, object]:
     """
     Search for Works, Instances and Hubs.
+    With `scope=identifier`, `q` is an exact identifier lookup instead:
+        `isbn:9780140449112` searches ISBNs only, `9780140449112` searches ISBNs,
+        ISSNs, LCCNs and DOIs. Spaces, hyphens and letter case don't matter.
     It transforms the query string to be compatible with PostgreSQL full-text search.
     It supports phrase search using double quotes.
     If the query contains a phrase in double quotes, it will use "simple" language for

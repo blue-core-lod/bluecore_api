@@ -65,6 +65,9 @@
                 <option value="title"{% if search_scope == 'title' %} selected{% endif %}>
                     Title
                 </option>
+                <option value="identifier"{% if search_scope == 'identifier' %} selected{% endif %}>
+                    Identifier
+                </option>
             </select>
             <input type="search" name="q" value="{{ search_q|default('', true) }}" placeholder="Start typing…">
             <button type="submit">Search</button>

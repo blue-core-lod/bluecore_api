@@ -45,6 +45,7 @@ class SearchScope(StrEnum):
 
     ALL = auto()
     TITLE = auto()
+    IDENTIFIER = auto()
 
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
