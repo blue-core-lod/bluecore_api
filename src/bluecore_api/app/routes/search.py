@@ -14,7 +14,7 @@ from bluecore_models.models import (
 from bluecore_models.utils.search import normalize_symbols
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import ColumnElement, Select, func, literal, or_, select
+from sqlalchemy import ColumnElement, Select, and_, func, literal, or_, select
 from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.views.search_display import (
@@ -194,14 +194,19 @@ def identifier_match(identifier: str) -> ColumnElement[bool]:
     scheme = prefix.strip().lower()
 
     if colon and scheme in IDENTIFIER_SCHEMES:
-        # Clean up the value, then put the scheme back in front of each result
+        cleaned_values = func.bluecore_identifier_values(scheme, value)
+        # Put the scheme back in front of each cleaned value
         # ("isbn:9780140449112"), because only those match this one scheme
-        cleaned_value = func.unnest(
-            func.bluecore_identifier_values(scheme, value)
-        ).column_valued("cleaned_value")
+        cleaned_value = func.unnest(cleaned_values).column_valued("cleaned_value")
         prefixed_values = select(literal(f"{scheme}:") + cleaned_value)
-        return ResourceBase.identifiers.overlap(
-            func.array(prefixed_values.scalar_subquery())
+        # Postgres can't see inside the prefixed values when it plans the query,
+        # so it would scan the whole table. Matching the plain values too lets
+        # it use the index; the prefixed ones then keep only this scheme.
+        return and_(
+            ResourceBase.identifiers.overlap(cleaned_values),
+            ResourceBase.identifiers.overlap(
+                func.array(prefixed_values.scalar_subquery())
+            ),
         )
 
     # No prefix: clean up the text as each scheme would, and match the values
