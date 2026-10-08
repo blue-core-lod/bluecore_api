@@ -42,7 +42,8 @@ def accept_media_types(accept_header: str) -> Iterator[str]:
     """Yield the requested media types, in the order the client listed them.
 
     `q=` parameters are stripped rather than ranked, so the client's ordering
-    decides and not its weights. An empty or absent header yields one empty
+    decides and not its weights. Media types are lowercased, since RFC 9110
+    makes them case-insensitive. An empty or absent header yields one empty
     string, which callers can treat as "no preference".
 
     What to do with a wildcard, or with a header naming nothing available, is
@@ -50,7 +51,9 @@ def accept_media_types(accept_header: str) -> Iterator[str]:
     app/routes/convert.py defaults to JSON-LD and raises 406.
     """
     for accept_raw in accept_header.split(","):
-        yield accept_raw.split(";")[0].strip()
+        # Lowercased because RFC 9110 makes type/subtype case-insensitive, and
+        # both registries here are keyed in lower case.
+        yield accept_raw.split(";")[0].strip().lower()
 
 
 def serialize(

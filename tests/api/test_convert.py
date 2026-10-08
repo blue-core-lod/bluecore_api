@@ -2,7 +2,6 @@ import pytest
 from pymarc import Field, Record, Subfield
 from pymarc.field import Indicators
 from rdflib import RDF, Graph, URIRef
-from rdflib.compare import isomorphic
 
 from bluecore_api.app.routes import convert
 
@@ -432,11 +431,16 @@ def _post_for_turtle(client, params: str = "") -> str:
 
 
 @pytest.mark.asyncio
-async def test_marc2bibframe_default_source_base_uri_matches_the_dag(client):
-    """Unasked, the endpoint mints under the marc_to_bibframe DAG's base."""
-    minted = _minted_subjects(_post_for_turtle(client), "http://id.loc.gov/resources/")
-    assert "http://id.loc.gov/resources/92005291#Work" in minted
-    assert "http://id.loc.gov/resources/92005291#Instance" in minted
+async def test_marc2bibframe_default_source_base_uri_is_non_resolvable(client):
+    """Unasked, the endpoint mints under marc-bibframe's placeholder base.
+
+    Deliberately not an authority's namespace: the minted URIs name nothing, so
+    they should not be mistakable for real Library of Congress identifiers.
+    """
+    minted = _minted_subjects(_post_for_turtle(client), "http://example.org/")
+    assert "http://example.org/92005291#Work" in minted
+    assert "http://example.org/92005291#Instance" in minted
+    assert not any("id.loc.gov/resources" in uri for uri in minted)
 
 
 @pytest.mark.asyncio
@@ -445,7 +449,7 @@ async def test_marc2bibframe_honors_source_base_uri(client):
     assert "https://example.edu/catalog/92005291#Work" in _minted_subjects(
         body, "https://example.edu/catalog/"
     )
-    assert "id.loc.gov/resources/92005291" not in body
+    assert "example.org/92005291" not in body
 
 
 @pytest.mark.asyncio
@@ -577,7 +581,7 @@ async def test_bare_record_without_a_collection_wrapper_converts(client):
     graph = Graph()
     graph.parse(data=resp.text, format="json-ld")
     assert (
-        URIRef("http://id.loc.gov/resources/999#Work"),
+        URIRef("http://example.org/999#Work"),
         RDF.type,
         BF_WORK,
     ) in graph
@@ -639,16 +643,14 @@ async def test_marcxml_with_a_utf8_bom_converts(client):
     )
     assert resp.status_code == 200
 
-    without_bom = client.post(
-        "/marc2bibframe",
-        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
-        content=MARCXML,
-    )
-    # Compared as graphs, not as JSON: rdflib mints fresh blank node labels on
-    # every run, so the two serializations differ even when the RDF matches.
-    assert isomorphic(
-        Graph().parse(data=resp.text, format="json-ld"),
-        Graph().parse(data=without_bom.text, format="json-ld"),
+    # Asserted on content rather than by diffing against a BOM-less response:
+    # the transform stamps bf:date with the current second, so two requests are
+    # not comparable. A Work and a title prove it was read as MARCXML, which is
+    # the whole point -- read as binary MARC it was a 422.
+    graph = Graph().parse(data=resp.text, format="json-ld")
+    assert (URIRef("http://example.org/92005291#Work"), RDF.type, BF_WORK) in graph
+    assert "Getting started with Marc" in "".join(
+        str(o) for o in graph.objects(predicate=BF_MAIN_TITLE)
     )
 
 
@@ -712,7 +714,7 @@ async def test_collection_with_no_records_is_422_not_413(client):
         content=empty,
     )
     assert resp.status_code == 422
-    assert resp.json()["detail"] == "No MARC record found."
+    assert resp.json()["detail"].startswith("No MARC record found.")
 
 
 @pytest.mark.parametrize(
@@ -745,3 +747,152 @@ async def test_source_base_uri_is_validated_before_the_body_is_converted(client)
     )
     assert resp.status_code == 422
     assert "source_base_uri" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Review round two: input that reached rdflib, or the wrong guard
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "base",
+    [
+        "http://example.edu/a b/",
+        "http://example.edu/a|b/",
+        'http://example.edu/a"b/',
+        "http://example.edu/a{b}/",
+        "http://example.edu/a^b/",
+    ],
+)
+@pytest.mark.parametrize("accept", ["text/turtle", "application/ld+json"])
+@pytest.mark.asyncio
+async def test_base_uri_with_characters_rdflib_rejects(client, base, accept):
+    """Checking scheme and host was not enough.
+
+    rdflib refuses these at serialization: a 500 for turtle and N-Triples, and
+    for JSON-LD a 200 carrying malformed URIs, which is worse.
+    """
+    resp = client.post(
+        f"/marc2bibframe?source_base_uri={base}",
+        headers={
+            "X-User": "cataloger",
+            "Content-Type": "application/xml",
+            "Accept": accept,
+        },
+        content=MARCXML,
+    )
+    assert resp.status_code == 422
+    assert "cannot appear in a URI" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_base_uri_with_a_fragment_is_rejected(client):
+    """The transform appends its own #fragment, so a base carrying one minted
+    http://example.edu/rec#92005291#Work: two fragments, and rdflib serialized
+    it without complaint."""
+    resp = client.post(
+        "/marc2bibframe?source_base_uri=http://example.edu/rec%23",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=MARCXML,
+    )
+    assert resp.status_code == 422
+    assert "fragment" in resp.json()["detail"]
+
+
+def _record_with(subfield_value: str) -> bytes:
+    record = Record()
+    record.add_field(Field(tag="001", data="1"))
+    record.add_field(
+        Field(
+            tag="245",
+            indicators=Indicators("1", "0"),
+            subfields=[Subfield("a", subfield_value)],
+        )
+    )
+    return record.as_marc()
+
+
+@pytest.mark.parametrize("path", ["/marc2xml", "/marc2bibframe"])
+@pytest.mark.asyncio
+async def test_control_character_in_subfield_is_422_not_500(client, path):
+    """marc_to_marcxml copies subfield data through verbatim, so a control
+    character makes the MARCXML unparseable. /marc2xml used to 500 on it."""
+    resp = client.post(
+        path,
+        headers={"X-User": "cataloger", "Content-Type": "application/marc"},
+        content=_record_with("Test\x0ctitle"),
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.parametrize("path", ["/marc2xml", "/marc2bibframe"])
+@pytest.mark.asyncio
+async def test_record_terminator_in_subfield_is_not_reported_as_a_batch(client, path):
+    """0x1D can appear in subfield data, and counting those bytes read a single
+    record as two, refusing it with "Received 2 records... use a batch workflow".
+
+    pymarc reads it as the one record it is. The request is still refused, since
+    0x1D is not a legal XML character so the MARCXML cannot be parsed, but now
+    for the real reason.
+    """
+    resp = client.post(
+        path,
+        headers={"X-User": "cataloger", "Content-Type": "application/marc"},
+        content=_record_with("Test\x1dtitle"),
+    )
+    assert resp.status_code == 422
+    assert "XML" in resp.json()["detail"]
+    assert "records" not in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_non_marc_xml_with_record_elements_is_rejected(client):
+    """An OAI-PMH <record> matched on localname alone and returned an empty graph."""
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=(
+            b'<record xmlns="http://www.openarchives.org/OAI/2.0/"><header/></record>'
+        ),
+    )
+    assert resp.status_code == 422
+    assert "No MARC record found" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_namespaceless_marcxml_is_rejected(client):
+    """The transform only recognizes records in the MARCXML namespace, so this
+    used to convert to an empty graph and return 200."""
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=b"<collection><record><leader>x</leader></record></collection>",
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "accept,expected",
+    [
+        ("TEXT/TURTLE", "text/turtle"),
+        ("Application/LD+JSON", "application/ld+json"),
+        ("text/*", "text/turtle"),
+        ("application/*", "application/ld+json"),
+        ("*", "application/ld+json"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_accept_casing_and_subtype_wildcards(client, accept, expected):
+    """RFC 9110 makes media types case-insensitive, and a subtype wildcard
+    should take the first thing offered of that type."""
+    resp = client.post(
+        "/marc2bibframe",
+        headers={
+            "X-User": "cataloger",
+            "Content-Type": "application/xml",
+            "Accept": accept,
+        },
+        content=MARCXML,
+    )
+    assert resp.status_code == 200
+    assert expected in resp.headers["content-type"]

@@ -13,14 +13,22 @@ Bulk MARC belongs in a batch workflow: today that means the bluecore-workflows
 uploads to `resource_loader`, which reads JSON-LD rather than MARC.
 """
 
+from copy import deepcopy
+from io import BytesIO
 from typing import Annotated
 from urllib.parse import urlparse
 
+import pymarc
 from bluecore_models.utils.marc import replace_dlc_assigner
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response
 from lxml import etree
-from marc_bibframe import marc_to_marcxml, marcxml_to_graph
+from marc_bibframe import (
+    DEFAULT_BASE_URI,
+    marc_to_marcxml,
+    marcxml_to_graph,
+)
+from pymarc.exceptions import PymarcException
 from rdflib import Graph
 
 from bluecore_api.app.utils.examples import MARCXML_EXAMPLE
@@ -50,26 +58,36 @@ BIBFRAME_SERIALIZATIONS = {
 }
 
 #: Media types that resolve to the default serialization rather than naming one:
-#: the wildcards, and application/json, which serializer_accept_registry in
-#: app/utils/serializer.py also treats as a synonym for JSON-LD.
-_DEFAULTED_ACCEPTS = frozenset({"", "*/*", "application/*", "application/json"})
+#: the catch-all wildcards, and application/json, which
+#: serializer_accept_registry in app/utils/serializer.py also treats as a
+#: synonym for JSON-LD.
+_DEFAULTED_ACCEPTS = frozenset({"", "*", "*/*", "application/json"})
 
 DEFAULT_BIBFRAME_MEDIA_TYPE = next(iter(BIBFRAME_SERIALIZATIONS))
 
-#: The source_base_uri of the bluecore-workflows `marc_to_bibframe` DAG, plus
-#: the trailing slash the DAG omits. marc2bibframe2 joins the base and the
-#: record id by plain concatenation, so a base without a trailing delimiter
-#: mints `http://id.loc.gov/resources92005291#Work`.
-DEFAULT_SOURCE_BASE_URI = "http://id.loc.gov/resources/"
+#: marc-bibframe's own default, and deliberately non-resolvable: the URIs the
+#: transform mints name nothing, so a caller who does not pass a base should get
+#: URIs that are obviously placeholders rather than ones that look like an
+#: authority's. The bluecore-workflows `marc_to_bibframe` DAG defaults to
+#: `http://id.loc.gov/resources` instead, which mints fabricated URIs inside
+#: id.loc.gov (and, lacking a trailing slash, malformed ones).
+DEFAULT_SOURCE_BASE_URI = DEFAULT_BASE_URI
+
+
+#: Characters rdflib refuses to serialize in a URI (rdflib.term._invalid_uri_chars
+#: plus the controls), mirrored here so we reject them up front. Left to
+#: rdflib they surface as a bare Exception during serialization -- a 500 for
+#: turtle and N-Triples, and for JSON-LD a 200 carrying malformed URIs.
+_INVALID_URI_CHARS = frozenset('<>" {}|\\^`') | {chr(c) for c in range(33)}
 
 
 def _base_uri(source_base_uri: str) -> str:
-    """Validate the base URI, and give it a trailing delimiter.
+    """Validate the base URI, and give it a trailing slash.
 
-    The transform concatenates the base and the record id, so an unchecked
-    value produces URIs that are wrong rather than an error: an empty base
-    mints a relative "/92005291#Work", and a value with a space in it gets as
-    far as serialization before rdflib refuses it, which surfaces as a 500.
+    The transform concatenates the base, the record id and "#fragment", so an
+    unchecked value yields URIs that are wrong rather than an error: an empty
+    base mints a relative "/92005291#Work", and a space in the base mints
+    something rdflib will not serialize.
     """
     parsed = urlparse(source_base_uri)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -80,7 +98,23 @@ def _base_uri(source_base_uri: str) -> str:
                 f"got {source_base_uri!r}."
             ),
         )
-    if source_base_uri.endswith(("/", "#")):
+    if bad := sorted(_INVALID_URI_CHARS.intersection(source_base_uri)):
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"source_base_uri contains characters that cannot appear in a "
+                f"URI: {''.join(bad)!r}."
+            ),
+        )
+    if "#" in source_base_uri:
+        # The transform appends its own "#fragment", so a base carrying one
+        # mints http://example.edu/rec#92005291#Work -- two fragments, which
+        # RFC 3986 forbids and which rdflib serializes without complaint.
+        raise HTTPException(
+            status_code=422,
+            detail="source_base_uri must not contain a fragment.",
+        )
+    if source_base_uri.endswith("/"):
         return source_base_uri
     return source_base_uri + "/"
 
@@ -94,10 +128,17 @@ _UTF8_BOM = b"\xef\xbb\xbf"
 
 
 def _check_declared_size(request: Request) -> None:
-    """Refuse an oversized body by its Content-Length, before reading it.
+    """Refuse an oversized raw body by its Content-Length, before reading it.
 
-    Absent under chunked transfer-encoding, which is why _check_size() checks
-    again once the bytes are in hand.
+    Only called on the raw-body path. On a multipart upload FastAPI has already
+    parsed and spooled the whole request before the handler's first statement,
+    so checking there would buy nothing and would measure the multipart
+    envelope rather than the record, rejecting a file the part-size check would
+    accept. A limit that bites ahead of body parsing belongs in middleware or
+    in nginx's client_max_body_size.
+
+    Content-Length is absent under chunked transfer-encoding, which is why
+    _check_size() checks again once the bytes are in hand.
     """
     declared = request.headers.get("content-length", "")
     if declared.isdigit() and int(declared) > MAX_CONVERT_BYTES:
@@ -133,23 +174,36 @@ def _too_many_records(count: int) -> HTTPException:
     )
 
 
-#: MARC21 record terminator. 0x1E and 0x1F delimit fields and subfields, so a
-#: 0x1D inside a single record would be malformed, which makes counting these a
-#: sound fast path.
-_MARC_RECORD_TERMINATOR = b"\x1d"
-
-
 def _reject_obvious_batch(marc_bytes: bytes) -> None:
-    """Refuse binary MARC carrying several records, before parsing them.
+    """Refuse binary MARC carrying several records, before converting them.
 
-    Advisory, and deliberately so: a final record missing its terminator
-    undercounts, which just falls through to _require_single_record on the
-    converted MARCXML. Its value is avoiding marc_to_marcxml over a whole batch
-    -- at the byte cap that is ~1 ms here instead of ~125 ms there.
+    pymarc reads the records without building MARCXML, which at the byte cap is
+    ~22 ms against ~90 ms for the conversion this saves. Counting record
+    terminator bytes would be faster still, but 0x1D can appear in subfield
+    data, and that reads a single record as a batch and refuses it.
+
+    Advisory: unreadable input counts as nothing here and is reported properly
+    by marc_to_marcxml a moment later.
     """
-    count = marc_bytes.count(_MARC_RECORD_TERMINATOR)
+    try:
+        # MARCReader yields None for a record it cannot read, which is how
+        # marc_to_marcxml detects bad input too.
+        count = sum(1 for record in pymarc.MARCReader(BytesIO(marc_bytes)) if record)
+    except (PymarcException, ValueError):
+        return  # marc_to_marcxml reports it as a 422 a moment later
     if count > 1:
         raise _too_many_records(count)
+
+
+#: MARCXML's namespace. Checked as well as the element name, because the
+#: transform only recognises records in it: without this an OAI-PMH <record>,
+#: or a namespace-less one, passes the guard and returns 200 with an empty graph.
+MARCXML_NAMESPACE = "http://www.loc.gov/MARC21/slim"
+
+
+def _is_marc_record(element: etree._Element) -> bool:
+    name = etree.QName(element)
+    return name.localname == "record" and name.namespace == MARCXML_NAMESPACE
 
 
 def _require_single_record(marcxml: bytes) -> None:
@@ -164,11 +218,17 @@ def _require_single_record(marcxml: bytes) -> None:
     carry a comment.
     """
     root = etree.fromstring(marcxml)
-    if etree.QName(root).localname == "record":
+    if _is_marc_record(root):
         return  # a bare <record>, not wrapped in a <collection>
-    count = sum(1 for el in root.iter("*") if etree.QName(el).localname == "record")
+    count = sum(1 for el in root.iter("*") if _is_marc_record(el))
     if count == 0:
-        raise HTTPException(status_code=422, detail="No MARC record found.")
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "No MARC record found. Records must be <record> elements in the "
+                f"{MARCXML_NAMESPACE} namespace."
+            ),
+        )
     if count > 1:
         raise _too_many_records(count)
 
@@ -187,6 +247,13 @@ def _negotiate(accept_header: str) -> str:
             return DEFAULT_BIBFRAME_MEDIA_TYPE
         if accept in BIBFRAME_SERIALIZATIONS:
             return accept
+        if accept.endswith("/*"):
+            # A subtype wildcard takes the first thing we offer of that type,
+            # so text/* gets turtle and application/* gets JSON-LD.
+            offered = accept[: -len("*")]
+            for media_type in BIBFRAME_SERIALIZATIONS:
+                if media_type.startswith(offered):
+                    return media_type
     raise HTTPException(
         status_code=406,
         detail=(
@@ -265,8 +332,12 @@ def _raw_body_openapi(
         "requestBody": {
             "required": True,
             "description": description,
+            # Deep-copied because FastAPI deep-copies route.responses but merges
+            # openapi_extra by reference, so both operations and this module
+            # constant would otherwise share one mutable dict.
             "content": {
-                media_type: _RAW_BODY_SCHEMAS[media_type] for media_type in media_types
+                media_type: deepcopy(_RAW_BODY_SCHEMAS[media_type])
+                for media_type in media_types
             },
         }
     }
@@ -364,11 +435,10 @@ async def marc2xml(
 
     Returns MARCXML as ``application/xml``.
     """
-    _check_declared_size(request)
-
     if file and getattr(file, "filename", None):
         marc_bytes = await file.read()
     else:
+        _check_declared_size(request)
         ct = (request.headers.get("content-type") or "").lower()
         if not ct.startswith(MARC2XML_RAW_TYPES):
             raise HTTPException(
@@ -389,7 +459,15 @@ async def marc2xml(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=422, detail=f"Failed to parse MARC data: {exc}")
 
-    _require_single_record(marcxml_bytes)
+    try:
+        # marc_to_marcxml copies subfield data through verbatim, so a control
+        # character in the record makes this parse fail. marc2bibframe catches
+        # the same thing where it parses.
+        _require_single_record(marcxml_bytes)
+    except etree.XMLSyntaxError as exc:
+        raise HTTPException(
+            status_code=422, detail=f"MARC data produced invalid XML: {exc}"
+        )
 
     return Response(content=marcxml_bytes, media_type="application/xml")
 
@@ -453,11 +531,11 @@ async def marc2bibframe(
     """
     media_type = _negotiate(request.headers.get("accept", ""))
     base_uri = _base_uri(source_base_uri)
-    _check_declared_size(request)
 
     if file and getattr(file, "filename", None):
         raw_bytes = await file.read()
     else:
+        _check_declared_size(request)
         ct = (request.headers.get("content-type") or "").lower()
         if not ct.startswith(MARC2BIBFRAME_RAW_TYPES):
             raise HTTPException(

@@ -234,10 +234,13 @@ curl --header "Authorization: Bearer $(bluecore token)" \
   'http://localhost:3000/marc2bibframe?source_base_uri=https://example.edu/catalog/'
 ```
 
-`source_base_uri` defaults to `http://id.loc.gov/resources/`, matching the DAG's parameter of
-the same name. These are not authority URIs. They are scoped to the record they came from,
-so two records describing the same person give you two different agent URIs, and
-reconciling those against an authority is your job once the endpoint hands back the graph.
+`source_base_uri` defaults to `http://example.org/`, which is marc-bibframe's own default and
+is deliberately non-resolvable. These are not authority URIs. They are scoped to the record
+they came from, so two records describing the same person give you two different agent URIs,
+and reconciling those against an authority is your job once the endpoint hands back the graph.
+Pass a base you control, and prefer one that cannot be mistaken for an authority's: minting
+under `http://id.loc.gov/resources/` produces URIs that look like Library of Congress
+identifiers but are not.
 
 From Python, the [Blue Core Client] wraps the second endpoint:
 
