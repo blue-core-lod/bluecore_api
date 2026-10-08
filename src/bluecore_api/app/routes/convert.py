@@ -14,6 +14,7 @@ uploads to `resource_loader`, which reads JSON-LD rather than MARC.
 """
 
 from typing import Annotated
+from urllib.parse import urlparse
 
 from bluecore_models.utils.marc import replace_dlc_assigner
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
@@ -62,9 +63,24 @@ DEFAULT_BIBFRAME_MEDIA_TYPE = next(iter(BIBFRAME_SERIALIZATIONS))
 DEFAULT_SOURCE_BASE_URI = "http://id.loc.gov/resources/"
 
 
-def _delimited(source_base_uri: str) -> str:
-    """Give the base URI a trailing delimiter, since the transform concatenates."""
-    if source_base_uri.endswith(("/", "#", ":")):
+def _base_uri(source_base_uri: str) -> str:
+    """Validate the base URI, and give it a trailing delimiter.
+
+    The transform concatenates the base and the record id, so an unchecked
+    value produces URIs that are wrong rather than an error: an empty base
+    mints a relative "/92005291#Work", and a value with a space in it gets as
+    far as serialization before rdflib refuses it, which surfaces as a 500.
+    """
+    parsed = urlparse(source_base_uri)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"source_base_uri must be an http(s) URI with a host; "
+                f"got {source_base_uri!r}."
+            ),
+        )
+    if source_base_uri.endswith(("/", "#")):
         return source_base_uri
     return source_base_uri + "/"
 
@@ -142,12 +158,18 @@ def _require_single_record(marcxml: bytes) -> None:
     Counted on the parsed XML rather than by scanning bytes for b"<record",
     which would miss a namespace-prefixed <marc:record> and would count
     <recordset>. The parse costs well under 1% of the transform it guards.
+
+    iter("*") rather than iter(): the latter also yields comments and
+    processing instructions, and QName() raises on those. ILS exports routinely
+    carry a comment.
     """
     root = etree.fromstring(marcxml)
     if etree.QName(root).localname == "record":
         return  # a bare <record>, not wrapped in a <collection>
-    count = sum(1 for el in root.iter() if etree.QName(el).localname == "record")
-    if count != 1:
+    count = sum(1 for el in root.iter("*") if etree.QName(el).localname == "record")
+    if count == 0:
+        raise HTTPException(status_code=422, detail="No MARC record found.")
+    if count > 1:
         raise _too_many_records(count)
 
 
@@ -305,9 +327,10 @@ MARC2BIBFRAME_RESPONSES: dict[int | str, dict[str, object]] = {
         "Content-Type: application/xml, text/xml, or application/marc.",
     ),
     422: _detail_response(
-        "Body was empty, was not well-formed XML, or the BIBFRAME "
-        "transformation failed.",
-        "Empty payload.",
+        "Body was empty, held no record, was not well-formed XML, or the "
+        "BIBFRAME transformation failed; or `source_base_uri` was not an "
+        "http(s) URI.",
+        "No MARC record found.",
     ),
 }
 
@@ -429,6 +452,7 @@ async def marc2bibframe(
     default), RDF/XML, turtle, or N-Triples.
     """
     media_type = _negotiate(request.headers.get("accept", ""))
+    base_uri = _base_uri(source_base_uri)
     _check_declared_size(request)
 
     if file and getattr(file, "filename", None):
@@ -469,7 +493,7 @@ async def marc2bibframe(
         # through, which is what keeps the transform from running on a rejected
         # request.
         _require_single_record(raw_bytes)
-        graph = _marcxml_to_bibframe_graph(raw_bytes, _delimited(source_base_uri))
+        graph = _marcxml_to_bibframe_graph(raw_bytes, base_uri)
     except etree.XMLSyntaxError as exc:
         raise HTTPException(status_code=422, detail=f"Invalid XML: {exc}")
     except etree.XSLTApplyError as exc:

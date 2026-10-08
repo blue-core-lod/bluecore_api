@@ -660,3 +660,88 @@ async def test_marcxml_with_a_bom_converts_via_multipart(client):
         headers={"X-User": "cataloger"},
     )
     assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Input the converter does not expect
+#
+# All three were found by a colleague exercising the running API, and all three
+# were introduced with the single-record guard and source_base_uri.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_xml_comment_does_not_break_the_record_count(client):
+    """ILS exports routinely carry a comment, and it used to be a 500.
+
+    iter() yields comments and processing instructions as well as elements, and
+    etree.QName() raises on those, so counting records tripped over the note.
+    """
+    with_comment = MARCXML.replace(
+        b"<record>", b"<!-- exported by ILS on 2026-10-01 -->\n  <record>", 1
+    )
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=with_comment,
+    )
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_processing_instruction_does_not_break_the_record_count(client):
+    with_pi = MARCXML.replace(b"<record>", b"<?sort alpha?>\n  <record>", 1)
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=with_pi,
+    )
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_collection_with_no_records_is_422_not_413(client):
+    """An empty file is not a batch, so it must not be told to use one."""
+    empty = (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        b'<collection xmlns="http://www.loc.gov/MARC21/slim"></collection>'
+    )
+    resp = client.post(
+        "/marc2bibframe",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=empty,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["detail"] == "No MARC record found."
+
+
+@pytest.mark.parametrize(
+    "base",
+    ["", "not a uri", "ftp://example.edu/", "https://", "/catalog/", "example.edu"],
+)
+@pytest.mark.asyncio
+async def test_source_base_uri_must_be_an_http_uri(client, base):
+    """Unchecked, these produced wrong data or a 500 rather than an error.
+
+    An empty base minted a relative "/92005291#Work", and a value with a space
+    got as far as serialization before rdflib refused it.
+    """
+    resp = client.post(
+        f"/marc2bibframe?source_base_uri={base}",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=MARCXML,
+    )
+    assert resp.status_code == 422
+    assert "source_base_uri must be an http(s) URI" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_source_base_uri_is_validated_before_the_body_is_converted(client):
+    """A bad parameter should not cost a transform, so it is checked first."""
+    resp = client.post(
+        "/marc2bibframe?source_base_uri=not+a+uri",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=b"this is not xml at all",
+    )
+    assert resp.status_code == 422
+    assert "source_base_uri" in resp.json()["detail"]
