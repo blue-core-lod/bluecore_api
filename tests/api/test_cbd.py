@@ -386,11 +386,12 @@ def test_cbd_leaves_the_related_records_untouched(
         "associatedResource": {"@id": work_b.uri},
     }
     db_session.commit()
+    work_b_data, instance_b_data = dict(work_b.data), dict(instance_b.data)
 
     generate_cbd_graph(instance_a)
 
-    assert "@context" not in work_b.data
-    assert "@context" not in instance_b.data
+    assert work_b.data == work_b_data
+    assert instance_b.data == instance_b_data
 
 
 def _top_level_uris(root) -> list[str]:

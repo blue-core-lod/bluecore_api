@@ -12,6 +12,7 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
 from bluecore_api.constants import CONTEXT_URL
 
@@ -40,7 +41,7 @@ def test_get_hub(client, db_session):
 
     assert data["uri"].startswith(test_hub_uri)
     assert data["data"]["@context"] == CONTEXT_URL
-    data["data"]["@context"] = CONTEXT
+    data["data"]["@context"] = BIBFRAME_CONTEXT_URL
 
     fetched_graph = load_jsonld(data["data"])
     assert len(fetched_graph) == len(orig_graph)
@@ -78,7 +79,7 @@ def test_get_expanded_hub(client, db_session):
     regular_response = client.get(f"/hubs/{hub_uuid}.vnd.sinopia.json")
     data = regular_response.json()["data"]
     assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
 
     regular_graph = load_jsonld(data)
 
@@ -87,7 +88,7 @@ def test_get_expanded_hub(client, db_session):
     expanded_response = client.get(f"/hubs/{hub_uuid}?expand=true")
     data = expanded_response.json()
     assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     expanded_graph = load_jsonld(data)
 
     assert len(expanded_graph) == 5

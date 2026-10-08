@@ -2,6 +2,7 @@ import json
 
 import pytest
 from bluecore_models.utils.graph import CONTEXT
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
@@ -75,7 +76,7 @@ async def test_deserialize_shaped_body_validation_error_becomes_request_validati
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("content_type", [JSONLD_CONTENT_TYPE, "application/json"])
-async def test_deserialize_inlines_the_bluecore_context(content_type):
+async def test_deserialize_names_the_bibframe_json_context(content_type):
     """A body echoing back our @context URL must not be left for rdflib to resolve."""
     jsonld = {"@context": CONTEXT_URL, "@id": "https://bcld.info/works/1"}
     body = (
@@ -87,7 +88,25 @@ async def test_deserialize_inlines_the_bluecore_context(content_type):
 
     parsed = await deserialize(DataOnlySchema)(request)
 
-    assert json.loads(parsed.data)["@context"] == CONTEXT
+    assert json.loads(parsed.data)["@context"] == BIBFRAME_CONTEXT_URL
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("content_type", [JSONLD_CONTENT_TYPE, "application/json"])
+async def test_deserialize_inline_context_raises_unprocessable_entity(content_type):
+    """An inline context can reference a remote one, so it is refused, not parsed."""
+    jsonld = {"@context": CONTEXT, "@id": "https://bcld.info/works/1"}
+    body = (
+        json.dumps(jsonld)
+        if content_type == JSONLD_CONTENT_TYPE
+        else json.dumps({"data": json.dumps(jsonld)})
+    )
+    request = request_with_body(body.encode(), content_type)
+
+    with pytest.raises(HTTPException) as error:
+        await deserialize(DataOnlySchema)(request)
+
+    assert error.value.status_code == 422
 
 
 @pytest.mark.asyncio
