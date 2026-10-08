@@ -1,9 +1,12 @@
 """
-Executable JSON-LD request-body examples shown in the OpenAPI docs.
+Executable request-body examples shown in the OpenAPI docs.
 
-These are used by 'request_body_openapi' to populate the Swagger "Try it out"
-forms for the Work, Instance, and Hub create/update endpoints. Each is a valid,
-self-contained BIBFRAME resource that returns '201' when POSTed as-is.
+The JSON-LD ones are used by 'request_body_openapi' to populate the Swagger "Try
+it out" forms for the Work, Instance, and Hub create/update endpoints. Each is a
+valid, self-contained BIBFRAME resource that returns '201' when POSTed as-is.
+
+MARCXML_EXAMPLE does the same job for the convert routes, which hand-write their
+request bodies in app/routes/convert.py.
 """
 
 _CONTEXT = {
@@ -57,3 +60,25 @@ HUB_EXAMPLE = {
     "bf:language": {"@id": "http://id.loc.gov/vocabulary/languages/eng"},
     "bflc:aap": "Austen, Jane, 1775-1817. Pride and prejudice",
 }
+
+
+#: A single MARCXML record, enough of one to transform cleanly, so Swagger's
+#: "Try it out" works as-is against /marc2bibframe.
+MARCXML_EXAMPLE = """<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim">
+  <record>
+    <leader>01142cam a2200301 a 4500</leader>
+    <controlfield tag="001">92005291</controlfield>
+    <controlfield tag="003">DLC</controlfield>
+    <controlfield tag="008">920219s1993    caua          001 0 eng  </controlfield>
+    <datafield tag="100" ind1="1" ind2=" ">
+      <subfield code="a">Austen, Jane,</subfield>
+      <subfield code="d">1775-1817.</subfield>
+    </datafield>
+    <datafield tag="245" ind1="1" ind2="0">
+      <subfield code="a">Pride and prejudice /</subfield>
+      <subfield code="c">Jane Austen.</subfield>
+    </datafield>
+  </record>
+</collection>
+"""

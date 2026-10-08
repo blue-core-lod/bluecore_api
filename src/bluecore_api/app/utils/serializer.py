@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 from bluecore_models.models import Hub, Instance, Work
 from fastapi import Request, Response
@@ -38,14 +38,27 @@ serializer_accept_registry: dict[str, SerializerFn] = {
 }
 
 
+def accept_media_types(accept_header: str) -> Iterator[str]:
+    """Yield the requested media types, in the order the client listed them.
+
+    `q=` parameters are stripped rather than ranked, so the client's ordering
+    decides and not its weights. An empty or absent header yields one empty
+    string, which callers can treat as "no preference".
+
+    What to do with a wildcard, or with a header naming nothing available, is
+    left to the caller: the resource routes fall back to HTML, while
+    app/routes/convert.py defaults to JSON-LD and raises 406.
+    """
+    for accept_raw in accept_header.split(","):
+        yield accept_raw.split(";")[0].strip()
+
+
 def serialize(
     doc: Hub | Instance | Work, expand: bool, format: str | None, request: Request
 ) -> Response | None:
     if format in serializer_format_registry:
         return serializer_format_registry[format](doc, expand)
-    accept_header = request.headers.get("accept", "")
-    for accept_raw in accept_header.split(","):
-        accept = accept_raw.split(";")[0].strip()
+    for accept in accept_media_types(request.headers.get("accept", "")):
         if (
             accept == "text/html"
         ):  # HTML is reached by content negotiation "Accept: text/html"

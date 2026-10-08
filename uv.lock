@@ -119,6 +119,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "lxml-stubs" },
+    { name = "pymarc" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-httpx" },
@@ -137,7 +138,7 @@ requires-dist = [
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "lxml", specifier = ">=6.0.2" },
-    { name = "marc-bibframe", specifier = ">=0.2.1" },
+    { name = "marc-bibframe", specifier = ">=0.3.0" },
     { name = "mcp", specifier = "==1.29.0" },
     { name = "pgvector" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
@@ -150,6 +151,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "lxml-stubs", specifier = ">=0.5.1" },
+    { name = "pymarc", specifier = ">=5.2.0" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-httpx", specifier = ">=0.35.0" },
