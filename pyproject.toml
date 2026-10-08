@@ -17,7 +17,7 @@ dependencies = [
   "lxml>=6.0.2",
   "jinja2>=3.1.6",
   "mcp==1.29.0", # Pinning version until fastapi-mcp is updated
-  "marc-bibframe>=0.2.1",
+  "marc-bibframe>=0.3.0",
   "psycopg[binary]>=3.3.6",
 ]
 
@@ -29,6 +29,9 @@ dev = [
   "pytest-mock>=3.14.0",
   "pytest-httpx>=0.35.0",
   "pytest-asyncio>=0.26.0",
+  # Imported directly by tests/api/test_convert.py; otherwise only present
+  # transitively through marc-bibframe.
+  "pymarc>=5.2.0",
   "lxml-stubs>=0.5.1",
   "ty>=0.0.77",
   "types-lxml>=2026.2.16",

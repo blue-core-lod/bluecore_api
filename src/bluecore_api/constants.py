@@ -47,6 +47,11 @@ class SearchScope(StrEnum):
     TITLE = auto()
 
 
+#: Largest body the convert routes will read. The largest real Library of
+#: Congress record measured in load testing was 21 KB, so this leaves ~50x
+#: headroom for one record while keeping a hostile upload far below nginx's
+#: client_max_body_size of 100m.
+MAX_CONVERT_BYTES = int(os.environ.get("MAX_CONVERT_BYTES", str(1024 * 1024)))
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 CONTEXT_URL = BLUECORE_URL.rstrip("/") + "/api/context.jsonld"
 DEFAULT_ACTIVITY_STREAMS_PAGE_LENGTH = 100

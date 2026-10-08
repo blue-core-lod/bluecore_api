@@ -174,6 +174,84 @@ Two things have to line up for that button to work:
 If they don't, the spec still documents authentication correctly — only the in-browser
 login fails, and the `curl` form above still works.
 
+## 🔁 Converting MARC
+
+Two endpoints convert MARC records, and both require the `create` role. The
+[marc-bibframe] package runs the Library of Congress [marc2bibframe2] stylesheet in this
+process, so no Airflow DAG sits in the path and the response comes back in the same
+request.
+
+`POST /marc2xml` turns binary MARC21 into MARCXML:
+
+```shell
+curl --header "Authorization: Bearer $(bluecore token)" \
+  --header "Content-Type: application/marc" \
+  --data-binary @record.mrc \
+  http://localhost:3000/marc2xml
+```
+
+`POST /marc2bibframe` turns either binary MARC21 or MARCXML into BIBFRAME. Name the
+serialization you want in `Accept`: `application/ld+json` (the default),
+`application/rdf+xml`, `text/turtle` or `application/n-triples`.
+
+```shell
+curl --header "Authorization: Bearer $(bluecore token)" \
+  --header "Content-Type: application/marc" \
+  --header "Accept: text/turtle" \
+  --data-binary @record.mrc \
+  http://localhost:3000/marc2bibframe
+```
+
+Both also accept a `multipart/form-data` upload in a `file` field instead of a raw body,
+which is how the Swagger "Try it out" form at `/docs` submits them.
+
+Send one record. Both endpoints refuse a body holding more than one, or one larger than
+`MAX_CONVERT_BYTES` (1 MB by default), with a `413`. They convert on the event loop and
+answer synchronously, and the service runs a single worker, so an unbounded request would
+stall every other call to the API: load testing with real Library of Congress records
+measured 11 ms for one record against 9.5 s for a thousand.
+
+Bulk MARC belongs in a batch workflow, which today means the [Blue Core Workflows]
+`marc_to_bibframe` DAG: `/batches/upload/` passes its uploads to the `resource_loader` DAG,
+and that reads JSON-LD rather than MARC.
+
+MARCXML saved by a Windows editor often starts with an invisible byte order mark. That is
+ignored, so such a file is still read as XML.
+
+On top of the stylesheet's output, Blue Core names CBC rather than DLC as the assigner of
+identifiers derived from the record. The bluecore-workflows `marc_to_bibframe` DAG applies
+the same rewrite, so both routes into Blue Core agree.
+
+### Base URIs
+
+MARC does not identify most of what it describes, so the transform mints URIs for it, of the
+form `{source_base_uri}{record id}#{fragment}`:
+
+```shell
+curl --header "Authorization: Bearer $(bluecore token)" \
+  --header "Content-Type: application/xml" \
+  --data-binary @record.xml \
+  'http://localhost:3000/marc2bibframe?source_base_uri=https://example.edu/catalog/'
+```
+
+`source_base_uri` defaults to `http://example.org/`, which is marc-bibframe's own default and
+is deliberately non-resolvable. These are not authority URIs. They are scoped to the record
+they came from, so two records describing the same person give you two different agent URIs,
+and reconciling those against an authority is your job once the endpoint hands back the graph.
+Pass a base you control, and prefer one that cannot be mistaken for an authority's: minting
+under `http://id.loc.gov/resources/` produces URIs that look like Library of Congress
+identifiers but are not.
+
+From Python, the [Blue Core Client] wraps the second endpoint:
+
+```python
+from bluecore_client import BluecoreClient
+
+with BluecoreClient() as client:
+    graph = client.convert.marc_to_bibframe("record.mrc")
+    marcxml = client.convert.marc_to_xml("record.mrc")
+```
+
 ## 🧹 Linting
 
 Bluecore API uses [ruff]
@@ -212,3 +290,5 @@ Bluecore API uses [ty]
 [ruff]: https://docs.astral.sh/ruff/
 [uv]: https://github.com/astral-sh/uv
 [Docker]: https://www.docker.com/
+[marc2bibframe2]: https://github.com/lcnetdev/marc2bibframe2
+[marc-bibframe]: https://github.com/blue-core-lod/marc-bibframe
