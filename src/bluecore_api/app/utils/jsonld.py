@@ -3,7 +3,8 @@
 from typing import Any, cast
 from urllib.parse import urlparse
 
-from bluecore_models.utils.graph import CONTEXT, load_jsonld
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
+from bluecore_models.utils.graph import load_jsonld, terms_for
 from rdflib import Graph
 
 from bluecore_api.constants import CONTEXT_URL
@@ -23,11 +24,9 @@ def _is_bluecore_context(reference: object) -> bool:
     )
 
 
-def _inline(context: object) -> object:
+def _normalize(context: object) -> object:
     if _is_bluecore_context(context):
-        return CONTEXT
-    if isinstance(context, list):
-        return [CONTEXT if _is_bluecore_context(entry) else entry for entry in context]
+        return BIBFRAME_CONTEXT_URL
     return context
 
 
@@ -47,19 +46,29 @@ def load_jsonld_from_model(data: bytes) -> Graph:
     return load_jsonld(model_data_as_dict(data))
 
 
-def inline_context(data: object) -> object:
-    """Replace a reference to the Bluecore context document with the context itself.
+def normalize_context(data: object) -> object:
+    """Replace a reference to the Bluecore context document with bibframe-json's.
 
     Resources we serialize advertise their context by URL
     ('<bluecore>/api/context.jsonld'), so a client that round-trips one back to
-    us -- GET a Work, edit it, PUT it -- sends that URL. Both parsers we hand the
-    body to (rdflib for the graph, pyld for framing on persist) resolve a context
-    URL over the network, which is a needless request in production and fails
-    outright in development, where the URL only resolves outside the container.
-    The context document is bundled in bluecore_models, so substitute it here.
+    us -- GET a Work, edit it, PUT it -- sends that URL. That document is the
+    bibframe-json context, which bluecore_models resolves out of the installed
+    package when it is named by its own URL, and refuses to fetch otherwise. So
+    substitute the bibframe-json URL here.
     """
     if isinstance(data, list):
-        return [inline_context(node) for node in data]
+        return [normalize_context(node) for node in data]
     if isinstance(data, dict) and "@context" in data:
-        return {**data, "@context": _inline(data["@context"])}
+        return {**data, "@context": _normalize(data["@context"])}
     return data
+
+
+def check_context(data: object) -> None:
+    """Raise ValueError unless every node's @context is one bluecore_models reads.
+
+    That is no @context, or the bibframe-json context URL. An inline context is
+    refused, since it can reference a remote one; see terms_for.
+    """
+    for node in data if isinstance(data, list) else [data]:
+        if isinstance(node, dict):
+            terms_for(node)

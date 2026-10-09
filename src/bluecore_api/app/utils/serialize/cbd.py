@@ -3,7 +3,7 @@ import json
 from collections.abc import Callable, Sequence
 
 from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import CONTEXT
+from bluecore_models.utils.graph import terms_for
 from fastapi import HTTPException
 from lxml import etree
 from rdflib import Graph, Namespace
@@ -114,8 +114,10 @@ def add_resource(
     data = dict(reorder(model_data_as_dict(resource.data)))
     if keep is not None:
         data = {key: value for key, value in data.items() if key in keep}
-    data["@context"] = CONTEXT
-    graph.parse(data=json.dumps(data), format="json-ld")
+    # Resolved here and handed over as context=, so rdflib never fetches it.
+    terms = terms_for(data)
+    data.pop("@context", None)
+    graph.parse(data=json.dumps(data), format="json-ld", context=terms)
     if keep is not None:
         return graph
     return expand_resource_as_graph(resource, graph)

@@ -12,6 +12,7 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
 from bluecore_api.constants import CONTEXT_URL
 
@@ -76,7 +77,7 @@ def test_get_work_vnd_sinopia_json(client, db_session):
     assert response.status_code == 200
     data = response.json()
     assert data["data"]["@context"] == CONTEXT_URL
-    data["data"]["@context"] = CONTEXT
+    data["data"]["@context"] = BIBFRAME_CONTEXT_URL
 
     assert data["uri"].startswith(test_work_bluecore_uri)
 
@@ -97,7 +98,7 @@ def test_get_work_json(client, db_session):
     assert response.status_code == 200
     data = response.json()
     assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
 
     fetched_graph = load_jsonld(data)
     assert len(fetched_graph) == len(orig_graph)
@@ -109,7 +110,7 @@ def test_get_expanded_work(client, db_session):
     # Test regular GET response without expand parameter
     regular_work_response = client.get(f"/works/{expanded_work_uuid}.vnd.sinopia.json")
     data = regular_work_response.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     regular_work_graph = load_jsonld(data)
 
     assert len(regular_work_graph) == 2
@@ -121,7 +122,7 @@ def test_get_expanded_work(client, db_session):
     )
     data = expanded_work_response.json()["data"]
     assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     expanded_work_graph = load_jsonld(data)
 
     assert len(expanded_work_graph) == 5

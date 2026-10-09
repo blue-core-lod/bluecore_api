@@ -9,12 +9,10 @@ MARCXML_EXAMPLE does the same job for the convert routes, which hand-write their
 request bodies in app/routes/convert.py.
 """
 
-_CONTEXT = {
-    "bf": "http://id.loc.gov/ontologies/bibframe/",
-    "bflc": "http://id.loc.gov/ontologies/bflc/",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-}
+from bluecore_api.constants import CONTEXT_URL
+
+# The context is named by URL: the API refuses an inline one.
+_CONTEXT = CONTEXT_URL
 
 WORK_EXAMPLE = {
     "@context": _CONTEXT,

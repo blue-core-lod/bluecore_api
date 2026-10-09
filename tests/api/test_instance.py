@@ -12,6 +12,7 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
 from bluecore_api.app.utils.serialize.response_generator import CONTEXT_URL
 
@@ -74,7 +75,7 @@ def test_get_instance_sinopia_json(client, db_session):
 
     assert response.json()["data"]["@context"] == CONTEXT_URL
     data = response.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     fetched_graph = load_jsonld(data)
     assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
 
@@ -89,7 +90,7 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
     )
     assert regular_instance_result.json()["data"]["@context"] == CONTEXT_URL
     data: dict[str, Any] = regular_instance_result.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     regular_instance_graph = load_jsonld(data)
 
     assert len(regular_instance_graph) == 2
@@ -100,7 +101,7 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
         headers={"Accept": "application/vnd.sinopia+json"},
     )
     data = expanded_instance_result.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     expanded_instance_graph = load_jsonld(data)
 
     assert len(expanded_instance_graph) == 5
@@ -110,7 +111,7 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
         f"/instances/{test_expanded_instance_uuid}.vnd.sinopia.json?expand=false",
     )
     data = expand_false_result.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     expand_false_graph = load_jsonld(data)
 
     assert len(expand_false_graph) == len(regular_instance_graph)
