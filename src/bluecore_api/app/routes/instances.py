@@ -11,12 +11,12 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import INSTANCE_EXAMPLE
-from bluecore_api.app.utils.jsonld import load_jsonld_from_model
+from bluecore_api.app.utils.jsonld import load_jsonld_from_model, with_context
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import (
     serialize,
 )
-from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import (
     get_db,
     get_session_maker,
@@ -113,7 +113,7 @@ async def create_instance(
     doc = db.query(Instance).filter(Instance.uri == instance_uri).first()
 
     if doc:
-        doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
+        with_context(doc.data)
     return doc
 
 
@@ -150,7 +150,7 @@ async def update_instance(
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Instance)
         db.refresh(db_instance)
 
-        db_instance.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
+        with_context(db_instance.data)
 
     return db_instance
 

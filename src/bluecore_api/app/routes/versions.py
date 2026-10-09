@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from bluecore_api.constants import CONTEXT_URL
+from bluecore_api.app.utils.jsonld import with_context
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
     HubSchema,
@@ -126,7 +126,7 @@ def version_payload(
             data=cast(dict[str, object] | list[object], version.data),
         )
     data = dict(cast(dict[str, object], version.data))
-    data["@context"] = CONTEXT_URL
+    with_context(data)
     if isinstance(resource, Instance):
         return InstanceSchema(
             id=resource.id,
