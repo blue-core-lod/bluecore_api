@@ -45,6 +45,7 @@ class SearchScope(StrEnum):
 
     ALL = auto()
     TITLE = auto()
+    IDENTIFIER = auto()
 
 
 #: Largest body the convert routes will read. The largest real Library of
