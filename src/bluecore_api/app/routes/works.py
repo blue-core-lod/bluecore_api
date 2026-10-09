@@ -11,9 +11,10 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import WORK_EXAMPLE
+from bluecore_api.app.utils.jsonld import with_context
 from bluecore_api.app.utils.serialize.response_generator import as_html
 from bluecore_api.app.utils.serializer import serialize
-from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import (
     get_db,
     get_session_maker,
@@ -91,7 +92,7 @@ async def create_work(
     work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
     doc = db.query(Work).filter(Work.uri == work_uri).first()
     if doc:
-        doc.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
+        with_context(doc.data)
     return doc
 
 
@@ -116,7 +117,7 @@ async def update_work(
         graph = load_jsonld(json.loads(work.data))
         save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Work)
         db.refresh(db_work)
-        db_work.data["@context"] = CONTEXT_URL  # ty: ignore[invalid-assignment]
+        with_context(db_work.data)
 
     return db_work
 

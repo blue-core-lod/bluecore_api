@@ -14,8 +14,6 @@ from bluecore_models.models import (
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
-from bluecore_api.constants import CONTEXT_URL
-
 
 def test_get_hub(client, db_session):
     test_hub_uuid = "62a26d82-4e65-c696-afed-b12d215a35b1"
@@ -40,8 +38,7 @@ def test_get_hub(client, db_session):
     data = response.json()
 
     assert data["uri"].startswith(test_hub_uri)
-    assert data["data"]["@context"] == CONTEXT_URL
-    data["data"]["@context"] = BIBFRAME_CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
     fetched_graph = load_jsonld(data["data"])
     assert len(fetched_graph) == len(orig_graph)
@@ -78,8 +75,7 @@ def test_get_expanded_hub(client, db_session):
 
     regular_response = client.get(f"/hubs/{hub_uuid}.vnd.sinopia.json")
     data = regular_response.json()["data"]
-    assert data["@context"] == CONTEXT_URL
-    data["@context"] = BIBFRAME_CONTEXT_URL
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
 
     regular_graph = load_jsonld(data)
 
@@ -87,8 +83,7 @@ def test_get_expanded_hub(client, db_session):
 
     expanded_response = client.get(f"/hubs/{hub_uuid}?expand=true")
     data = expanded_response.json()
-    assert data["@context"] == CONTEXT_URL
-    data["@context"] = BIBFRAME_CONTEXT_URL
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
     expanded_graph = load_jsonld(data)
 
     assert len(expanded_graph) == 5
@@ -109,7 +104,7 @@ def test_create_hub(client, mocker, derived_from_sparql):
 
     assert create_response.status_code == 201
     data = create_response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data["data"]["@context"] = CONTEXT
     new_graph = init_graph()
     new_graph.parse(data=data["data"], format="json-ld")
@@ -141,7 +136,7 @@ def test_update_hub(client, db_session):
     assert create_response.status_code == 201
 
     data = create_response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data["data"]["@context"] = CONTEXT
     hub_uri = rdflib.URIRef(data["uri"])
     hub_graph = init_graph()

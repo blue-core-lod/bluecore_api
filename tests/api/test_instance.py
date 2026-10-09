@@ -14,8 +14,6 @@ from bluecore_models.models import (
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
 from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
-from bluecore_api.app.utils.serialize.response_generator import CONTEXT_URL
-
 test_instance_uuid = "75d831b9-e0d6-40f0-abb3-e9130622eb8a"
 test_instance_bluecore_uri = f"https://bluecore.info/instances/{test_instance_uuid}"
 jsonld_data = json.loads(pathlib.Path("tests/blue-core-instance.jsonld").read_text())
@@ -73,9 +71,8 @@ def test_get_instance_sinopia_json(client, db_session):
 
     assert response.json()["uri"].startswith(test_instance_bluecore_uri)
 
-    assert response.json()["data"]["@context"] == CONTEXT_URL
+    assert response.json()["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data = response.json()["data"]
-    data["@context"] = BIBFRAME_CONTEXT_URL
     fetched_graph = load_jsonld(data)
     assert len(orig_graph) == len(fetched_graph), "graph lengths are the same"
 
@@ -88,9 +85,8 @@ def test_get_expanded_instance_sinopia_json(client, db_session):
         f"/instances/{test_expanded_instance_uuid}",
         headers={"Accept": "application/vnd.sinopia+json"},
     )
-    assert regular_instance_result.json()["data"]["@context"] == CONTEXT_URL
+    assert regular_instance_result.json()["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data: dict[str, Any] = regular_instance_result.json()["data"]
-    data["@context"] = BIBFRAME_CONTEXT_URL
     regular_instance_graph = load_jsonld(data)
 
     assert len(regular_instance_graph) == 2
@@ -129,7 +125,7 @@ def test_get_instance_jsonld(client, db_session):
     response = client.get(f"/instances/{test_instance_uuid}.jsonld")
     assert response.status_code == 200
     assert response.json()["@id"] == test_instance_bluecore_uri
-    assert response.json()["@context"] == CONTEXT_URL
+    assert response.json()["@context"] == BIBFRAME_CONTEXT_URL
 
 
 def test_get_instance_json(client, db_session):
@@ -144,7 +140,7 @@ def test_get_instance_json(client, db_session):
     response = client.get(f"/instances/{test_instance_uuid}.json")
     assert response.status_code == 200
     assert response.json()["@id"] == test_instance_bluecore_uri
-    assert response.json()["@context"] == CONTEXT_URL
+    assert response.json()["@context"] == BIBFRAME_CONTEXT_URL
 
 
 def test_get_instance_rdf_xml(client, db_session):
@@ -298,7 +294,7 @@ def test_create_instance(client, derived_from_sparql):
     assert response.status_code == 201
     data: dict[str, Any] = response.json()
     new_graph = init_graph()
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data["data"]["@context"] = CONTEXT
     new_graph.parse(data=data["data"], format="json-ld")
 
@@ -363,7 +359,7 @@ def test_update_instance(client, db_session):
     )
     assert create_response.status_code == 201
     data = create_response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data["data"]["@context"] = CONTEXT
 
     instance_uri = rdflib.URIRef(data["uri"])
@@ -391,12 +387,12 @@ def test_update_instance(client, db_session):
         json={"data": instance_graph.serialize(format="json-ld")},
     )
     assert put_response.status_code == 200
-    assert put_response.json()["data"]["@context"] == CONTEXT_URL
+    assert put_response.json()["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
     # Retrieve Instance
     get_response = client.get(f"/instances/{instance_uuid}.vnd.sinopia.json")
     payload = get_response.json()
-    assert payload["data"]["@context"] == CONTEXT_URL
+    assert payload["data"]["@context"] == BIBFRAME_CONTEXT_URL
     payload["data"]["@context"] = CONTEXT
     new_instance_graph = init_graph()
     new_instance_graph.parse(data=json.dumps(payload["data"]), format="json-ld")

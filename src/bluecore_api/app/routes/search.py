@@ -17,12 +17,12 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, noload
 
+from bluecore_api.app.utils.jsonld import with_context
 from bluecore_api.app.views.search_display import (
     resource_title,
 )
 from bluecore_api.app.views.templating import templates
 from bluecore_api.constants import (
-    CONTEXT_URL,
     DEFAULT_SEARCH_PAGE_LENGTH,
     SearchScope,
     SearchType,
@@ -248,7 +248,7 @@ async def search(
     stmt = stmt.offset(offset).limit(limit)
     results = db.execute(stmt).scalars().all()
     for result in results:
-        result.data["@context"] = CONTEXT_URL
+        with_context(result.data)
     links = generate_links(
         verb="search",
         slice_size=len(results),
@@ -283,7 +283,7 @@ async def search_html(
     total = db.scalar(create_count_query(stmt)) or 0
     results = db.execute(stmt.offset(offset).limit(limit)).scalars().all()
     for result in results:
-        result.data["@context"] = CONTEXT_URL
+        with_context(result.data)
 
     def item(resource: ResourceBase) -> dict[str, str]:
         return {
