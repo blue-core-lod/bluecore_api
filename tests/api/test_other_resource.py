@@ -4,8 +4,7 @@ import pytest
 import rdflib
 from bluecore_models.models import BibframeOtherResources, OtherResource, Work
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph
-
-from bluecore_api.constants import CONTEXT_URL
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
 
 @pytest.fixture
@@ -31,7 +30,7 @@ def test_read_other_resource(client, db_session, other_graph):
     assert response.status_code == 200
     data = response.json()
     assert data["uri"] == "http://id.loc.gov/vocabulary/mstatus/u"
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
 
 def test_create_other_resource(client, other_graph):
@@ -46,7 +45,7 @@ def test_create_other_resource(client, other_graph):
 
     assert create_resource_response.status_code == 201
     data = create_resource_response.json()["data"]
-    assert data["@context"] == CONTEXT_URL
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
     data["@context"] = CONTEXT
     other_resource_graph = init_graph()
     other_resource_graph.parse(data=json.dumps(data), format="json-ld")
@@ -86,7 +85,7 @@ def test_update_other_resource(client, db_session, other_graph):
     assert get_response.status_code == 200
 
     data = get_response.json()["data"]
-    assert data["@context"] == CONTEXT_URL
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
     data["@context"] = CONTEXT
     new_graph = init_graph()
     new_graph.parse(data=json.dumps(data), format="json-ld")
