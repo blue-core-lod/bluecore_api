@@ -63,6 +63,19 @@ def normalize_context(data: object) -> object:
     return data
 
 
+def with_context(data: object) -> None:
+    """Name a context on a stored resource we are about to serve, if it has none.
+
+    A resource the reframe DAG in bluecore-workflows has framed already names
+    the bibframe-json context it was framed with, and that is the one to serve:
+    it says which terms the document was actually written in. Only data stored
+    before then, which carries no @context, is given ours. Mutates the data in
+    place, as the callers serve it straight from the model.
+    """
+    if isinstance(data, dict):
+        data.setdefault("@context", CONTEXT_URL)
+
+
 def check_context(data: object) -> None:
     """Raise ValueError unless every node's @context is one bluecore_models reads.
 

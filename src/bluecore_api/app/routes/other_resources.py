@@ -6,7 +6,8 @@ from bluecore_models.models import BibframeOtherResources, OtherResource
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from bluecore_api.constants import CONTEXT_URL, READ_ONLY_ROLES, KeycloakRole
+from bluecore_api.app.utils.jsonld import with_context
+from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
 from bluecore_api.middleware.bluecore_check_permissions import (
     BluecoreCheckPermissions as BCP,
@@ -39,15 +40,6 @@ def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
     return links
 
 
-def add_context_to_data(doc: OtherResource) -> OtherResource:
-    """
-    Add @context to data if it is a dictionary and does not already have @context
-    """
-    if isinstance(doc.data, dict):
-        doc.data["@context"] = CONTEXT_URL
-    return doc
-
-
 @endpoints.get("/resources/", operation_id="get_other_resources")
 async def read_other_resources(
     uri: str | None = None,
@@ -71,7 +63,7 @@ async def read_other_resources(
     db_other_resources = db.query(OtherResource).limit(limit).offset(offset).all()
     total = db.query(OtherResource).count()
     for doc in db_other_resources:
-        add_context_to_data(doc)
+        with_context(doc.data)
     payload: dict[str, object] = {"resources": db_other_resources, "total": total}
     payload["links"] = _generate_links(len(db_other_resources), limit, offset)
     return payload
@@ -90,7 +82,7 @@ async def read_other_resource(resource_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=404, detail=f"Other Resource {resource_id} not found"
         )
-    add_context_to_data(db_other_resource)
+    with_context(db_other_resource.data)
 
     return db_other_resource
 
@@ -115,7 +107,7 @@ async def create_other_resource(
     db.add(db_other_resource)
     db.commit()
     db.refresh(db_other_resource)
-    add_context_to_data(db_other_resource)
+    with_context(db_other_resource.data)
     return db_other_resource
 
 
@@ -145,7 +137,7 @@ async def update_other_resource(
 
     db.commit()
     db.refresh(db_other_resource)
-    add_context_to_data(db_other_resource)
+    with_context(db_other_resource.data)
     return db_other_resource
 
 

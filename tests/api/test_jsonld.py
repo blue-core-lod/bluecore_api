@@ -2,7 +2,11 @@ import pytest
 from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 from bluecore_models.utils.graph import load_jsonld
 
-from bluecore_api.app.utils.jsonld import check_context, normalize_context
+from bluecore_api.app.utils.jsonld import (
+    check_context,
+    normalize_context,
+    with_context,
+)
 from bluecore_api.constants import CONTEXT_URL
 
 
@@ -93,3 +97,27 @@ def test_round_tripped_jsonld_parses_without_the_network(context_url, monkeypatc
     )
 
     assert len(graph) == 1
+
+
+def test_with_context_keeps_a_stored_context():
+    data = {"@context": BIBFRAME_CONTEXT_URL, "@id": "https://bcld.info/works/1"}
+
+    with_context(data)
+
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
+
+
+def test_with_context_names_ours_when_none_is_stored():
+    data = {"@id": "https://bcld.info/works/1"}
+
+    with_context(data)
+
+    assert data["@context"] == CONTEXT_URL
+
+
+def test_with_context_leaves_a_list_alone():
+    data = [{"@id": "https://bcld.info/works/1"}]
+
+    with_context(data)
+
+    assert data == [{"@id": "https://bcld.info/works/1"}]

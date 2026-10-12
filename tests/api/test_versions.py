@@ -5,10 +5,9 @@ from datetime import datetime
 
 import pytest
 from bluecore_models.models import Hub, Instance, Profile, Work
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-
-from bluecore_api.constants import CONTEXT_URL
 
 WORK_UUID = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
 OTHER_WORK_UUID = "9c1a2b3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d"
@@ -228,9 +227,9 @@ def test_version_payload_carries_identity_and_context(
     assert payload["uuid"] == WORK_UUID
     assert payload["uri"] == f"https://bcld.info/works/{WORK_UUID}"
     assert payload["type"] == "works"
-    # Version.data is stored without @context; the route re-injects it, and the
-    # editor's datasetFromJsonld() cannot parse the graph without it.
-    assert payload["data"]["@context"] == CONTEXT_URL
+    # The snapshot keeps the context it was framed with; the editor's
+    # datasetFromJsonld() cannot parse the graph without one.
+    assert payload["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
 
 def test_fetching_a_version_does_not_create_one(
