@@ -1,11 +1,11 @@
 [project]
 name = "bluecore-api"
-version = "0.35.1"
+version = "0.35.2"
 description = "Blue Core API for managing BIBFRAME RDF data and workflows"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "bluecore-models>=0.35.0", # bibframe-json 
+  "bluecore-models>=0.36.0", # linking fix 
   "fastapi[standard]",
   "sqlalchemy",
   "pgvector",
