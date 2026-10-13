@@ -4,13 +4,13 @@ Has Instance, Instance of, and a section per relationship term. The Hub-Work lin
 is a foreign key, set at ingest from bf:expressionOf, so it is read from there.
 """
 
-from collections.abc import Mapping
 from urllib.parse import urlparse
 
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
 from sqlalchemy.orm import object_session
 
-from bluecore_api.app.views import nodes, vocabulary
+from bluecore_api.app.views import fields, model, nodes, vocabulary
+from bluecore_api.schemas import bibframe
 
 
 def add_section(
@@ -31,23 +31,21 @@ def add_section(
     sidebar.append({"label": label, "values": values})
 
 
-def _instance_label(data: Mapping[str, object]) -> str:
+def instance_label(instance: bibframe.Instance) -> str:
     """Names an Instance by its imprint: "Hershey, PA: IGI Global, [2025]".
 
     Every Instance of a Work repeats that Work's title, so the title cannot tell
     two printings apart and the publisher and date have to.
     """
-    statement = nodes.scalar(data.get("publicationStatement", "")).strip()
+    statement = fields.joined(instance.publication_statement)
     if statement:
         return statement
-    for activity in nodes.as_list(data.get("provisionActivity")):
-        if not isinstance(activity, dict):
-            continue
+    for activity in instance.provision_activity:
         parts = [
             text
-            for text in (
-                nodes.scalar(activity.get(key, "")).strip()
-                for key in ("bflc:simplePlace", "bflc:simpleAgent", "bflc:simpleDate")
+            for text in map(
+                fields.joined,
+                (activity.simple_place, activity.simple_agent, activity.simple_date),
             )
             if text
         ]
@@ -55,14 +53,23 @@ def _instance_label(data: Mapping[str, object]) -> str:
             return f"{parts[0]}: {', '.join(parts[1:])}"
         if parts:
             return parts[0]
-    return nodes.access_point(data)
+    return fields.access_point(instance)
 
 
 def _record_label(record: ResourceBase) -> str:
-    """The text that names a record in a link, whichever page the link is on."""
-    if isinstance(record, Instance):
-        return _instance_label(record.data)  # ty: ignore[invalid-argument-type]
-    return nodes.access_point(record.data)  # ty: ignore[invalid-argument-type]
+    """The text that names a record in a link, whichever page the link is on.
+
+    A record the models will not read at all is named by its uuid, as its
+    own page is.
+    """
+    resource = (
+        model.as_model(record) if isinstance(record, Hub | Instance | Work) else None
+    )
+    if isinstance(resource, bibframe.Instance):
+        return instance_label(resource)
+    if resource is not None:
+        return fields.access_point(resource)
+    return nodes.id_tail(record.uri)
 
 
 def record_link(record: ResourceBase) -> dict[str, object]:
@@ -74,21 +81,22 @@ def record_link(record: ResourceBase) -> dict[str, object]:
 
 
 def _relation_value(
-    node: Mapping[str, object], enumeration: str, records: dict[str, ResourceBase]
+    target: bibframe.Resource, enumeration: str, records: dict[str, ResourceBase]
 ) -> dict[str, object] | None:
     """One line under a relation's heading, linked when there is somewhere to go.
 
     Ingestion leaves only a bare uri behind, so a record we hold is named from
-    its own data. One described in place keeps the label written here, and a
-    transcribed statement -- which has no uri at all -- stays plain text.
+    its own data. One described in place is named the way its own page would
+    be, and a transcribed statement -- which has no uri at all -- stays plain
+    text.
     """
-    uri = nodes.link_uri(node.get("@id"))
+    uri = nodes.link_uri(target.uri)
     record = records.get(uri) if uri else None
     external = False
     if record is not None:
         text, href = _record_label(record), record.uri
     else:
-        text, href = nodes.title_of(node), uri
+        text, href = fields.title_of(target), uri
         if uri and urlparse(uri).netloc == nodes.LC_ID_HOST:
             # not a record we hold: LC's readable page for it, in a new tab
             href, external = nodes.source_record_url(uri), True
@@ -113,27 +121,24 @@ def _records_by_uri(resource: ResourceBase, uris: list[str]) -> dict[str, Resour
     }
 
 
-def linked_records(resource: ResourceBase, key: str) -> list[dict[str, object]]:
-    """Sidebar values for a key that points straight at other records by uri.
+def linked_records(
+    record: ResourceBase, targets: list[bibframe.Resource]
+) -> list[dict[str, object]]:
+    """Sidebar values for the records a property points straight at.
 
     Covers both ends of the Hub-Work pair -- expressionOf going up and
     hasExpression coming back down -- and names each target from its own record,
-    since the data holds nothing but a uuid.
+    since the data usually holds nothing but a uuid.
     """
-    candidates = [
-        n
-        for n in nodes.as_list(resource.data.get(key))  # ty: ignore[unresolved-attribute]
-        if isinstance(n, dict)
-    ]
     records = _records_by_uri(
-        resource, [u for n in candidates if (u := nodes.link_uri(n.get("@id")))]
+        record, [uri for t in targets if (uri := nodes.link_uri(t.uri))]
     )
-    values = [_relation_value(n, "", records) for n in candidates]
+    values = [_relation_value(t, "", records) for t in targets]
     return nodes.dedupe([v for v in values if v is not None])
 
 
 def relation_sections(
-    resource: Hub | Work, label_map: dict[str, str]
+    record: ResourceBase, relations: list[bibframe.Relation], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """Groups a record's bf:relation into one sidebar section per relationship.
 
@@ -141,40 +146,20 @@ def relation_sections(
     controls it. A fully described Hub points back the other way, so it gets a
     section each for "Series of", "Translated as", "Part of" and the rest.
     """
-    relations = [
-        r
-        for r in nodes.as_list(resource.data.get("relation"))  # ty: ignore[unresolved-attribute]
-        if isinstance(r, dict) and not vocabulary.is_exempt_relation(r)
-    ]
-    if not relations:
-        return []
-
-    uris = [
-        node["@id"]
-        for relation in relations
-        for node in nodes.as_list(relation.get("associatedResource"))
-        if isinstance(node, dict) and isinstance(node.get("@id"), str)
-    ]
+    relations = [r for r in relations if not vocabulary.is_exempt_relation(r)]
     # Either end can be any record type, so resolve against resource_base in one
     # query for the whole page.
-    session = object_session(resource)
-    records: dict[str, ResourceBase] = {}
-    if uris and session is not None:
-        records = {
-            row.uri: row
-            for row in session.query(ResourceBase)
-            .where(ResourceBase.uri.in_(uris))
-            .all()
-        }
+    records = _records_by_uri(
+        record,
+        [t.uri for r in relations for t in r.associated_resource if t.uri],
+    )
 
     sections: dict[str, list[dict[str, object]]] = {}
     for relation in relations:
         labels = vocabulary.relationship_labels(relation, label_map)
-        enumeration = nodes.scalar(relation.get("seriesEnumeration", "")).strip()
-        for node in nodes.as_list(relation.get("associatedResource")):
-            if not isinstance(node, dict):
-                continue
-            value = _relation_value(node, enumeration, records)
+        enumeration = fields.joined(relation.series_enumeration)
+        for target in relation.associated_resource:
+            value = _relation_value(target, enumeration, records)
             if value is None:
                 continue
             for label in labels:

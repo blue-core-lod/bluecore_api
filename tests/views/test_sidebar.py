@@ -8,14 +8,16 @@ linking, separately from the lookup (covered in tests/api).
 
 from bluecore_models.models import Hub, Instance, Work
 
+from bluecore_api.app.views.model import as_model
 from bluecore_api.app.views.sidebar import (
-    _instance_label,
     _record_label,
     add_section,
+    instance_label,
     record_link,
     relation_sections,
     works_for_hub,
 )
+from bluecore_api.schemas import bibframe
 
 SERIES = "http://id.loc.gov/vocabulary/relationship/series"
 SERIES_OF = "http://id.loc.gov/vocabulary/relationship/seriesof"
@@ -26,45 +28,61 @@ def _sections(data):
     work = Work(
         uri="http://localhost/works/x", data={**data, "@id": "http://localhost/works/x"}
     )
-    return {s["label"]: s["values"] for s in relation_sections(work, {})}
+    resource = as_model(work)
+    assert resource is not None
+    return {
+        s["label"]: s["values"] for s in relation_sections(work, resource.relation, {})
+    }
 
 
 # --- naming an Instance ------------------------------------------------------
 
 
-def test_instance_label_prefers_the_publication_statement():
+def _label(stored, **properties):
+    instance = stored(of=Instance, **properties)
+    assert isinstance(instance, bibframe.Instance)
+    return instance_label(instance)
+
+
+def test_instance_label_prefers_the_publication_statement(stored):
     """Every Instance of a Work shares its title, so the imprint is what tells
     two of them apart -- LC's "Has Instance" reads this way."""
-    data = {
-        "title": {"mainTitle": "Minority voices"},
-        "publicationStatement": "Hershey, PA: IGI Global, [2025]",
-    }
-    assert _instance_label(data) == "Hershey, PA: IGI Global, [2025]"
-
-
-def test_instance_label_assembles_the_provision_activity():
-    data = {
-        "title": {"mainTitle": "Minority voices"},
-        "provisionActivity": {
-            "@type": ["ProvisionActivity", "Publication"],
-            "bflc:simplePlace": "Hershey, PA",
-            "bflc:simpleAgent": "IGI Global",
-            "bflc:simpleDate": "[2025]",
-        },
-    }
-    assert _instance_label(data) == "Hershey, PA: IGI Global, [2025]"
-
-
-def test_instance_label_copes_with_a_partial_provision_activity():
-    data = {"provisionActivity": {"bflc:simplePlace": "Hershey, PA"}}
-    assert _instance_label(data) == "Hershey, PA"
-
-
-def test_instance_label_falls_back_to_the_title():
-    """No imprint at all: better the title than an empty line."""
-    assert _instance_label({"title": {"mainTitle": "The waste lands"}}) == (
-        "The waste lands"
+    assert (
+        _label(
+            stored,
+            title={"mainTitle": "Minority voices"},
+            publicationStatement="Hershey, PA: IGI Global, [2025]",
+        )
+        == "Hershey, PA: IGI Global, [2025]"
     )
+
+
+def test_instance_label_assembles_the_provision_activity(stored):
+    assert (
+        _label(
+            stored,
+            title={"mainTitle": "Minority voices"},
+            provisionActivity={
+                "@type": ["ProvisionActivity", "Publication"],
+                "bflc:simplePlace": "Hershey, PA",
+                "bflc:simpleAgent": "IGI Global",
+                "bflc:simpleDate": "[2025]",
+            },
+        )
+        == "Hershey, PA: IGI Global, [2025]"
+    )
+
+
+def test_instance_label_copes_with_a_partial_provision_activity(stored):
+    assert (
+        _label(stored, provisionActivity={"bflc:simplePlace": "Hershey, PA"})
+        == "Hershey, PA"
+    )
+
+
+def test_instance_label_falls_back_to_the_title(stored):
+    """No imprint at all: better the title than an empty line."""
+    assert _label(stored, title={"mainTitle": "The waste lands"}) == "The waste lands"
 
 
 # --- naming any record ------------------------------------------------------
@@ -141,7 +159,9 @@ def test_add_section_appends_a_new_heading():
 
 
 def test_no_relations_means_no_sections():
-    assert relation_sections(Work(uri="http://localhost/works/x", data={}), {}) == []
+    assert (
+        relation_sections(Work(uri="http://localhost/works/x", data={}), [], {}) == []
+    )
 
 
 def test_relations_group_under_their_relationship():

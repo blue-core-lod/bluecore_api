@@ -3,21 +3,12 @@
 FIELD_ORDER sets position, FIELD_LABELS sets wording, NON_FIELD_KEYS withholds.
 """
 
-from collections.abc import Mapping
-
 from bluecore_api.app.views import nodes, vocabulary
+from bluecore_api.schemas import bibframe
 
 # The status marking a stubbed-out record. A literal, so rendering never depends
 # on a newer bluecore_models release.
 STUB_STATUS = "http://id.loc.gov/vocabulary/mstatus/incmp"
-
-
-def _is_stub_status(value: object) -> bool:
-    """Whether a bf:status value is the one we record on a stub."""
-    return any(
-        isinstance(item, dict) and item.get("@id") == STUB_STATUS
-        for item in nodes.as_list(value)
-    )
 
 
 # Pseudo-keys, because bf:title feeds three headings: the title proper, the
@@ -119,14 +110,17 @@ FIELD_LABELS: dict[str, str] = {
 }
 
 
-def node_values(node: object, label_map: dict[str, str]) -> list[dict[str, object]]:
-    """Generic rendering of a field's value(s) into display dicts."""
-    values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        href = nodes.node_href(item)
-        text = vocabulary.resolve_label(href, nodes.label_text(item), label_map)
-        values.append(nodes.value(text or (href or ""), href))
-    return values
+def generic_values(
+    values: list[bibframe.Value], label_map: dict[str, str]
+) -> list[dict[str, object]]:
+    """A property with no builder of its own: each value's text, linked where
+    it has somewhere to go."""
+    built: list[dict[str, object]] = []
+    for value in values:
+        href = nodes.value_href(value)
+        text = vocabulary.resolve_label(href, nodes.value_text(value), label_map)
+        built.append(nodes.value(text or (href or ""), href))
+    return built
 
 
 # An ISSN record at issn.org is addressed by the number itself, which is the only
@@ -142,8 +136,13 @@ def _identifier_url(bf_type: str, ident: str) -> str | None:
     return None
 
 
-def _identifier_values(
-    node: object, label_map: dict[str, str]
+def joined(texts: list[bibframe.Text]) -> str:
+    """Several literals as one line of text, in the order the record holds them."""
+    return ", ".join(filter(None, map(str, texts))).strip()
+
+
+def identifier_values(
+    identifiers: list[bibframe.Identifier], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """An identifier written as "Issn: 1435-5655", led by the kind of number.
 
@@ -152,28 +151,20 @@ def _identifier_values(
     two identical-looking numbers apart.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        if not isinstance(item, dict):
-            continue
-        bf_type = item.get("@type", "")
-        if isinstance(bf_type, list):
-            bf_type = bf_type[0] if bf_type else ""
-        bf_type = nodes.id_tail(bf_type) if bf_type else ""
-        ident = nodes.scalar(nodes.rdf_value(item) or "").strip()
+    for identifier in identifiers:
+        kind = nodes.id_tail(identifier.types[0]) if identifier.types else ""
+        number = joined(identifier.value)
 
-        href = _identifier_url(bf_type, ident)
-        value = nodes.value(ident, href)
-        if bf_type:
-            value["prefix"] = f"{bf_type}: "
+        href = _identifier_url(kind, number)
+        value = nodes.value(number, href)
+        if kind:
+            value["prefix"] = f"{kind}: "
         if href:
             value["external"] = True
 
-        qualifier = nodes.scalar(item.get("qualifier", "")).strip()
-        status = nodes.first_node(item.get("status"))
-        status_href = nodes.link_uri(status.get("@id")) if status else None
-        status_text = vocabulary.resolve_label(
-            status_href, nodes.label_text(status) if status else "", label_map
-        )
+        qualifier = joined(identifier.qualifier)
+        status = identifier.status[0] if identifier.status else None
+        status_text, _ = ref_text(status, label_map)
         # both read as one aside: "(paperback, canceled or invalid)"
         extras = [e for e in (qualifier, status_text) if e]
         if extras:
@@ -182,29 +173,53 @@ def _identifier_values(
     return values
 
 
-def _contribution_values(
-    node: object, label_map: dict[str, str]
-) -> list[dict[str, object]]:
-    """Each Contribution renders as its agent, optionally with the role.
+def ref_text(
+    ref: bibframe.Ref | None, label_map: dict[str, str]
+) -> tuple[str, str | None]:
+    """The text and link for a reference: its own label, else the vocabulary's,
+    else the tail of its uri."""
+    return _named(ref, ("label",), label_map)
 
-    The Contribution node has no label of its own; the names are in the nested
-    "agent" and "role" nodes.
+
+def _stated(ref: bibframe.Ref, names: tuple[str, ...]) -> str | None:
+    """The first of these properties the record states for `ref`, as one line.
+
+    None when it states none of them. A property stated but empty counts as
+    stated, and gives "": the record said something, and said nothing.
+    """
+    for name in names:
+        if name in ref.model_fields_set:
+            return ", ".join(filter(None, map(nodes.value_text, getattr(ref, name))))
+    return None
+
+
+def _named(
+    ref: bibframe.Ref | None, names: tuple[str, ...], label_map: dict[str, str]
+) -> tuple[str, str | None]:
+    """The text and link for a reference: the first of `names` it states, else
+    the vocabulary's label, else the tail of its uri."""
+    if ref is None:
+        return "", None
+    href = nodes.link_uri(ref.uri)
+    text = _stated(ref, names)
+    if text is None:
+        text = nodes.id_tail(ref.uri) if ref.uri else ""
+    return vocabulary.resolve_label(href, text, label_map), href
+
+
+def contribution_values(
+    contributions: list[bibframe.Contribution], label_map: dict[str, str]
+) -> list[dict[str, object]]:
+    """Each Contribution renders as its agent, with its role after it.
+
+    Only the first role shows, though 3% of contributions on stage carry more.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        if not isinstance(item, dict):
-            values.append(nodes.value(nodes.label_text(item)))
-            continue
-        agent = nodes.first_node(item.get("agent"))
-        agent_href = nodes.link_uri(agent.get("@id")) if agent else None
-        agent_text = vocabulary.resolve_label(
-            agent_href, nodes.label_text(agent) if agent else "", label_map
-        )
-        role = nodes.first_node(item.get("role"))
-        role_href = nodes.link_uri(role.get("@id")) if role else None
-        role_text = vocabulary.resolve_label(
-            role_href, nodes.label_text(role) if role else "", label_map
-        )
+    for contribution in contributions:
+        agent = contribution.agent[0] if contribution.agent else None
+        agent_text, agent_href = ref_text(agent, label_map)
+        role = contribution.role[0] if contribution.role else None
+        role_text, role_href = ref_text(role, label_map)
         role_text = vocabulary.RELATOR_LABEL_FALLBACKS.get(role_text, role_text)
 
         value = nodes.value(agent_text or (agent_href or ""), agent_href)
@@ -223,130 +238,85 @@ def _classification_kind(local_name: str) -> str:
     return tail.upper() if tail and tail != local_name else local_name
 
 
-def _classification_extras(
-    item: Mapping[str, object], label_map: dict[str, str]
-) -> list[dict[str, object]]:
-    """The assigner and status LC prints after a call number, each linked.
-
-    The assigner shows its code ("dlc") the way LC does, rather than the
-    organization's full name; the status shows its vocabulary label.
-    """
-    extras: list[dict[str, object]] = []
-    for label, key in (("Assigner", "assigner"), ("Status", "status")):
-        node = item.get(key)
-        href = nodes.link_uri(node.get("@id")) if isinstance(node, dict) else None
-        if key == "assigner":
-            text = nodes.id_tail(href) if href else nodes.label_text(node)
-        else:
-            text = vocabulary.resolve_label(
-                href, nodes.label_text(node) if node else "", label_map
-            )
-        if text:
-            extras.append({"label": label, "text": text, "href": href})
-    return extras
-
-
-def _classification_values(
-    node: object, label_map: dict[str, str]
+def classification_values(
+    classifications: list[bibframe.Classification], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """A call number written the way LC writes it.
 
     "LCC: ML31 .C595 (Assigner: dlc) (Status: used by assigner)" -- the kind,
-    the number itself, then whoever assigned it and how far it is trusted.
+    the number itself, then whoever assigned it and how far it is trusted, each
+    linked to its vocabulary term. The assigner shows its code ("dlc") the way
+    LC does, rather than the organization's full name.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        if not isinstance(item, dict):
-            values.append(nodes.value(nodes.label_text(item)))
-            continue
+    for classification in classifications:
         kinds = [
-            t
-            for t in nodes.as_list(item.get("@type"))
-            if nodes.id_tail(t) != "Classification"
+            t for t in classification.types if nodes.id_tail(t) != "Classification"
         ]
         kind = _classification_kind(nodes.id_tail(kinds[0])) if kinds else ""
         portion = " ".join(
             p
             for p in (
-                nodes.scalar(item.get("classificationPortion", "")),
-                nodes.scalar(item.get("itemPortion", "")),
+                joined(classification.portion),
+                joined(classification.item_portion),
             )
             if p
         )
         text = f"{kind}: {portion}".strip(": ").strip() if kind else portion
+
+        extras: list[dict[str, object]] = []
+        for assigner in classification.assigner:
+            href = nodes.link_uri(assigner.uri)
+            code = nodes.id_tail(href) if href else ref_text(assigner, label_map)[0]
+            if code:
+                extras.append({"label": "Assigner", "text": code, "href": href})
+        for status in classification.status:
+            status_text, href = ref_text(status, label_map)
+            if status_text:
+                extras.append({"label": "Status", "text": status_text, "href": href})
+
         value = nodes.value(text)
-        extras = _classification_extras(item, label_map)
         if extras:
             value["suffixes"] = extras
         values.append(value)
     return values
 
 
-def _provision_values(
-    node: object, label_map: dict[str, str]
+def provision_values(
+    activities: list[bibframe.ProvisionActivity], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """A provision activity written as "Publication: New York 1991".
 
     Led by its kind, then whichever of place, date and statement it carries.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        if not isinstance(item, dict):
-            values.append(nodes.value(nodes.label_text(item)))
-            continue
-        types = [
-            t for t in nodes.as_list(item.get("@type")) if "ProvisionActivity" not in t
-        ]
-        kind = nodes.id_tail(types[0]) if types else "Provision"
-        place = nodes.first_node(item.get("place"))
-        place_href = nodes.link_uri(place.get("@id")) if place else None
+    for activity in activities:
+        kinds = [t for t in activity.types if "ProvisionActivity" not in t]
+        kind = nodes.id_tail(kinds[0]) if kinds else "Provision"
+        place = activity.place[0] if activity.place else None
+        place_text, place_href = ref_text(place, label_map)
         parts = [
-            vocabulary.resolve_label(
-                place_href, nodes.label_text(place) if place else "", label_map
-            ),
-            nodes.scalar(item.get("date", "")),
-            nodes.scalar(item.get("bflc:simpleStatement", "")),
+            place_text,
+            joined(activity.date),
+            joined(activity.simple_statement),
         ]
         text = f"{kind}: " + " ".join(p for p in parts if p)
         values.append(nodes.value(text.strip(), place_href))
     return values
 
 
-def _derived_from_values(key: str, node: object) -> list[dict[str, object]]:
-    """Link a derivedFrom to its source record instead of showing a bare number.
-
-    The label stays outside the link, so the line reads as a label plus a link.
-    """
-    values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        href = item.get("@id") if isinstance(item, dict) else item
-        if not isinstance(href, str) or not href.startswith("http"):
-            values.append(
-                nodes.value(f"{nodes.humanize(key)}: {nodes.label_text(item)}")
-            )
-            continue
-        value = nodes.value(nodes.id_tail(href), nodes.source_record_url(href))
-        value["prefix"] = f"{nodes.humanize(key)}: "
-        value["external"] = True
-        values.append(value)
-    return values
-
-
-def _note_values(node: object, label_map: dict[str, str]) -> list[dict[str, object]]:
+def note_values(
+    notes: list[bibframe.Ref], label_map: dict[str, str]
+) -> list[dict[str, object]]:
     """A note led by its kind: "description source: Created from auth.".
 
     The kind is a second @type beside bf:Note, and it is what tells otherwise
     similar notes apart.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        if not isinstance(item, dict):
-            values.append(nodes.value(nodes.label_text(item)))
-            continue
-        text = nodes.label_text(item)
-        kinds = [
-            t for t in nodes.as_list(item.get("@type")) if nodes.id_tail(t) != "Note"
-        ]
+    for note in notes:
+        text = _stated(note, ("label",)) or ""
+        kinds = [t for t in note.types if nodes.id_tail(t) != "Note"]
         kind = ""
         if kinds:
             kind = label_map.get(kinds[0]) or vocabulary.NOTE_TYPE_LABELS.get(
@@ -356,35 +326,51 @@ def _note_values(node: object, label_map: dict[str, str]) -> list[dict[str, obje
     return values
 
 
-def _admin_metadata_fields(node: object) -> list[dict[str, object]]:
+def _derived_from(key: str, values: list[bibframe.Value]) -> list[dict[str, object]]:
+    """Link a derivedFrom to its source record instead of showing a bare number.
+
+    The label stays outside the link, so the line reads as a label plus a link.
+    """
+    built: list[dict[str, object]] = []
+    for value in values:
+        href = str(value) if isinstance(value, bibframe.Text) else value.uri
+        if not href or not href.startswith("http"):
+            built.append(
+                nodes.value(f"{nodes.humanize(key)}: {nodes.value_text(value)}")
+            )
+            continue
+        line = nodes.value(nodes.id_tail(href), nodes.source_record_url(href))
+        line["prefix"] = f"{nodes.humanize(key)}: "
+        line["external"] = True
+        built.append(line)
+    return built
+
+
+def admin_metadata_fields(blocks: list[bibframe.Ref]) -> list[dict[str, object]]:
     """Each AdminMetadata block becomes its own 'Admin Metadata' field.
 
     Sub-properties show as-is, raw MARC included, pending the metadata group.
     """
-    fields: list[dict[str, object]] = []
-    for block in nodes.as_list(node):
-        if not isinstance(block, dict):
-            continue
+    built: list[dict[str, object]] = []
+    for block in blocks:
         values: list[dict[str, object]] = []
-        for key, val in block.items():
-            if key in ("@id", "@type"):
-                continue
+        for key, held in block.properties().items():
             if key == "derivedFrom":
-                values.extend(_derived_from_values(key, val))
+                values.extend(_derived_from(key, held))
                 continue
-            value = nodes.value(f"{nodes.humanize(key)}: {nodes.label_text(val)}")
+            line = nodes.value(
+                f"{nodes.humanize(key)}: {nodes.distinct(map(nodes.value_text, held))}"
+            )
             # flag the stub status here too, not just beside the heading
-            if key == "status" and _is_stub_status(val):
-                value["alert"] = True
-            values.append(value)
+            if key == "status" and any(
+                isinstance(v, bibframe.Ref) and v.uri == STUB_STATUS for v in held
+            ):
+                line["alert"] = True
+            values.append(line)
         if values:
-            fields.append({"label": "Admin Metadata", "values": values})
-    return fields
+            built.append({"label": "Admin Metadata", "values": values})
+    return built
 
-
-# Fields whose values name a controlled term, so each one is tagged with the
-# authority it came from -- see _authority_values.
-AUTHORITY_KEYS = {"subject", "genreForm"}
 
 # The authorities whose tag cannot be read off the uri, because it is an agreed
 # abbreviation rather than the last path segment ("/authorities/subjects" is
@@ -416,7 +402,7 @@ AUTHORITY_URI_TAGS: tuple[tuple[str, str], ...] = (
 )
 
 
-def _scheme_tag(item: object, href: str | None) -> str:
+def _scheme_tag(source_id: str | None, href: str | None) -> str:
     """The authority a term belongs to, as LC prints it: LCSH, GND, FAST.
 
     An LC scheme uri names its own tag, so that family needs no listing. Anything
@@ -426,8 +412,6 @@ def _scheme_tag(item: object, href: str | None) -> str:
     An authority in neither is tagged with nothing, and the term renders with its
     label and link intact -- only the parenthesised marker is missing.
     """
-    source = nodes.first_node(item.get("source")) if isinstance(item, dict) else None
-    source_id = source.get("@id") if source else None
     if source_id and "Schemes/" in source_id:
         return nodes.id_tail(source_id).upper()
     for uri in (source_id, href):
@@ -437,8 +421,12 @@ def _scheme_tag(item: object, href: str | None) -> str:
     return ""
 
 
-def _authority_values(
-    node: object, label_map: dict[str, str]
+# Where a controlled term states its name, in the order they win.
+TERM_NAMES = ("label", "authoritative_label", "code")
+
+
+def authority_values(
+    terms: list[bibframe.Term], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """A controlled term with the authority it came from: "Periodicals (LCGFT)".
 
@@ -446,19 +434,70 @@ def _authority_values(
     same-named headings a record can carry from different vocabularies.
     """
     values: list[dict[str, object]] = []
-    for item in nodes.as_list(node):
-        href = nodes.node_href(item)
-        text = vocabulary.resolve_label(href, nodes.label_text(item), label_map)
+    for term in terms:
+        text, href = _named(term, TERM_NAMES, label_map)
         value = nodes.value(text or (href or ""), href)
-        tag = _scheme_tag(item, href)
+        tag = _scheme_tag(term.source[0].uri if term.source else None, href)
         if tag:
             value["suffixes"] = [{"text": tag}]
         values.append(value)
     return values
 
 
+def _title_text(title: bibframe.Title) -> str:
+    """A title's text, which is its main title: the subtitle has a heading of
+    its own. A title with no main title may say what it is in a note."""
+    text = _stated(title, ("main", "label"))
+    if text is None:
+        text = ", ".join(filter(None, (_stated(n, ("label",)) for n in title.note)))
+    return text
+
+
+def title_values(titles: list[bibframe.Title]) -> list[dict[str, object]]:
+    """Each title as one line, with nowhere to link to."""
+    return nodes.dedupe([nodes.value(_title_text(title)) for title in titles])
+
+
+def subtitle_values(titles: list[bibframe.Title]) -> list[dict[str, object]]:
+    """The subtitles of the title proper, in reading order. A variant's
+    subtitle belongs with its variant."""
+    return nodes.dedupe(
+        [
+            nodes.value(str(subtitle))
+            for title in titles
+            if not title.is_variant
+            for subtitle in title.subtitle
+        ]
+    )
+
+
+def title_of(resource: bibframe.Resource) -> str:
+    """The one title that names a record, for the page heading.
+
+    The title proper, else a variant, else the access point, else the record's
+    own label or authoritative label, else the tail of its uri.
+    """
+    proper = [t for t in resource.title if not t.is_variant]
+    variants = [t for t in resource.title if t.is_variant]
+    for titles in (proper, variants):
+        text = ", ".join(dict.fromkeys(filter(None, map(_title_text, titles))))
+        if text:
+            return text
+    named = joined(resource.aap) or _stated(resource, ("label", "authoritative_label"))
+    return named or (nodes.id_tail(resource.uri) if resource.uri else "")
+
+
+def access_point(resource: bibframe.Resource) -> str:
+    """The name LC writes a record under: "King, Stephen, 1947-. Dark tower".
+
+    Held in bflc:aap or rdfs:label depending on the source; the title is a
+    fallback.
+    """
+    return joined(resource.aap) or _stated(resource, ("label",)) or title_of(resource)
+
+
 def _field(
-    label: str, key: str, data: Mapping[str, object], label_map: dict[str, str]
+    label: str, key: str, resource: bibframe.Resource, label_map: dict[str, str]
 ) -> dict[str, object] | None:
     """Builds one field -- a heading and its values -- or None if it is empty.
 
@@ -466,30 +505,32 @@ def _field(
     identifiers and notes, have a dedicated builder.
     """
     if key == VARIANT_TITLE_KEY:
-        values = node_values(nodes.split_titles(data.get("title"))[1], label_map)
-        return {"label": label, "values": nodes.dedupe(values)} if values else None
+        values = title_values([t for t in resource.title if t.is_variant])
+        return {"label": label, "values": values} if values else None
     if key == SUB_TITLE_KEY:
-        values = node_values(nodes.subtitles(data.get("title")), label_map)
-        return {"label": label, "values": nodes.dedupe(values)} if values else None
-    if key not in data:
+        values = subtitle_values(resource.title)
+        return {"label": label, "values": values} if values else None
+    if not resource.states(key):
         return None
     if key == "title":
         # variants get their own heading, so keep them out of Title
-        values = node_values(nodes.split_titles(data[key])[0], label_map)
+        values = title_values([t for t in resource.title if not t.is_variant])
     elif key == "identifiedBy":
-        values = _identifier_values(data[key], label_map)
+        values = identifier_values(resource.identified_by, label_map)
     elif key == "contribution":
-        values = _contribution_values(data[key], label_map)
+        values = contribution_values(resource.contribution, label_map)
     elif key == "classification":
-        values = _classification_values(data[key], label_map)
+        values = classification_values(resource.classification, label_map)
     elif key == "provisionActivity":
-        values = _provision_values(data[key], label_map)
+        values = provision_values(resource.provision_activity, label_map)
     elif key == "note":
-        values = _note_values(data[key], label_map)
-    elif key in AUTHORITY_KEYS:
-        values = _authority_values(data[key], label_map)
+        values = note_values(resource.note, label_map)
+    elif key == "subject":
+        values = authority_values(resource.subject, label_map)
+    elif key == "genreForm":
+        values = authority_values(resource.genre_form, label_map)
     else:
-        values = node_values(data[key], label_map)
+        values = generic_values(resource.values(key), label_map)
     # A node with neither text nor a uri would render as a blank line.
     values = nodes.dedupe([v for v in values if v["text"] or v["href"]])
 
@@ -502,7 +543,7 @@ def _field_label(key: str) -> str:
 
 
 def build_fields(
-    data: Mapping[str, object],
+    resource: bibframe.Resource,
     label_map: dict[str, str],
     field_order: tuple[str, ...] = FIELD_ORDER,
 ) -> list[dict[str, object]]:
@@ -513,19 +554,21 @@ def build_fields(
     """
     fields: list[dict[str, object]] = []
     for key in field_order:
-        built = _field(_field_label(key), key, data, label_map)
+        built = _field(_field_label(key), key, resource, label_map)
         if built:
             fields.append(built)
 
     extra = sorted(
-        key for key in data if key not in field_order and key not in NON_FIELD_KEYS
+        key
+        for key in resource.stated
+        if key not in field_order and key not in NON_FIELD_KEYS
     )
     for key in extra:
-        built = _field(_field_label(key), key, data, label_map)
+        built = _field(_field_label(key), key, resource, label_map)
         if built:
             fields.append(built)
 
-    fields.extend(_admin_metadata_fields(data.get("adminMetadata")))
+    fields.extend(admin_metadata_fields(resource.admin_metadata))
     return fields
 
 
@@ -551,7 +594,7 @@ IMPLIED_HUB_TYPES = frozenset({"Work"})
 
 
 def extra_types(
-    data: Mapping[str, object], implied: frozenset[str]
+    resource: bibframe.Resource, implied: frozenset[str]
 ) -> list[dict[str, object]]:
     """The types to list under the Type heading, minus any the caller skips.
 
@@ -559,9 +602,7 @@ def extra_types(
     heading already says "BIBFRAME Work", so callers pass implied={"Work"} to
     leave that one out and list only Text and Monograph.
     """
-    types = [
-        t for t in nodes.as_list(data.get("@type")) if nodes.id_tail(t) not in implied
-    ]
+    types = [t for t in resource.types if nodes.id_tail(t) not in implied]
     return [nodes.value(nodes.split_camel_case(nodes.id_tail(t))) for t in types]
 
 

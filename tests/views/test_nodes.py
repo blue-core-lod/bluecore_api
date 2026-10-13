@@ -1,49 +1,77 @@
-"""Unit tests for views/nodes.py -- reading json-ld nodes into text.
+"""Unit tests for views/nodes.py -- naming and linking a value, and the uri
+helpers.
 
-Which rdf:value form a node uses, which of several titles names the record, and
-how a source record's readable page is addressed.
+Each way a value names itself, in the order they win, and how a source
+record's readable page is addressed.
 """
 
 from bluecore_api.app.views.nodes import (
-    rdf_value,
     source_record_url,
     split_camel_case,
-    title_of,
+    value_href,
+    value_text,
 )
+from bluecore_api.schemas import bibframe
 
-RDF_VALUE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
-
-
-def test_rdf_value_prefers_available_key_form():
-    assert rdf_value({"rdf:value": "a"}) == "a"
-    assert rdf_value({RDF_VALUE_URI: "b"}) == "b"
-    assert rdf_value({"@type": "Isbn"}) is None
+ENG = "http://id.loc.gov/vocabulary/languages/eng"
 
 
-VARIANT_AND_PRIMARY = {
-    "@id": "https://bcld.info/works/7f6c1711-663b-4a7d-a196-21c5a953413c",
-    "@type": "Work",
-    "title": [
+def _node(data):
+    return bibframe.Ref.model_validate(data)
+
+
+def test_a_literal_is_its_own_text():
+    assert value_text(bibframe.Text.model_validate("24 cm")) == "24 cm"
+    assert (
+        value_text(bibframe.Text.model_validate({"@value": "x", "@language": "en"}))
+        == "x"
+    )
+
+
+def test_a_node_is_named_by_its_label():
+    assert value_text(_node({"@id": ENG, "rdfs:label": ["English"]})) == "English"
+
+
+def test_a_label_can_itself_be_a_reference():
+    """Some nodes on stage name themselves by pointing at a term."""
+    assert value_text(_node({"rdfs:label": [{"@id": ENG}]})) == "eng"
+
+
+def test_a_node_without_a_label_is_named_by_its_rdf_value():
+    assert (
+        value_text(_node({"@type": ["AspectRatio"], "rdf:value": [" 16:9 "]})) == "16:9"
+    )
+
+
+def test_a_node_without_a_label_or_value_is_named_by_its_note():
+    """As 6,593 capture and supplementaryContent nodes on stage are."""
+    node = _node(
         {
-            "@type": ["VariantTitle", "http://id.loc.gov/vocabulary/vartitletype/por"],
-            "mainTitle": "One thousand best movies on DVD",
-        },
-        {"@type": "Title", "mainTitle": "1,000 best movies on DVD"},
-    ],
-}
+            "@type": ["Capture"],
+            "note": [{"@type": ["Note"], "rdfs:label": ["Recorded live"]}],
+        }
+    )
+    assert value_text(node) == "Recorded live"
 
 
-def test_title_of_ignores_variants():
-    """
-    The heading and any link naming the resource use the title proper, rather
-    than joining every title the record carries.
-    """
-    assert title_of(VARIANT_AND_PRIMARY) == "1,000 best movies on DVD"
+def test_a_node_with_only_a_code_is_named_by_it():
+    assert value_text(_node({"@type": ["Status"], "code": ["incmp"]})) == "incmp"
 
 
-def test_title_of_still_falls_back_to_aap():
-    """A record with no title at all is still named by its access point."""
-    assert title_of({"bflc:aap": "Author, A. Some work"}) == "Author, A. Some work"
+def test_a_bare_reference_is_named_by_its_uri_tail():
+    assert value_text(_node({"@id": ENG})) == "eng"
+
+
+def test_a_node_with_nothing_to_show_is_empty():
+    assert value_text(_node({"@type": ["Ensemble"], "ensembleSize": ["4"]})) == ""
+
+
+def test_a_value_links_to_its_own_uri_or_its_locator():
+    assert value_href(_node({"@id": ENG})) == ENG
+    locator = "https://example.org/toc.pdf"
+    assert value_href(_node({"electronicLocator": [locator]})) == locator
+    assert value_href(_node({"@id": "_:b1"})) is None
+    assert value_href(bibframe.Text.model_validate("24 cm")) is None
 
 
 def test_source_record_url_points_at_the_lc_html_page():

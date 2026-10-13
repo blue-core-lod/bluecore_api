@@ -955,3 +955,45 @@ def test_get_work_html_drops_the_generic_format_beside_a_version(client, db_sess
     assert "<h2>Print version</h2>" in page
     assert "<h2>Other physical format</h2>" not in page
     assert page.count(f'href="{target}"') == 1
+
+
+def test_get_work_html_reads_contribution_from_the_model(client, db_session, mocker):
+    """
+    A record stored the way the reframe DAG writes one -- the bibframe-json
+    context named, every property a list -- has its contributions read from the
+    model.
+    """
+    from bluecore_api.app.views import fields
+
+    model_builder = mocker.spy(fields, "contribution_values")
+    uuid_ = "0d9d6e1c-2b8f-4c35-9a61-3f5e0c7a1b42"
+    uri = f"http://localhost/works/{uuid_}"
+    db_session.add(
+        Work(
+            id=90,
+            uuid=uuid_,
+            uri=uri,
+            data={
+                "@context": BIBFRAME_CONTEXT_URL,
+                "@id": uri,
+                "@type": ["Work", "Text"],
+                "title": [{"@type": ["Title"], "mainTitle": ["Dark tower"]}],
+                "contribution": [
+                    {
+                        "@type": ["Contribution", "PrimaryContribution"],
+                        "agent": [
+                            {"@type": ["Person"], "rdfs:label": ["King, Stephen"]}
+                        ],
+                        "role": [{"@id": "http://id.loc.gov/vocabulary/relators/aut"}],
+                    }
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "King, Stephen" in page
+    assert 'href="http://id.loc.gov/vocabulary/relators/aut"' in page
+    model_builder.assert_called_once()

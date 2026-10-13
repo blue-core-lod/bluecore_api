@@ -8,11 +8,29 @@ from fastapi import Request, Response
 
 from bluecore_api.app.views import (
     fields,
+    model,
     nodes,
     sidebar,
     templating,
     vocabulary,
 )
+from bluecore_api.schemas import bibframe
+
+
+def _main_column(
+    record: Hub | Instance | Work, label_map: dict[str, str]
+) -> tuple[list[dict[str, object]], str, bibframe.Resource | None]:
+    """The fields and the heading of a record's page, and the model they are
+    read from, for the sidebar.
+
+    A record the models will not read at all -- one naming another
+    bibframe-json version, which views/model.py logs -- gets its uuid for a
+    heading and nothing else.
+    """
+    resource = model.as_model(record)
+    if resource is None:
+        return [], nodes.id_tail(record.uri), None
+    return fields.build_fields(resource, label_map), fields.title_of(resource), resource
 
 
 def render_instance_html(instance: Instance, request: Request) -> Response:
@@ -20,9 +38,8 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
 
     Its sidebar holds a single link, back to the Work it is an instance of.
     """
-    data = instance.data
     label_map = vocabulary.build_label_map(instance)
-    main_fields = fields.build_fields(data, label_map)  # ty: ignore[invalid-argument-type]
+    main_fields, title, resource = _main_column(instance, label_map)
     fields.mark_bulleted(main_fields)
 
     sidebar_sections: list[dict[str, object]] = []
@@ -31,11 +48,15 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
         sidebar_sections.append(
             {"label": "Instance of", "values": [sidebar.record_link(work)]}
         )
-    elif "instanceOf" in data:  # ty: ignore[unsupported-operator]
+    elif isinstance(resource, bibframe.Instance) and resource.instance_of:
+        # a Work we do not hold: its uri is all there is, so link to it
         sidebar_sections.append(
             {
                 "label": "Instance of",
-                "values": fields.node_values(data["instanceOf"], label_map),  # ty: ignore[invalid-argument-type]
+                "values": [
+                    nodes.value(*fields.ref_text(ref, label_map))
+                    for ref in resource.instance_of
+                ],
             }
         )
 
@@ -44,7 +65,7 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
         "resource.html",
         {
             "doc_type": "BIBFRAME Instance",
-            "title": nodes.title_of(data),  # ty: ignore[invalid-argument-type]
+            "title": title,
             "fields": main_fields,
             "sidebar": sidebar_sections,
             "resource_uri": instance.uri,
@@ -60,31 +81,31 @@ def render_work_html(work: Work, request: Request) -> Response:
     Its sidebar lists the Instances beneath it and whatever its bf:relation
     points at, such as the Hub for a series.
     """
-    data = work.data
     label_map = vocabulary.build_label_map(work)
-    main_fields = fields.build_fields(data, label_map)  # ty: ignore[invalid-argument-type]
-    fields.insert_type_field(
-        main_fields,
-        fields.extra_types(data, fields.IMPLIED_WORK_TYPES),  # ty: ignore[invalid-argument-type]
-    )
+    main_fields, title, resource = _main_column(work, label_map)
+    if resource is not None:
+        fields.insert_type_field(
+            main_fields, fields.extra_types(resource, fields.IMPLIED_WORK_TYPES)
+        )
     fields.mark_bulleted(main_fields)
 
     sidebar_sections: list[dict[str, object]] = []
-    expressed = sidebar.linked_records(work, "expressionOf")
+    expressed = sidebar.linked_records(work, resource.expression_of if resource else [])
     if expressed:
         sidebar.add_section(sidebar_sections, "Expression Of", expressed)
     instance_values = [sidebar.record_link(inst) for inst in work.instances]
     if instance_values:
         sidebar.add_section(sidebar_sections, "Has Instance", instance_values)
-    for section in sidebar.relation_sections(work, label_map):
+    relations = resource.relation if resource else []
+    for section in sidebar.relation_sections(work, relations, label_map):
         sidebar.add_section(sidebar_sections, str(section["label"]), section["values"])  # ty: ignore[invalid-argument-type]
-    if "seriesStatement" in data:  # ty: ignore[unsupported-operator]
+    if resource and resource.series_statement:
         # merges with the Series heading a bf:relation may already have opened,
         # rather than showing the reader the same heading twice
         sidebar.add_section(
             sidebar_sections,
             "Series",
-            fields.node_values(data["seriesStatement"], label_map),  # ty: ignore[invalid-argument-type]
+            [nodes.value(str(s)) for s in resource.series_statement],
         )
 
     return templating.templates.TemplateResponse(
@@ -92,7 +113,7 @@ def render_work_html(work: Work, request: Request) -> Response:
         "resource.html",
         {
             "doc_type": "BIBFRAME Work",
-            "title": nodes.title_of(data),  # ty: ignore[invalid-argument-type]
+            "title": title,
             "fields": main_fields,
             "sidebar": sidebar_sections,
             "resource_uri": work.uri,
@@ -108,20 +129,22 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
     Its sidebar gets a section per relationship ("Series of", "Translated as"),
     plus any Works that point here without the Hub naming them back.
     """
-    data = hub.data
     label_map = vocabulary.build_label_map(hub)
-    main_fields = fields.build_fields(data, label_map)  # ty: ignore[invalid-argument-type]
-    fields.insert_type_field(
-        main_fields,
-        fields.extra_types(data, fields.IMPLIED_HUB_TYPES),  # ty: ignore[invalid-argument-type]
-    )
+    main_fields, title, resource = _main_column(hub, label_map)
+    if resource is not None:
+        fields.insert_type_field(
+            main_fields, fields.extra_types(resource, fields.IMPLIED_HUB_TYPES)
+        )
     fields.mark_bulleted(main_fields)
 
     sidebar_sections: list[dict[str, object]] = []
-    expressions = sidebar.linked_records(hub, "hasExpression")
+    expressions = sidebar.linked_records(
+        hub, resource.has_expression if isinstance(resource, bibframe.Hub) else []
+    )
     if expressions:
         sidebar.add_section(sidebar_sections, "Has Expression", expressions)
-    for section in sidebar.relation_sections(hub, label_map):
+    relations = resource.relation if resource else []
+    for section in sidebar.relation_sections(hub, relations, label_map):
         sidebar.add_section(sidebar_sections, str(section["label"]), section["values"])  # ty: ignore[invalid-argument-type]
 
     # A described Hub names its Works above, so the foreign key catches only the
@@ -149,7 +172,7 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
         "resource.html",
         {
             "doc_type": "BIBFRAME Hub",
-            "title": nodes.title_of(data),  # ty: ignore[invalid-argument-type]
+            "title": title,
             "fields": main_fields,
             "sidebar": sidebar_sections,
             "resource_uri": hub.uri,
