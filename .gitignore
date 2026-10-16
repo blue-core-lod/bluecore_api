@@ -8,3 +8,5 @@ uploads
 
 # Milvus Lite embedded test database
 test-vector.db/
+
+*.csv.gz

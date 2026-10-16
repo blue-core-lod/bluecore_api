@@ -5,7 +5,6 @@ the OtherResources we hold, or from the tables below when we hold nothing.
 """
 
 import logging
-from collections.abc import Mapping
 
 from bluecore_models.models import Hub, Instance, OtherResource, Work
 from bluecore_models.namespaces import MADS
@@ -15,6 +14,7 @@ from sqlalchemy.orm import object_session
 
 from bluecore_api.app.utils.jsonld import load_jsonld_from_model
 from bluecore_api.app.views import nodes
+from bluecore_api.schemas import bibframe
 
 logger = logging.getLogger(__name__)
 
@@ -129,13 +129,9 @@ EXTERNAL_RELATIONSHIPS = frozenset(
 )
 
 
-def is_exempt_relation(relation: Mapping[str, object]) -> bool:
+def is_exempt_relation(relation: bibframe.Relation) -> bool:
     """True for a relation asserting an external identity rather than a link."""
-    return any(
-        term.get("@id") in EXTERNAL_RELATIONSHIPS
-        for term in nodes.as_list(relation.get("relationship"))
-        if isinstance(term, dict)
-    )
+    return any(term.uri in EXTERNAL_RELATIONSHIPS for term in relation.relationship)
 
 
 # Two slugs can share a heading ("series" and "hasSeries" are both Series), so
@@ -183,7 +179,7 @@ def _drop_redundant_format(terms: list[tuple[str, str]]) -> list[tuple[str, str]
 
 
 def relationship_labels(
-    relation: Mapping[str, object], label_map: dict[str, str]
+    relation: bibframe.Relation, label_map: dict[str, str]
 ) -> list[str]:
     """Every heading a relation belongs under, one per bf:relationship term.
 
@@ -192,10 +188,8 @@ def relationship_labels(
     place instead of referenced supplies its own label.
     """
     terms: list[tuple[str, str]] = []
-    for term in nodes.as_list(relation.get("relationship")):
-        if not isinstance(term, dict):
-            continue
-        href = nodes.link_uri(term.get("@id"))
+    for term in relation.relationship:
+        href = nodes.link_uri(term.uri)
         if href:
             slug = nodes.id_tail(href)
             held = label_map.get(href)
@@ -206,7 +200,7 @@ def relationship_labels(
             )
             terms.append((slug, label))
             continue
-        text = nodes.label_text(term)
+        text = ", ".join(filter(None, map(nodes.value_text, term.label)))
         if text:
             terms.append(("", nodes.capitalize(text)))
     return [label for _, label in _drop_redundant_format(terms)] or ["Related"]

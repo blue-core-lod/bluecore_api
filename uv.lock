@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -123,6 +123,7 @@ dependencies = [
     { name = "mcp" },
     { name = "pgvector" },
     { name = "psycopg", extra = ["binary"] },
+    { name = "pyld" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
     { name = "rdflib" },
@@ -155,6 +156,7 @@ requires-dist = [
     { name = "mcp", specifier = "==1.29.0" },
     { name = "pgvector" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
+    { name = "pyld", specifier = ">=3.3.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rdflib", specifier = ">=7.1.3" },
