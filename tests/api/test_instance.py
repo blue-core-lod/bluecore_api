@@ -539,3 +539,36 @@ def test_get_instance_html_dashes_its_list_like_fields(client, db_session):
     assert 'class="bc-bulleted"' in fields["Identified by"]
     for label in ("Title", "Extent"):
         assert 'class="bc-bulleted"' not in fields[label], label
+
+
+def test_get_instance_html_links_a_work_it_names_but_we_do_not_hold(client, db_session):
+    """
+    With no Work in the database, the sidebar falls back to the instanceOf the
+    record itself names. That is a reference, so it links, even though its
+    uri is all there is to show.
+    """
+    instance_uuid = "5f0e4f7e-8d3c-4a65-9b1e-2c7d8a9b0c1d"
+    instance_uri = f"http://localhost/instances/{instance_uuid}"
+    elsewhere = "https://example.org/works/elsewhere"
+    db_session.add(
+        Instance(
+            id=73,
+            uuid=instance_uuid,
+            uri=instance_uri,
+            data={
+                "@id": instance_uri,
+                "@type": "Instance",
+                "title": {"@type": "Title", "mainTitle": "The waste lands"},
+                "instanceOf": elsewhere,
+            },
+        )
+    )
+    db_session.commit()
+
+    response = client.get(
+        f"/instances/{instance_uuid}", headers={"Accept": "text/html"}
+    )
+
+    assert response.status_code == 200
+    assert "Instance of" in response.text
+    assert f'<a href="{elsewhere}">elsewhere</a>' in response.text

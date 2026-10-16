@@ -19,6 +19,7 @@ dependencies = [
   "mcp==1.29.0", # Pinning version until fastapi-mcp is updated
   "marc-bibframe>=0.3.0",
   "psycopg[binary]>=3.3.6",
+  "pyld>=3.3.0",
 ]
 
 [dependency-groups]

@@ -4,11 +4,13 @@ import re
 
 import pytest
 import rdflib
+import sqlalchemy
 from bluecore_models.models import (
     BibframeOtherResources,
     Hub,
     Instance,
     OtherResource,
+    ResourceBase,
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
@@ -192,12 +194,47 @@ def test_get_work_html(client, db_session):
     assert 'id="bc-export"' not in response.text
     assert 'id="bc-export-notice"' not in response.text
     assert "Only Instances can be exported." in response.text
+    # read in the current context, so with no notice that it may be wrong
+    assert "bc-notice-advisory" not in response.text
 
     # An unrecognized format (e.g. `.html`, `.xml`) falls through to the default
     # serialization, which is the HTML view.
     response = client.get(f"/works/{test_work_uuid}.html")
     assert response.status_code == 200
     assert response.headers["Content-Type"].startswith("text/html")
+
+
+def test_get_work_html_reads_a_newer_context_as_stored(client, db_session):
+    """A row written under a bibframe-json version this deploy does not ship,
+    as when the reframe DAG runs ahead of an upgrade: the page shows what it
+    can, and says some of it may be wrong, rather than showing only a uuid."""
+    work_uuid = "0b0c3f4e-5d2a-4c1e-9f7b-6a8d2e1c0b9a"
+    uri = f"https://bcld.info/works/{work_uuid}"
+    db_session.add(Work(id=96, uuid=work_uuid, uri=uri, data={"@id": uri}))
+    db_session.commit()
+    # Under the ORM, set_jsonld would frame this, and framing refuses the
+    # context, so it is written the way the DAG writes: as a column.
+    db_session.execute(
+        sqlalchemy.update(ResourceBase.__table__)
+        .where(ResourceBase.__table__.c.uri == uri)
+        .values(
+            data={
+                "@context": "https://bibframe-json.org/v9.9/context/bibframe.jsonld",
+                "@id": uri,
+                "@type": ["Work"],
+                "title": [{"mainTitle": ["The gunslinger"]}],
+            }
+        )
+    )
+    db_session.commit()
+    db_session.expire_all()
+
+    response = client.get(f"/works/{work_uuid}", headers={"Accept": "text/html"})
+
+    assert response.status_code == 200
+    assert "The gunslinger" in response.text
+    assert "bc-notice-advisory" in response.text
+    assert "may be missing or shown wrongly" in response.text
 
 
 def test_get_work_html_orders_variant_titles_under_the_title(client, db_session):
@@ -955,3 +992,45 @@ def test_get_work_html_drops_the_generic_format_beside_a_version(client, db_sess
     assert "<h2>Print version</h2>" in page
     assert "<h2>Other physical format</h2>" not in page
     assert page.count(f'href="{target}"') == 1
+
+
+def test_get_work_html_reads_contribution_from_the_model(client, db_session, mocker):
+    """
+    A record stored the way the reframe DAG writes one -- the bibframe-json
+    context named, every property a list -- has its contributions read from the
+    model.
+    """
+    from bluecore_api.app.views import fields
+
+    model_builder = mocker.spy(fields, "contribution_values")
+    uuid_ = "0d9d6e1c-2b8f-4c35-9a61-3f5e0c7a1b42"
+    uri = f"http://localhost/works/{uuid_}"
+    db_session.add(
+        Work(
+            id=90,
+            uuid=uuid_,
+            uri=uri,
+            data={
+                "@context": BIBFRAME_CONTEXT_URL,
+                "@id": uri,
+                "@type": ["Work", "Text"],
+                "title": [{"@type": ["Title"], "mainTitle": ["Dark tower"]}],
+                "contribution": [
+                    {
+                        "@type": ["Contribution", "PrimaryContribution"],
+                        "agent": [
+                            {"@type": ["Person"], "rdfs:label": ["King, Stephen"]}
+                        ],
+                        "role": [{"@id": "http://id.loc.gov/vocabulary/relators/aut"}],
+                    }
+                ],
+            },
+        )
+    )
+    db_session.commit()
+
+    page = client.get(f"/works/{uuid_}", headers={"Accept": "text/html"}).text
+
+    assert "King, Stephen" in page
+    assert 'href="http://id.loc.gov/vocabulary/relators/aut"' in page
+    model_builder.assert_called_once()

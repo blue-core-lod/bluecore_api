@@ -9,6 +9,13 @@
 {####  Content Block Section  ####}
 {% block content %}
     <h1 class="bc-doctype">{{ doc_type }}</h1>
+    {% if read_as_stored %}
+        {#### The record names a context this deploy cannot read; see views/model.read ####}
+        <p class="bc-notice bc-notice-advisory" role="note">
+            This record is stored in a format this version of Blue Core does not
+            recognise, so some of its fields may be missing or shown wrongly.
+        </p>
+    {% endif %}
     {% for field in fields %}
         {{ f.render_field(field) }}
     {% endfor %}

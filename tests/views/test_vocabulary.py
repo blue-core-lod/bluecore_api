@@ -18,6 +18,7 @@ from bluecore_api.app.views.vocabulary import (
     resolve_label,
     section_order,
 )
+from bluecore_api.schemas import bibframe
 
 RELATIONSHIP = "http://id.loc.gov/vocabulary/relationship/"
 ONLINE_VERSION = "http://id.loc.gov/entities/relationships/onlineversion"
@@ -100,7 +101,9 @@ def test_resolve_label_leaves_the_tail_when_the_map_has_nothing():
 
 
 def _relation(*terms):
-    return {"relationship": [{"@id": t} for t in terms]}
+    return bibframe.Relation.model_validate(
+        {"relationship": [{"@id": t} for t in terms]}
+    )
 
 
 def test_relationship_label_uses_lcs_wording_for_a_run_together_slug():
@@ -122,7 +125,7 @@ def test_relationship_label_prefers_a_vocabulary_label_we_hold():
 
 
 def test_relationship_label_falls_back_to_related():
-    assert relationship_labels({}, {}) == ["Related"]
+    assert relationship_labels(_relation(), {}) == ["Related"]
 
 
 def test_relationship_words_spaces_a_slug_it_can_read():

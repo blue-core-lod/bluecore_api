@@ -1,125 +1,27 @@
-"""Pulls readable text out of stored JSON-LD and wraps it for the templates.
+"""The bottom layer of the views: turning values into words and links.
 
-A "node" here is one JSON-LD object out of a record's stored data -- the dict
-sitting under a property like bf:title or bf:contribution. A node may carry a
-literal, an "@id" referring to another resource, or both, and a property may
-hold a single node or a list of them. The helpers below take whatever a property
-held and hand back text a template can print.
+`value_text` and `value_href` name and link any value a model holds, a
+literal or a reference. The rest
+are small helpers over uris and the display dicts the templates read:
+`value` makes one, `dedupe` drops repeats, `link_uri` decides what is worth
+linking to. `referenced_uris` is the one helper that still walks a stored
+record's raw JSON, because collecting every uri it mentions is a job over the
+whole graph rather than a reading of named properties.
 
-The bottom layer: it knows nothing about fields, sidebars or vocabularies.
+It knows nothing about fields, sidebars or vocabularies.
 """
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable
 from urllib.parse import urlparse
 
 from bluecore_models.utils.graph import CONTEXT
 
 from bluecore_api.constants import BLUECORE_URL
-
-RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
-
-# Stored data uses either the full uri or the short "rdf:value"; check both.
-RDF_VALUE_KEYS = (RDF_VALUE, "rdf:value")
+from bluecore_api.schemas import bibframe
 
 # The only host whose readable page url we know how to build.
 LC_ID_HOST = "id.loc.gov"
-
-
-def rdf_value(node: Mapping[str, object]) -> object:
-    """The rdf:value of a node, under whichever of the two key spellings it uses."""
-    for key in RDF_VALUE_KEYS:
-        if key in node:
-            return node[key]
-    return None
-
-
-def as_list(value: object) -> list:
-    """Wraps a value in a list unless it already is one, so callers can loop.
-
-    Stored JSON-LD holds one title as a bare node and two as a list, and most
-    code here does not care which it got.
-    """
-    if value is None:
-        return []
-    return value if isinstance(value, list) else [value]
-
-
-def first_node(value: object) -> dict | None:
-    """The first node a property holds, whether it holds one or a list of them.
-
-    For the callers that want one nested resource rather than a loop: the agent
-    of a contribution, the place of a provision activity, the source of an
-    identifier. Those were written as
-
-        agent.get("@id") if isinstance(agent, dict) else None
-
-    which quietly returns None once the same property arrives as a one-element
-    list, because a list is not a dict. Nothing raises. The name still renders,
-    because label_text() does handle lists -- so the text appears and only the
-    link goes missing, which is the worst way for this to fail and the reason
-    this is a named helper rather than an isinstance check repeated at each site.
-
-    Tolerates both shapes deliberately. bluecore-models is moving to making every
-    property a list, and the two shapes coexist until every row has been
-    re-framed; a record restored from an older backup will be the old shape long
-    after that.
-    """
-    for item in as_list(value):
-        if isinstance(item, dict):
-            return item
-    return None
-
-
-def scalar(value: object) -> str:
-    """Flattens whatever a key holds -- text, a wrapped literal, a list -- to plain text."""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, list):
-        return ", ".join(filter(None, (scalar(v) for v in value)))
-    if isinstance(value, dict):
-        if "@value" in value:
-            return str(value["@value"])
-        return label_text(value)
-    return str(value) if value is not None else ""
-
-
-def label_text(node: object) -> str:
-    """The best readable label a node offers, trying each place one can hide.
-
-    Titles, labels and codes all name a node in different records, so they are
-    tried in turn and the first one found wins.
-    """
-    if isinstance(node, str):
-        return node
-    if isinstance(node, list):
-        # dict.fromkeys drops repeated labels and keeps the original order.
-        return ", ".join(dict.fromkeys(filter(None, (label_text(n) for n in node))))
-    if not isinstance(node, dict):
-        return str(node) if node is not None else ""
-    for key in (
-        "mainTitle",
-        "rdfs:label",
-        "mads:authoritativeLabel",
-        "bflc:authoritativeLabel",
-        "label",
-    ):
-        if key in node:
-            return scalar(node[key])
-    if any(key in node for key in RDF_VALUE_KEYS):
-        return scalar(rdf_value(node)).strip()
-    # Some nodes have no label and are described by a nested note instead.
-    if "note" in node:
-        text = label_text(node["note"])
-        if text:
-            return text
-    if "code" in node:
-        return scalar(node["code"])
-    if "@value" in node:
-        return str(node["@value"])
-    if "@id" in node:
-        return id_tail(node["@id"])
-    return ""
 
 
 def id_tail(uri: str) -> str:
@@ -195,28 +97,6 @@ def link_uri(value: object) -> str | None:
     return None
 
 
-def node_href(item: object) -> str | None:
-    """Where a value should link to: its own uri, or the locator it points at.
-
-    Supplementary content has no uri of its own -- only an electronicLocator.
-    """
-    if not isinstance(item, dict):
-        return None
-    own = link_uri(item.get("@id"))
-    if own:
-        return own
-    locator = item.get("electronicLocator")
-    for candidate in as_list(locator):
-        if isinstance(candidate, dict):
-            found = link_uri(candidate.get("@id"))
-            if found:
-                return found
-        found = link_uri(candidate)
-        if found:
-            return found
-    return None
-
-
 def humanize(key: str) -> str:
     """Turns a json-ld key into a heading: "descriptionConventions" -> "Description conventions"."""
     name = key.rsplit("/", 1)[-1] if "://" in key else key.split(":")[-1]
@@ -268,53 +148,6 @@ def dedupe(values: list[dict[str, object]]) -> list[dict[str, object]]:
     return unique
 
 
-def split_titles(node: object) -> tuple[list[object], list[object]]:
-    """Split bf:title into the title proper and any variants.
-
-    A variant is any subtype of bf:Title; an untyped node counts as the proper one.
-    """
-    primary: list[object] = []
-    variant: list[object] = []
-    for item in as_list(node):
-        if isinstance(item, dict):
-            types = [id_tail(t) for t in as_list(item.get("@type"))]
-        else:
-            types = []
-        (variant if types and "Title" not in types else primary).append(item)
-    return primary, variant
-
-
-def subtitles(node: object) -> list[object]:
-    """The subtitles bf:title carries, in reading order.
-
-    A subtitle is a property of a title node rather than a node of its own, so it
-    cannot be picked out by type the way split_titles picks out variants. Only the
-    title proper is read: a variant's subtitle belongs with its variant.
-    """
-    found: list[object] = []
-    for item in split_titles(node)[0]:
-        if isinstance(item, dict):
-            found.extend(as_list(item.get("subtitle")))
-    return found
-
-
-def title_of(data: Mapping[str, object]) -> str:
-    """The one title that names a record, for a heading or a link.
-
-    Falls back to the access point, then to any plain label, so authorities and
-    agents -- which carry no title at all -- still come back with something.
-    """
-    # Only the title proper names the resource; variants would all get joined in.
-    primary, variant = split_titles(data.get("title"))
-    return (
-        label_text(primary)
-        or label_text(variant)
-        or scalar(data.get("bflc:aap", ""))
-        # Authorities and agents have no title at all, only a label.
-        or label_text(data)
-    )
-
-
 def capitalize(text: str) -> str:
     """Capitalizes the first letter only, leaving the rest as written.
 
@@ -323,13 +156,60 @@ def capitalize(text: str) -> str:
     return text[:1].upper() + text[1:]
 
 
-def access_point(data: Mapping[str, object]) -> str:
-    """The name LC writes a record under: "King, Stephen, 1947-. Dark tower".
+# --- reading the models -------------------------------------------------------
 
-    Held in bflc:aap or rdfs:label depending on the source; the title is a fallback.
+
+# Where a node writes its own name, in the order they win: a title in
+# mainTitle, an authority in mads:authoritativeLabel, an identifier in
+# rdf:value. An empty one is passed over, since it names nothing.
+NAMED_BY = (
+    "mainTitle",
+    "rdfs:label",
+    "mads:authoritativeLabel",
+    "bflc:authoritativeLabel",
+    "label",
+    "rdf:value",
+    bibframe.RDF_VALUE,
+)
+
+
+def value_text(value: bibframe.Value) -> str:
+    """The text a value shows: a literal's own text, or the name a node gives
+    itself.
+
+    A node is named by the first of NAMED_BY it fills, else the label of a note
+    it carries, else its code, else the tail of its uri. Every view names a
+    value this way, so an agent, a subject, a note and a property with no
+    builder of its own all read alike.
     """
-    for key in ("bflc:aap", "rdfs:label"):
-        text = scalar(data.get(key, ""))
+    if isinstance(value, bibframe.Text):
+        return str(value)
+    for name in (*NAMED_BY, "note", "code"):
+        text = distinct(map(value_text, value.values(name))).strip()
         if text:
             return text
-    return title_of(data)
+    return id_tail(value.uri) if value.uri else ""
+
+
+def distinct(texts: Iterable[str]) -> str:
+    """Several texts as one line, each once, in the order they came."""
+    return ", ".join(dict.fromkeys(filter(None, texts)))
+
+
+def value_href(value: bibframe.Value) -> str | None:
+    """Where a value links to: its own uri, or the locator it points at.
+
+    Supplementary content has no uri of its own -- only an electronicLocator.
+    """
+    if isinstance(value, bibframe.Text):
+        return None
+    own = link_uri(value.uri)
+    if own:
+        return own
+    for locator in value.values("electronicLocator"):
+        found = link_uri(
+            str(locator) if isinstance(locator, bibframe.Text) else locator.uri
+        )
+        if found:
+            return found
+    return None
