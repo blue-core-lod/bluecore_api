@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Analyze a MARC file and report statistics."""
+
+import argparse
+import os
+import sys
+from importlib.resources import files
+
+import rdflib
+from lxml import etree
+from pymarc import MARCReader
+from pymarc.marcxml import record_to_xml
+
+_COLLECTION_OPEN = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<collection xmlns="http://www.loc.gov/MARC21/slim">'
+)
+_COLLECTION_CLOSE = b"</collection>"
+
+_XSL_PATH = files("bluecore_api").joinpath("xsl/marc2bibframe2.xsl")
+_MARC2BF_TRANSFORM = etree.XSLT(etree.parse(str(_XSL_PATH)))
+
+
+def format_size(size_bytes):
+    """Format byte count to the most appropriate unit."""
+    if size_bytes >= 1_073_741_824:
+        return f"{size_bytes / 1_073_741_824:.2f} GB"
+    if size_bytes >= 1_048_576:
+        return f"{size_bytes / 1_048_576:.2f} MB"
+    return f"{size_bytes / 1024:.2f} KB"
+
+
+def get_control_number(record):
+    f001 = record.get_fields("001")
+    return f001[0].data.strip() if f001 else "unknown"
+
+
+def check_conversions(file_path):
+    failures = []
+
+    with open(file_path, "rb") as fh:
+        reader = MARCReader(fh)
+        for record in reader:
+            if record is None:
+                continue
+            ctrl = get_control_number(record)
+
+            # Convert to MARCXML
+            try:
+                marcxml_bytes = b"".join([
+                    _COLLECTION_OPEN,
+                    record_to_xml(record, namespace=False),
+                    _COLLECTION_CLOSE,
+                ])
+            except Exception:
+                failures.append((ctrl, "failed marcxml conversion"))
+                continue
+
+            # Convert MARCXML to BIBFRAME
+            try:
+                doc = etree.fromstring(marcxml_bytes)
+                rdfxml_bytes = etree.tostring(_MARC2BF_TRANSFORM(doc))
+                g = rdflib.Graph()
+                g.parse(data=rdfxml_bytes, format="xml")
+                g.serialize(format="json-ld")
+            except Exception:
+                failures.append((ctrl, "failed bibframe conversion"))
+
+    if failures:
+        print(f"\n{len(failures)} conversion failure(s):\n")
+        for ctrl, msg in failures:
+            print(f"{ctrl}: {msg}")
+    else:
+        print("\nAll records converted successfully.")
+
+
+def analyze(file_path):
+    file_size = os.path.getsize(file_path)
+
+    record_sizes = []
+    with open(file_path, "rb") as fh:
+        reader = MARCReader(fh)
+        for record in reader:
+            if record is not None:
+                record_sizes.append(len(record.as_marc()))
+
+    if not record_sizes:
+        print(f"File:            {file_path}")
+        print(f"File size:       {format_size(file_size)}")
+        print("No MARC records found.")
+        return
+
+    count = len(record_sizes)
+    avg_size = sum(record_sizes) / count
+    largest = max(record_sizes)
+    smallest = min(record_sizes)
+
+    print(f"File:            {file_path}")
+    print(f"File size:       {format_size(file_size)}")
+    print(f"Records:         {count:,}")
+    print(f"Avg record size: {format_size(avg_size)}")
+    print(f"Largest record:  {format_size(largest)}")
+    print(f"Smallest record: {format_size(smallest)}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Analyze a MARC file")
+    parser.add_argument("file", help="Path to the MARC file")
+    parser.add_argument(
+        "-c", action="store_true", help="Check each record for MARCXML and BIBFRAME conversion errors"
+    )
+    args = parser.parse_args()
+
+    if not os.path.isfile(args.file):
+        print(f"Error: {args.file} not found", file=sys.stderr)
+        sys.exit(1)
+
+    analyze(args.file)
+
+    if args.c:
+        check_conversions(args.file)
