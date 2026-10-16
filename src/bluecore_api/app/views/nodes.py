@@ -13,6 +13,8 @@ import re
 from collections.abc import Mapping
 from urllib.parse import urlparse
 
+from bluecore_models.utils.graph import CONTEXT
+
 from bluecore_api.constants import BLUECORE_URL
 
 RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
@@ -164,14 +166,32 @@ def referenced_uris(node: object, found: set[str]) -> None:
             referenced_uris(item, found)
 
 
+# The context's prefixes, so a compacted id can be linked to. Framing compacts
+# an @id against them, which turns ".../bibframe/relatedTo" into "bf:relatedTo".
+_PREFIXES = {
+    prefix: namespace
+    for prefix, namespace in CONTEXT.items()
+    if not prefix.startswith("@") and isinstance(namespace, str)
+}
+
+
+def expand_curie(value: str) -> str:
+    """The full uri behind a compacted id: "bf:relatedTo" -> ".../relatedTo"."""
+    prefix, sep, local = value.partition(":")
+    if sep and not local.startswith("//") and prefix in _PREFIXES:
+        return _PREFIXES[prefix] + local
+    return value
+
+
 def link_uri(value: object) -> str | None:
     """A uri worth linking to, or None.
 
     Blank-node ids like "_:b25" are strings but address nothing outside the
-    record they came from, so they never become links.
+    record they came from, so they never become links. A compacted id is
+    expanded first, since "bf:relatedTo" is no address either.
     """
     if isinstance(value, str) and not value.startswith("_:"):
-        return value
+        return expand_curie(value)
     return None
 
 

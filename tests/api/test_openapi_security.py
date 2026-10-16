@@ -182,11 +182,21 @@ def test_public_operations_do_not_document_401_or_403(openapi_schema):
 
 
 def test_auth_responses_do_not_clobber_route_defined_responses(openapi_schema):
-    """The injection uses setdefault. /marc2xml declares its own 200 with an XML
-    content type (convert.py) and that must survive."""
+    """The injection uses setdefault. The convert routes declare their own 200s
+    with non-JSON content types (convert.py) and those must survive."""
     responses = openapi_schema["paths"]["/marc2xml"]["post"]["responses"]
     assert "application/xml" in responses["200"]["content"]
     assert {"401", "403"} <= set(responses)
+
+    # /marc2bibframe declares four, one per serialization it negotiates.
+    bibframe = openapi_schema["paths"]["/marc2bibframe"]["post"]["responses"]
+    assert set(bibframe["200"]["content"]) == {
+        "application/ld+json",
+        "application/rdf+xml",
+        "text/turtle",
+        "application/n-triples",
+    }
+    assert {"401", "403"} <= set(bibframe)
 
 
 # --- Drift guard --------------------------------------------------------------

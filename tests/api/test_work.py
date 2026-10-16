@@ -12,8 +12,7 @@ from bluecore_models.models import (
     Work,
 )
 from bluecore_models.utils.graph import BF, CONTEXT, init_graph, load_jsonld
-
-from bluecore_api.constants import CONTEXT_URL
+from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
 
 test_work_uuid = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
 test_work_bluecore_uri = f"https://api.sinopia.io/resources/{test_work_uuid}"
@@ -75,8 +74,7 @@ def test_get_work_vnd_sinopia_json(client, db_session):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
-    data["data"]["@context"] = CONTEXT
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
     assert data["uri"].startswith(test_work_bluecore_uri)
 
@@ -96,8 +94,7 @@ def test_get_work_json(client, db_session):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
 
     fetched_graph = load_jsonld(data)
     assert len(fetched_graph) == len(orig_graph)
@@ -109,7 +106,7 @@ def test_get_expanded_work(client, db_session):
     # Test regular GET response without expand parameter
     regular_work_response = client.get(f"/works/{expanded_work_uuid}.vnd.sinopia.json")
     data = regular_work_response.json()["data"]
-    data["@context"] = CONTEXT
+    data["@context"] = BIBFRAME_CONTEXT_URL
     regular_work_graph = load_jsonld(data)
 
     assert len(regular_work_graph) == 2
@@ -120,8 +117,7 @@ def test_get_expanded_work(client, db_session):
         headers={"Accept": "application/vnd.sinopia+json"},
     )
     data = expanded_work_response.json()["data"]
-    assert data["@context"] == CONTEXT_URL
-    data["@context"] = CONTEXT
+    assert data["@context"] == BIBFRAME_CONTEXT_URL
     expanded_work_graph = load_jsonld(data)
 
     assert len(expanded_work_graph) == 5
@@ -139,7 +135,7 @@ def test_get_work_jsonld(client, db_session):
     response = client.get(f"/works/{test_work_uuid}.jsonld")
     assert response.status_code == 200
     assert response.json()["@id"] == test_work_bluecore_uri
-    assert response.json()["@context"] == CONTEXT_URL
+    assert response.json()["@context"] == BIBFRAME_CONTEXT_URL
 
 
 def test_get_work_rdf_xml(client, db_session):
@@ -304,7 +300,7 @@ def test_create_work(client, mocker, derived_from_sparql):
 
     assert create_response.status_code == 201
     data = create_response.json()
-    assert data["data"]["@context"] == CONTEXT_URL
+    assert data["data"]["@context"] == BIBFRAME_CONTEXT_URL
     data["data"]["@context"] = CONTEXT
     new_graph = init_graph()
 
@@ -360,7 +356,7 @@ def test_update_work(client, db_session):
     )
 
     assert update_response.status_code == 200
-    assert update_response.json()["data"]["@context"] == CONTEXT_URL
+    assert update_response.json()["data"]["@context"] == BIBFRAME_CONTEXT_URL
 
     get_response = client.get(f"/works/{work_uuid}.vnd.sinopia.json")
     assert get_response.status_code == 200
@@ -407,7 +403,7 @@ def test_update_work_round_trips_downloaded_jsonld(client, db_session, monkeypat
     work_uuid = create_response.json()["uri"].split("/")[-1]
 
     downloaded = client.get(f"/works/{work_uuid}.jsonld").json()
-    assert downloaded["@context"] == CONTEXT_URL
+    assert downloaded["@context"] == BIBFRAME_CONTEXT_URL
 
     update_response = client.put(
         f"/works/{work_uuid}",
