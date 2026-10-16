@@ -23,9 +23,9 @@ def _main_column(
     """The fields and the heading of a record's page, and the model they are
     read from, for the sidebar.
 
-    A record the models will not read at all -- one naming another
-    bibframe-json version, which views/model.py logs -- gets its uuid for a
-    heading and nothing else.
+    A record the models will not read at all -- stored data that is no JSON
+    object, which views/model.py logs -- gets its uuid for a heading and
+    nothing else.
     """
     resource = model.as_model(record)
     if resource is None:
@@ -67,6 +67,7 @@ def render_instance_html(instance: Instance, request: Request) -> Response:
             "doc_type": "BIBFRAME Instance",
             "title": title,
             "fields": main_fields,
+            "read_as_stored": resource is not None and resource.read_as_stored,
             "sidebar": sidebar_sections,
             "resource_uri": instance.uri,
             "is_work": False,
@@ -115,6 +116,7 @@ def render_work_html(work: Work, request: Request) -> Response:
             "doc_type": "BIBFRAME Work",
             "title": title,
             "fields": main_fields,
+            "read_as_stored": resource is not None and resource.read_as_stored,
             "sidebar": sidebar_sections,
             "resource_uri": work.uri,
             "is_work": True,
@@ -174,6 +176,7 @@ def render_hub_html(hub: Hub, request: Request) -> Response:
             "doc_type": "BIBFRAME Hub",
             "title": title,
             "fields": main_fields,
+            "read_as_stored": resource is not None and resource.read_as_stored,
             "sidebar": sidebar_sections,
             "resource_uri": hub.uri,
             "is_work": False,

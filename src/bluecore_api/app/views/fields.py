@@ -176,35 +176,25 @@ def identifier_values(
 def ref_text(
     ref: bibframe.Ref | None, label_map: dict[str, str]
 ) -> tuple[str, str | None]:
-    """The text and link for a reference: its own label, else the vocabulary's,
-    else the tail of its uri."""
-    return _named(ref, ("label",), label_map)
-
-
-def _stated(ref: bibframe.Ref, names: tuple[str, ...]) -> str | None:
-    """The first of these properties the record states for `ref`, as one line.
-
-    None when it states none of them. A property stated but empty counts as
-    stated, and gives "": the record said something, and said nothing.
-    """
-    for name in names:
-        if name in ref.model_fields_set:
-            return ", ".join(filter(None, map(nodes.value_text, getattr(ref, name))))
-    return None
-
-
-def _named(
-    ref: bibframe.Ref | None, names: tuple[str, ...], label_map: dict[str, str]
-) -> tuple[str, str | None]:
-    """The text and link for a reference: the first of `names` it states, else
-    the vocabulary's label, else the tail of its uri."""
+    """The text and link for a reference: the name it gives itself, else the
+    vocabulary's label, else the tail of its uri."""
     if ref is None:
         return "", None
     href = nodes.link_uri(ref.uri)
-    text = _stated(ref, names)
-    if text is None:
-        text = nodes.id_tail(ref.uri) if ref.uri else ""
-    return vocabulary.resolve_label(href, text, label_map), href
+    return vocabulary.resolve_label(href, nodes.value_text(ref), label_map), href
+
+
+def _stated(ref: bibframe.Ref, names: tuple[str, ...]) -> str | None:
+    """The first of these properties the record fills for `ref`, as one line.
+
+    None when it fills none of them. A property stated but empty is passed
+    over: it names nothing, so the next one gets its turn.
+    """
+    for name in names:
+        text = nodes.distinct(map(nodes.value_text, getattr(ref, name)))
+        if text:
+            return text
+    return None
 
 
 def contribution_values(
@@ -306,16 +296,20 @@ def provision_values(
 
 
 def note_values(
-    notes: list[bibframe.Ref], label_map: dict[str, str]
+    notes: list[bibframe.Value], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
     """A note led by its kind: "description source: Created from auth.".
 
     The kind is a second @type beside bf:Note, and it is what tells otherwise
-    similar notes apart.
+    similar notes apart. A note written as a plain literal has no kind, only
+    its text.
     """
     values: list[dict[str, object]] = []
     for note in notes:
-        text = _stated(note, ("label",)) or ""
+        text = nodes.value_text(note)
+        if isinstance(note, bibframe.Text):
+            values.append(nodes.value(text))
+            continue
         kinds = [t for t in note.types if nodes.id_tail(t) != "Note"]
         kind = ""
         if kinds:
@@ -422,9 +416,6 @@ def _scheme_tag(source_id: str | None, href: str | None) -> str:
 
 
 # Where a controlled term states its name, in the order they win.
-TERM_NAMES = ("label", "authoritative_label", "code")
-
-
 def authority_values(
     terms: list[bibframe.Term], label_map: dict[str, str]
 ) -> list[dict[str, object]]:
@@ -435,7 +426,7 @@ def authority_values(
     """
     values: list[dict[str, object]] = []
     for term in terms:
-        text, href = _named(term, TERM_NAMES, label_map)
+        text, href = ref_text(term, label_map)
         value = nodes.value(text or (href or ""), href)
         tag = _scheme_tag(term.source[0].uri if term.source else None, href)
         if tag:
@@ -447,10 +438,7 @@ def authority_values(
 def _title_text(title: bibframe.Title) -> str:
     """A title's text, which is its main title: the subtitle has a heading of
     its own. A title with no main title may say what it is in a note."""
-    text = _stated(title, ("main", "label"))
-    if text is None:
-        text = ", ".join(filter(None, (_stated(n, ("label",)) for n in title.note)))
-    return text
+    return nodes.value_text(title)
 
 
 def title_values(titles: list[bibframe.Title]) -> list[dict[str, object]]:

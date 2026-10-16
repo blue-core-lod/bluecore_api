@@ -395,6 +395,15 @@ body {
   color: #7f1d1d;
 }
 
+/* The same amber as the stub flags: an advisory about the record, not an
+   error the reader caused. */
+.bc-notice-advisory {
+  margin: 0 0 16px;
+  border-color: #b45309;
+  background: #fffbeb;
+  color: #78350f;
+}
+
 
 /*############################################################################*/
 /*#######  Advisories: Stub Flags and Tooltips Section  #######*/

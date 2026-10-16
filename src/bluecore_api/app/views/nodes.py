@@ -1,7 +1,7 @@
 """The bottom layer of the views: turning values into words and links.
 
 `value_text` and `value_href` name and link any value a model holds, a
-literal or a reference, wherever nothing more particular reads it. The rest
+literal or a reference. The rest
 are small helpers over uris and the display dicts the templates read:
 `value` makes one, `dedupe` drops repeats, `link_uri` decides what is worth
 linking to. `referenced_uris` is the one helper that still walks a stored
@@ -159,26 +159,35 @@ def capitalize(text: str) -> str:
 # --- reading the models -------------------------------------------------------
 
 
-def value_text(value: bibframe.Value) -> str:
-    """The text a value shows wherever nothing more particular reads it.
+# Where a node writes its own name, in the order they win: a title in
+# mainTitle, an authority in mads:authoritativeLabel, an identifier in
+# rdf:value. An empty one is passed over, since it names nothing.
+NAMED_BY = (
+    "mainTitle",
+    "rdfs:label",
+    "mads:authoritativeLabel",
+    "bflc:authoritativeLabel",
+    "label",
+    "rdf:value",
+    bibframe.RDF_VALUE,
+)
 
-    A literal's own text. A node's label, else its rdf:value, else the label
-    of a note it carries, else its code, else the tail of its uri -- the ways
-    the values on stage are actually named, in the order they win.
+
+def value_text(value: bibframe.Value) -> str:
+    """The text a value shows: a literal's own text, or the name a node gives
+    itself.
+
+    A node is named by the first of NAMED_BY it fills, else the label of a note
+    it carries, else its code, else the tail of its uri. Every view names a
+    value this way, so an agent, a subject, a note and a property with no
+    builder of its own all read alike.
     """
     if isinstance(value, bibframe.Text):
         return str(value)
-    if value.states("rdfs:label"):
-        return ", ".join(filter(None, map(value_text, value.label)))
-    if value.states("rdf:value"):
-        return ", ".join(
-            filter(None, map(value_text, value.values("rdf:value")))
-        ).strip()
-    noted = distinct(value_text(note) for note in value.values("note"))
-    if noted:
-        return noted
-    if value.states("code"):
-        return ", ".join(filter(None, map(value_text, value.values("code"))))
+    for name in (*NAMED_BY, "note", "code"):
+        text = distinct(map(value_text, value.values(name))).strip()
+        if text:
+            return text
     return id_tail(value.uri) if value.uri else ""
 
 

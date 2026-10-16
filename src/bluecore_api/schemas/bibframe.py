@@ -17,22 +17,29 @@ here should become a `response_model`, or these models turn into a second
 specification of the shape alongside bibframe-json's own.
 """
 
+import logging
 from functools import cache
 from typing import Annotated, Any
 
 from bluecore_models.utils.graph import CONTEXT_URL
 from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
     Field,
     PrivateAttr,
     TypeAdapter,
+    ValidationError,
     model_validator,
 )
+
+logger = logging.getLogger(__name__)
 
 # The context a record has to name for these models to read it: the
 # bibframe-json version bluecore-models frames with.
 CURRENT_CONTEXT = CONTEXT_URL
+
+RDF_VALUE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
 
 
 class Text(BaseModel):
@@ -116,7 +123,14 @@ class Ref(BaseModel):
         held = (self.model_extra or {}).get(name)
         if held is None:
             return []
-        return _values().validate_python(held if isinstance(held, list) else [held])
+        try:
+            return _values().validate_python(held if isinstance(held, list) else [held])
+        except ValidationError:
+            # read() checks only the modelled properties, so an unmodelled one
+            # is checked here, as it is asked for; leaving it out costs the
+            # page that field and no other
+            logger.warning("%s: leaving out %s, which will not read", self.uri, name)
+            return []
 
     def properties(self) -> dict[str, list["Value"]]:
         """Every property the record states, in its order, as `values()` reads
@@ -167,7 +181,12 @@ class Contribution(Ref):
 class Identifier(Ref):
     """A number that names a resource: an ISBN, an LCCN, a local number."""
 
-    value: list[Text] = Field(default_factory=list, alias="rdf:value")
+    # Framing writes rdf:value compacted, but a record can spell it in full.
+    value: list[Text] = Field(
+        default_factory=list,
+        alias="rdf:value",
+        validation_alias=AliasChoices("rdf:value", RDF_VALUE),
+    )
     qualifier: list[Text] = Field(default_factory=list)
     status: list[Ref] = Field(default_factory=list)
 
@@ -215,8 +234,8 @@ class Title(Ref):
     main: list[Text] = Field(default_factory=list, alias="mainTitle")
     subtitle: list[Text] = Field(default_factory=list)
     # where a title with no mainTitle can still say what it is, as "English
-    # summary title: ..." does
-    note: list[Ref] = Field(default_factory=list)
+    # summary title: ..." does; a note can be a plain literal or a Note node
+    note: list[Value] = Field(default_factory=list)
 
     @property
     def is_variant(self) -> bool:
@@ -231,6 +250,17 @@ class Title(Ref):
 class Resource(Ref):
     """What a Work, Instance and Hub have in common."""
 
+    # Set by views/model.read for a record naming a context framing cannot
+    # read, so read as it was stored, its terms taken to mean what they mean
+    # in the current context.
+    _read_as_stored: bool = PrivateAttr(default=False)
+
+    @property
+    def read_as_stored(self) -> bool:
+        """Whether the record was read as stored, unframed, so that some of
+        its fields may be missing or mean something else."""
+        return self._read_as_stored
+
     classification: list[Classification] = Field(default_factory=list)
     contribution: list[Contribution] = Field(default_factory=list)
     provision_activity: list[ProvisionActivity] = Field(
@@ -239,7 +269,8 @@ class Resource(Ref):
     subject: list[Term] = Field(default_factory=list)
     genre_form: list[Term] = Field(default_factory=list, alias="genreForm")
     identified_by: list[Identifier] = Field(default_factory=list, alias="identifiedBy")
-    note: list[Ref] = Field(default_factory=list)
+    # a plain literal, or a Note node with its label and kind
+    note: list[Value] = Field(default_factory=list)
     title: list[Title] = Field(default_factory=list)
     # The name LC files a record under: "King, Stephen, 1947-. Dark tower".
     aap: list[Text] = Field(default_factory=list, alias="bflc:aap")
