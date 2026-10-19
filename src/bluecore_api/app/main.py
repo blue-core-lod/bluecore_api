@@ -118,7 +118,7 @@ async def mcp_permissions(request: Request, auth=Depends(get_auth)):
     """
     if request.method == "GET":
         return
-    _mcp_write_permission(user=None, auth=auth or [])
+    _mcp_write_permission(request, auth=auth or [])
 
 
 mcp = FastApiMCP(

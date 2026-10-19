@@ -36,18 +36,20 @@ def test_mcp_post_without_auth_is_rejected_by_keycloak(keycloak_client):
     assert response.status_code == 401
 
 
-def test_mcp_without_required_permissions(keycloak_client):
+@pytest.mark.parametrize("roles", ["", "export"])
+def test_mcp_without_required_permissions(keycloak_client, roles):
     """Test that MCP access is denied without create/update permissions."""
     payload = {"jsonrpc": "2.0", "method": "initialize", "params": {}, "id": 1}
-    headers = {"X-User": "public"}  # public user has no special roles
+    headers = {"X-User": "public", "X-Roles": roles}
     response = keycloak_client.post("/mcp", json=payload, headers=headers)
     # Should be denied without required permissions
     assert response.status_code == 403
 
 
-def test_mcp_post_with_permissions_clears_gate(keycloak_client):
+@pytest.mark.parametrize("roles", ["create", "update", "create,update"])
+def test_mcp_post_with_permissions_clears_gate(keycloak_client, roles):
     """
-    POST /mcp as a create/update user passes the keyclaok auth and reaches the MCP app.
+    POST /mcp with either create or update permission reaches the MCP app.
     """
     payload = {
         "jsonrpc": "2.0",
@@ -60,7 +62,8 @@ def test_mcp_post_with_permissions_clears_gate(keycloak_client):
         "id": 1,
     }
     headers = {
-        "X-User": "cataloger",
+        "X-User": "public",
+        "X-Roles": roles,
         "Accept": "application/json, text/event-stream",
     }
     response = keycloak_client.post("/mcp", json=payload, headers=headers)
