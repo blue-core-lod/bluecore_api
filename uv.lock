@@ -148,7 +148,7 @@ dev = [
 requires-dist = [
     { name = "bluecore-models", specifier = ">=0.37.0" },
     { name = "fastapi", extras = ["standard"] },
-    { name = "fastapi-keycloak-middleware", specifier = ">=1.2.0" },
+    { name = "fastapi-keycloak-middleware", specifier = ">=2.0.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
     { name = "jinja2", specifier = ">=3.1.6" },
     { name = "lxml", specifier = ">=6.0.2" },

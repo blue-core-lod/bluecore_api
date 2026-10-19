@@ -114,11 +114,11 @@ async def mcp_permissions(request: Request, auth=Depends(get_auth)):
     """
     Auth for the MCP mount.
     GET /mcp (the SSE/discovery stream) is public it's and bypassed upstream by
-    BypassKeycloakForGet, so get_auth is None here
+    BypassKeycloakForGet, so get_auth is an empty list here
     """
     if request.method == "GET":
         return
-    _mcp_write_permission(request, auth=auth or [])
+    _mcp_write_permission(request, auth=auth)
 
 
 mcp = FastApiMCP(
@@ -148,12 +148,6 @@ async def static_files(path: str) -> FileResponse:
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
-async def scope_mapper(claim_auth: list) -> list:
-    """Role mapper — keycloak middleware passes the decoded claim as a dict at runtime."""
-    permissions = claim_auth.get("roles", [])  # ty: ignore[unresolved-attribute]
-    return permissions
-
-
 """Auth or dev mode config"""
 if os.getenv("DEVELOPER_MODE") == "true":
     enable_developer_mode(base_app)
@@ -166,13 +160,13 @@ else:
         realm="bluecore",
         client_id=os.getenv("API_KEYCLOAK_CLIENT_ID", ""),
         authorization_method=AuthorizationMethod.CLAIM,
-        authorization_claim="realm_access",
+        # Dot path into the nested claim; the middleware resolves it to the roles list
+        authorization_claim="realm_access.roles",
     )
 
     keycloak_middleware = KeycloakMiddleware(
         app=base_app,
         keycloak_configuration=keycloak_config,
-        scope_mapper=scope_mapper,
         exclude_patterns=[],
     )
 
