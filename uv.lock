@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -110,7 +110,7 @@ wheels = [
 
 [[package]]
 name = "bluecore-api"
-version = "0.36.1"
+version = "0.36.2"
 source = { editable = "." }
 dependencies = [
     { name = "bluecore-models" },
@@ -146,7 +146,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bluecore-models", specifier = ">=0.37.0" },
+    { name = "bluecore-models", specifier = ">=0.37.2" },
     { name = "fastapi", extras = ["standard"] },
     { name = "fastapi-keycloak-middleware", specifier = ">=2.0.0" },
     { name = "fastapi-mcp", specifier = ">=0.4.0" },
@@ -179,7 +179,7 @@ dev = [
 
 [[package]]
 name = "bluecore-models"
-version = "0.37.1"
+version = "0.37.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -190,9 +190,9 @@ dependencies = [
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/6e/5852aa753d93bb0976721f951e68a382bf347c8eac6292f42b35c4b57671/bluecore_models-0.37.1.tar.gz", hash = "sha256:47debd13dbb93628b336e4d1e6200c746f81eb6351ff8acf4ae57908b5d4abf5", size = 219702, upload-time = "2026-10-19T16:39:48.552Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/c0/ff2a741bbbb1f98381aefd4266df79a0f10b937770fc14bc5459348975a7/bluecore_models-0.37.2.tar.gz", hash = "sha256:0c3f8e1a2fadeb41bac20894748e344b58334155dc67872aa9c44f4023569800", size = 220066, upload-time = "2026-10-20T13:46:01.557Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/d1/c85ef7f194d075ffba5593ea9a9b56a2db1257ec17927cff409f562cfd66/bluecore_models-0.37.1-py3-none-any.whl", hash = "sha256:e6aaa3951a10aed42dad9f5ae181179d67c199fca133b9e4402a8fd4f5bd8d83", size = 78775, upload-time = "2026-10-19T16:39:47.203Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/bd/21fc2d33a84b9e7bb6dc3965e070c1a878f9d0919c2b15a4643faa7c8298/bluecore_models-0.37.2-py3-none-any.whl", hash = "sha256:1bdd12a24893c36ed8c8b7e7d3fb8e6ecf442560da80e72b72d872b4db49213a", size = 78861, upload-time = "2026-10-20T13:46:00.083Z" },
 ]
 
 [[package]]
