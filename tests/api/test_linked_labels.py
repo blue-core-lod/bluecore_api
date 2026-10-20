@@ -5,7 +5,8 @@ needs one or it loads unlabeled and fails "Label required" on every reload.
 """
 
 import rdflib
-from bluecore_models.models import Instance, Work
+import sqlalchemy
+from bluecore_models.models import Instance, ResourceBase, Work
 from bluecore_models.utils.graph import load_jsonld
 from rdflib import RDFS, Literal, URIRef
 
@@ -83,6 +84,27 @@ def test_instance_labels_its_work(client, db_session):
     plain = _graph(client, f"/instances/{INSTANCE_UUID}")
     assert _labels(plain, WORK_URI) == []
     assert len(plain) == len(load_jsonld(instance_data))
+
+
+def test_malformed_language_tag_is_dropped(client, db_session):
+    _, instance_data = _add_pair(db_session)
+    # bluecore_models' after_insert hook parses data with rdflib, which rejects
+    # "en_US", so write the bad tag with a Core UPDATE that skips the hook, as a
+    # row loaded outside the ORM would have it.
+    instance_data["title"] = {
+        "@type": "Title",
+        "mainTitle": {"@value": "Pride and prejudice", "@language": "en_US"},
+    }
+    db_session.execute(
+        sqlalchemy.update(ResourceBase.__table__)
+        .where(ResourceBase.__table__.c.uri == INSTANCE_URI)
+        .values(data=instance_data)
+    )
+    db_session.commit()
+    db_session.expire_all()
+
+    expanded = _graph(client, f"/works/{WORK_UUID}?expand=true")
+    assert _labels(expanded, INSTANCE_URI) == [Literal("Pride and prejudice")]
 
 
 def test_untitled_instance_gets_no_label(client, db_session):

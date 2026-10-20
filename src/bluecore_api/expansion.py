@@ -66,7 +66,11 @@ def _linked_resources(db_resource: ResourceBase) -> list[Hub | Instance | Work]:
 
 def _main_title(resource: Hub | Instance | Work) -> Literal | None:
     """The mainTitle of the resource's title proper, else its first mainTitle
-    of any title, keeping the language tag; None if it has no mainTitle."""
+    of any title, keeping the language tag; None if it has no mainTitle.
+
+    A language tag rdflib rejects, such as "en_US", is dropped rather than
+    failing the whole response over one linked record's title.
+    """
     read = model.as_model(resource)
     if read is None:
         return None
@@ -74,5 +78,8 @@ def _main_title(resource: Hub | Instance | Work) -> Literal | None:
     for title in [*proper, *read.title]:
         if title.main:
             text = title.main[0]
-            return Literal(text.value, lang=text.language)
+            try:
+                return Literal(text.value, lang=text.language)
+            except ValueError:
+                return Literal(text.value)
     return None
