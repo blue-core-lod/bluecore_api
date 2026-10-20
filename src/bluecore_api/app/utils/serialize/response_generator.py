@@ -13,7 +13,11 @@ from bluecore_api.app.views.render import (
     render_instance_html,
     render_work_html,
 )
-from bluecore_api.expansion import expand_resource_as_graph, expand_resource_graph
+from bluecore_api.expansion import (
+    add_linked_labels,
+    expand_resource_as_graph,
+    expand_resource_graph,
+)
 from bluecore_api.schemas.schemas import HubSchema, InstanceSchema, WorkSchema
 
 
@@ -23,6 +27,7 @@ def create_response(
     graph = load_jsonld_from_model(doc.data)
     if expand:
         graph = expand_resource_as_graph(doc, graph)
+        graph = add_linked_labels(doc, graph)
     return Response(
         content=graph.serialize(format=format),
         media_type=return_type,
