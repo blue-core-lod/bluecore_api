@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Display MARC records in a human-readable format."""
+
+import argparse
+import os
+import sys
+
+from pymarc import MARCReader
+
+FIELD_LABELS = {
+    "001": "Control Number",
+    "003": "Control Number ID",
+    "005": "Last Modified",
+    "008": "Fixed Data",
+    "010": "LCCN",
+    "020": "ISBN",
+    "022": "ISSN",
+    "035": "System Control No.",
+    "040": "Cataloging Source",
+    "050": "LC Call Number",
+    "082": "Dewey Number",
+    "100": "Author",
+    "110": "Corporate Author",
+    "111": "Meeting Name",
+    "130": "Uniform Title",
+    "245": "Title",
+    "246": "Alternate Title",
+    "250": "Edition",
+    "260": "Publication",
+    "264": "Production",
+    "300": "Physical Description",
+    "336": "Content Type",
+    "337": "Media Type",
+    "338": "Carrier Type",
+    "490": "Series",
+    "500": "Note",
+    "504": "Bibliography Note",
+    "505": "Contents",
+    "520": "Summary",
+    "600": "Subject (Person)",
+    "610": "Subject (Corporate)",
+    "630": "Subject (Title)",
+    "650": "Subject",
+    "651": "Subject (Geographic)",
+    "655": "Genre",
+    "700": "Added Author",
+    "710": "Added Corporate",
+    "776": "Additional Form",
+    "800": "Series Added (Person)",
+    "830": "Series Added (Title)",
+    "856": "Electronic Location",
+}
+
+
+def print_record(record, index):
+    print("-----------------------------------")
+    print(f"Record {index}")
+    print("-----------------------------------")
+    for field in record.get_fields():
+        tag = field.tag
+        label = FIELD_LABELS.get(tag, f"Field {tag}")
+
+        if field.is_control_field():
+            print(f"{label}: {field.data}")
+        else:
+            print(f"{label}: {field.value()}")
+
+    print()
+
+
+def display(file_path, control_number=None):
+    with open(file_path, "rb") as fh:
+        reader = MARCReader(fh)
+        for i, record in enumerate(reader, 1):
+            if record is None:
+                continue
+            if control_number:
+                f001 = record.get_fields("001")
+                if f001 and f001[0].data.strip() == control_number:
+                    print_record(record, i)
+                    return
+            else:
+                print_record(record, i)
+
+    if control_number:
+        print(f"No record found with control number: {control_number}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Display MARC records")
+    parser.add_argument("file", help="Path to the MARC file")
+    parser.add_argument("-c", metavar="CONTROL_NUMBER", help="Display only the record with this control number")
+    args = parser.parse_args()
+
+    if not os.path.isfile(args.file):
+        print(f"Error: {args.file} not found", file=sys.stderr)
+        sys.exit(1)
+
+    display(args.file, args.c)
