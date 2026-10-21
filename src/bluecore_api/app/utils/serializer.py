@@ -57,13 +57,21 @@ def accept_media_types(accept_header: str) -> Iterator[str]:
 
 
 def serialize(
-    doc: Hub | Instance | Work, expand: bool, format: str | None, request: Request
+    doc: Hub | Instance | Work,
+    expand: bool,
+    format: str | None,
+    request: Request,
+    *,
+    allow_html: bool = True,
 ) -> Response | None:
+    """With allow_html=False, "text/html" is skipped rather than matched, so a
+    browser's Accept list falls through to its next type or the caller's default.
+    Versions use this: they have no HTML view of their own."""
     if format in serializer_format_registry:
         return serializer_format_registry[format](doc, expand)
     for accept in accept_media_types(request.headers.get("accept", "")):
         if (
-            accept == "text/html"
+            accept == "text/html" and allow_html
         ):  # HTML is reached by content negotiation "Accept: text/html"
             return as_html(doc, request)
         if accept in serializer_accept_registry:
