@@ -91,6 +91,16 @@ For local development with the environment file created above:
 
 The application should then be available at http://localhost:3000
 
+### Running without Keycloak (`DEVELOPER_MODE`)
+
+To exercise write routes locally without a running Keycloak, add this to your `.env`:
+
+```text
+DEVELOPER_MODE=true
+```
+
+The API then skips the Keycloak middleware entirely and treats every request as the user `developer` with the `create`, `export` and `update` roles, so POST, PUT and DELETE routes work without a token. Startup prints a `DEVELOPER_MODE is ON` banner as a reminder. Versions written this way are attributed to `anonymous`, since there is no JWT to read a user from. Never set this outside local development.
+
 ## 🧑‍💻 Blue Core Client
 
 Loading data and talking to the API by hand are both done with the [Blue Core Client]
