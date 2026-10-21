@@ -3,11 +3,13 @@ from typing import Annotated, cast
 from uuid import UUID
 
 from bluecore_models.models import Hub, Instance, Profile, ResourceBase, Version, Work
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import set_committed_value
 
-from bluecore_api.app.utils.jsonld import with_context
+from bluecore_api.app.utils.serialize.response_generator import as_jsonld
+from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
     HubSchema,
@@ -22,6 +24,16 @@ endpoints = APIRouter()
 
 VERSION_ID = Path(
     description="The integer version id, as returned by the versions list. Example: 42"
+)
+
+# Hubs, Works and Instances take a serialization suffix, as the live routes do:
+# "42.ttl", "42.cbd.jsonld". Anything else is still a 422.
+SERIALIZABLE_VERSION_ID = Path(
+    description=(
+        "The integer version id, as returned by the versions list, optionally "
+        "followed by a serialization suffix. Examples: 42, 42.ttl, 42.jsonld"
+    ),
+    pattern=r"^\d+(\.[a-z]+)*$",
 )
 
 
@@ -102,62 +114,62 @@ def version_or_404(db: Session, resource: ResourceBase, version_id: int) -> Vers
     return version
 
 
-def version_payload(
-    resource: ResourceBase, version: Version
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
-    resource_uuid = cast(UUID | None, resource.uuid)
-    if isinstance(resource, Profile):
-        """
-        A Profile's snapshot is handed back exactly as stored: its data is
-        expanded JSON-LD (a list of nodes keyed by full URI) rather than the
-        framed object the resources below hold, and it carries no @context
-        because sinopia_editor parses profiles by hand and does not honor one
-        -- see _mint_resource_template in routes/profiles.py. Injecting a
-        @context here would also mean mutating a list as if it were a dict.
+def profile_version_payload(resource: Profile, version: Version) -> ProfileSchema:
+    """
+    A Profile's snapshot is handed back exactly as stored: its data is
+    expanded JSON-LD (a list of nodes keyed by full URI) rather than the
+    framed object the resources below hold, and it carries no @context
+    because sinopia_editor parses profiles by hand and does not honor one
+    -- see _mint_resource_template in routes/profiles.py. Injecting a
+    @context here would also mean mutating a list as if it were a dict.
 
-        ProfileSchema has no updated_at to carry the snapshot's own timestamp,
-        which matches the live GET /profiles/{uuid}; the caller already holds
-        it from the list endpoint.
-        """
-        return ProfileSchema(
-            id=resource.id,
-            uuid=resource_uuid,
-            uri=resource.uri,
-            data=cast(dict[str, object] | list[object], version.data),
-        )
-    data = dict(cast(dict[str, object], version.data))
-    with_context(data)
-    if isinstance(resource, Instance):
-        return InstanceSchema(
-            id=resource.id,
-            type=resource.type,
-            uri=resource.uri,
-            uuid=resource_uuid,
-            data=data,
-            created_at=resource.created_at,
-            updated_at=version.created_at,
-            work_id=resource.work_id,
-        )
-    if isinstance(resource, Work):
-        return WorkSchema(
-            id=resource.id,
-            type=resource.type,
-            uri=resource.uri,
-            uuid=resource_uuid,
-            data=data,
-            created_at=resource.created_at,
-            updated_at=version.created_at,
-            hub_id=resource.hub_id,
-        )
-    return HubSchema(
+    ProfileSchema has no updated_at to carry the snapshot's own timestamp,
+    which matches the live GET /profiles/{uuid}; the caller already holds
+    it from the list endpoint.
+    """
+    return ProfileSchema(
         id=resource.id,
-        type=resource.type,
+        uuid=cast(UUID | None, resource.uuid),
         uri=resource.uri,
-        uuid=resource_uuid,
-        data=data,
-        created_at=resource.created_at,
-        updated_at=version.created_at,
+        data=cast(dict[str, object] | list[object], version.data),
     )
+
+
+def as_version(resource: Hub | Instance | Work, version: Version) -> None:
+    """
+    Show the loaded resource as it was at this version, so the same serializers
+    the live routes use can render it. Identity comes from the live resource;
+    only data and updated_at come from the snapshot.
+
+    set_committed_value rather than assignment: assigning marks the row dirty,
+    and the lazy loads inside expand would autoflush an UPDATE of the live row
+    with old data, firing add_version(). get_db never commits, so that is rolled
+    back, but a read should not depend on the rollback to leave history alone.
+    """
+    set_committed_value(resource, "data", dict(cast(dict[str, object], version.data)))
+    set_committed_value(resource, "updated_at", version.created_at)
+
+
+def serialize_version(
+    db: Session,
+    model: type[Hub | Instance | Work],
+    uuid: str,
+    version_id: str,
+    expand: bool,
+    request: Request,
+) -> Response:
+    """
+    Negotiate a version the way the live resource routes do (a ".ttl" style
+    suffix or the Accept header), except that it falls back to JSON-LD rather
+    than HTML. Only application/vnd.sinopia+json gets the wrapped schema.
+    """
+    id_part, format = (
+        version_id.split(".", 1) if "." in version_id else (version_id, None)
+    )
+    resource = cast(Hub | Instance | Work, resource_or_404(db, model, uuid))
+    as_version(resource, version_or_404(db, resource, int(id_part)))
+    resp = serialize(resource, expand, format, request, allow_html=False)
+    return resp if resp else as_jsonld(resource, expand)
 
 
 @endpoints.get(
@@ -180,12 +192,13 @@ async def read_hub_versions(
 )
 async def read_hub_version(
     hub_uuid: str,
-    version_id: Annotated[int, VERSION_ID],
+    version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
+    request: Request,
+    expand: bool = False,
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
-    """Return one historical version of a Hub as stored JSON-LD."""
-    resource = resource_or_404(db, Hub, hub_uuid)
-    return version_payload(resource, version_or_404(db, resource, version_id))
+) -> Response:
+    """Return one historical version of a Hub, as JSON-LD by default."""
+    return serialize_version(db, Hub, hub_uuid, version_id, expand, request)
 
 
 @endpoints.get(
@@ -208,12 +221,13 @@ async def read_work_versions(
 )
 async def read_work_version(
     work_uuid: str,
-    version_id: Annotated[int, VERSION_ID],
+    version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
+    request: Request,
+    expand: bool = False,
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
-    """Return one historical version of a Work as stored JSON-LD."""
-    resource = resource_or_404(db, Work, work_uuid)
-    return version_payload(resource, version_or_404(db, resource, version_id))
+) -> Response:
+    """Return one historical version of a Work, as JSON-LD by default."""
+    return serialize_version(db, Work, work_uuid, version_id, expand, request)
 
 
 @endpoints.get(
@@ -236,12 +250,13 @@ async def read_instance_versions(
 )
 async def read_instance_version(
     instance_uuid: str,
-    version_id: Annotated[int, VERSION_ID],
+    version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
+    request: Request,
+    expand: bool = False,
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
-    """Return one historical version of an Instance as stored JSON-LD."""
-    resource = resource_or_404(db, Instance, instance_uuid)
-    return version_payload(resource, version_or_404(db, resource, version_id))
+) -> Response:
+    """Return one historical version of an Instance, as JSON-LD by default."""
+    return serialize_version(db, Instance, instance_uuid, version_id, expand, request)
 
 
 @endpoints.get(
@@ -266,7 +281,7 @@ async def read_profile_version(
     profile_uuid: str,
     version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
+) -> ProfileSchema:
     """Return one historical version of a Profile as stored JSON-LD."""
-    resource = resource_or_404(db, Profile, profile_uuid)
-    return version_payload(resource, version_or_404(db, resource, version_id))
+    resource = cast(Profile, resource_or_404(db, Profile, profile_uuid))
+    return profile_version_payload(resource, version_or_404(db, resource, version_id))
