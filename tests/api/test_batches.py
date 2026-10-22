@@ -3,7 +3,12 @@ import re
 from pathlib import Path
 
 import pytest
+from pymarc import Field, Record, Subfield
+from pymarc.field import Indicators
 from pytest_httpx import HTTPXMock
+from rdflib import RDF, Graph, Namespace
+
+BF = Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 # ------------------------------
 # Helpers
@@ -258,3 +263,182 @@ async def test_upload_json_body_missing_rdfxml(client, monkeypatch, tmp_path):
     )
     assert resp.status_code == 422
     assert "Provide 'rdfxml' in the JSON body" in resp.text
+
+
+# ------------------------------
+# /batches/upload/ (MARC -> BIBFRAME JSON-LD -> resource_loader)
+# ------------------------------
+def _marc_bytes(*titles: str) -> bytes:
+    """Binary MARC21, one record per title, each with its own 001."""
+    records = []
+    for number, title in enumerate(titles, start=1):
+        record = Record()
+        record.add_field(Field(tag="001", data=f"rec{number}"))
+        record.add_field(
+            Field(
+                tag="245",
+                indicators=Indicators("1", "0"),
+                subfields=[Subfield("a", title)],
+            )
+        )
+        records.append(record.as_marc())
+    return b"".join(records)
+
+
+MARCXML_TWO_RECORDS = b"""<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim">
+  <record>
+    <leader>01142cam a2200301 a 4500</leader>
+    <controlfield tag="001">111</controlfield>
+    <controlfield tag="008">920219s1993    caua          001 0 eng  </controlfield>
+    <datafield tag="245" ind1="1" ind2="0"><subfield code="a">Title A</subfield></datafield>
+  </record>
+  <record>
+    <leader>01142cam a2200301 a 4500</leader>
+    <controlfield tag="001">222</controlfield>
+    <controlfield tag="008">920219s1994    caua          001 0 eng  </controlfield>
+    <datafield tag="245" ind1="1" ind2="0"><subfield code="a">Title B</subfield></datafield>
+  </record>
+</collection>"""
+
+
+def _saved_graph(data: dict) -> Graph:
+    """Parse the file the upload handed Airflow, as resource_loader would."""
+    assert data["uri"].endswith(".jsonld")
+    saved_path = Path("./uploads") / data["uri"].split("uploads/")[-1]
+    return Graph().parse(saved_path, format="json-ld")
+
+
+def _titles(graph: Graph) -> set[str]:
+    return {str(o) for o in graph.objects(None, BF.mainTitle)}
+
+
+def _airflow_conf(httpx_mock: HTTPXMock) -> dict:
+    return json.loads(httpx_mock.get_requests()[1].content)["conf"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "filename,content_type",
+    [
+        ("records.mrc", "application/octet-stream"),
+        ("RECORDS.MARC", "application/octet-stream"),
+        ("export.bin", "application/marc"),
+    ],
+)
+async def test_upload_multipart_marc_converts_every_record(
+    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path, filename, content_type
+):
+    monkeypatch.chdir(tmp_path)
+    _mock_airflow_chain(httpx_mock, dag_run_id="marc-1")
+
+    files = {"file": (filename, _marc_bytes("Title A", "Title B"), content_type)}
+    resp = client.post("/batches/upload/", headers={"X-User": "cataloger"}, files=files)
+
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["workflow_id"] == "marc-1"
+    # every record in the file, not just the first: this is the bulk path
+    assert _titles(_saved_graph(data)) == {"Title A", "Title B"}
+    # what resource_loader is handed is the converted JSON-LD, not the MARC
+    assert _airflow_conf(httpx_mock)["file"] == data["uri"]
+
+
+@pytest.mark.asyncio
+async def test_upload_raw_marc_body(
+    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
+):
+    monkeypatch.chdir(tmp_path)
+    _mock_airflow_chain(httpx_mock, dag_run_id="marc-2")
+
+    resp = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger", "Content-Type": "application/marc"},
+        content=_marc_bytes("Title A", "Title B", "Title C"),
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert _titles(_saved_graph(resp.json())) == {"Title A", "Title B", "Title C"}
+
+
+@pytest.mark.asyncio
+async def test_upload_raw_marcxml_body_is_read_as_marc_not_rdfxml(
+    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
+):
+    monkeypatch.chdir(tmp_path)
+    _mock_airflow_chain(httpx_mock, dag_run_id="marc-3")
+
+    resp = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger", "Content-Type": "application/xml"},
+        content=MARCXML_TWO_RECORDS,
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert _titles(_saved_graph(resp.json())) == {"Title A", "Title B"}
+
+
+@pytest.mark.asyncio
+async def test_upload_marc_matches_marc2bibframe(
+    client, httpx_mock: HTTPXMock, monkeypatch, tmp_path
+):
+    """Both routes into Blue Core must agree, Blue Core policy included."""
+    monkeypatch.chdir(tmp_path)
+    _mock_airflow_chain(httpx_mock, dag_run_id="marc-4")
+    marc = _marc_bytes("Title A")
+    base = "https://example.edu/catalog/"
+
+    upload = client.post(
+        f"/batches/upload/?source_base_uri={base}",
+        headers={"X-User": "cataloger"},
+        files={"file": ("one.mrc", marc, "application/octet-stream")},
+    )
+    converted = client.post(
+        f"/marc2bibframe?source_base_uri={base}",
+        headers={"X-User": "cataloger", "Content-Type": "application/marc"},
+        content=marc,
+    )
+
+    assert upload.status_code == 200, upload.text
+    assert converted.status_code == 200, converted.text
+    ingested = _saved_graph(upload.json())
+    expected = Graph().parse(data=converted.text, format="json-ld")
+    # Compare the minted subjects rather than whole graphs: the transform
+    # stamps a generation time, and blank nodes differ from run to run.
+    assert set(ingested.subjects(RDF.type, BF.Work)) == set(
+        expected.subjects(RDF.type, BF.Work)
+    )
+    assert any(str(s).startswith(base) for s in ingested.subjects(RDF.type, BF.Work))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "body", [b"", b"this is not MARC"], ids=["empty", "unreadable"]
+)
+async def test_upload_bad_marc_is_422_without_starting_a_dag(
+    client, monkeypatch, tmp_path, body
+):
+    """No Airflow call is mocked, so pytest-httpx fails the test if one is made."""
+    monkeypatch.chdir(tmp_path)
+
+    resp = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger"},
+        files={"file": ("bad.mrc", body, "application/octet-stream")},
+    )
+
+    assert resp.status_code == 422, resp.text
+
+
+@pytest.mark.asyncio
+async def test_upload_marc_rejects_a_bad_source_base_uri(client, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    resp = client.post(
+        "/batches/upload/?source_base_uri=not-a-uri",
+        headers={"X-User": "cataloger"},
+        files={"file": ("one.mrc", _marc_bytes("Title A"), "application/marc")},
+    )
+
+    assert resp.status_code == 422
+    assert "source_base_uri" in resp.text
