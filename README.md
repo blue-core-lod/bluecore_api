@@ -211,9 +211,21 @@ answer synchronously, and the service runs a single worker, so an unbounded requ
 stall every other call to the API: load testing with real Library of Congress records
 measured 11 ms for one record against 9.5 s for a thousand.
 
-Bulk MARC belongs in a batch workflow, which today means the [Blue Core Workflows]
-`marc_to_bibframe` DAG: `/batches/upload/` passes its uploads to the `resource_loader` DAG,
-and that reads JSON-LD rather than MARC.
+Bulk MARC goes to `POST /batches/upload/` instead, which ingests it rather than returning
+it. A `.mrc` or `.marc` file, a part or raw body typed `application/marc`, or a raw
+`application/xml` body whose root is a MARCXML `<collection>`, is converted with the same
+transform as `/marc2bibframe`, any number of records, and the resulting JSON-LD is handed
+to the `resource_loader` DAG. It takes the same `source_base_uri` parameter:
+
+```shell
+curl --header "Authorization: Bearer $(bluecore token)" \
+  --form file=@records.mrc \
+  'http://localhost:3000/batches/upload/?source_base_uri=https://example.edu/catalog/'
+```
+
+The conversion still runs inside the API, in the request, before the workflow id comes
+back. It runs off the event loop, so other requests are slowed rather than stalled, but a
+file of many thousands of records takes minutes to answer.
 
 MARCXML saved by a Windows editor often starts with an invisible byte order mark. That is
 ignored, so such a file is still read as XML.
