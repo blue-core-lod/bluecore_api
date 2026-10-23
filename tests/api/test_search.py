@@ -4,9 +4,10 @@ import pathlib
 import pytest
 from bluecore_models.models import Hub, Instance, Profile, Work
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from bluecore_api.app.routes.search import format_query
+from bluecore_api.app.routes.search import format_query, search_tsquery
 
 
 def test_format_query():
@@ -30,11 +31,11 @@ def test_format_query():
     )
     assert (
         format_query('"Ocean Becoming : Pacific pavements"')
-        == "Ocean <-> Becoming <-> \\: <-> Pacific <-> pavements"
+        == "Ocean <-> Becoming <-> Pacific <-> pavements"
     )
     assert (
         format_query('"phrase with ampersand & test"')
-        == "phrase <-> with <-> ampersand <-> \\& <-> test"
+        == "phrase <-> with <-> ampersand <-> test"
     )
     assert (
         format_query('"phrase with ampersand&test2"')
@@ -50,11 +51,11 @@ def test_format_query():
     )
     assert (
         format_query('"phrase with double ampersand && test"')
-        == "phrase <-> with <-> double <-> ampersand <-> \\&\\& <-> test"
+        == "phrase <-> with <-> double <-> ampersand <-> test"
     )
     assert (
         format_query('"phrase with | or operator test"')
-        == "phrase <-> with <-> \\| <-> or <-> operator <-> test"
+        == "phrase <-> with <-> or <-> operator <-> test"
     )
     assert (
         format_query('"phrase with|or operator test2"')
@@ -96,7 +97,7 @@ def test_format_query():
     assert format_query("colon :test4") == "colon & test4"
     assert (
         format_query('"phrase colon escape : test"')
-        == "phrase <-> colon <-> escape <-> \\: <-> test"
+        == "phrase <-> colon <-> escape <-> test"
     )
     assert (
         format_query('"phrase colon escape:test2"')
@@ -513,14 +514,112 @@ def test_bad_query_trailing_operator(client: TestClient, db_session: Session):
     assert result["total"] == 1
 
 
-def test_bad_query_colon_in_phrase(client: TestClient, db_session: Session):
+def test_colon_in_phrase(client: TestClient, db_session: Session):
     add_data(db_session)
 
-    # kumae <-> \: <-> chedo <-> mit doesn't match because of the escaped colon
+    # The parser holds no token for a lone ':', so the phrase is kumae <-> chedo
+    # <-> mit. Escaping it instead left a gap no document could fill (#300).
     response = client.get("/search/", params={"q": '"kumae : chedo mit"'})
     result = response.json()
-    assert len(result["results"]) == 0
-    assert result["total"] == 0
+    assert len(result["results"]) == 1
+    assert result["total"] == 1
+
+
+# Queries that reached to_tsquery as malformed syntax and returned a 500 (#300).
+OPERATOR_QUERIES = [
+    "fish & chips",
+    "a ! b",
+    "a!b",
+    "a )b",
+    "a(b)",
+    "((",
+    "a <-> b",
+    "a <2> b",
+    "a & !b",
+    "& foo",
+    "| foo",
+    "foo || bar",
+    "x::y",
+    "a\\",
+    "'a",
+    '"rock <-> roll"',
+    '"a ! b"',
+    "’Tis",
+    "«Le Monde»",
+    "Symphony 8½",
+]
+
+
+@pytest.mark.parametrize("query", OPERATOR_QUERIES)
+def test_to_tsquery_accepts_operator_characters(db_session: Session, query: str):
+    """The query builder must never emit a string to_tsquery rejects.
+
+    This runs the real pipeline, unaccent included: unaccent rewrites some
+    characters into tsquery syntax after format_query has run, ’ into '.
+    """
+    search_query = search_tsquery(query)
+    if search_query is not None:  # "((" holds no terms at all
+        db_session.scalar(select(search_query))
+
+
+@pytest.mark.parametrize("path", ["/search/", "/search", "/search/profile"])
+@pytest.mark.parametrize("query", OPERATOR_QUERIES)
+def test_operator_characters_are_not_an_error(
+    client: TestClient, db_session: Session, path: str, query: str
+):
+    assert client.get(path, params={"q": query}).status_code == 200
+
+
+def _titled_work(db_session: Session, id_: int, title: str) -> str:
+    uri = f"https://bcld.info/works/00000000-0000-0000-0000-000000000{id_}"
+    db_session.add(
+        Work(
+            id=id_,
+            uuid=uri.rsplit("/", 1)[-1],
+            uri=uri,
+            data={"@id": uri, "@type": "Work", "title": {"mainTitle": title}},
+        )
+    )
+    db_session.commit()
+    return uri
+
+
+@pytest.mark.parametrize(
+    "query", ["fish & chips", "Fish&chips", '"fish & chips"', "fish & chips*"]
+)
+def test_ampersand_finds_the_title(client: TestClient, db_session: Session, query: str):
+    uri = _titled_work(db_session, 301, "Fish & chips")
+    _titled_work(db_session, 302, "Fish and other sea creatures")
+
+    response = client.get("/search/", params={"q": query})
+    assert [r["uri"] for r in response.json()["results"]] == [uri]
+
+
+def test_quoted_ampersand_finds_the_phrase(client: TestClient, db_session: Session):
+    """The index holds rock:1 roll:2 for "Rock & roll". Escaping the & made the
+    phrase three tokens long, so it matched nothing (#300)."""
+    uri = _titled_work(db_session, 303, "Rock & roll")
+
+    response = client.get("/search/", params={"q": '"rock & roll"'})
+    assert [r["uri"] for r in response.json()["results"]] == [uri]
+
+
+def test_ampersand_in_the_html_search(client: TestClient, db_session: Session):
+    _titled_work(db_session, 304, "Marks & Spencer")
+
+    response = client.get("/search", params={"q": "Marks & Spencer"})
+    assert response.status_code == 200
+    assert "Marks &amp; Spencer" in response.text
+
+
+def test_ampersand_in_a_profile_search(client: TestClient, db_session: Session):
+    add_profiles(db_session)
+
+    response = client.get(
+        "/search/profile",
+        params={"q": "& id.loc.gov/ontologies/bibframe/language &"},
+    )
+    assert response.json()["total"] == 2
 
 
 def test_search_profile_no_match(client: TestClient, db_session: Session):

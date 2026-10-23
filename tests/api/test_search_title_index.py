@@ -225,8 +225,5 @@ def test_an_empty_query_is_not_an_error(
     )
 
 
-# A query carrying a bare tsquery operator -- "fish & chips", "a ! b", "a <-> b"
-# -- reaches to_tsquery as malformed syntax and 500s, and a quoted phrase holding
-# one silently matches nothing. Both are in format_query, both predate the title
-# scope and affect every scope, so they are tracked as their own issue rather
-# than pinned here. See https://github.com/blue-core-lod/bluecore_api/issues/300.
+# Bare and quoted tsquery operators -- "fish & chips", "a ! b", '"rock & roll"'
+# -- affect every scope, and are covered in test_search.py (#300).
