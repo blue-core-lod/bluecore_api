@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 from typing import Literal
 from urllib.parse import urlencode
 
@@ -37,68 +38,122 @@ BLUECORE_URL: str = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 endpoints = APIRouter()
 
-SPACE_CONDENSER = re.compile(r"\s+")
-PHRASE_MAPPER = re.compile(r'"([^"]+)"')
-OR_MAPPER = re.compile(r"\s*\|\s*")
-COLLON_MAPPER = re.compile(r"\s*:\s*")
-INVALID_WILDCARD_MAPPER = re.compile(r"(\*\s*)+")
-PHRASE_LEADING_WILDCARD_MAPPER = re.compile(r"^(\*(__PH__)*)+")
-TRAILING_OPERATOR_MAPPER = re.compile(r"\s*(&|\|)\s*$")
+QUOTED_PHRASE = re.compile(r'"([^"]*)"')
+# A ':' between two terms, as in "bluecore:bf2:Work", but not the one in "://".
+TERM_COLON = re.compile(r":(?!//)")
+# A run of text, and whether a '*' wildcard follows it.
+WILDCARD_PIECE = re.compile(r"([^*]+)(\*?)")
+WORD_CHARACTER = re.compile(r"\w")
+# Characters to_tsquery reads as syntax rather than text. '*' is handled as the
+# wildcard before anything is escaped, and '"' never reaches to_tsquery.
+TSQUERY_SYNTAX = frozenset("&|!()<>:'\\")
+
+
+def _separate_symbols(text: str) -> str:
+    """
+    Turn non-ASCII punctuation, symbols and fractions into spaces.
+
+    unaccent runs after format_query, in SQL, and rewrites some of these into
+    tsquery syntax: « becomes <<, © becomes (C), ½ becomes " 1/2". A backslash
+    can't escape a character that turns into two, so they are dropped instead.
+    The text parser discards them when it indexes a document anyway.
+    """
+    return "".join(
+        " " if not ch.isascii() and _is_symbol(unicodedata.category(ch)) else ch
+        for ch in text
+    )
+
+
+def _is_symbol(category: str) -> bool:
+    """Punctuation, a symbol, or a number that isn't a digit (½, ⑴)."""
+    return category[0] in "PS" or category == "No"
+
+
+def _escape(text: str) -> str:
+    """
+    Backslash escape text so to_tsquery reads it as a single operand.
+
+    Non-ASCII letters are escaped too: unaccent rewrites a few of them into
+    syntax, ʻ into ', and leaves the backslash in front of what it produces.
+    Escaping any other letter is harmless.
+    """
+    return "".join(
+        "\\" + ch
+        if ch in TSQUERY_SYNTAX
+        or not ch.isascii()
+        and unicodedata.category(ch).startswith("L")
+        else ch
+        for ch in text
+    )
+
+
+def _terms(word: str) -> list[str]:
+    """
+    The tsquery operands for one whitespace-free word.
+
+    A '*' marks the text before it as a prefix ("worl*" -> "worl:*") and splits
+    the word there, so "inval*wildcard" is two terms. A piece with no letter or
+    digit in it, a bare "&" or "<->", is dropped: the document side holds no
+    token for it, so in a phrase it would be a gap the index can never match.
+    """
+    return [
+        _escape(piece) + (":*" if wildcard else "")
+        for piece, wildcard in WILDCARD_PIECE.findall(word)
+        if WORD_CHARACTER.search(piece)
+    ]
 
 
 def format_query(query: str) -> str:
     """
-    Format query
-        - Remove leading and trailing spaces.
-        - Remove invalid wildcards (e.g. "hello * world *" -> "hello world ").
-        - Combine consecutive spaces into a single space.
-        - Replace spaces inside double quotes with <-> for phrase search.
-        - Reserved characters like ':' in the phrase can cause issues with the full-text search parser.
-          Currently &, |, : characters inside quotes are escaped. Add more special characters when reported.
-        - Leave '|' sequences outside a phrase intact for OR operations.
-        - Replace spaces outside a phrase with ' & ' for AND operations.
-        - Replace '*' with ':*' for wildcard search.
+    Format a user query as to_tsquery input.
+
+    Query syntax:
+        - "double quotes" search for a phrase: its terms are joined with <->.
+        - '|' outside a phrase is OR.
+        - '*' after a term is a prefix search ("worl*" -> "worl:*"). A '*' with
+          nothing before it is dropped.
+        - ':' outside a phrase separates terms, except in "://".
+        - Anything else separated by spaces is ANDed.
+
+    Every other tsquery operator, '&', '!', '(', ')', '<->', is literal text.
+    It is escaped when it sits inside a word ("AT&T"), and dropped when it
+    stands alone ("fish & chips"), because the document side holds no token
+    for it. The result is always valid to_tsquery syntax.
 
     Known limitations:
         - The asterisk (*) character cannot be used as literal value of a query string.
+        - '!' and '(' ')' are not NOT or grouping.
     """
 
-    formatted = query.strip()
-    if not formatted or formatted == "*":
-        return ""
+    # Each item is an operand, or None for an OR between two of them.
+    items: list[str | None] = []
+    for index, segment in enumerate(QUOTED_PHRASE.split(_separate_symbols(query))):
+        if index % 2:
+            phrase = [term for word in segment.split() for term in _terms(word)]
+            if phrase:
+                items.append(" <-> ".join(phrase))
+            continue
+        for position, alternative in enumerate(segment.replace('"', " ").split("|")):
+            if position:
+                items.append(None)
+            items.extend(
+                term
+                for word in alternative.split()
+                for part in TERM_COLON.split(word)
+                for term in _terms(part)
+            )
 
-    formatted = TRAILING_OPERATOR_MAPPER.sub("", formatted)
-    formatted = INVALID_WILDCARD_MAPPER.sub("* ", formatted).replace(" * ", " ")
-    formatted = SPACE_CONDENSER.sub(" ", formatted)
-    formatted = PHRASE_MAPPER.sub(
-        lambda m: (
-            m.group(1)
-            .strip()
-            .replace("&", "\\&")
-            .replace("|", "__OR_ESCAPE__")
-            .replace(":", "__COLON_ESCAPE__")
-            .replace(" ", "__PH__")
-        ),
-        formatted,
-    )
-    formatted = PHRASE_LEADING_WILDCARD_MAPPER.sub("", formatted)
-    formatted = (
-        OR_MAPPER.sub("__OR__", formatted)
-        .replace("__OR_ESCAPE__", "\\|")
-        .replace("://", "__PROTOCOL_ESCAPE__")
-    )
-    return (
-        (
-            COLLON_MAPPER.sub(" ", formatted)
-            .replace("__PROTOCOL_ESCAPE__", "\\://")
-            .replace("__COLON_ESCAPE__", "\\:")
-        )
-        .strip()
-        .replace(" ", " & ")
-        .replace("__OR__", " | ")
-        .replace("__PH__", " <-> ")
-        .replace("*", ":*")
-    )
+    formatted = ""
+    pending_or = False
+    for item in items:
+        if item is None:
+            pending_or = bool(formatted)
+        else:
+            if formatted:
+                formatted += " | " if pending_or else " & "
+            formatted += item
+            pending_or = False
+    return formatted
 
 
 def search_tsquery(q: str):
