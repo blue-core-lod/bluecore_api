@@ -204,8 +204,8 @@ base_app.add_middleware(
     allow_headers=["*"],
     # Browsers hide every response header outside the CORS safelist from
     # cross-origin scripts unless it is listed here, and an editor needs to read
-    # ETag to send it back in If-Match.
-    expose_headers=["ETag"],
+    # ETag to send it back in If-Match. A CBD carries one per resource instead.
+    expose_headers=["ETag", "Bluecore-Instance-ETag", "Bluecore-Work-ETag"],
 )
 
 

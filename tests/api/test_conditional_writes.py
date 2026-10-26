@@ -330,7 +330,11 @@ def test_cors_exposes_etag(client, work_path):
     )
     assert response.headers["Access-Control-Allow-Origin"] == "*"
     exposed = response.headers["Access-Control-Expose-Headers"].lower().split(",")
-    assert "etag" in [header.strip() for header in exposed]
+    exposed = [header.strip() for header in exposed]
+    assert "etag" in exposed
+    # and the per-resource ETags a CBD carries
+    assert "bluecore-instance-etag" in exposed
+    assert "bluecore-work-etag" in exposed
 
 
 def test_cors_exposes_etag_on_412(client, work_path):

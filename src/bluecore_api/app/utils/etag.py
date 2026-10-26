@@ -81,6 +81,23 @@ def resource_etag(resource: Instance | Work) -> str:
     return '"' + hashlib.sha256(token.encode()).hexdigest()[:32] + '"'
 
 
+def composite_etag_headers(instance: Instance) -> dict[str, str]:
+    """
+    The ETags of the resources a CBD lets a client save, one header each.
+
+    A CBD spans several resources, so no one ETag can stand for it (see
+    with_etag in serializer.py). But an editor reads an Instance and its Work
+    from it and saves each with If-Match, so it needs both, read in the same
+    request as the data they vouch for: fetched separately, a save that landed
+    in between would go unnoticed. Each value is an entity-tag, to send back in
+    If-Match as it is.
+    """
+    headers = {"Bluecore-Instance-ETag": resource_etag(instance)}
+    if instance.work is not None:
+        headers["Bluecore-Work-ETag"] = resource_etag(instance.work)
+    return headers
+
+
 def if_match_satisfied(if_match: str, etag: str) -> bool:
     """
     Whether an If-Match header value admits the current ETag.
