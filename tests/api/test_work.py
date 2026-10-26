@@ -396,7 +396,8 @@ def test_create_work_reports_why_it_could_not_be_saved(client, mocker):
 
     assert response.status_code == 422
     assert response.json() == {
-        "detail": "Unable to save resource: Unable to find subject URI for bf:Work"
+        "title": "Unable to save resource",
+        "detail": "Unable to find subject URI for bf:Work",
     }
 
 

@@ -159,7 +159,8 @@ async def bluecore_graph_error(request: Request, exc: BluecoreGraphError):
     """
     logger.warning("Unable to save %s %s: %s", request.method, request.url.path, exc)
     return JSONResponse(
-        status_code=422, content={"detail": f"Unable to save resource: {exc}"}
+        status_code=422,
+        content={"title": "Unable to save resource", "detail": str(exc)},
     )
 
 
