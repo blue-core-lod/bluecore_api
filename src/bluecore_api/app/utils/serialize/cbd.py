@@ -1,11 +1,14 @@
 import copy
 import json
 from collections.abc import Callable, Sequence
+from typing import Any
 
+import bibframe_json
 from bluecore_models.models import Instance, Work
-from bluecore_models.utils.graph import terms_for
+from bluecore_models.utils.graph import CONTEXT, terms_for
 from fastapi import HTTPException
 from lxml import etree
+from pyld import jsonld
 from rdflib import Graph, Namespace
 from sqlalchemy.orm import object_session
 
@@ -228,14 +231,93 @@ def generate_cbd_xml(graph: Graph, primary_uris: Sequence[str] = ()):
     return root
 
 
+def bounded_description(instance: Instance) -> dict[str, Any]:
+    """
+    The CBD as bibframe-json's bounded description: the Instance at the root,
+    its Work embedded under instanceOf, and everything else described where it
+    is first referenced.
+
+    The graph is the same one cbd.xml serializes, and so are the triples; only
+    the arrangement differs. RDF/XML has no natural root, so LC's CBD puts the
+    principal resources side by side, which is what Marva reads. JSON has one,
+    so here the document is the Instance, and a client reads it without
+    rejoining URIs.
+
+    These are the steps bibframe-json gives for producing the shape
+    (example/produce.py there). Framing is one of them; the others are what
+    framing won't do: make every property an array, drop the blank node labels
+    framing invents, and name the context by URL instead of inlining its 12,000
+    bytes. "@embed": "@once" describes a resource the first time it is reached
+    and references it after, which keeps the document finite: the Work's
+    hasInstance points back to the root by URI.
+    """
+    graph = generate_cbd_graph(instance)
+    expanded = json.loads(graph.serialize(format="json-ld"))
+    framed = jsonld.frame(
+        expanded,
+        {
+            "@context": CONTEXT,
+            "@id": instance.uri,
+            "@embed": "@once",
+            "@omitDefault": True,
+        },
+    )
+    document = without_blank_ids(as_arrays(framed))
+    document["@context"] = bibframe_json.CONTEXT_URL
+    return document
+
+
+# Keywords holding one value by definition, which the array rule doesn't reach.
+SINGULAR_KEYWORDS = ("@context", "@id", "@value", "@language", "@direction", "@index")
+
+
+def as_arrays(node: Any) -> Any:
+    """
+    Every property an array, which the context's @container: @set promises only
+    for the terms it declares. @type is a list of classes on a node, so it is
+    wrapped, but one datatype IRI on a value object, so it is not.
+    """
+    if isinstance(node, list):
+        return [as_arrays(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    literal = "@value" in node
+    result: dict[str, Any] = {}
+    for key, value in node.items():
+        if key in SINGULAR_KEYWORDS:
+            result[key] = value
+        elif key == "@type":
+            result[key] = value if literal or isinstance(value, list) else [value]
+        else:
+            listed = value if isinstance(value, list) else [value]
+            result[key] = [as_arrays(item) for item in listed]
+    return result
+
+
+def without_blank_ids(node: Any) -> Any:
+    """
+    Drop the _:b0-style @id framing gives a node that has none. bibframe-json
+    forbids an @id on a blank node: it addresses nothing outside the document,
+    and keeping it would make two identical values differ by accident.
+    """
+    if isinstance(node, list):
+        return [without_blank_ids(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    return {
+        key: without_blank_ids(value)
+        for key, value in node.items()
+        if not (key == "@id" and isinstance(value, str) and value.startswith("_:"))
+    }
+
+
 def cbd_jsonld(instance: Instance) -> str:
     if isinstance(instance, Work):
         raise HTTPException(
             status_code=400, detail="CBD serialization is only supported for Instances"
         )
 
-    instance_graph = generate_cbd_graph(instance)
-    return instance_graph.serialize(format="json-ld", indent=2)
+    return json.dumps(bounded_description(instance), indent=2)
 
 
 def cbd_xml(instance: Instance) -> str:
