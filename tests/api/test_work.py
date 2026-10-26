@@ -5,6 +5,7 @@ import re
 import pytest
 import rdflib
 import sqlalchemy
+from bluecore_models.bluecore_graph import BluecoreGraphError
 from bluecore_models.models import (
     BibframeOtherResources,
     Hub,
@@ -359,6 +360,45 @@ def test_create_work(client, mocker, derived_from_sparql):
     assert data["created_at"] == data["updated_at"], (
         "created_at and updated_at should match on creation"
     )
+
+
+@pytest.mark.xfail(
+    reason="https://github.com/blue-core-lod/bluecore-models/issues/203",
+    strict=True,
+)
+def test_create_work_with_blank_node_accompanying_work(client, db_session):
+    """A new Work can nest another Work without a URI, as the editor's
+    Monograph Work template does for the language of an accompanying Work."""
+    work = {
+        "@type": str(BF.Work),
+        str(BF.accompaniedBy): {
+            "@type": str(BF.Work),
+            str(BF.language): {"@id": "http://id.loc.gov/vocabulary/languages/lat"},
+        },
+    }
+    response = client.post(
+        "/works/", headers={"X-User": "cataloger"}, json={"data": json.dumps(work)}
+    )
+
+    assert response.status_code == 201
+
+
+def test_create_work_reports_why_it_could_not_be_saved(client, mocker):
+    mocker.patch(
+        "bluecore_api.app.routes.works.save_graph",
+        side_effect=BluecoreGraphError("Unable to find subject URI for bf:Work"),
+    )
+    response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger"},
+        json={"data": json.dumps({"@type": str(BF.Work)})},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "title": "Unable to save resource",
+        "detail": "Unable to find subject URI for bf:Work",
+    }
 
 
 def test_update_work(client, db_session):

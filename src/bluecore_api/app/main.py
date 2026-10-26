@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -18,6 +19,7 @@ from bluecore_api.app.config.logging_setup import setup_logging
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../")
 
+from bluecore_models.bluecore_graph import BluecoreGraphError
 from bluecore_models.utils.graph import CONTEXT
 
 from bluecore_api.app.routes.batches import endpoints as batch_endpoints
@@ -143,6 +145,23 @@ async def static_files(path: str) -> FileResponse:
     ):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(full_path)
+
+
+logger = logging.getLogger(__name__)
+
+
+@base_app.exception_handler(BluecoreGraphError)
+async def bluecore_graph_error(request: Request, exc: BluecoreGraphError):
+    """
+    save_graph raises BluecoreGraphError when it can't make sense of the graph it
+    was given, e.g. a Work with no URI that nests another Work with no URI. Report
+    that to the client as a 422 instead of letting it become a bare 500.
+    """
+    logger.warning("Unable to save %s %s: %s", request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=422,
+        content={"title": "Unable to save resource", "detail": str(exc)},
+    )
 
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
