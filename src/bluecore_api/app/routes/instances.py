@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from rdflib import RDF, URIRef
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.create import load_new_resource, save_new_resource
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import INSTANCE_EXAMPLE
 from bluecore_api.app.utils.jsonld import load_jsonld_from_model, with_context
@@ -95,7 +96,7 @@ async def create_instance(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = load_jsonld(json.loads(instance.data))
+    graph = load_new_resource(instance.data)
     if instance.work_id is not None:
         db_work = db.query(Work).filter(Work.id == instance.work_id).first()
         if db_work is None:
@@ -105,10 +106,7 @@ async def create_instance(
         graph += load_jsonld_from_model(db_work.data)
         instance_subject = next(graph.subjects(RDF.type, BF.Instance))
         graph.add((instance_subject, BF.instanceOf, URIRef(db_work.uri)))
-    result_graph = save_graph(
-        session_maker, graph, BLUECORE_URL, primary_class=BF.Instance
-    )
-    instance_uri = str(next(result_graph.subjects(RDF.type, BF.Instance)))
+    instance_uri = save_new_resource(session_maker, graph, BLUECORE_URL, BF.Instance)
 
     doc = db.query(Instance).filter(Instance.uri == instance_uri).first()
 

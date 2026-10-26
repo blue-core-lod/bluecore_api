@@ -6,9 +6,9 @@ from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Work
 from bluecore_models.utils.graph import BF, load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from rdflib import RDF
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.create import load_new_resource, save_new_resource
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import WORK_EXAMPLE
 from bluecore_api.app.utils.jsonld import with_context
@@ -87,9 +87,8 @@ async def create_work(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = load_jsonld(json.loads(work.data))
-    result_graph = save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Work)
-    work_uri = str(next(result_graph.subjects(RDF.type, BF.Work)))
+    graph = load_new_resource(work.data)
+    work_uri = save_new_resource(session_maker, graph, BLUECORE_URL, BF.Work)
     doc = db.query(Work).filter(Work.uri == work_uri).first()
     if doc:
         with_context(doc.data)
