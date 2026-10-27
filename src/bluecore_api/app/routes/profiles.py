@@ -2,14 +2,14 @@ import json
 import os
 from uuid import uuid4
 
-from bluecore_models.models import Profile, Version
+from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld, replace_uri
 from fastapi import APIRouter, Depends, HTTPException, Response
 from rdflib import RDF, IdentifiedNode, Namespace, URIRef
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import normalize_context
+from bluecore_api.app.utils.profile_versions import with_version_uri
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -19,7 +19,6 @@ from bluecore_api.schemas.schemas import (
     ProfileCreateSchema,
     ProfileSchema,
     ProfileUpdateSchema,
-    ProfileWithVersionSchema,
 )
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
@@ -82,7 +81,7 @@ async def read_profiles(
             raise HTTPException(
                 status_code=404, detail=f"Profile with uri {uri} not found"
             )
-        return db_profile
+        return with_version_uri(db, db_profile)
     db_profiles = db.query(Profile).limit(limit).offset(offset).all()
     total = db.query(Profile).count()
     return {
@@ -94,29 +93,14 @@ async def read_profiles(
 
 @endpoints.get(
     "/profiles/{profile_uuid}",
-    response_model=ProfileWithVersionSchema,
+    response_model=ProfileSchema,
     operation_id="get_profile",
 )
 async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
-    # Select the id column only: db_profile.versions would load every snapshot's
-    # data. "Newest" is by created_at, the same order the versions list uses.
-    # The URI is built here so clients never have to assemble one themselves.
-    version_id = db.execute(
-        select(Version.id)
-        .where(Version.resource_id == db_profile.id)
-        .order_by(Version.created_at.desc())
-        .limit(1)
-    ).scalar_one_or_none()
-    version_uri = (
-        None if version_id is None else f"{db_profile.uri}/version/{version_id}"
-    )
-    return ProfileWithVersionSchema(
-        **ProfileSchema.model_validate(db_profile).model_dump(),
-        version_uri=version_uri,
-    )
+    return with_version_uri(db, db_profile)
 
 
 @endpoints.post(
@@ -140,7 +124,7 @@ async def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)
-    return db_profile
+    return with_version_uri(db, db_profile)
 
 
 @endpoints.put(
@@ -161,7 +145,9 @@ async def update_profile(
         db_profile.data = normalize_context(json.loads(profile.data))  # ty: ignore[invalid-assignment]
     db.commit()
     db.refresh(db_profile)
-    return db_profile
+    # A PUT that changes nothing writes no version, so this is the version the
+    # profile is now at, whether or not this request created it.
+    return with_version_uri(db, db_profile)
 
 
 @endpoints.delete(

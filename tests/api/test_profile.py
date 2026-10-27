@@ -1,8 +1,12 @@
 import json
 
+import pytest
 from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld
+from fastapi import HTTPException
 from rdflib import RDF, Literal, Namespace, URIRef
+
+from bluecore_api.app.utils.profile_versions import resolve_version_uri
 
 SINOPIA = Namespace("http://sinopia.io/vocabulary/")
 
@@ -202,3 +206,122 @@ def test_profile_not_found_in_resources(client):
 
     response = client.get(f"/resources/{created['id']}")
     assert response.status_code == 404
+
+
+BCLD = "https://bcld.info"
+CATALOGER = {"X-User": "cataloger"}
+
+
+def post_profile(client, data: str = '{"label": "a profile"}') -> dict:
+    response = client.post("/profiles/", headers=CATALOGER, json={"data": data})
+    assert response.status_code == 201
+    return response.json()
+
+
+def newest_version_uri(client, profile: dict) -> str:
+    versions = client.get(f"/profiles/{profile['uuid']}/versions").json()["versions"]
+    return f"{profile['uri']}/version/{versions[-1]['id']}"
+
+
+def test_create_profile_returns_its_version_uri(client):
+    created = post_profile(client)
+
+    assert created["version_uri"] == newest_version_uri(client, created)
+    # it resolves, to what was just saved
+    snapshot = client.get(created["version_uri"].removeprefix(BCLD))
+    assert snapshot.status_code == 200
+    assert snapshot.json()["data"] == created["data"]
+
+
+def test_update_profile_returns_the_version_it_created(client):
+    created = post_profile(client)
+
+    response = client.put(
+        f"/profiles/{created['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "changed"})},
+    )
+    assert response.status_code == 200
+    updated = response.json()
+
+    assert updated["version_uri"] != created["version_uri"]
+    assert updated["version_uri"] == newest_version_uri(client, created)
+
+
+def test_profile_version_carries_its_own_uri(client):
+    created = post_profile(client)
+    client.put(
+        f"/profiles/{created['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "changed"})},
+    )
+
+    # the older version, not the newest
+    snapshot = client.get(created["version_uri"].removeprefix(BCLD)).json()
+    assert snapshot["version_uri"] == created["version_uri"]
+
+
+def test_resolve_version_uri(client, db_session):
+    created = post_profile(client)
+
+    profile, version = resolve_version_uri(db_session, created["version_uri"])
+
+    assert str(profile.uuid) == created["uuid"]
+    assert created["version_uri"].endswith(f"/version/{version.id}")
+
+
+def test_resolve_version_uri_unknown_version(client, db_session):
+    created = post_profile(client)
+
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, f"{created['uri']}/version/999999")
+    assert error.value.status_code == 404
+
+
+def test_resolve_version_uri_unknown_profile(client, db_session):
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(
+            db_session,
+            f"{BCLD}/profiles/00000000-0000-0000-0000-000000009999/version/1",
+        )
+    assert error.value.status_code == 404
+
+
+def test_resolve_version_uri_of_another_profiles_version(client, db_session):
+    """versions.id is global, so another profile's version id must not resolve."""
+    mine = post_profile(client)
+    theirs = post_profile(client)
+    their_version_id = theirs["version_uri"].rsplit("/", 1)[1]
+
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, f"{mine['uri']}/version/{their_version_id}")
+    assert error.value.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "uri",
+    [
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001",
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/",
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/latest",
+        "pcc:bf2:Title",
+    ],
+)
+def test_resolve_version_uri_malformed(client, db_session, uri):
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, uri)
+    assert error.value.status_code == 422
+
+
+def test_profile_by_uri_returns_its_version_uri(client):
+    created = post_profile(client)
+
+    found = client.get("/profiles/", params={"uri": created["uri"]}).json()
+    assert found["version_uri"] == created["version_uri"]
+
+
+def test_profile_search_returns_version_uris(client):
+    created = post_profile(client)
+
+    results = client.get("/search/profile").json()["results"]
+    assert [r["version_uri"] for r in results] == [created["version_uri"]]

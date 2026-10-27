@@ -62,14 +62,12 @@ class ProfileSchema(BaseModel):
     uuid: UUID | None = None
     uri: str | None = None
     data: dict[str, object] | list[object]
+    # The URI of the Version this response shows, {uri}/version/{version_id}:
+    # the newest one, except from GET /profiles/{uuid}/version/{id}. None only
+    # if no version was written.
+    version_uri: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class ProfileWithVersionSchema(ProfileSchema):
-    # The URI of the newest Version, {uri}/version/{version_id}, which addresses
-    # this exact state of the profile. None only if no version was written.
-    version_uri: str | None = None
 
 
 class ProfileCreateSchema(BaseModel):
