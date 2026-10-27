@@ -67,9 +67,9 @@ class ProfileSchema(BaseModel):
 
 
 class ProfileWithVersionSchema(ProfileSchema):
-    # The newest Version id, so a client can address this exact state through
-    # /profiles/{uuid}/version/{version_id}. None only if no version was written.
-    version_id: int | None = None
+    # The URI of the newest Version, {uri}/version/{version_id}, which addresses
+    # this exact state of the profile. None only if no version was written.
+    version_uri: str | None = None
 
 
 class ProfileCreateSchema(BaseModel):

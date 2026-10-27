@@ -103,15 +103,19 @@ async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
     # Select the id column only: db_profile.versions would load every snapshot's
     # data. "Newest" is by created_at, the same order the versions list uses.
+    # The URI is built here so clients never have to assemble one themselves.
     version_id = db.execute(
         select(Version.id)
         .where(Version.resource_id == db_profile.id)
         .order_by(Version.created_at.desc())
         .limit(1)
     ).scalar_one_or_none()
+    version_uri = (
+        None if version_id is None else f"{db_profile.uri}/version/{version_id}"
+    )
     return ProfileWithVersionSchema(
         **ProfileSchema.model_validate(db_profile).model_dump(),
-        version_id=version_id,
+        version_uri=version_uri,
     )
 
 
