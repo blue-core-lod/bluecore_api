@@ -1,6 +1,6 @@
 from bluecore_models.models.version import CURRENT_USER_ID, CURRENT_USERNAME
 from fastapi import FastAPI, Request
-from fastapi_keycloak_middleware import get_auth, get_user
+from fastapi_keycloak_middleware import FastApiUser, get_auth, get_user
 
 from bluecore_api.middleware.helpers.keycloak_utils import (
     get_keycloak_user_info,
@@ -19,8 +19,9 @@ def enable_developer_mode(app):
     async def mocked_get_auth(request: Request):
         return developer_permissions
 
-    async def mocked_get_user(request: Request):
-        return "developer"
+    async def mocked_get_user(request: Request) -> FastApiUser:
+        # Must be a FastApiUser: BluecoreCheckPermissions reads .is_authenticated.
+        return FastApiUser("Developer", "Mode", "developer")
 
     app.dependency_overrides[get_auth] = mocked_get_auth
     app.dependency_overrides[get_user] = mocked_get_user
