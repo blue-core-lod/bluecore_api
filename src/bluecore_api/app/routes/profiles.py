@@ -2,10 +2,11 @@ import json
 import os
 from uuid import uuid4
 
-from bluecore_models.models import Profile
+from bluecore_models.models import Profile, Version
 from bluecore_models.utils.graph import load_jsonld, replace_uri
 from fastapi import APIRouter, Depends, HTTPException, Response
 from rdflib import RDF, IdentifiedNode, Namespace, URIRef
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import normalize_context
@@ -18,6 +19,7 @@ from bluecore_api.schemas.schemas import (
     ProfileCreateSchema,
     ProfileSchema,
     ProfileUpdateSchema,
+    ProfileWithVersionSchema,
 )
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
@@ -92,14 +94,29 @@ async def read_profiles(
 
 @endpoints.get(
     "/profiles/{profile_uuid}",
-    response_model=ProfileSchema,
+    response_model=ProfileWithVersionSchema,
     operation_id="get_profile",
 )
 async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
-    return db_profile
+    # Select the id column only: db_profile.versions would load every snapshot's
+    # data. "Newest" is by created_at, the same order the versions list uses.
+    # The URI is built here so clients never have to assemble one themselves.
+    version_id = db.execute(
+        select(Version.id)
+        .where(Version.resource_id == db_profile.id)
+        .order_by(Version.created_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    version_uri = (
+        None if version_id is None else f"{db_profile.uri}/version/{version_id}"
+    )
+    return ProfileWithVersionSchema(
+        **ProfileSchema.model_validate(db_profile).model_dump(),
+        version_uri=version_uri,
+    )
 
 
 @endpoints.post(

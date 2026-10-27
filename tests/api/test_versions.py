@@ -414,6 +414,22 @@ def test_newest_profile_version_matches_the_live_profile(
     assert newest["data"] == live["data"]
 
 
+def test_live_profile_carries_newest_version_uri(
+    client: TestClient, db_session: Session
+) -> None:
+    profile = add_profile(db_session)
+    update_profile(db_session, profile)
+
+    versions = client.get(f"/profiles/{PROFILE_UUID}/versions").json()["versions"]
+    live = client.get(f"/profiles/{PROFILE_UUID}").json()
+
+    assert "version_id" not in live
+    assert live["version_uri"] == f"{live['uri']}/version/{versions[-1]['id']}"
+    assert live["version_uri"] == (
+        f"https://bcld.info/profiles/{PROFILE_UUID}/version/{versions[-1]['id']}"
+    )
+
+
 def test_profile_versions_are_written_through_the_http_layer(
     client: TestClient, db_session: Session
 ) -> None:

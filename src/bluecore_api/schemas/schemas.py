@@ -66,6 +66,12 @@ class ProfileSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProfileWithVersionSchema(ProfileSchema):
+    # The URI of the newest Version, {uri}/version/{version_id}, which addresses
+    # this exact state of the profile. None only if no version was written.
+    version_uri: str | None = None
+
+
 class ProfileCreateSchema(BaseModel):
     data: str
 
