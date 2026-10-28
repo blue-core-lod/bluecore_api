@@ -1,15 +1,20 @@
 import json
 import os
-from uuid import uuid4
+from typing import cast
+from uuid import UUID, uuid4
 
 from bluecore_models.models import Profile
 from bluecore_models.utils.graph import load_jsonld, replace_uri
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
 from rdflib import RDF, IdentifiedNode, Namespace, URIRef
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import normalize_context
-from bluecore_api.app.utils.profile_versions import with_version_uri
+from bluecore_api.app.utils.profile_usage import profile_usage, referenced_by
+from bluecore_api.app.utils.profile_versions import (
+    latest_version_uri,
+    with_version_uri,
+)
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -19,6 +24,8 @@ from bluecore_api.schemas.schemas import (
     ProfileCreateSchema,
     ProfileSchema,
     ProfileUpdateSchema,
+    ProfileValidateSchema,
+    ProfileValidationSchema,
 )
 
 BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
@@ -163,6 +170,14 @@ async def delete_profile(
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
+    # Deleting would take every version with it, and leave whatever points at
+    # one of them pointing at nothing.
+    users = referenced_by(db, db_profile)
+    if users:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Profile {profile_uuid} is still used by {', '.join(users)}",
+        )
     for rbc in db_profile.classes:
         db.delete(rbc)
     for version in db_profile.versions:
@@ -170,3 +185,43 @@ async def delete_profile(
     db.delete(db_profile)
     db.commit()
     return Response(status_code=204)
+
+
+@endpoints.post(
+    "/profiles/{profile_uuid}/validate",
+    response_model=ProfileValidationSchema,
+    # The editor calls this while a template is being edited, so whoever calls
+    # it can already update profiles. Being a POST, it needs a token anyway.
+    dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
+    operation_id="validate_profile",
+)
+async def validate_profile(
+    profile_uuid: str,
+    body: ProfileValidateSchema | None = Body(default=None),
+    limit: int = Query(10, ge=0, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """Report what uses a profile. Send data to check a proposed change first.
+
+    Read-only: it never changes the profile or writes a version.
+    """
+    db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
+    if db_profile is None:
+        raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
+    if body is not None and body.data is not None:
+        try:
+            data = normalize_context(json.loads(body.data))
+            if not isinstance(data, list | dict):
+                raise TypeError("expected a JSON object or array")
+            load_jsonld(data)
+        except (ValueError, TypeError, AttributeError, RuntimeError) as error:
+            raise HTTPException(
+                status_code=422, detail=f"data is not valid JSON-LD: {error}"
+            ) from error
+    return ProfileValidationSchema(
+        profile_uuid=cast(UUID, db_profile.uuid),
+        profile_uri=db_profile.uri,
+        current_version_uri=latest_version_uri(db, db_profile),
+        **profile_usage(db, db_profile, limit, offset),
+    )
