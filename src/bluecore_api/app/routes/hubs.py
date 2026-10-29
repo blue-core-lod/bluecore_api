@@ -7,9 +7,9 @@ from bluecore_models.bluecore_graph import save_graph
 from bluecore_models.models import Hub
 from bluecore_models.utils.graph import BF, load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from rdflib import RDF
 from sqlalchemy.orm import Session
 
+from bluecore_api.app.utils.create import load_new_resource, save_new_resource
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import HUB_EXAMPLE
 from bluecore_api.app.utils.jsonld import with_context
@@ -88,9 +88,8 @@ async def create_hub(
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
 ):
-    graph = load_jsonld(json.loads(hub.data))
-    result_graph = save_graph(session_maker, graph, BLUECORE_URL, primary_class=BF.Hub)
-    hub_uri = str(next(result_graph.subjects(RDF.type, BF.Hub)))
+    graph = load_new_resource(hub.data)
+    hub_uri = save_new_resource(session_maker, graph, BLUECORE_URL, BF.Hub)
     doc = db.query(Hub).filter(Hub.uri == hub_uri).first()
     if doc:
         with_context(doc.data)

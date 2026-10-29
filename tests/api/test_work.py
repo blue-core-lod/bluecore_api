@@ -5,7 +5,6 @@ import re
 import pytest
 import rdflib
 import sqlalchemy
-from bluecore_models.bluecore_graph import BluecoreGraphError
 from bluecore_models.models import (
     BibframeOtherResources,
     Hub,
@@ -362,10 +361,6 @@ def test_create_work(client, mocker, derived_from_sparql):
     )
 
 
-@pytest.mark.xfail(
-    reason="https://github.com/blue-core-lod/bluecore-models/issues/203",
-    strict=True,
-)
 def test_create_work_with_blank_node_accompanying_work(client, db_session):
     """A new Work can nest another Work without a URI, as the editor's
     Monograph Work template does for the language of an accompanying Work."""
@@ -383,21 +378,42 @@ def test_create_work_with_blank_node_accompanying_work(client, db_session):
     assert response.status_code == 201
 
 
-def test_create_work_reports_why_it_could_not_be_saved(client, mocker):
-    mocker.patch(
-        "bluecore_api.app.routes.works.save_graph",
-        side_effect=BluecoreGraphError("Unable to find subject URI for bf:Work"),
-    )
+def test_create_work_named_by_an_empty_id(client, db_session):
+    """An empty @id names the Work being created, so a part can point back at
+    it, and comes back as the Work's new URI."""
+    work = {
+        "@context": BIBFRAME_CONTEXT_URL,
+        "@id": "",
+        "@type": "Work",
+        "hasPart": {"@type": "Work", "partOf": {"@id": ""}},
+    }
     response = client.post(
-        "/works/",
-        headers={"X-User": "cataloger"},
-        json={"data": json.dumps({"@type": str(BF.Work)})},
+        "/works/", headers={"X-User": "cataloger"}, json={"data": json.dumps(work)}
+    )
+
+    assert response.status_code == 201
+    uri = response.json()["uri"]
+    assert uri.startswith("https://bcld.info/works/")
+    assert response.json()["data"]["hasPart"] == [
+        {"@type": ["Work"], "partOf": [{"@id": uri}]}
+    ]
+
+
+def test_create_work_reports_why_it_could_not_be_saved(client, db_session):
+    work = {
+        "@context": BIBFRAME_CONTEXT_URL,
+        "@type": "Work",
+        "hasPart": {"@id": "#part", "@type": "Work"},
+    }
+    response = client.post(
+        "/works/", headers={"X-User": "cataloger"}, json={"data": json.dumps(work)}
     )
 
     assert response.status_code == 422
     assert response.json() == {
         "title": "Unable to save resource",
-        "detail": "Unable to find subject URI for bf:Work",
+        "detail": 'Unsupported relative @id "#part": use "" for the resource '
+        "being created, or a blank node",
     }
 
 
