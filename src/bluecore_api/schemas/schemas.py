@@ -62,14 +62,12 @@ class ProfileSchema(BaseModel):
     uuid: UUID | None = None
     uri: str | None = None
     data: dict[str, object] | list[object]
+    # The URI of the Version this response shows, {uri}/version/{version_id}:
+    # the newest one, except from GET /profiles/{uuid}/version/{id}. None only
+    # if no version was written.
+    version_uri: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class ProfileWithVersionSchema(ProfileSchema):
-    # The URI of the newest Version, {uri}/version/{version_id}, which addresses
-    # this exact state of the profile. None only if no version was written.
-    version_uri: str | None = None
 
 
 class ProfileCreateSchema(BaseModel):
@@ -78,6 +76,43 @@ class ProfileCreateSchema(BaseModel):
 
 class ProfileUpdateSchema(BaseModel):
     data: str | None = None
+
+
+class ProfileValidateSchema(BaseModel):
+    # A proposed change to check before it is saved. Without it, the stored
+    # profile is reported on.
+    data: str | None = None
+
+
+class ProfileVersionUsageSchema(BaseModel):
+    # None for records that name a plain profile URI rather than a version.
+    version_uri: str | None
+    instance_count: int
+
+
+class ProfileInstanceSchema(BaseModel):
+    uri: str
+    version_uri: str | None
+
+
+class ProfileValidationSchema(BaseModel):
+    """What a profile is used by, and whether a proposed change would break it.
+
+    Records are found by the template pointer they carry, so for a nested
+    profile versions and instances name the profiles that nest it.
+    requires_new_version, changes and incompatible_instances are placeholders
+    until #339 adds the compatibility checks.
+    """
+
+    profile_uuid: UUID
+    profile_uri: str
+    current_version_uri: str | None
+    instance_count: int
+    versions: list[ProfileVersionUsageSchema]
+    instances: list[ProfileInstanceSchema]
+    requires_new_version: bool = False
+    changes: list[object] = []
+    incompatible_instances: list[object] = []
 
 
 class HubCreateSchema(BaseModel):

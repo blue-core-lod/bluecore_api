@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import with_context
+from bluecore_api.app.utils.profile_versions import version_uri
 from bluecore_api.database import get_db
 from bluecore_api.schemas.schemas import (
     HubSchema,
@@ -266,7 +267,10 @@ async def read_profile_version(
     profile_uuid: str,
     version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),
-) -> HubSchema | InstanceSchema | ProfileSchema | WorkSchema:
+) -> ProfileSchema:
     """Return one historical version of a Profile as stored JSON-LD."""
-    resource = resource_or_404(db, Profile, profile_uuid)
-    return version_payload(resource, version_or_404(db, resource, version_id))
+    resource = cast(Profile, resource_or_404(db, Profile, profile_uuid))
+    version = version_or_404(db, resource, version_id)
+    payload = cast(ProfileSchema, version_payload(resource, version))
+    payload.version_uri = version_uri(resource, version.id)
+    return payload

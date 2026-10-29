@@ -396,9 +396,10 @@ def test_profile_version_is_returned_exactly_as_stored(
     # A dict-shaped payload, or one carrying @context, would mean the framed
     # resource branch had claimed a Profile.
     assert isinstance(payload["data"], list)
-    assert set(payload) == {"id", "uuid", "uri", "data"}
+    assert set(payload) == {"id", "uuid", "uri", "data", "version_uri"}
     assert payload["uuid"] == PROFILE_UUID
     assert payload["uri"] == f"https://bcld.info/profiles/{PROFILE_UUID}"
+    assert payload["version_uri"] == f"{payload['uri']}/version/{versions[0]['id']}"
 
 
 def test_newest_profile_version_matches_the_live_profile(

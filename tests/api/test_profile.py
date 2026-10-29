@@ -1,8 +1,12 @@
 import json
 
-from bluecore_models.models import Profile
+import pytest
+from bluecore_models.models import Instance, Profile, Version, Work
 from bluecore_models.utils.graph import load_jsonld
+from fastapi import HTTPException
 from rdflib import RDF, Literal, Namespace, URIRef
+
+from bluecore_api.app.utils.profile_versions import resolve_version_uri
 
 SINOPIA = Namespace("http://sinopia.io/vocabulary/")
 
@@ -202,3 +206,319 @@ def test_profile_not_found_in_resources(client):
 
     response = client.get(f"/resources/{created['id']}")
     assert response.status_code == 404
+
+
+BCLD = "https://bcld.info"
+CATALOGER = {"X-User": "cataloger"}
+
+
+def post_profile(client, data: str = '{"label": "a profile"}') -> dict:
+    response = client.post("/profiles/", headers=CATALOGER, json={"data": data})
+    assert response.status_code == 201
+    return response.json()
+
+
+def newest_version_uri(client, profile: dict) -> str:
+    versions = client.get(f"/profiles/{profile['uuid']}/versions").json()["versions"]
+    return f"{profile['uri']}/version/{versions[-1]['id']}"
+
+
+def test_create_profile_returns_its_version_uri(client):
+    created = post_profile(client)
+
+    assert created["version_uri"] == newest_version_uri(client, created)
+    # it resolves, to what was just saved
+    snapshot = client.get(created["version_uri"].removeprefix(BCLD))
+    assert snapshot.status_code == 200
+    assert snapshot.json()["data"] == created["data"]
+
+
+def test_update_profile_returns_the_version_it_created(client):
+    created = post_profile(client)
+
+    response = client.put(
+        f"/profiles/{created['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "changed"})},
+    )
+    assert response.status_code == 200
+    updated = response.json()
+
+    assert updated["version_uri"] != created["version_uri"]
+    assert updated["version_uri"] == newest_version_uri(client, created)
+
+
+def test_profile_version_carries_its_own_uri(client):
+    created = post_profile(client)
+    client.put(
+        f"/profiles/{created['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "changed"})},
+    )
+
+    # the older version, not the newest
+    snapshot = client.get(created["version_uri"].removeprefix(BCLD)).json()
+    assert snapshot["version_uri"] == created["version_uri"]
+
+
+def test_resolve_version_uri(client, db_session):
+    created = post_profile(client)
+
+    profile, version = resolve_version_uri(db_session, created["version_uri"])
+
+    assert str(profile.uuid) == created["uuid"]
+    assert created["version_uri"].endswith(f"/version/{version.id}")
+
+
+def test_resolve_version_uri_unknown_version(client, db_session):
+    created = post_profile(client)
+
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, f"{created['uri']}/version/999999")
+    assert error.value.status_code == 404
+
+
+def test_resolve_version_uri_unknown_profile(client, db_session):
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(
+            db_session,
+            f"{BCLD}/profiles/00000000-0000-0000-0000-000000009999/version/1",
+        )
+    assert error.value.status_code == 404
+
+
+def test_resolve_version_uri_of_another_profiles_version(client, db_session):
+    """versions.id is global, so another profile's version id must not resolve."""
+    mine = post_profile(client)
+    theirs = post_profile(client)
+    their_version_id = theirs["version_uri"].rsplit("/", 1)[1]
+
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, f"{mine['uri']}/version/{their_version_id}")
+    assert error.value.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "uri",
+    [
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001",
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/",
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/latest",
+        "pcc:bf2:Title",
+    ],
+)
+def test_resolve_version_uri_malformed(client, db_session, uri):
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, uri)
+    assert error.value.status_code == 422
+
+
+def test_profile_by_uri_returns_its_version_uri(client):
+    created = post_profile(client)
+
+    found = client.get("/profiles/", params={"uri": created["uri"]}).json()
+    assert found["version_uri"] == created["version_uri"]
+
+
+def test_profile_search_returns_version_uris(client):
+    created = post_profile(client)
+
+    results = client.get("/search/profile").json()["results"]
+    assert [r["version_uri"] for r in results] == [created["version_uri"]]
+
+
+HAS_RESOURCE_TEMPLATE = "http://sinopia.io/vocabulary/hasResourceTemplate"
+
+
+def nesting(*refs: str) -> str:
+    """A profile whose property templates nest the given profile references."""
+    return json.dumps(
+        [
+            {
+                "@id": f"_:attributes{i}",
+                "@type": ["http://sinopia.io/vocabulary/ResourcePropertyTemplate"],
+                "http://sinopia.io/vocabulary/hasResourceTemplateId": [{"@id": ref}],
+            }
+            for i, ref in enumerate(refs)
+        ]
+    )
+
+
+def add_record(db_session, model, name: str, template: str):
+    """A Work or Instance made with the given template, framed as stored."""
+    uri = f"{BCLD}/{model.__tablename__}/{name}"
+    db_session.add(
+        model(
+            uri=uri,
+            data={
+                "@id": uri,
+                "@type": [model.__name__],
+                HAS_RESOURCE_TEMPLATE: [{"@id": template}],
+            },
+        )
+    )
+    db_session.commit()
+    return uri
+
+
+def validate(client, profile: dict, **kwargs):
+    return client.post(
+        f"/profiles/{profile['uuid']}/validate", headers=CATALOGER, **kwargs
+    )
+
+
+def test_delete_profile_used_by_a_record(client, db_session):
+    profile = post_profile(client)
+    record = add_record(db_session, Work, "w1", profile["version_uri"])
+
+    response = client.delete(f"/profiles/{profile['uuid']}", headers=CATALOGER)
+
+    assert response.status_code == 409
+    assert record in response.json()["detail"]
+    assert client.get(f"/profiles/{profile['uuid']}").status_code == 200
+
+
+def test_delete_profile_nested_by_version(client):
+    title = post_profile(client)
+    work = post_profile(client, nesting(title["version_uri"]))
+
+    response = client.delete(f"/profiles/{title['uuid']}", headers=CATALOGER)
+
+    assert response.status_code == 409
+    assert work["uri"] in response.json()["detail"]
+
+
+def test_delete_profile_nested_by_plain_uri(client):
+    title = post_profile(client)
+    post_profile(client, nesting(title["uri"]))
+
+    response = client.delete(f"/profiles/{title['uuid']}", headers=CATALOGER)
+
+    assert response.status_code == 409
+
+
+def test_delete_profile_whose_uri_another_extends(client, db_session):
+    """A profile URI that merely starts with this one's is not a reference."""
+    profile = post_profile(client)
+    add_record(db_session, Work, "w1", f"{profile['uri']}-copy")
+
+    response = client.delete(f"/profiles/{profile['uuid']}", headers=CATALOGER)
+
+    assert response.status_code == 204
+
+
+def test_validate_unknown_profile(client):
+    response = client.post(
+        "/profiles/00000000-0000-0000-0000-000000009999/validate", headers=CATALOGER
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize("data", ["not json", "42", '{"@context": 5}'])
+def test_validate_data_that_is_not_jsonld(client, data):
+    profile = post_profile(client)
+
+    response = validate(client, profile, json={"data": data})
+
+    assert response.status_code == 422
+
+
+def test_validate_never_writes(client, db_session):
+    profile = post_profile(client)
+    versions_before = db_session.query(Version).count()
+
+    response = validate(client, profile, json={"data": json.dumps({"label": "new"})})
+
+    assert response.status_code == 200
+    db_session.expire_all()
+    assert db_session.query(Version).count() == versions_before
+    stored = client.get(f"/profiles/{profile['uuid']}").json()
+    assert stored["data"] == profile["data"]
+
+
+def test_validate_an_unused_profile(client):
+    profile = post_profile(client)
+
+    body = validate(client, profile).json()
+
+    assert body == {
+        "profile_uuid": profile["uuid"],
+        "profile_uri": profile["uri"],
+        "current_version_uri": profile["version_uri"],
+        "instance_count": 0,
+        "versions": [],
+        "instances": [],
+        "requires_new_version": False,
+        "changes": [],
+        "incompatible_instances": [],
+    }
+
+
+def test_validate_a_top_level_profile(client, db_session):
+    profile = post_profile(client)
+    old_version = profile["version_uri"]
+    w1 = add_record(db_session, Work, "w1", old_version)
+    i1 = add_record(db_session, Instance, "i1", profile["uri"])
+    new_version = client.put(
+        f"/profiles/{profile['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "changed"})},
+    ).json()["version_uri"]
+    i2 = add_record(db_session, Instance, "i2", new_version)
+    # made with some other profile
+    add_record(db_session, Work, "w2", post_profile(client)["version_uri"])
+
+    body = validate(client, profile).json()
+
+    assert body["current_version_uri"] == new_version
+    assert body["instance_count"] == 3
+    assert sorted(body["versions"], key=lambda v: v["version_uri"] or "") == sorted(
+        [
+            {"version_uri": None, "instance_count": 1},
+            {"version_uri": old_version, "instance_count": 1},
+            {"version_uri": new_version, "instance_count": 1},
+        ],
+        key=lambda v: v["version_uri"] or "",
+    )
+    assert {i["uri"]: i["version_uri"] for i in body["instances"]} == {
+        w1: old_version,
+        i1: None,
+        i2: new_version,
+    }
+
+
+def test_validate_a_nested_profile(client, db_session):
+    """Records name only their root template, so a nested profile's records are
+    those made with any template that nests it, however deeply."""
+    title = post_profile(client)
+    work = post_profile(client, nesting(title["uri"]))
+    monograph = post_profile(client, nesting(work["uri"]))
+    w1 = add_record(db_session, Work, "w1", work["version_uri"])
+    i1 = add_record(db_session, Instance, "i1", monograph["version_uri"])
+
+    body = validate(client, title).json()
+
+    assert body["instance_count"] == 2
+    assert {i["uri"]: i["version_uri"] for i in body["instances"]} == {
+        w1: work["version_uri"],
+        i1: monograph["version_uri"],
+    }
+
+
+def test_validate_pages_instances(client, db_session):
+    profile = post_profile(client)
+    for n in range(3):
+        add_record(db_session, Instance, f"i{n}", profile["version_uri"])
+
+    body = validate(client, profile, params={"limit": 2, "offset": 2}).json()
+
+    assert body["instance_count"] == 3
+    assert [i["uri"] for i in body["instances"]] == [f"{BCLD}/instances/i2"]
+
+
+def test_validate_requires_permission(client):
+    profile = post_profile(client)
+
+    response = client.post(f"/profiles/{profile['uuid']}/validate")
+
+    assert response.status_code == 403
