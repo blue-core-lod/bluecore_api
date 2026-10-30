@@ -31,6 +31,7 @@ from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.profiles import endpoints as profile_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
+from bluecore_api.app.routes.usage import endpoints as usage_routes
 from bluecore_api.app.routes.versions import endpoints as version_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
 from bluecore_api.app.utils.etag import PreconditionFailed
@@ -102,6 +103,7 @@ base_app.include_router(resource_routes, tags=["Resources"])
 base_app.include_router(profile_routes, tags=["Profiles"])
 base_app.include_router(version_routes, tags=["Versions"])
 base_app.include_router(search_routes, tags=["Search"])
+base_app.include_router(usage_routes, tags=["Usage"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])
 base_app.include_router(export_routes, tags=["Export"])

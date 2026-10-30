@@ -84,5 +84,5 @@ async def test_mcp_list_tools_request(mcp_client):
 
     data = response.json()
     tools = sorted(data["result"]["tools"], key=lambda x: x["name"])
-    assert len(tools) == 49
+    assert len(tools) == 50
     assert tools[0]["name"].startswith("batch_upload")
