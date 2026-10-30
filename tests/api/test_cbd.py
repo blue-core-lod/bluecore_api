@@ -25,6 +25,7 @@ from bluecore_api.app.utils.serialize.cbd import (
     related_works,
     reorder_instance_types,
     reorder_work_types,
+    without_blank_ids,
 )
 from bluecore_api.constants import BibframeType
 
@@ -550,3 +551,47 @@ def test_cbd_work_etag_saves_the_work(client: TestClient, db_session: Session):
 
     assert save().status_code == 200
     assert save().status_code == 412
+
+
+def test_bounded_description_drops_references_to_blank_nodes():
+    """
+    An unnamed related Work whose unnamed Instance points back at it: framing
+    embeds the Work once and can only refer to it again by its blank label,
+    which names nothing once the labels are dropped.
+    """
+    framed = {
+        "@id": "http://example.org/instances/1",
+        "instanceOf": [
+            {
+                "@id": "http://example.org/works/1",
+                "relation": [
+                    {
+                        "@id": "_:b0",
+                        "@type": ["Relation"],
+                        "associatedResource": [
+                            {
+                                "@id": "_:b13",
+                                "@type": ["Work"],
+                                "hasInstance": [
+                                    {
+                                        "@id": "_:b14",
+                                        "@type": ["Instance"],
+                                        "instanceOf": ["_:b13"],
+                                    }
+                                ],
+                                "sameAs": [{"@id": "_:b13"}],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+    document = without_blank_ids(framed)
+
+    assert "_:" not in json.dumps(document)
+    [work] = document["instanceOf"]
+    [relation] = work["relation"]
+    [related] = relation["associatedResource"]
+    # Only the references went: the related Work and its Instance remain.
+    assert related == {"@type": ["Work"], "hasInstance": [{"@type": ["Instance"]}]}

@@ -299,16 +299,37 @@ def without_blank_ids(node: Any) -> Any:
     Drop the _:b0-style @id framing gives a node that has none. bibframe-json
     forbids an @id on a blank node: it addresses nothing outside the document,
     and keeping it would make two identical values differ by accident.
+
+    A reference to a blank node goes too, along with a property it leaves
+    empty. Framing writes one when it reaches a blank node it has already
+    embedded, as when an unnamed related Work's unnamed Instance points back
+    at it with instanceOf. Once the node's own label is gone, the reference
+    would name nothing, and a client saving the document back would make it a
+    new, empty node. What it said is the inverse of the property it sits
+    under (instanceOf below hasInstance), which Blue Core's loader adds back.
     """
     if isinstance(node, list):
-        return [without_blank_ids(item) for item in node]
+        return [
+            without_blank_ids(item) for item in node if not is_blank_reference(item)
+        ]
     if not isinstance(node, dict):
         return node
-    return {
-        key: without_blank_ids(value)
-        for key, value in node.items()
-        if not (key == "@id" and isinstance(value, str) and value.startswith("_:"))
-    }
+    result: dict[str, Any] = {}
+    for key, value in node.items():
+        if key == "@id" and isinstance(value, str) and value.startswith("_:"):
+            continue
+        kept = without_blank_ids(value)
+        if isinstance(value, list) and value and kept == []:
+            continue
+        result[key] = kept
+    return result
+
+
+def is_blank_reference(value: Any) -> bool:
+    """A value that only points at a blank node by its label: "_:b13" or {"@id": "_:b13"}."""
+    if isinstance(value, dict) and set(value) == {"@id"}:
+        value = value["@id"]
+    return isinstance(value, str) and value.startswith("_:")
 
 
 def cbd_jsonld(instance: Instance) -> str:
