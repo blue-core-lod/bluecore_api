@@ -242,6 +242,15 @@ def bounded_description(instance: Instance) -> dict[str, Any]:
     principal resources side by side, which is what Marva reads. JSON has one,
     so here the document is the Instance, and a client reads it without
     rejoining URIs.
+    """
+    return frame_bounded(generate_cbd_graph(instance), instance.uri)
+
+
+def frame_bounded(graph: Graph, instance_uri: str) -> dict[str, Any]:
+    """
+    Any BIBFRAME graph framed as a bounded description rooted at one Instance:
+    a CBD from Blue Core, or a description from elsewhere (see the /frame
+    route).
 
     These are the steps bibframe-json gives for producing the shape
     (example/produce.py there). Framing is one of them; the others are what
@@ -251,13 +260,12 @@ def bounded_description(instance: Instance) -> dict[str, Any]:
     and references it after, which keeps the document finite: the Work's
     hasInstance points back to the root by URI.
     """
-    graph = generate_cbd_graph(instance)
     expanded = json.loads(graph.serialize(format="json-ld"))
     framed = jsonld.frame(
         expanded,
         {
             "@context": CONTEXT,
-            "@id": instance.uri,
+            "@id": instance_uri,
             "@embed": "@once",
             "@omitDefault": True,
         },
