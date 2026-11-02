@@ -14,7 +14,11 @@ from sqlalchemy.orm import Session
 
 from bluecore_api.schemas.schemas import ProfileSchema
 
-VERSION_URI = re.compile(r"(?P<profile_uri>.+)/version/(?P<version_id>[0-9]+)")
+# The host is left open: the lookup by URI rejects a wrong one, and tying it to
+# BLUECORE_URL would refuse stored URIs whenever the two are spelled differently.
+VERSION_URI = re.compile(
+    r"(?P<profile_uri>.+/profiles/[0-9a-f-]{36})/version/(?P<version_id>[0-9]+)"
+)
 
 
 def version_uri(profile: Profile, version_id: int) -> str:

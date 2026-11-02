@@ -6,7 +6,7 @@ versions. Framing stores every property as a list, and CONTEXT has no term for
 this predicate, so the value is always at data[HAS_RESOURCE_TEMPLATE][0]["@id"].
 """
 
-from bluecore_models.models import Profile, ResourceBase
+from bluecore_models.models import Profile, ResourceBase, Version
 from sqlalchemy import Select, Text, func, or_, select
 from sqlalchemy import cast as sql_cast
 from sqlalchemy.orm import Session
@@ -19,27 +19,36 @@ template_ref = ResourceBase.data[HAS_RESOURCE_TEMPLATE][0]["@id"].astext
 
 
 def referenced_by(db: Session, profile: Profile, limit: int = 5) -> list[str]:
-    """URIs of resources whose current data mentions this profile or a version.
+    """URIs of resources whose data, now or in any version, mentions this profile.
 
-    A text match over every resource's data, so it finds a record's
-    hasResourceTemplate and another profile's nested references alike, plain or
-    versioned. It scans the table, which is fine for something as rare as
-    deleting a profile.
+    A text match, so it finds a record's hasResourceTemplate and another
+    profile's nested references alike, plain or versioned. Old versions count
+    because a record can be pinned to a parent template's version that nested
+    this profile, even after the parent moved on. It scans the tables, which is
+    fine for something as rare as deleting a profile.
 
     TODO: profile_relations can answer the profile half of this once it links
     versions of profiles. Today it records no link for a versioned nested
-    reference, so it would miss them.
+    reference, and drops a link once the parent's current data stops making it.
     """
-    text = sql_cast(ResourceBase.data, Text)
+
+    def mentions(data):
+        text = sql_cast(data, Text)
+        return or_(
+            text.contains(f'"{profile.uri}"', autoescape=True),
+            text.contains(f'"{profile.uri}/version/', autoescape=True),
+        )
+
+    in_a_version = (
+        select(Version.id)
+        .where(Version.resource_id == ResourceBase.id)
+        .where(mentions(Version.data))
+        .exists()
+    )
     stmt = (
         select(ResourceBase.uri)
         .where(ResourceBase.id != profile.id)
-        .where(
-            or_(
-                text.contains(f'"{profile.uri}"', autoescape=True),
-                text.contains(f'"{profile.uri}/version/', autoescape=True),
-            )
-        )
+        .where(or_(mentions(ResourceBase.data), in_a_version))
         .order_by(ResourceBase.id)
         .limit(limit)
     )

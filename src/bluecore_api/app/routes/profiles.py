@@ -74,8 +74,8 @@ def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
 @endpoints.get("/profiles/", operation_id="get_profiles")
 async def read_profiles(
     uri: str | None = None,
-    limit: int = 10,
-    offset: int = 0,
+    limit: int = Query(10, ge=0, le=100),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
     """
@@ -92,7 +92,7 @@ async def read_profiles(
     db_profiles = db.query(Profile).limit(limit).offset(offset).all()
     total = db.query(Profile).count()
     return {
-        "profiles": db_profiles,
+        "profiles": [with_version_uri(db, profile) for profile in db_profiles],
         "total": total,
         "links": _generate_links(len(db_profiles), limit, offset),
     }
@@ -172,11 +172,11 @@ async def delete_profile(
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
     # Deleting would take every version with it, and leave whatever points at
     # one of them pointing at nothing.
-    users = referenced_by(db, db_profile)
-    if users:
+    referrers = referenced_by(db, db_profile)
+    if referrers:
         raise HTTPException(
             status_code=409,
-            detail=f"Profile {profile_uuid} is still used by {', '.join(users)}",
+            detail=f"Profile {profile_uuid} is still used by {', '.join(referrers)}",
         )
     for rbc in db_profile.classes:
         db.delete(rbc)

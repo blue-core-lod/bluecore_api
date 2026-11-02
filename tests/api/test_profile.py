@@ -144,6 +144,15 @@ def test_list_profiles(client):
     assert "first" in body["links"]
 
 
+def test_list_profiles_returns_version_uris(client):
+    created = post_profile(client)
+
+    listed = client.get("/profiles/").json()["profiles"]
+
+    assert listed[0]["version_uri"] == created["version_uri"]
+    assert "title_vector" not in listed[0]
+
+
 def test_read_profile_by_uri(client):
     created = client.post(
         "/profiles/",
@@ -301,6 +310,20 @@ def test_resolve_version_uri_of_another_profiles_version(client, db_session):
 @pytest.mark.parametrize(
     "uri",
     [
+        f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/1/version/2",
+        "urn:anything/version/1",
+        f"{BCLD}/works/00000000-0000-0000-0000-000000000001/version/1",
+    ],
+)
+def test_resolve_version_uri_rejects_non_profile_uris(db_session, uri):
+    with pytest.raises(HTTPException) as error:
+        resolve_version_uri(db_session, uri)
+    assert error.value.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "uri",
+    [
         f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001",
         f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/",
         f"{BCLD}/profiles/00000000-0000-0000-0000-000000000001/version/latest",
@@ -395,6 +418,23 @@ def test_delete_profile_nested_by_plain_uri(client):
     response = client.delete(f"/profiles/{title['uuid']}", headers=CATALOGER)
 
     assert response.status_code == 409
+
+
+def test_delete_profile_nested_by_a_pinned_parent_version(client, db_session):
+    """A record pinned to an old parent version still needs the nested profile."""
+    title = post_profile(client)
+    work = post_profile(client, nesting(title["version_uri"]))
+    record = add_record(db_session, Work, "w1", work["version_uri"])
+    client.put(
+        f"/profiles/{work['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps({"label": "no longer nests title"})},
+    )
+
+    response = client.delete(f"/profiles/{title['uuid']}", headers=CATALOGER)
+
+    assert response.status_code == 409, f"{record} would point at a dangling template"
+    assert work["uri"] in response.json()["detail"]
 
 
 def test_delete_profile_whose_uri_another_extends(client, db_session):
