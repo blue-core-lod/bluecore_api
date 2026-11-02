@@ -136,8 +136,8 @@
     {% if not (is_work or is_hub) %}
         {#### keycloak-js loads from jsDelivr; the browser refuses it unless its bytes match the hash. ####}
         {#### .github/workflows/dependency-updates.yml rewrites these two lines -- keep their shape.  ####}
-        {% set keycloak_js_url = "https://cdn.jsdelivr.net/npm/keycloak-js@26.2.4/lib/keycloak.js" %}
-        {% set keycloak_js_integrity = "sha384-H/s0CjiTzSWrUEPhnUduI9XFNHARQjaXpB7aJ3R48Rw0Mm8vomuZ4phg1N3152xi" %}
+        {% set keycloak_js_url = "https://cdn.jsdelivr.net/npm/keycloak-js@26.2.5/lib/keycloak.js" %}
+        {% set keycloak_js_integrity = "sha384-Mk2tvDKrQ/Q0rtUN0CDS3GISaVdJq8BikiOyMVk7C734WNyE3PbXlGRuyzW9My+b" %}
         <script type="importmap">
             {
                 "imports": {"keycloak-js": "{{ keycloak_js_url }}"},
