@@ -19,6 +19,7 @@ from sqlalchemy import ColumnElement, Select, and_, func, literal, or_, select
 from sqlalchemy.orm import Session, noload
 
 from bluecore_api.app.utils.jsonld import with_context
+from bluecore_api.app.utils.profile_versions import with_version_uri
 from bluecore_api.app.views.search_display import (
     resource_title,
 )
@@ -482,7 +483,8 @@ async def search_profile(
     total = db.scalar(count_query)
 
     stmt = stmt.offset(offset).limit(limit)
-    results = db.execute(stmt).scalars().all()
+    # One version query per profile, which is fine at a page of profiles.
+    results = [with_version_uri(db, profile) for profile in db.execute(stmt).scalars()]
     links = generate_links(
         verb="search/profile",
         slice_size=len(results),
