@@ -1,7 +1,10 @@
 import json
 
-from bluecore_models.models import Hub, Instance, ResourceBase, Work
+from bluecore_models.models import Hub, Instance, OtherResource, ResourceBase, Work
+from bluecore_models.utils.graph import framed_for_storage
 from rdflib import RDFS, Graph, Literal, URIRef
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import load_jsonld_from_model
 from bluecore_api.app.views import model
@@ -25,11 +28,43 @@ def expand_resource_as_graph(db_resource: Instance | Work, graph: Graph) -> Grap
     other resources and adds the other resource RDF to the input graph.
     """
     for row in db_resource.other_resources:
-        other_resource_graph = load_jsonld_from_model(row.other_resource.data)
-        graph.parse(
-            data=other_resource_graph.serialize(format="json-ld"), format="json-ld"
-        )
+        _add_other_resource(graph, row.other_resource)
     return graph
+
+
+def expand_version_graph(
+    db: Session, db_resource: Hub | Instance | Work, data: dict
+) -> dict:
+    """
+    expand_resource_graph for a historical version of a resource, framed as the
+    live route's expanded data is when it is assigned to the model.
+
+    The live expansion follows the links the database holds now. A version
+    follows the links its own RDF makes instead: the other resources and the
+    Works, Instances and Hubs it names, looked up by URI. So a subject or Work
+    the resource has since dropped is still filled in, and one added later is
+    not. What a link resolves to -- an other resource's RDF, a Work's title --
+    is read as it is now, as only the versioned resource itself has a history.
+    """
+    graph = load_jsonld_from_model(data)  # ty: ignore[invalid-argument-type]
+    uris = {str(o) for o in graph.objects() if isinstance(o, URIRef)}
+    uris.discard(str(db_resource.uri))
+    linked = (
+        db.scalars(select(ResourceBase).where(ResourceBase.uri.in_(uris))).all()
+        if uris
+        else []
+    )
+    for resource in linked:
+        if isinstance(resource, OtherResource):
+            _add_other_resource(graph, resource)
+    _label_links(graph, [r for r in linked if isinstance(r, Hub | Instance | Work)])
+    expanded = json.loads(graph.serialize(format="json-ld"))
+    return framed_for_storage(str(db_resource.uri), expanded)
+
+
+def _add_other_resource(graph: Graph, other_resource: OtherResource) -> None:
+    other_resource_graph = load_jsonld_from_model(other_resource.data)
+    graph.parse(data=other_resource_graph.serialize(format="json-ld"), format="json-ld")
 
 
 def add_linked_labels(db_resource: ResourceBase, graph: Graph) -> Graph:
@@ -42,7 +77,11 @@ def add_linked_labels(db_resource: ResourceBase, graph: Graph) -> Graph:
     loads unlabeled. Only a link the graph actually makes is labeled, and one
     the graph already labels is left as it is.
     """
-    for linked in _linked_resources(db_resource):
+    return _label_links(graph, _linked_resources(db_resource))
+
+
+def _label_links(graph: Graph, linked_resources: list[Hub | Instance | Work]) -> Graph:
+    for linked in linked_resources:
         uri = URIRef(linked.uri)
         if (None, None, uri) not in graph or (uri, RDFS.label, None) in graph:
             continue

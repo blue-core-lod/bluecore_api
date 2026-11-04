@@ -12,6 +12,7 @@ from bluecore_api.app.utils.profile_versions import version_uri
 from bluecore_api.app.utils.serialize.response_generator import as_jsonld
 from bluecore_api.app.utils.serializer import serialize
 from bluecore_api.database import get_db
+from bluecore_api.expansion import expand_version_graph
 from bluecore_api.schemas.schemas import (
     HubSchema,
     InstanceSchema,
@@ -136,18 +137,27 @@ def profile_version_payload(resource: Profile, version: Version) -> ProfileSchem
     )
 
 
-def as_version(resource: Hub | Instance | Work, version: Version) -> None:
+def as_version(
+    db: Session, resource: Hub | Instance | Work, version: Version, expand: bool
+) -> None:
     """
     Show the loaded resource as it was at this version, so the same serializers
     the live routes use can render it. Identity comes from the live resource;
     only data and updated_at come from the snapshot.
 
+    With expand, the snapshot is expanded here rather than by the serializers:
+    they follow the resource's links in the database, which are today's, and a
+    version has to follow the links it made itself -- see expand_version_graph.
+
     set_committed_value rather than assignment: assigning marks the row dirty,
-    and the lazy loads inside expand would autoflush an UPDATE of the live row
-    with old data, firing add_version(). get_db never commits, so that is rolled
-    back, but a read should not depend on the rollback to leave history alone.
+    and any later query would autoflush an UPDATE of the live row with old
+    data, firing add_version(). get_db never commits, so that is rolled back,
+    but a read should not depend on the rollback to leave history alone.
     """
-    set_committed_value(resource, "data", dict(cast(dict[str, object], version.data)))
+    data = dict(cast(dict[str, object], version.data))
+    if expand:
+        data = expand_version_graph(db, resource, data)
+    set_committed_value(resource, "data", data)
     set_committed_value(resource, "updated_at", version.created_at)
 
 
@@ -163,14 +173,16 @@ def serialize_version(
     Negotiate a version the way the live resource routes do (a ".ttl" style
     suffix or the Accept header), except that it falls back to JSON-LD rather
     than HTML. Only application/vnd.sinopia+json gets the wrapped schema.
+
+    The serializers are told not to expand: as_version already has.
     """
     id_part, format = (
         version_id.split(".", 1) if "." in version_id else (version_id, None)
     )
     resource = cast(Hub | Instance | Work, resource_or_404(db, model, uuid))
-    as_version(resource, version_or_404(db, resource, int(id_part)))
-    resp = serialize(resource, expand, format, request, allow_html=False)
-    return resp if resp else as_jsonld(resource, expand)
+    as_version(db, resource, version_or_404(db, resource, int(id_part)), expand)
+    resp = serialize(resource, False, format, request, allow_html=False)
+    return resp if resp else as_jsonld(resource, False)
 
 
 @endpoints.get(
