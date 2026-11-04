@@ -8,9 +8,9 @@ with real Library of Congress records measured 11 ms for one record and 9.5 s of
 full-API stall for a thousand, hence the two guards here: a body larger than
 MAX_CONVERT_BYTES or carrying more than one record is refused with a 413.
 
-Bulk MARC belongs in `POST /batches/upload/`, which converts it with the same
-marcxml_to_bibframe_graph() used here and hands the JSON-LD to Airflow's
-`resource_loader` DAG to persist.
+Bulk MARC belongs in a batch workflow: today that means the bluecore-workflows
+`marc_to_bibframe` DAG with `ingest=true`, since `/batches/upload/` hands its
+uploads to `resource_loader`, which reads JSON-LD rather than MARC.
 """
 
 from copy import deepcopy
@@ -81,7 +81,7 @@ DEFAULT_SOURCE_BASE_URI = DEFAULT_BASE_URI
 _INVALID_URI_CHARS = frozenset('<>" {}|\\^`') | {chr(c) for c in range(33)}
 
 
-def normalize_base_uri(source_base_uri: str) -> str:
+def _base_uri(source_base_uri: str) -> str:
     """Validate the base URI, and give it a trailing slash.
 
     The transform concatenates the base, the record id and "#fragment", so an
@@ -168,8 +168,8 @@ def _too_many_records(count: int) -> HTTPException:
     return HTTPException(
         status_code=413,
         detail=(
-            f"Received {count} records; this endpoint converts one. Send "
-            "bulk MARC to POST /batches/upload/."
+            f"Received {count} records; this endpoint converts one. Bulk "
+            "MARC belongs in a batch workflow."
         ),
     )
 
@@ -263,15 +263,14 @@ def _negotiate(accept_header: str) -> str:
     )
 
 
-def marcxml_to_bibframe_graph(marcxml_bytes: bytes, source_base_uri: str) -> Graph:
+def _marcxml_to_bibframe_graph(marcxml_bytes: bytes, source_base_uri: str) -> Graph:
     """Convert MARCXML to Blue Core BIBFRAME.
 
     marc-bibframe does the conversion; replace_dlc_assigner then applies the one
     piece of Blue Core policy that MARC-derived BIBFRAME needs. Given the same
     source_base_uri, this endpoint and the bluecore-workflows marc2bf DAG
     produce the same thing -- the DAG applies the same rewrite to the same
-    transform's output. POST /batches/upload/ calls this too, so bulk MARC
-    ingested through the API matches what this endpoint returns.
+    transform's output.
     """
     graph = marcxml_to_graph(marcxml_bytes, baseuri=source_base_uri)
     replace_dlc_assigner(graph)
@@ -351,8 +350,8 @@ MARC2XML_RESPONSES: dict[int | str, dict[str, object]] = {
     },
     413: _detail_response(
         "Body exceeded the byte limit, or carried more than one record.",
-        "Received 2 records; this endpoint converts one. Send bulk MARC to "
-        "POST /batches/upload/.",
+        "Received 2 records; this endpoint converts one. Bulk MARC belongs in a "
+        "batch workflow.",
     ),
     415: _detail_response(
         "Body was neither a multipart upload with a `file` field nor a raw body "
@@ -389,8 +388,8 @@ MARC2BIBFRAME_RESPONSES: dict[int | str, dict[str, object]] = {
     ),
     413: _detail_response(
         "Body exceeded the byte limit, or carried more than one record.",
-        "Received 2 records; this endpoint converts one. Send bulk MARC to "
-        "POST /batches/upload/.",
+        "Received 2 records; this endpoint converts one. Bulk MARC belongs in a "
+        "batch workflow.",
     ),
     415: _detail_response(
         "Body was neither a multipart upload with a `file` field nor a raw body "
@@ -428,7 +427,7 @@ async def marc2xml(
     Convert a binary MARC record to MARCXML.
 
     One record per request. A body over the byte limit, or holding more than one
-    record, is refused with a 413; send bulk MARC to ``POST /batches/upload/``.
+    record, is refused with a 413; bulk MARC belongs in a batch workflow.
 
     Accepts either:
     - Multipart form-data with a ``file`` field containing binary MARC data.
@@ -520,7 +519,7 @@ async def marc2bibframe(
       or ``application/marc``.
 
     One record per request. A body over the byte limit, or holding more than one
-    record, is refused with a 413; send bulk MARC to ``POST /batches/upload/``.
+    record, is refused with a 413; bulk MARC belongs in a batch workflow.
 
     Binary MARC21 payloads are converted to MARCXML before the BIBFRAME
     transformation. A leading UTF-8 byte order mark is ignored, so MARCXML saved
@@ -531,7 +530,7 @@ async def marc2bibframe(
     default), RDF/XML, turtle, or N-Triples.
     """
     media_type = _negotiate(request.headers.get("accept", ""))
-    base_uri = normalize_base_uri(source_base_uri)
+    base_uri = _base_uri(source_base_uri)
 
     if file and getattr(file, "filename", None):
         raw_bytes = await file.read()
@@ -572,7 +571,7 @@ async def marc2bibframe(
         # through, which is what keeps the transform from running on a rejected
         # request.
         _require_single_record(raw_bytes)
-        graph = marcxml_to_bibframe_graph(raw_bytes, base_uri)
+        graph = _marcxml_to_bibframe_graph(raw_bytes, base_uri)
     except etree.XMLSyntaxError as exc:
         raise HTTPException(status_code=422, detail=f"Invalid XML: {exc}")
     except etree.XSLTApplyError as exc:
