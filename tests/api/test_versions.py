@@ -4,9 +4,19 @@ import json
 from datetime import datetime
 
 import pytest
-from bluecore_models.models import Hub, Instance, Profile, Work
+import rdflib
+from bluecore_models.models import (
+    BibframeOtherResources,
+    Hub,
+    Instance,
+    OtherResource,
+    Profile,
+    Work,
+)
 from bluecore_models.utils.graph import CONTEXT_URL as BIBFRAME_CONTEXT_URL
+from bluecore_models.utils.graph import load_jsonld
 from fastapi.testclient import TestClient
+from rdflib import RDFS, Literal, URIRef
 from sqlalchemy.orm import Session
 
 WORK_UUID = "370ccc0a-3280-4036-9ca1-d9b5d5daf7df"
@@ -22,6 +32,12 @@ UPDATED_TITLE = "second title"
 # on write -- so reads have to expect the wrapped form.
 FRAMED_ORIGINAL_TITLE = [ORIGINAL_TITLE]
 FRAMED_UPDATED_TITLE = [UPDATED_TITLE]
+
+# sinopia_editor's fetchResource() sends this; it is the only Accept header that
+# gets the wrapped schema. Everything else gets the version's JSON-LD itself.
+SINOPIA = {"Accept": "application/vnd.sinopia+json"}
+
+LANGUAGE_FRE = "http://id.loc.gov/vocabulary/languages/fre"
 
 
 def add_work(db: Session, *, id: int = 1, uuid: str = WORK_UUID) -> Work:
@@ -192,7 +208,9 @@ def test_version_can_be_fetched_by_integer_id(
 
     versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
 
-    response = client.get(f"/works/{WORK_UUID}/version/{versions[0]['id']}")
+    response = client.get(
+        f"/works/{WORK_UUID}/version/{versions[0]['id']}", headers=SINOPIA
+    )
 
     assert response.status_code == 200
     assert response.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
@@ -205,10 +223,10 @@ def test_newest_version_matches_the_live_resource(
     update_work(db_session, work)
 
     versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
-    newest = client.get(f"/works/{WORK_UUID}/version/{versions[-1]['id']}").json()
-    live = client.get(
-        f"/works/{WORK_UUID}", headers={"Accept": "application/vnd.sinopia+json"}
+    newest = client.get(
+        f"/works/{WORK_UUID}/version/{versions[-1]['id']}", headers=SINOPIA
     ).json()
+    live = client.get(f"/works/{WORK_UUID}", headers=SINOPIA).json()
 
     assert newest["data"]["title"] == FRAMED_UPDATED_TITLE
     assert newest["data"] == live["data"]
@@ -221,7 +239,9 @@ def test_version_payload_carries_identity_and_context(
     update_work(db_session, work)
 
     versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
-    payload = client.get(f"/works/{WORK_UUID}/version/{versions[0]['id']}").json()
+    payload = client.get(
+        f"/works/{WORK_UUID}/version/{versions[0]['id']}", headers=SINOPIA
+    ).json()
 
     # Identity comes from the live resource; only data comes from the snapshot.
     assert payload["uuid"] == WORK_UUID
@@ -280,6 +300,208 @@ def test_malformed_version_identifier_is_422(
     assert response.status_code == 422
 
 
+def oldest_version_path(client: TestClient) -> str:
+    versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
+    return f"/works/{WORK_UUID}/version/{versions[0]['id']}"
+
+
+def test_version_is_jsonld_by_default(client: TestClient, db_session: Session) -> None:
+    # Like the live resource, a version is Linked Data first: without the
+    # Sinopia header it is the snapshot itself, not the editor's wrapper.
+    update_work(db_session, add_work(db_session))
+
+    response = client.get(oldest_version_path(client))
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/ld+json"
+    body = response.json()
+    assert body["@id"] == f"https://bcld.info/works/{WORK_UUID}"
+    assert body["@context"] == BIBFRAME_CONTEXT_URL
+    assert body["title"] == FRAMED_ORIGINAL_TITLE
+    assert "data" not in body
+    assert "uuid" not in body
+
+
+@pytest.mark.parametrize(
+    "accept",
+    [
+        "text/html",
+        "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "*/*",
+    ],
+)
+def test_version_has_no_html_view(
+    client: TestClient, db_session: Session, accept: str
+) -> None:
+    # The live resource falls back to HTML; a version has no page of its own,
+    # so a browser gets the JSON-LD.
+    update_work(db_session, add_work(db_session))
+
+    response = client.get(oldest_version_path(client), headers={"Accept": accept})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/ld+json"
+    assert response.json()["title"] == FRAMED_ORIGINAL_TITLE
+
+
+def test_sinopia_accept_wraps_the_version(
+    client: TestClient, db_session: Session
+) -> None:
+    update_work(db_session, add_work(db_session))
+    versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
+
+    payload = client.get(
+        f"/works/{WORK_UUID}/version/{versions[0]['id']}", headers=SINOPIA
+    ).json()
+
+    # updated_at is the snapshot's own time, not the live resource's.
+    assert payload["updated_at"] + "Z" == versions[0]["timestamp"]
+    assert payload["data"]["title"] == FRAMED_ORIGINAL_TITLE
+
+
+@pytest.mark.parametrize(
+    ("suffix", "accept", "media_type"),
+    [
+        (".ttl", None, "text/turtle"),
+        (".nt", None, "application/n-triples"),
+        ("", "text/turtle", "text/turtle"),
+    ],
+)
+def test_version_serializes_the_snapshot(
+    client: TestClient,
+    db_session: Session,
+    suffix: str,
+    accept: str | None,
+    media_type: str,
+) -> None:
+    # The old title, not the live one, proves the serializers read the version.
+    update_work(db_session, add_work(db_session))
+    headers = {"Accept": accept} if accept else {}
+
+    response = client.get(oldest_version_path(client) + suffix, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith(media_type)
+    assert ORIGINAL_TITLE in response.text
+    assert UPDATED_TITLE not in response.text
+
+
+def test_expanded_version_does_not_create_one(
+    client: TestClient, db_session: Session
+) -> None:
+    # sinopia_editor fetches versions with expand=true, which lazy-loads the
+    # resource's relationships after the snapshot is in place.
+    update_work(db_session, add_work(db_session))
+    before = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
+
+    response = client.get(
+        oldest_version_path(client), params={"expand": "true"}, headers=SINOPIA
+    )
+    after = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
+
+    assert response.status_code == 200
+    assert before == after
+
+
+@pytest.mark.parametrize("version_id", ["1.", "1.TTL", "1..ttl", ".ttl"])
+def test_malformed_version_suffix_is_422(
+    client: TestClient, db_session: Session, version_id: str
+) -> None:
+    add_work(db_session)
+
+    response = client.get(f"/works/{WORK_UUID}/version/{version_id}")
+
+    assert response.status_code == 422
+
+
+def test_unknown_version_with_a_suffix_is_404(
+    client: TestClient, db_session: Session
+) -> None:
+    add_work(db_session)
+
+    response = client.get(f"/works/{WORK_UUID}/version/999999.ttl")
+
+    assert response.status_code == 404
+
+
+def expanded_version_graph(client: TestClient, path: str) -> rdflib.Graph:
+    response = client.get(path, params={"expand": "true"}, headers=SINOPIA)
+    assert response.status_code == 200
+    return load_jsonld(response.json()["data"])
+
+
+def test_expanded_version_labels_the_work_it_linked_to(
+    client: TestClient, db_session: Session
+) -> None:
+    # The Instance has since moved to another Work. Its first version still
+    # says instanceOf the first Work, so that is the one to label -- not the
+    # Work the database links it to now.
+    first = add_work(db_session)
+    # A linked resource is labeled with its bf:Title's mainTitle.
+    update_work(db_session, first, {"@type": "Title", "mainTitle": "Emma"})  # ty: ignore[invalid-argument-type]
+    second = add_work(db_session, id=2, uuid=OTHER_WORK_UUID)
+    first_uri, second_uri = str(first.uri), str(second.uri)
+    uri = f"https://bcld.info/instances/{INSTANCE_UUID}"
+    instance = Instance(
+        id=3,
+        uuid=INSTANCE_UUID,
+        uri=uri,
+        work=first,
+        data={"@id": uri, "@type": "Instance", "instanceOf": {"@id": first_uri}},
+    )
+    db_session.add(instance)
+    db_session.commit()
+    instance.data = {  # ty: ignore[invalid-assignment]
+        "@id": uri,
+        "@type": "Instance",
+        "instanceOf": {"@id": second_uri},
+    }
+    instance.work = second
+    db_session.commit()
+
+    versions = client.get(f"/instances/{INSTANCE_UUID}/versions").json()["versions"]
+    graph = expanded_version_graph(
+        client, f"/instances/{INSTANCE_UUID}/version/{versions[0]['id']}"
+    )
+
+    assert list(graph.objects(URIRef(first_uri), RDFS.label)) == [Literal("Emma")]
+    assert (URIRef(second_uri), None, None) not in graph
+
+
+def test_expanded_version_fills_in_the_other_resources_it_linked_to(
+    client: TestClient, db_session: Session
+) -> None:
+    # The Work's language has since changed, and the database now links it to
+    # the new one only. Its first version is filled in with the old language.
+    old, new = "http://id.loc.gov/vocabulary/languages/eng", LANGUAGE_FRE
+    for id, language in [(5, old), (6, new)]:
+        db_session.add(
+            OtherResource(
+                id=id,
+                uri=language,
+                data={"@id": language, "rdfs:label": language.rsplit("/", 1)[-1]},
+            )
+        )
+    work = add_work(db_session)
+    work.data = {**work.data, "language": {"@id": old}}  # ty: ignore[invalid-assignment, invalid-argument-type]
+    db_session.commit()
+    work.data = {**work.data, "language": {"@id": new}}  # ty: ignore[invalid-assignment, invalid-argument-type]
+    db_session.add(
+        BibframeOtherResources(
+            other_resource=db_session.get(OtherResource, 6), bibframe_resource=work
+        )
+    )
+    db_session.commit()
+
+    versions = client.get(f"/works/{WORK_UUID}/versions").json()["versions"]
+    graph = expanded_version_graph(
+        client, f"/works/{WORK_UUID}/version/{versions[1]['id']}"
+    )
+
+    assert list(graph.objects(URIRef(old), RDFS.label)) == [Literal("eng")]
+    assert (URIRef(new), None, None) not in graph
+
+
 def test_instance_versions(client: TestClient, db_session: Session) -> None:
     work = add_work(db_session)
     uri = f"https://bcld.info/instances/{INSTANCE_UUID}"
@@ -301,7 +523,9 @@ def test_instance_versions(client: TestClient, db_session: Session) -> None:
     versions = listed.json()["versions"]
     assert len(versions) == 1
 
-    payload = client.get(f"/instances/{INSTANCE_UUID}/version/{versions[0]['id']}")
+    payload = client.get(
+        f"/instances/{INSTANCE_UUID}/version/{versions[0]['id']}", headers=SINOPIA
+    )
     assert payload.status_code == 200
     assert payload.json()["work_id"] == work_id
     assert payload.json()["data"]["title"] == FRAMED_ORIGINAL_TITLE
@@ -323,7 +547,9 @@ def test_hub_versions(client: TestClient, db_session: Session) -> None:
     versions = listed.json()["versions"]
     assert len(versions) == 1
 
-    payload = client.get(f"/hubs/{HUB_UUID}/version/{versions[0]['id']}")
+    payload = client.get(
+        f"/hubs/{HUB_UUID}/version/{versions[0]['id']}", headers=SINOPIA
+    )
     assert payload.status_code == 200
     assert payload.json()["type"] == "hubs"
 
