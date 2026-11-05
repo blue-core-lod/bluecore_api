@@ -1,11 +1,12 @@
 import json
 
 import pytest
-from bluecore_models.models import Instance, Profile, Version, Work
+from bluecore_models.models import Instance, Profile, ResourceBase, Version, Work
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import HTTPException
 from rdflib import RDF, Literal, Namespace, URIRef
 from sinopia_templates import BF, Prop, template
+from sqlalchemy import update
 
 from bluecore_api.app.utils import template_compat
 from bluecore_api.app.utils.profile_versions import resolve_version_uri
@@ -499,6 +500,7 @@ def test_validate_an_unused_profile(client):
         "requires_new_version": False,
         "changes": [],
         "incompatible_instances": [],
+        "unchecked_instances": [],
         "unresolved_templates": [],
     }
 
@@ -775,3 +777,38 @@ def test_validate_reports_templates_it_could_not_load(client, db_session):
     ]
     [bump] = [c for c in body["changes"] if c["kind"] == "nested_version_changed"]
     assert bump["breaking"] is True
+
+
+def test_validate_a_stored_profile_that_cant_be_read(client):
+    """Two ResourceTemplate nodes: listed as unresolved, not a 500."""
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+    other = template(WORK, uri="https://example.com/templates/other")
+    put_profile(client, profile, template(WORK, NOTE) + other)
+
+    body = propose(client, profile, template(WORK, NOTE, DATE))
+
+    assert body["changes"] == []
+    assert profile["uri"] in body["unresolved_templates"]
+
+
+def test_validate_skips_records_it_cant_read(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    pinned = profile["version_uri"]
+    dated = add_record(db_session, Work, "w1", pinned, values(date="1990"))
+    unreadable = add_record(db_session, Work, "w2", pinned, values(date="1990"))
+    # A Core UPDATE, so the ORM's framing hook doesn't fix the data up.
+    db_session.execute(
+        update(ResourceBase)
+        .where(ResourceBase.uri == unreadable)
+        .values(data={"@context": 5, HAS_RESOURCE_TEMPLATE: [{"@id": pinned}]})
+    )
+    db_session.commit()
+    missing_version = add_record(
+        db_session, Work, "w3", f"{profile['uri']}/version/999999", values(date="x")
+    )
+
+    body = propose(client, profile, template(WORK, NOTE))
+
+    assert [i["uri"] for i in body["incompatible_instances"]] == [dated]
+    assert body["unchecked_instances"] == [unreadable, missing_version]
+    assert f"{profile['uri']}/version/999999" in body["unresolved_templates"]

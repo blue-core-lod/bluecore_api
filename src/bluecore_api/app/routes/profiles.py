@@ -17,11 +17,11 @@ from bluecore_api.app.utils.profile_versions import (
     with_version_uri,
 )
 from bluecore_api.app.utils.template_compat import (
+    UNREADABLE,
     TemplateCache,
     TemplateError,
     incompatible_instances,
     parse_template,
-    stored_template,
     template_changes,
 )
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
@@ -228,7 +228,7 @@ async def validate_profile(
             if not isinstance(data, list | dict):
                 raise TypeError("expected a JSON object or array")
             graph = load_jsonld(data)
-        except (ValueError, TypeError, AttributeError, RuntimeError) as error:
+        except UNREADABLE as error:
             raise HTTPException(
                 status_code=422, detail=f"data is not valid JSON-LD: {error}"
             ) from error
@@ -239,16 +239,20 @@ async def validate_profile(
                 status_code=422, detail=f"data is not a resource template: {error}"
             ) from error
         templates = TemplateCache(db)
-        changes = template_changes(
-            stored_template(db_profile.data), proposed, nested_templates=templates
+        # Through the cache, so a stored profile that can't be read is listed in
+        # unresolved_templates (with no changes) instead of failing the request.
+        current = templates(db_profile.uri)
+        changes = (
+            []
+            if current is None
+            else template_changes(current, proposed, nested_templates=templates)
         )
-        incompatible = incompatible_instances(
-            db, db_profile, proposed, templates=templates
-        )
+        check = incompatible_instances(db, db_profile, proposed, templates=templates)
         compatibility = {
-            "requires_new_version": bool(incompatible),
+            "requires_new_version": bool(check.incompatible),
             "changes": [asdict(change) for change in changes],
-            "incompatible_instances": [asdict(record) for record in incompatible],
+            "incompatible_instances": [asdict(r) for r in check.incompatible],
+            "unchecked_instances": check.unchecked,
             "unresolved_templates": templates.unresolved(),
         }
     return ProfileValidationSchema(

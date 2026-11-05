@@ -41,6 +41,10 @@ class TemplateError(ValueError):
     """The data does not describe exactly one resource template."""
 
 
+# What load_jsonld (and parse_template) raise for data they can't read.
+UNREADABLE = (ValueError, TypeError, AttributeError, RuntimeError)
+
+
 @dataclass
 class PropertyTemplate:
     uris: tuple[str, ...]
@@ -244,7 +248,7 @@ class TemplateCache:
             data = profile.data
         try:
             return stored_template(data)
-        except (ValueError, TypeError):
+        except UNREADABLE:
             return None
 
 
@@ -773,32 +777,49 @@ class IncompatibleInstance:
     problems: list[Problem]
 
 
+@dataclass
+class InstanceCheck:
+    incompatible: list[IncompatibleInstance] = field(default_factory=list)
+    # Records that could not be checked: their data or the version they are
+    # pinned to could not be read.
+    unchecked: list[str] = field(default_factory=list)
+
+
 def incompatible_instances(
     db: Session,
     profile: Profile,
     proposed: ResourceTemplate,
     templates: TemplateLookup,
-) -> list[IncompatibleInstance]:
+) -> InstanceCheck:
     """The records pinned to a version of this profile that couldn't move to it.
 
     Only records whose root template is this profile are checked. Records pinned
     to a plain profile URI are skipped, since they name no version to compare.
     templates looks up both the version each record is pinned to and the nested
     templates; pass a TemplateCache so each is parsed once.
+
+    A record that can't be read is listed as unchecked rather than failing the
+    whole check.
     """
-    found = []
+    check = InstanceCheck()
     for uri, version_uri, data in pinned_records(db, profile):
         pinned = templates(version_uri)
         if pinned is None:
+            check.unchecked.append(uri)
             continue
-        graph = load_jsonld_from_model(data)
+        try:
+            graph = load_jsonld_from_model(data)
+        except UNREADABLE:
+            check.unchecked.append(uri)
+            continue
         pointer = URIRef(version_uri)
         root = next(graph.subjects(SINOPIA.hasResourceTemplate, pointer), None)
         if root is None:
+            check.unchecked.append(uri)
             continue
         problems = breaking_changes(
             pinned, proposed, graph, root, nested_templates=templates
         )
         if problems:
-            found.append(IncompatibleInstance(uri, version_uri, problems))
-    return found
+            check.incompatible.append(IncompatibleInstance(uri, version_uri, problems))
+    return check

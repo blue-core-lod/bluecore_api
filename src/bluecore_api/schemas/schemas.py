@@ -133,8 +133,11 @@ class ProfileValidationSchema(BaseModel):
     requires_new_version is true when any record could not move to data.
     unresolved_templates lists the nested or pinned template references the
     checks could not load (not stored, or a bare template id); anything they
-    affect is reported as breaking rather than assumed safe, except records
-    pinned to such a version, which could not be checked at all.
+    affect is reported as breaking rather than assumed safe. If the stored
+    profile itself can't be read, it is listed there and changes is empty.
+    unchecked_instances lists records that could not be checked at all, because
+    their data or the version they are pinned to could not be read; they do not
+    count towards requires_new_version.
     """
 
     profile_uuid: UUID
@@ -146,6 +149,7 @@ class ProfileValidationSchema(BaseModel):
     requires_new_version: bool = False
     changes: list[ProfileChangeSchema] = []
     incompatible_instances: list[IncompatibleInstanceSchema] = []
+    unchecked_instances: list[str] = []
     unresolved_templates: list[str] = []
 
 
