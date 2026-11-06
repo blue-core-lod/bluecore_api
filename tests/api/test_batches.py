@@ -258,3 +258,46 @@ async def test_upload_json_body_missing_rdfxml(client, monkeypatch, tmp_path):
     )
     assert resp.status_code == 422
     assert "Provide 'rdfxml' in the JSON body" in resp.text
+
+
+# ------------------------------
+# /batches/upload/ (MARC is refused until a bulk MARC loader DAG exists)
+# ------------------------------
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "filename,content_type",
+    [
+        ("records.mrc", "application/octet-stream"),
+        ("RECORDS.MARC", "application/octet-stream"),
+        ("export.bin", "application/marc"),
+    ],
+)
+async def test_upload_multipart_marc_is_refused(
+    client, monkeypatch, tmp_path, filename, content_type
+):
+    """No Airflow call is mocked, so pytest-httpx fails the test if one is made."""
+    monkeypatch.chdir(tmp_path)
+
+    resp = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger"},
+        files={"file": (filename, b"00026     2200025   4500\x1e\x1d", content_type)},
+    )
+
+    assert resp.status_code == 415, resp.text
+    assert "Bulk MARC loading is not supported yet" in resp.text
+    assert not any(tmp_path.joinpath("uploads").iterdir())
+
+
+@pytest.mark.asyncio
+async def test_upload_raw_marc_body_is_refused(client, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+
+    resp = client.post(
+        "/batches/upload/",
+        headers={"X-User": "cataloger", "Content-Type": "application/marc"},
+        content=b"00026     2200025   4500\x1e\x1d",
+    )
+
+    assert resp.status_code == 415, resp.text
+    assert "Bulk MARC loading is not supported yet" in resp.text

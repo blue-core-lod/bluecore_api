@@ -27,6 +27,31 @@ def _dag_for_filename(filename: str) -> str:
     return "resource_loader"
 
 
+#: Uploads read as binary MARC21. resource_loader parses JSON-LD only, so
+#: passing MARC through returned a 200 and a workflow id for a run that was
+#: certain to fail. They are refused until bluecore-workflows has a bulk MARC
+#: loader DAG to hand them to (blue-core-lod/bluecore-workflows#238).
+MARC_SUFFIXES = (".mrc", ".marc")
+MARC_MEDIA_TYPE = "application/marc"
+
+
+def _is_marc_upload(filename: str, content_type: str | None) -> bool:
+    """An upload is MARC if its name or its declared type says so."""
+    if (content_type or "").lower().startswith(MARC_MEDIA_TYPE):
+        return True
+    return filename.lower().endswith(MARC_SUFFIXES)
+
+
+def _refuse_marc() -> HTTPException:
+    return HTTPException(
+        status_code=415,
+        detail=(
+            "Bulk MARC loading is not supported yet. Use POST /marc2bibframe "
+            "to convert a single record."
+        ),
+    )
+
+
 def _xml_to_jsonld_and_save(
     upload_root: Path, xml_data: bytes | str, name: str | None = None
 ) -> str:
@@ -83,6 +108,8 @@ async def create_batch_file(
     """
     Multipart with 'file' -> save as-is.
     Otherwise:
+      - binary MARC (a .mrc or .marc file, or application/marc) -> 415, until
+        bluecore-workflows has a bulk MARC loader to hand it to
       - application/json body: {"name": "...", "rdfxml": "..."} -> XML -> JSON-LD
       - application/xml or text/xml raw body -> XML -> JSON-LD
     Then trigger the Airflow DAG using the saved path.
@@ -93,8 +120,16 @@ async def create_batch_file(
         upload_root = Path("./uploads")
         upload_root.mkdir(parents=True, exist_ok=True)
 
+        ct = (request.headers.get("content-type") or "").lower()
+        has_file = bool(file and getattr(file, "filename", None))
+
+        if (has_file and _is_marc_upload(file.filename or "", file.content_type)) or (
+            not has_file and ct.startswith(MARC_MEDIA_TYPE)
+        ):
+            raise _refuse_marc()
+
         # Case A: multipart file present -> PASS THROUGH (legacy)
-        if file and getattr(file, "filename", None):
+        if has_file:
             filename = file.filename or "upload"
             batch_file = f"{uuid4()}/{filename}"
             batch_path = upload_root / batch_file
@@ -111,9 +146,6 @@ async def create_batch_file(
                 dag_id=_dag_for_filename(filename),
             )
             return {"uri": file_location, "workflow_id": workflow_id}
-
-        # No multipart file: inspect content-type
-        ct = (request.headers.get("content-type") or "").lower()
 
         # Case B: JSON body with rdfxml -> convert to JSON-LD
         if ct.startswith("application/json"):
