@@ -6,6 +6,9 @@ versions. Framing stores every property as a list, and CONTEXT has no term for
 this predicate, so the value is always at data[HAS_RESOURCE_TEMPLATE][0]["@id"].
 """
 
+from collections.abc import Iterator
+from typing import Any
+
 from bluecore_models.models import Profile, ResourceBase, Version
 from sqlalchemy import Select, Text, func, or_, select
 from sqlalchemy import cast as sql_cast
@@ -83,6 +86,28 @@ def _records(templates: list[Profile]) -> Select:
     return select(ResourceBase.uri, template_ref.label("version_uri")).where(
         ResourceBase.type.in_(RECORD_TYPES), or_(*names)
     )
+
+
+def pinned_records(
+    db: Session, profile: Profile, batch_size: int = 100
+) -> Iterator[tuple[str, str, Any]]:
+    """(uri, version_uri, data) of each record pinned to a version of this profile.
+
+    Only records whose root template is this profile, not one that nests it, and
+    not records naming the plain profile URI. Ordered by version, so records
+    sharing one arrive together, and streamed rather than loaded at once.
+    """
+    stmt = (
+        select(ResourceBase.uri, template_ref, ResourceBase.data)
+        .where(
+            ResourceBase.type.in_(RECORD_TYPES),
+            template_ref.startswith(f"{profile.uri}/version/", autoescape=True),
+        )
+        .order_by(template_ref, ResourceBase.uri)
+        .execution_options(yield_per=batch_size)
+    )
+    for uri, version_uri, data in db.execute(stmt):
+        yield str(uri), str(version_uri), data
 
 
 def profile_usage(db: Session, profile: Profile, limit: int, offset: int) -> dict:

@@ -1,5 +1,6 @@
 import json
 import os
+from dataclasses import asdict
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -14,6 +15,14 @@ from bluecore_api.app.utils.profile_usage import profile_usage, referenced_by
 from bluecore_api.app.utils.profile_versions import (
     latest_version_uri,
     with_version_uri,
+)
+from bluecore_api.app.utils.template_compat import (
+    UNREADABLE,
+    TemplateCache,
+    TemplateError,
+    incompatible_instances,
+    parse_template,
+    template_changes,
 )
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.database import get_db
@@ -204,24 +213,52 @@ async def validate_profile(
 ):
     """Report what uses a profile. Send data to check a proposed change first.
 
+    With data, also report how it differs from the stored profile, and which
+    records pinned to a version of this profile could not move to it.
+
     Read-only: it never changes the profile or writes a version.
     """
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
+    compatibility = {}
     if body is not None and body.data is not None:
         try:
             data = normalize_context(json.loads(body.data))
             if not isinstance(data, list | dict):
                 raise TypeError("expected a JSON object or array")
-            load_jsonld(data)
-        except (ValueError, TypeError, AttributeError, RuntimeError) as error:
+            graph = load_jsonld(data)
+        except UNREADABLE as error:
             raise HTTPException(
                 status_code=422, detail=f"data is not valid JSON-LD: {error}"
             ) from error
+        try:
+            proposed = parse_template(graph)
+        except TemplateError as error:
+            raise HTTPException(
+                status_code=422, detail=f"data is not a resource template: {error}"
+            ) from error
+        templates = TemplateCache(db)
+        # Through the cache, so a stored profile that can't be read is listed in
+        # unresolved_templates (with no changes) instead of failing the request.
+        current = templates(db_profile.uri)
+        changes = (
+            []
+            if current is None
+            else template_changes(current, proposed, nested_templates=templates)
+        )
+        check = incompatible_instances(db, db_profile, proposed, templates=templates)
+        compatibility = {
+            "requires_new_version": bool(check.incompatible),
+            "changes": [asdict(change) for change in changes],
+            "incompatible_instances": [asdict(r) for r in check.incompatible],
+            "unchecked_instances": check.unchecked,
+            "unresolved_templates": templates.unresolved(),
+        }
     return ProfileValidationSchema(
         profile_uuid=cast(UUID, db_profile.uuid),
         profile_uri=db_profile.uri,
         current_version_uri=latest_version_uri(db, db_profile),
         **profile_usage(db, db_profile, limit, offset),
+        **compatibility,
     )

@@ -1,11 +1,14 @@
 import json
 
 import pytest
-from bluecore_models.models import Instance, Profile, Version, Work
+from bluecore_models.models import Instance, Profile, ResourceBase, Version, Work
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import HTTPException
 from rdflib import RDF, Literal, Namespace, URIRef
+from sinopia_templates import BF, Prop, template
+from sqlalchemy import update
 
+from bluecore_api.app.utils import template_compat
 from bluecore_api.app.utils.profile_versions import resolve_version_uri
 
 SINOPIA = Namespace("http://sinopia.io/vocabulary/")
@@ -367,8 +370,13 @@ def nesting(*refs: str) -> str:
     )
 
 
-def add_record(db_session, model, name: str, template: str):
-    """A Work or Instance made with the given template, framed as stored."""
+def add_record(
+    db_session, model, name: str, template: str, properties: dict | None = None
+):
+    """A Work or Instance made with the given template, framed as stored.
+
+    properties are expanded JSON-LD (full predicate IRIs) added to the record.
+    """
     uri = f"{BCLD}/{model.__tablename__}/{name}"
     db_session.add(
         model(
@@ -377,6 +385,7 @@ def add_record(db_session, model, name: str, template: str):
                 "@id": uri,
                 "@type": [model.__name__],
                 HAS_RESOURCE_TEMPLATE: [{"@id": template}],
+                **(properties or {}),
             },
         )
     )
@@ -467,7 +476,7 @@ def test_validate_never_writes(client, db_session):
     profile = post_profile(client)
     versions_before = db_session.query(Version).count()
 
-    response = validate(client, profile, json={"data": json.dumps({"label": "new"})})
+    response = validate(client, profile, json={"data": json.dumps(template(WORK))})
 
     assert response.status_code == 200
     db_session.expire_all()
@@ -491,6 +500,8 @@ def test_validate_an_unused_profile(client):
         "requires_new_version": False,
         "changes": [],
         "incompatible_instances": [],
+        "unchecked_instances": [],
+        "unresolved_templates": [],
     }
 
 
@@ -562,3 +573,242 @@ def test_validate_requires_permission(client):
     response = client.post(f"/profiles/{profile['uuid']}/validate")
 
     assert response.status_code == 403
+
+
+# --- #339: can existing records move to the proposed version? ------------------
+
+WORK = f"{BF}Work"
+NOTE = Prop(f"{BF}note", repeatable=True)
+DATE = Prop(f"{BF}date")
+EXTENT = Prop(f"{BF}extent")
+REMOVED = "property removed; its data would become unused RDF"
+
+
+def values(**literals: str) -> dict:
+    return {f"{BF}{name}": [{"@value": value}] for name, value in literals.items()}
+
+
+def propose(client, profile: dict, data) -> dict:
+    response = validate(client, profile, json={"data": json.dumps(data)})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def put_profile(client, profile: dict, data) -> str:
+    response = client.put(
+        f"/profiles/{profile['uuid']}",
+        headers=CATALOGER,
+        json={"data": json.dumps(data)},
+    )
+    assert response.status_code == 200
+    return response.json()["version_uri"]
+
+
+def test_validate_data_that_is_not_a_template(client):
+    profile = post_profile(client, json.dumps(template(WORK)))
+
+    response = validate(client, profile, json={"data": json.dumps({"label": "x"})})
+
+    assert response.status_code == 422
+    assert "resource template" in response.json()["detail"]
+
+
+def test_validate_reports_incompatible_instances(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    pinned = profile["version_uri"]
+    dated = add_record(db_session, Work, "w1", pinned, values(date="1990"))
+    add_record(db_session, Work, "w2", pinned, values(note="undated"))
+
+    body = propose(client, profile, template(WORK, NOTE))
+
+    assert body["requires_new_version"] is True
+    assert body["incompatible_instances"] == [
+        {
+            "uri": dated,
+            "version_uri": pinned,
+            "problems": [
+                {"subject": dated, "property": f"{BF}date", "reason": REMOVED}
+            ],
+        }
+    ]
+    assert {
+        "kind": "property_removed",
+        "property": f"{BF}date",
+        "detail": "property removed",
+        "breaking": True,
+    } in body["changes"]
+
+
+def test_validate_compares_each_record_with_its_own_version(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    v1 = profile["version_uri"]
+    v2 = put_profile(client, profile, template(WORK, NOTE, DATE, EXTENT))
+    # extent means nothing under v1, so dropping it can't break this one
+    add_record(db_session, Work, "w1", v1, values(extent="1 v."))
+    on_v2 = add_record(db_session, Work, "w2", v2, values(extent="1 v."))
+
+    body = propose(client, profile, template(WORK, NOTE, DATE))
+
+    assert [(i["uri"], i["version_uri"]) for i in body["incompatible_instances"]] == [
+        (on_v2, v2)
+    ]
+
+
+def test_validate_breaking_change_no_record_uses(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    add_record(db_session, Work, "w1", profile["version_uri"], values(note="a"))
+
+    body = propose(client, profile, template(WORK, NOTE))
+
+    assert body["requires_new_version"] is False
+    assert body["incompatible_instances"] == []
+    assert any(c["breaking"] for c in body["changes"])
+
+
+def test_validate_safe_change(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    add_record(db_session, Work, "w1", profile["version_uri"], values(date="1990"))
+
+    body = propose(client, profile, template(WORK, DATE, NOTE, label="Renamed"))
+
+    assert body["requires_new_version"] is False
+    assert [c["kind"] for c in body["changes"]] == ["label_changed"]
+
+
+def test_validate_skips_records_pinned_to_the_plain_profile_uri(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    add_record(db_session, Work, "w1", profile["uri"], values(date="1990"))
+
+    body = propose(client, profile, template(WORK, NOTE))
+
+    assert body["instance_count"] == 1
+    assert body["requires_new_version"] is False
+
+
+def test_validate_reads_ordered_values_as_stored(client, db_session):
+    """Framing stores an ordered property as an @list; it must read back as one."""
+    ordered = Prop(f"{BF}note", repeatable=True, ordered=True)
+    profile = post_profile(client, json.dumps(template(WORK, ordered)))
+    notes = {f"{BF}note": [{"@list": [{"@value": "a"}, {"@value": "b"}]}]}
+    record = add_record(db_session, Work, "w1", profile["version_uri"], notes)
+
+    body = propose(client, profile, template(WORK, Prop(f"{BF}note", ordered=True)))
+
+    [instance] = body["incompatible_instances"]
+    assert instance["uri"] == record
+    assert [p["reason"] for p in instance["problems"]] == [
+        "no longer repeatable, but it has more than one value"
+    ]
+
+
+TITLE = f"{BF}Title"
+MAIN_TITLE = Prop(f"{BF}mainTitle")
+SUBTITLE = Prop(f"{BF}subtitle")
+
+
+def titled(title_ref: str):
+    return template(WORK, Prop(f"{BF}title", "resource", nested=(title_ref,)))
+
+
+def a_title(**literals: str) -> dict:
+    return {f"{BF}title": [{"@type": [TITLE], **values(**literals)}]}
+
+
+def test_validate_resolves_each_nested_version_once(client, db_session, monkeypatch):
+    title = post_profile(client, json.dumps(template(TITLE, MAIN_TITLE, SUBTITLE)))
+    title_v1 = title["version_uri"]
+    title_v2 = put_profile(client, title, template(TITLE, MAIN_TITLE))
+    work = post_profile(client, json.dumps(titled(title_v1)))
+    for name in ("w1", "w2", "w3"):
+        add_record(
+            db_session,
+            Work,
+            name,
+            work["version_uri"],
+            a_title(mainTitle="Main", subtitle="Sub"),
+        )
+    calls = []
+
+    def counting(db, uri):
+        calls.append(uri)
+        return resolve_version_uri(db, uri)
+
+    monkeypatch.setattr(template_compat, "resolve_version_uri", counting)
+
+    body = propose(client, work, titled(title_v2))
+
+    assert len(body["incompatible_instances"]) == 3
+    problem = body["incompatible_instances"][0]["problems"][0]
+    assert (problem["property"], problem["reason"]) == (f"{BF}subtitle", REMOVED)
+    assert sorted(calls) == sorted([work["version_uri"], title_v1, title_v2])
+
+
+def test_validate_a_nested_profile_checks_no_records(client, db_session):
+    """Records pinned to a parent move only when the parent is validated."""
+    title = post_profile(client, json.dumps(template(TITLE, MAIN_TITLE, SUBTITLE)))
+    work = post_profile(client, json.dumps(titled(title["version_uri"])))
+    add_record(db_session, Work, "w1", work["version_uri"], a_title(subtitle="Sub"))
+
+    body = propose(client, title, template(TITLE, MAIN_TITLE))
+
+    assert body["unresolved_templates"] == []
+    assert body["requires_new_version"] is False
+    assert body["incompatible_instances"] == []
+    assert [c["kind"] for c in body["changes"]] == ["property_removed"]
+
+
+def test_validate_reports_templates_it_could_not_load(client, db_session):
+    """A nested version that isn't stored is listed, and not assumed safe."""
+    title = post_profile(client, json.dumps(template(TITLE, MAIN_TITLE, SUBTITLE)))
+    work = post_profile(client, json.dumps(titled(title["version_uri"])))
+    record = add_record(
+        db_session, Work, "w1", work["version_uri"], a_title(mainTitle="Main")
+    )
+    missing = f"{title['uri']}/version/999999"
+
+    body = propose(client, work, titled(missing))
+
+    assert body["unresolved_templates"] == [missing]
+    assert body["requires_new_version"] is True
+    [instance] = body["incompatible_instances"]
+    assert instance["uri"] == record
+    assert [p["reason"] for p in instance["problems"]] == [
+        f"could not load nested template {missing} to check it against"
+    ]
+    [bump] = [c for c in body["changes"] if c["kind"] == "nested_version_changed"]
+    assert bump["breaking"] is True
+
+
+def test_validate_a_stored_profile_that_cant_be_read(client):
+    """Two ResourceTemplate nodes: listed as unresolved, not a 500."""
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+    other = template(WORK, uri="https://example.com/templates/other")
+    put_profile(client, profile, template(WORK, NOTE) + other)
+
+    body = propose(client, profile, template(WORK, NOTE, DATE))
+
+    assert body["changes"] == []
+    assert profile["uri"] in body["unresolved_templates"]
+
+
+def test_validate_skips_records_it_cant_read(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    pinned = profile["version_uri"]
+    dated = add_record(db_session, Work, "w1", pinned, values(date="1990"))
+    unreadable = add_record(db_session, Work, "w2", pinned, values(date="1990"))
+    # A Core UPDATE, so the ORM's framing hook doesn't fix the data up.
+    db_session.execute(
+        update(ResourceBase)
+        .where(ResourceBase.uri == unreadable)
+        .values(data={"@context": 5, HAS_RESOURCE_TEMPLATE: [{"@id": pinned}]})
+    )
+    db_session.commit()
+    missing_version = add_record(
+        db_session, Work, "w3", f"{profile['uri']}/version/999999", values(date="x")
+    )
+
+    body = propose(client, profile, template(WORK, NOTE))
+
+    assert [i["uri"] for i in body["incompatible_instances"]] == [dated]
+    assert body["unchecked_instances"] == [unreadable, missing_version]
+    assert f"{profile['uri']}/version/999999" in body["unresolved_templates"]

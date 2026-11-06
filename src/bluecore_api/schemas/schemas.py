@@ -95,13 +95,49 @@ class ProfileInstanceSchema(BaseModel):
     version_uri: str | None
 
 
+class ProfileChangeSchema(BaseModel):
+    # e.g. property_removed, nested_version_changed, label_changed
+    kind: str
+    # The property URI, or None for a change to the template itself.
+    property: str | None
+    detail: str
+    # Whether the change could break a record. Whether one actually breaks is
+    # reported in incompatible_instances.
+    breaking: bool
+
+
+class InstanceProblemSchema(BaseModel):
+    # The node in the record the problem is on: the record, or a nested resource.
+    subject: str
+    property: str | None
+    reason: str
+
+
+class IncompatibleInstanceSchema(BaseModel):
+    uri: str
+    # The version the record is pinned to, which it would stay attached to.
+    version_uri: str
+    problems: list[InstanceProblemSchema]
+
+
 class ProfileValidationSchema(BaseModel):
     """What a profile is used by, and whether a proposed change would break it.
 
     Records are found by the template pointer they carry, so for a nested
     profile versions and instances name the profiles that nest it.
-    requires_new_version, changes and incompatible_instances are placeholders
-    until #339 adds the compatibility checks.
+
+    changes, incompatible_instances and requires_new_version are filled only
+    when data is sent. changes compares the stored profile with data.
+    incompatible_instances checks each record pinned to a version of this
+    profile (not of one that nests it) against data, and is not paged.
+    requires_new_version is true when any record could not move to data.
+    unresolved_templates lists the nested or pinned template references the
+    checks could not load (not stored, or a bare template id); anything they
+    affect is reported as breaking rather than assumed safe. If the stored
+    profile itself can't be read, it is listed there and changes is empty.
+    unchecked_instances lists records that could not be checked at all, because
+    their data or the version they are pinned to could not be read; they do not
+    count towards requires_new_version.
     """
 
     profile_uuid: UUID
@@ -111,8 +147,10 @@ class ProfileValidationSchema(BaseModel):
     versions: list[ProfileVersionUsageSchema]
     instances: list[ProfileInstanceSchema]
     requires_new_version: bool = False
-    changes: list[object] = []
-    incompatible_instances: list[object] = []
+    changes: list[ProfileChangeSchema] = []
+    incompatible_instances: list[IncompatibleInstanceSchema] = []
+    unchecked_instances: list[str] = []
+    unresolved_templates: list[str] = []
 
 
 class HubCreateSchema(BaseModel):
