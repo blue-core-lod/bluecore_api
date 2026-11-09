@@ -101,17 +101,24 @@ def serialize(
     request: Request,
     *,
     allow_html: bool = True,
+    etag: bool = True,
 ) -> Response | None:
     """With allow_html=False, "text/html" is skipped rather than matched, so a
     browser's Accept list falls through to its next type or the caller's default.
-    Versions use this: they have no HTML view of their own."""
+    With etag=False, no ETag is added (see with_etag). Versions use both: they
+    have no HTML view of their own, and a version is a past state of the
+    resource, not one a client can save over."""
+
+    def run(serializer: SerializerFn) -> Response | None:
+        return with_etag(serializer, doc, expand) if etag else serializer(doc, expand)
+
     if format in serializer_format_registry:
-        return with_etag(serializer_format_registry[format], doc, expand)
+        return run(serializer_format_registry[format])
     for accept in accept_media_types(request.headers.get("accept", "")):
         if (
             accept == "text/html" and allow_html
         ):  # HTML is reached by content negotiation "Accept: text/html"
             return as_html(doc, request)
         if accept in serializer_accept_registry:
-            return with_etag(serializer_accept_registry[accept], doc, expand)
+            return run(serializer_accept_registry[accept])
     return None

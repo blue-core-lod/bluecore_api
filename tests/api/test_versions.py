@@ -386,6 +386,39 @@ def test_version_serializes_the_snapshot(
     assert UPDATED_TITLE not in response.text
 
 
+@pytest.mark.parametrize(
+    ("suffix", "accept", "expand"),
+    [
+        ("", None, False),
+        (".jsonld", None, False),
+        (".ttl", None, False),
+        ("", "application/ld+json", False),
+        ("", "text/turtle", False),
+        ("", "application/ld+json", True),
+    ],
+)
+def test_version_has_no_etag(
+    client: TestClient,
+    db_session: Session,
+    suffix: str,
+    accept: str | None,
+    expand: bool,
+) -> None:
+    # An ETag is what a client sends back in If-Match to save, so it belongs
+    # only on the live resource (see app/utils/etag.py). A version is a past
+    # state, and an expanded one folds in other resources besides.
+    update_work(db_session, add_work(db_session))
+    headers = {"Accept": accept} if accept else {}
+    params = {"expand": "true"} if expand else {}
+
+    response = client.get(
+        oldest_version_path(client) + suffix, headers=headers, params=params
+    )
+
+    assert response.status_code == 200
+    assert "etag" not in response.headers
+
+
 def test_expanded_version_does_not_create_one(
     client: TestClient, db_session: Session
 ) -> None:
