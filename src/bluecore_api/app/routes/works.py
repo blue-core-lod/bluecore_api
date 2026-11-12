@@ -8,7 +8,11 @@ from bluecore_models.utils.graph import BF, load_jsonld
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
-from bluecore_api.app.utils.create import load_new_resource, save_new_resource
+from bluecore_api.app.utils.create import (
+    RecordDerivedFrom,
+    load_new_resource,
+    save_new_resource,
+)
 from bluecore_api.app.utils.deserializer import deserialize, request_body_openapi
 from bluecore_api.app.utils.examples import WORK_EXAMPLE
 from bluecore_api.app.utils.jsonld import with_context
@@ -86,9 +90,12 @@ async def create_work(
     work: WorkCreateSchema = Depends(deserialize(WorkCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
+    record_derived_from: RecordDerivedFrom = True,
 ):
     graph = load_new_resource(work.data)
-    work_uri = save_new_resource(session_maker, graph, BLUECORE_URL, BF.Work)
+    work_uri = save_new_resource(
+        session_maker, graph, BLUECORE_URL, BF.Work, record_derived_from
+    )
     doc = db.query(Work).filter(Work.uri == work_uri).first()
     if doc:
         with_context(doc.data)
