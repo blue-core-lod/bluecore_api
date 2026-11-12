@@ -110,6 +110,19 @@ def pinned_records(
         yield str(uri), str(version_uri), data
 
 
+def find_record(db: Session, uri: str) -> tuple[str | None, Any] | None:
+    """(template pointer, data) of the Work or Instance with this URI, or None.
+
+    The pointer is None for a record that names no template.
+    """
+    row = db.execute(
+        select(template_ref, ResourceBase.data).where(
+            ResourceBase.uri == uri, ResourceBase.type.in_(RECORD_TYPES)
+        )
+    ).first()
+    return None if row is None else (row[0], row[1])
+
+
 def profile_usage(db: Session, profile: Profile, limit: int, offset: int) -> dict:
     """The records made with this profile, or with any profile that nests it.
 

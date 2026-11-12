@@ -14,6 +14,7 @@ resolveAmbiguousChildRtIds and selectSuppressibleResourceTemplateId).
 import re
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 from bluecore_models.models import Profile
 from fastapi import HTTPException
@@ -803,23 +804,34 @@ def incompatible_instances(
     """
     check = InstanceCheck()
     for uri, version_uri, data in pinned_records(db, profile):
-        pinned = templates(version_uri)
-        if pinned is None:
+        problems = record_problems(version_uri, data, proposed, templates)
+        if problems is None:
             check.unchecked.append(uri)
-            continue
-        try:
-            graph = load_jsonld_from_model(data)
-        except UNREADABLE:
-            check.unchecked.append(uri)
-            continue
-        pointer = URIRef(version_uri)
-        root = next(graph.subjects(SINOPIA.hasResourceTemplate, pointer), None)
-        if root is None:
-            check.unchecked.append(uri)
-            continue
-        problems = breaking_changes(
-            pinned, proposed, graph, root, nested_templates=templates
-        )
-        if problems:
+        elif problems:
             check.incompatible.append(IncompatibleInstance(uri, version_uri, problems))
     return check
+
+
+def record_problems(
+    version_uri: str,
+    data: Any,
+    target: ResourceTemplate,
+    templates: TemplateLookup,
+) -> list[Problem] | None:
+    """What would stop a stored record, pinned to version_uri, moving to target.
+
+    None if the record can't be checked: the version it is pinned to or its data
+    can't be read, or no subject in it carries that pointer.
+    """
+    pinned = templates(version_uri)
+    if pinned is None:
+        return None
+    try:
+        graph = load_jsonld_from_model(data)
+    except UNREADABLE:
+        return None
+    pointer = URIRef(version_uri)
+    root = next(graph.subjects(SINOPIA.hasResourceTemplate, pointer), None)
+    if root is None:
+        return None
+    return breaking_changes(pinned, target, graph, root, nested_templates=templates)

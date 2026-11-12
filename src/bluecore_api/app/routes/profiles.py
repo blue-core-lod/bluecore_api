@@ -11,17 +11,25 @@ from rdflib import RDF, IdentifiedNode, Namespace, URIRef
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.jsonld import normalize_context
-from bluecore_api.app.utils.profile_usage import profile_usage, referenced_by
+from bluecore_api.app.utils.profile_usage import (
+    find_record,
+    profile_usage,
+    referenced_by,
+)
 from bluecore_api.app.utils.profile_versions import (
+    VERSION_URI,
     latest_version_uri,
     with_version_uri,
 )
 from bluecore_api.app.utils.template_compat import (
     UNREADABLE,
+    IncompatibleInstance,
+    ResourceTemplate,
     TemplateCache,
     TemplateError,
     incompatible_instances,
     parse_template,
+    record_problems,
     template_changes,
 )
 from bluecore_api.constants import READ_ONLY_ROLES, KeycloakRole
@@ -196,6 +204,58 @@ async def delete_profile(
     return Response(status_code=204)
 
 
+def _check_resource(
+    db: Session,
+    profile: Profile,
+    resource_uri: str,
+    proposed: ResourceTemplate | None,
+    current_version_uri: str | None,
+) -> dict:
+    """Whether one record can move from its pinned version to the target.
+
+    The target is proposed if sent, else the profile's latest version. changes
+    compares the pinned version with the target.
+    """
+    found = find_record(db, resource_uri)
+    if found is None:
+        raise HTTPException(
+            status_code=404, detail=f"Work or Instance {resource_uri} not found"
+        )
+    pointer, data = found
+    match = VERSION_URI.fullmatch(pointer or "")
+    if pointer is None or match is None or match["profile_uri"] != profile.uri:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{resource_uri} is not pinned to a version of profile {profile.uuid}",
+        )
+    templates = TemplateCache(db)
+    target = proposed
+    if target is None and current_version_uri is not None:
+        target = templates(current_version_uri)
+    pinned = templates(pointer)
+    problems = (
+        None if target is None else record_problems(pointer, data, target, templates)
+    )
+    changes = (
+        []
+        if pinned is None or target is None
+        else template_changes(pinned, target, nested_templates=templates)
+    )
+    incompatible = (
+        [IncompatibleInstance(resource_uri, pointer, problems)] if problems else []
+    )
+    return {
+        "requires_new_version": bool(incompatible),
+        "changes": [asdict(change) for change in changes],
+        "incompatible_instances": [asdict(r) for r in incompatible],
+        "unchecked_instances": [resource_uri] if problems is None else [],
+        "unresolved_templates": templates.unresolved(),
+        "resource_version_uri": pointer,
+        "is_latest": pointer == current_version_uri,
+        "compatible": None if problems is None else not problems,
+    }
+
+
 @endpoints.post(
     "/profiles/{profile_uuid}/validate",
     response_model=ProfileValidationSchema,
@@ -216,12 +276,19 @@ async def validate_profile(
     With data, also report how it differs from the stored profile, and which
     records pinned to a version of this profile could not move to it.
 
+    With resource_uri, check only that Work or Instance: whether it can move
+    from the version it is pinned to, to the latest version (or to data). 404
+    if there is no such record, 422 if it isn't pinned to a version of this
+    profile.
+
     Read-only: it never changes the profile or writes a version.
     """
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
+    current_version_uri = latest_version_uri(db, db_profile)
     compatibility = {}
+    proposed = None
     if body is not None and body.data is not None:
         try:
             data = normalize_context(json.loads(body.data))
@@ -238,6 +305,11 @@ async def validate_profile(
             raise HTTPException(
                 status_code=422, detail=f"data is not a resource template: {error}"
             ) from error
+    if body is not None and body.resource_uri is not None:
+        compatibility = _check_resource(
+            db, db_profile, body.resource_uri, proposed, current_version_uri
+        )
+    elif proposed is not None:
         templates = TemplateCache(db)
         # Through the cache, so a stored profile that can't be read is listed in
         # unresolved_templates (with no changes) instead of failing the request.
@@ -258,7 +330,7 @@ async def validate_profile(
     return ProfileValidationSchema(
         profile_uuid=cast(UUID, db_profile.uuid),
         profile_uri=db_profile.uri,
-        current_version_uri=latest_version_uri(db, db_profile),
+        current_version_uri=current_version_uri,
         **profile_usage(db, db_profile, limit, offset),
         **compatibility,
     )
