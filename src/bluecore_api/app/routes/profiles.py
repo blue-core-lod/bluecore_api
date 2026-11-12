@@ -23,7 +23,9 @@ from bluecore_api.app.utils.profile_versions import (
 )
 from bluecore_api.app.utils.template_compat import (
     UNREADABLE,
+    Change,
     IncompatibleInstance,
+    Problem,
     ResourceTemplate,
     TemplateCache,
     TemplateError,
@@ -228,7 +230,7 @@ def _pinned_record(db: Session, profile: Profile, resource_uri: str) -> tuple[st
     return version_uri, data
 
 
-def _check_resource(
+def _check_resource_compatibility(
     db: Session,
     profile: Profile,
     resource_uri: str,
@@ -246,16 +248,12 @@ def _check_resource(
     if target is None and current_version_uri is not None:
         target = templates(current_version_uri)
     pinned = templates(version_uri)
-    problems = (
-        None
-        if target is None
-        else record_problems(version_uri, data, target, templates)
-    )
-    changes = (
-        []
-        if pinned is None or target is None
-        else template_changes(pinned, target, nested_templates=templates)
-    )
+    problems: list[Problem] | None = None  # None: couldn't be checked
+    changes: list[Change] = []
+    if target is not None:
+        problems = record_problems(version_uri, data, target, templates)
+        if pinned is not None:
+            changes = template_changes(pinned, target, nested_templates=templates)
     incompatible = (
         [IncompatibleInstance(resource_uri, version_uri, problems)] if problems else []
     )
@@ -290,7 +288,9 @@ def _parse_proposed(raw: str) -> ResourceTemplate:
         ) from error
 
 
-def _check_proposed(db: Session, profile: Profile, proposed: ResourceTemplate) -> dict:
+def _check_proposed_compatibility(
+    db: Session, profile: Profile, proposed: ResourceTemplate
+) -> dict:
     """How proposed differs from the stored profile, and which pinned records it breaks."""
     templates = TemplateCache(db)
     # Through the cache, so a stored profile that can't be read is listed in
@@ -345,11 +345,11 @@ async def validate_profile(
     proposed = None if body is None or body.data is None else _parse_proposed(body.data)
     compatibility = {}
     if body is not None and body.resource_uri is not None:
-        compatibility = _check_resource(
+        compatibility = _check_resource_compatibility(
             db, db_profile, body.resource_uri, proposed, current_version_uri
         )
     elif proposed is not None:
-        compatibility = _check_proposed(db, db_profile, proposed)
+        compatibility = _check_proposed_compatibility(db, db_profile, proposed)
     return ProfileValidationSchema(
         profile_uuid=cast(UUID, db_profile.uuid),
         profile_uri=db_profile.uri,
