@@ -842,6 +842,15 @@ def test_validate_resource_unknown(client):
     assert response.status_code == 404
 
 
+def test_validate_resource_empty_uri(client):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+
+    response = check_resource(client, profile, "")
+
+    assert response.status_code == 422
+    assert [e["loc"] for e in response.json()["detail"]] == [["body", "resource_uri"]]
+
+
 def test_validate_resource_not_a_record(client, db_session):
     profile = post_profile(client, json.dumps(template(WORK, NOTE)))
     hub = add_record(db_session, Hub, "h1", profile["version_uri"])
