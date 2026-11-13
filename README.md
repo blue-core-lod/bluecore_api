@@ -252,6 +252,11 @@ Pass a base you control, and prefer one that cannot be mistaken for an authority
 under `http://id.loc.gov/resources/` produces URIs that look like Library of Congress
 identifiers but are not.
 
+When you save the converted graph with `POST /works/` or `POST /instances/`, Blue Core mints
+its own URIs and, by default, records each original URI as `bf:derivedFrom`. The
+placeholders name nothing, so pass `?record_derived_from=false` to leave them out, as the
+Sinopia editor's MARC import does.
+
 From Python, the [Blue Core Client] wraps the second endpoint:
 
 ```python
