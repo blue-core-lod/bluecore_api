@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from bluecore_api.constants import BluecoreType
 
@@ -82,6 +82,9 @@ class ProfileValidateSchema(BaseModel):
     # A proposed change to check before it is saved. Without it, the stored
     # profile is reported on.
     data: str | None = None
+    # A Work or Instance pinned to a version of this profile, to check whether it
+    # can move to the latest version (or to data, if sent).
+    resource_uri: str | None = Field(default=None, min_length=1)
 
 
 class ProfileVersionUsageSchema(BaseModel):
@@ -138,6 +141,14 @@ class ProfileValidationSchema(BaseModel):
     unchecked_instances lists records that could not be checked at all, because
     their data or the version they are pinned to could not be read; they do not
     count towards requires_new_version.
+
+    With resource_uri, only that record is checked, against the latest version
+    (or against data, if sent), and changes compares the version it is pinned
+    to with that target. compatible is true if the record can move to the
+    target, false if it can't (see incompatible_instances), and None if it
+    couldn't be checked (see unchecked_instances). is_latest says whether
+    resource_version_uri is current_version_uri. Without resource_uri,
+    resource_version_uri, is_latest and compatible are None.
     """
 
     profile_uuid: UUID
@@ -151,6 +162,9 @@ class ProfileValidationSchema(BaseModel):
     incompatible_instances: list[IncompatibleInstanceSchema] = []
     unchecked_instances: list[str] = []
     unresolved_templates: list[str] = []
+    resource_version_uri: str | None = None
+    is_latest: bool | None = None
+    compatible: bool | None = None
 
 
 class HubCreateSchema(BaseModel):

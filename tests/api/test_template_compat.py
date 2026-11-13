@@ -12,6 +12,7 @@ from bluecore_api.app.utils.template_compat import (
     TemplateError,
     breaking_changes,
     parse_template,
+    record_problems,
     select_nested,
     template_changes,
 )
@@ -528,3 +529,57 @@ def test_property_templates_sharing_a_predicate():
     assert [(p.property, p.reason) for p in problems] == [
         (f"{BF}date", "property removed; its data would become unused RDF")
     ]
+
+
+# --- one stored record ------------------------------------------------------------
+
+PINNED = version(1, 1)
+
+
+def stored_record(**literals: str) -> dict:
+    """A record's data as it is stored: framed, pinned to PINNED."""
+    return {
+        "@id": str(RECORD),
+        "@type": [WORK],
+        "http://sinopia.io/vocabulary/hasResourceTemplate": [{"@id": PINNED}],
+        **{f"{BF}{name}": [{"@value": value}] for name, value in literals.items()},
+    }
+
+
+def test_record_problems_reports_breaking_change():
+    old = parse(template(WORK, NOTE, DATE))
+    new = parse(template(WORK, NOTE))
+
+    problems = record_problems(
+        PINNED, stored_record(date="1990"), new, lookup(**{PINNED: old})
+    )
+
+    assert problems is not None
+    assert [(p.property, p.reason) for p in problems] == [
+        (f"{BF}date", "property removed; its data would become unused RDF")
+    ]
+
+
+def test_record_problems_none_for_unresolved_version():
+    new = parse(template(WORK, NOTE))
+
+    assert record_problems(PINNED, stored_record(date="1990"), new, NONE) is None
+
+
+def test_record_problems_none_for_unreadable_data():
+    old = parse(template(WORK, NOTE, DATE))
+
+    problems = record_problems(PINNED, {"@context": 5}, old, lookup(**{PINNED: old}))
+
+    assert problems is None
+
+
+def test_record_problems_empty_when_compatible():
+    old = parse(template(WORK, NOTE, DATE))
+    new = parse(template(WORK, NOTE, DATE, label="Renamed"))
+
+    problems = record_problems(
+        PINNED, stored_record(date="1990"), new, lookup(**{PINNED: old})
+    )
+
+    assert problems == []

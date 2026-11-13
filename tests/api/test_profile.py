@@ -1,7 +1,14 @@
 import json
 
 import pytest
-from bluecore_models.models import Instance, Profile, ResourceBase, Version, Work
+from bluecore_models.models import (
+    Hub,
+    Instance,
+    Profile,
+    ResourceBase,
+    Version,
+    Work,
+)
 from bluecore_models.utils.graph import load_jsonld
 from fastapi import HTTPException
 from rdflib import RDF, Literal, Namespace, URIRef
@@ -502,6 +509,9 @@ def test_validate_an_unused_profile(client):
         "incompatible_instances": [],
         "unchecked_instances": [],
         "unresolved_templates": [],
+        "resource_version_uri": None,
+        "is_latest": None,
+        "compatible": None,
     }
 
 
@@ -812,3 +822,201 @@ def test_validate_skips_records_it_cant_read(client, db_session):
     assert [i["uri"] for i in body["incompatible_instances"]] == [dated]
     assert body["unchecked_instances"] == [unreadable, missing_version]
     assert f"{profile['uri']}/version/999999" in body["unresolved_templates"]
+
+
+# --- one resource against the latest version (#340) ------------------------------
+
+
+def check_resource(client, profile: dict, resource_uri: str, data=None):
+    body: dict = {"resource_uri": resource_uri}
+    if data is not None:
+        body["data"] = json.dumps(data)
+    return validate(client, profile, json=body)
+
+
+def test_validate_resource_unknown(client):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+
+    response = check_resource(client, profile, f"{BCLD}/works/nope")
+
+    assert response.status_code == 404
+
+
+def test_validate_resource_empty_uri(client):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+
+    response = check_resource(client, profile, "")
+
+    assert response.status_code == 422
+    assert [e["loc"] for e in response.json()["detail"]] == [["body", "resource_uri"]]
+
+
+def test_validate_resource_not_a_record(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+    hub = add_record(db_session, Hub, "h1", profile["version_uri"])
+
+    response = check_resource(client, profile, hub)
+
+    assert response.status_code == 404
+
+
+def test_validate_resource_pinned_to_plain_profile_uri(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+    record = add_record(db_session, Work, "w1", profile["uri"])
+
+    response = check_resource(client, profile, record)
+
+    assert response.status_code == 422
+
+
+def test_validate_resource_pinned_to_another_profile(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+    other = post_profile(client, json.dumps(template(WORK, NOTE)))
+    record = add_record(db_session, Work, "w1", other["version_uri"])
+
+    response = check_resource(client, profile, record)
+
+    assert response.status_code == 422
+
+
+def test_validate_resource_on_latest(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    record = add_record(
+        db_session, Work, "w1", profile["version_uri"], values(date="1990")
+    )
+
+    response = check_resource(client, profile, record)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["is_latest"] is True
+    assert body["compatible"] is True
+    assert body["requires_new_version"] is False
+    assert body["unchecked_instances"] == []
+    assert body["resource_version_uri"] == profile["version_uri"]
+    assert body["current_version_uri"] == profile["version_uri"]
+    assert body["changes"] == []
+
+
+def test_validate_resource_after_safe_edit(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    v1 = profile["version_uri"]
+    record = add_record(db_session, Work, "w1", v1, values(date="1990"))
+    v2 = put_profile(client, profile, template(WORK, NOTE, DATE, label="Renamed"))
+
+    body = check_resource(client, profile, record).json()
+
+    assert body["is_latest"] is False
+    assert body["compatible"] is True
+    assert body["requires_new_version"] is False
+    assert body["unchecked_instances"] == []
+    assert body["resource_version_uri"] == v1
+    assert body["current_version_uri"] == v2
+    assert [c["kind"] for c in body["changes"]] == ["label_changed"]
+    assert body["incompatible_instances"] == []
+
+
+def test_validate_resource_after_breaking_edit(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    v1 = profile["version_uri"]
+    record = add_record(db_session, Work, "w1", v1, values(date="1990"))
+    put_profile(client, profile, template(WORK, NOTE))
+
+    body = check_resource(client, profile, record).json()
+
+    assert body["compatible"] is False
+    assert body["requires_new_version"] is True
+    assert body["incompatible_instances"] == [
+        {
+            "uri": record,
+            "version_uri": v1,
+            "problems": [
+                {"subject": record, "property": f"{BF}date", "reason": REMOVED}
+            ],
+        }
+    ]
+
+
+def test_validate_resource_only_that_resource(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    v1 = profile["version_uri"]
+    record = add_record(db_session, Work, "w1", v1, values(date="1990"))
+    add_record(db_session, Work, "w2", v1, values(date="1991"))
+    put_profile(client, profile, template(WORK, NOTE))
+
+    body = check_resource(client, profile, record).json()
+
+    assert [i["uri"] for i in body["incompatible_instances"]] == [record]
+
+
+def test_validate_resource_with_data(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    record = add_record(
+        db_session, Work, "w1", profile["version_uri"], values(date="1990")
+    )
+
+    body = check_resource(client, profile, record, template(WORK, NOTE)).json()
+
+    assert body["is_latest"] is True
+    assert body["compatible"] is False
+    assert body["requires_new_version"] is True
+    assert [c["kind"] for c in body["changes"]] == ["property_removed"]
+    assert body["incompatible_instances"][0]["problems"] == [
+        {"subject": record, "property": f"{BF}date", "reason": REMOVED}
+    ]
+
+
+def test_validate_resource_pinned_to_a_parent_that_nests_it(client, db_session):
+    """Records name only their root template, so a parent's pin isn't this one's."""
+    title = post_profile(client, json.dumps(template(WORK, NOTE)))
+    parent = post_profile(client, nesting(title["version_uri"]))
+    record = add_record(db_session, Work, "w1", parent["version_uri"])
+
+    response = check_resource(client, title, record)
+
+    assert response.status_code == 422
+
+
+def test_validate_resource_it_cant_read(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    missing = f"{profile['uri']}/version/999999"
+    record = add_record(db_session, Work, "w1", missing, values(date="1990"))
+
+    response = check_resource(client, profile, record)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["unchecked_instances"] == [record]
+    assert body["compatible"] is None
+    assert body["requires_new_version"] is False
+    assert body["incompatible_instances"] == []
+
+
+def test_validate_resource_never_writes(client, db_session):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE, DATE)))
+    record = add_record(
+        db_session, Work, "w1", profile["version_uri"], values(date="1990")
+    )
+    stored_record = db_session.query(Work).filter(Work.uri == record).one().data
+    versions_before = db_session.query(Version).count()
+
+    response = check_resource(client, profile, record, template(WORK, NOTE))
+
+    assert response.status_code == 200
+    db_session.expire_all()
+    assert db_session.query(Version).count() == versions_before
+    assert db_session.query(Work).filter(Work.uri == record).one().data == (
+        stored_record
+    )
+    stored = client.get(f"/profiles/{profile['uuid']}").json()
+    assert stored["data"] == profile["data"]
+
+
+def test_validate_without_resource_has_no_resource_fields(client):
+    profile = post_profile(client, json.dumps(template(WORK, NOTE)))
+
+    body = propose(client, profile, template(WORK, NOTE, DATE))
+
+    assert body["resource_version_uri"] is None
+    assert body["is_latest"] is None
+    assert body["compatible"] is None
