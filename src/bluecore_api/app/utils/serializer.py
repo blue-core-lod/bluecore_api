@@ -3,6 +3,7 @@ from collections.abc import Callable, Iterator
 from bluecore_models.models import Hub, Instance, Work
 from fastapi import Request, Response
 
+from bluecore_api.app.utils.etag import resource_etag
 from bluecore_api.app.utils.serialize.response_generator import (
     as_cbd_jsonld,
     as_cbd_xml,
@@ -56,6 +57,43 @@ def accept_media_types(accept_header: str) -> Iterator[str]:
         yield accept_raw.split(";")[0].strip().lower()
 
 
+# CBD bundles the Instance with its Work and the Work's other Instances, so it
+# changes when any of them do, and an Instance's ETag can't vouch for it.
+COMPOSITE_SERIALIZERS: set[SerializerFn] = {as_cbd_jsonld, as_cbd_xml}
+
+
+def with_etag(
+    serializer: SerializerFn, doc: Hub | Instance | Work, expand: bool
+) -> Response | None:
+    """Run a serializer, adding an ETag when the response is the stored resource.
+
+    The ETag (see app/utils/etag.py) is what a client sends back in If-Match to
+    PUT or DELETE a Work or Instance, so it is only given where the response is
+    that one stored resource, in some RDF serialization. An expanded response
+    folds in the labels and descriptions of the resources it links to, which
+    change without this resource's ETag moving; CBD likewise brings in other
+    resources. A strong ETag on those would claim they hadn't changed when they
+    had, so they go without. Hubs have no conditional writes yet.
+
+    The one ETag is shared by every serialization of a resource, since they are
+    all renderings of the same stored data and If-Match on a write has to accept
+    whichever one the client read.
+
+    HTML isn't served through here (see serialize): it is a page for people,
+    with linked labels and sidebars drawn from other resources, not something
+    an editor reads in order to save.
+    """
+    response = serializer(doc, expand)
+    if (
+        response is not None
+        and isinstance(doc, (Instance, Work))
+        and not expand
+        and serializer not in COMPOSITE_SERIALIZERS
+    ):
+        response.headers["ETag"] = resource_etag(doc)
+    return response
+
+
 def serialize(
     doc: Hub | Instance | Work,
     expand: bool,
@@ -63,17 +101,24 @@ def serialize(
     request: Request,
     *,
     allow_html: bool = True,
+    etag: bool = True,
 ) -> Response | None:
     """With allow_html=False, "text/html" is skipped rather than matched, so a
     browser's Accept list falls through to its next type or the caller's default.
-    Versions use this: they have no HTML view of their own."""
+    With etag=False, no ETag is added (see with_etag). Versions use both: they
+    have no HTML view of their own, and a version is a past state of the
+    resource, not one a client can save over."""
+
+    def run(serializer: SerializerFn) -> Response | None:
+        return with_etag(serializer, doc, expand) if etag else serializer(doc, expand)
+
     if format in serializer_format_registry:
-        return serializer_format_registry[format](doc, expand)
+        return run(serializer_format_registry[format])
     for accept in accept_media_types(request.headers.get("accept", "")):
         if (
             accept == "text/html" and allow_html
         ):  # HTML is reached by content negotiation "Accept: text/html"
             return as_html(doc, request)
         if accept in serializer_accept_registry:
-            return serializer_accept_registry[accept](doc, expand)
+            return run(serializer_accept_registry[accept])
     return None

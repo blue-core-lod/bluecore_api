@@ -1,4 +1,5 @@
-"""Convert MARC records to MARCXML and to Blue Core BIBFRAME.
+"""Convert MARC records to MARCXML and to Blue Core BIBFRAME, and frame BIBFRAME
+as a bibframe-json bounded description. None of these save anything.
 
 These routes convert one record per request. They hold the whole request and
 the whole response in memory and answer synchronously on the event loop, and
@@ -13,12 +14,16 @@ Bulk MARC belongs in a batch workflow: today that means the bluecore-workflows
 uploads to `resource_loader`, which reads JSON-LD rather than MARC.
 """
 
+import json
 from copy import deepcopy
 from io import BytesIO
 from typing import Annotated
 from urllib.parse import urlparse
+from xml.sax import SAXParseException
 
 import pymarc
+from bluecore_models.namespaces import BF
+from bluecore_models.utils.graph import init_graph, load_jsonld
 from bluecore_models.utils.marc import replace_dlc_assigner
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response
@@ -29,9 +34,12 @@ from marc_bibframe import (
     marcxml_to_graph,
 )
 from pymarc.exceptions import PymarcException
-from rdflib import Graph
+from rdflib import RDF, Graph, URIRef
+from rdflib.exceptions import ParserError
+from rdflib.plugins.parsers.notation3 import BadSyntax
 
 from bluecore_api.app.utils.examples import MARCXML_EXAMPLE
+from bluecore_api.app.utils.serialize.cbd import frame_bounded
 from bluecore_api.app.utils.serializer import accept_media_types
 from bluecore_api.constants import MAX_CONVERT_BYTES, READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -45,6 +53,14 @@ endpoints = APIRouter()
 #: OpenAPI, so the two cannot drift apart.
 MARC2XML_RAW_TYPES = ("application/marc",)
 MARC2BIBFRAME_RAW_TYPES = ("application/xml", "text/xml", "application/marc")
+
+#: The BIBFRAME serializations /frame reads, by the rdflib parser for each.
+FRAME_PARSERS = {
+    "application/ld+json": "json-ld",
+    "application/rdf+xml": "xml",
+    "text/turtle": "turtle",
+}
+FRAME_RAW_TYPES = tuple(FRAME_PARSERS)
 
 #: rdflib serializer name by response media type, in the order a client's Accept
 #: header is matched against. The first entry is the default: what a missing
@@ -308,6 +324,9 @@ _RAW_BODY_SCHEMAS: dict[str, dict[str, object]] = {
     },
     "application/xml": {"schema": {"type": "string"}, "example": MARCXML_EXAMPLE},
     "text/xml": {"schema": {"type": "string"}, "example": MARCXML_EXAMPLE},
+    "application/ld+json": {"schema": {"type": "object"}},
+    "application/rdf+xml": {"schema": {"type": "string"}},
+    "text/turtle": {"schema": {"type": "string"}},
 }
 
 
@@ -579,3 +598,116 @@ async def marc2bibframe(
 
     serialized = graph.serialize(format=BIBFRAME_SERIALIZATIONS[media_type])
     return Response(content=serialized, media_type=media_type)
+
+
+def _parse_bibframe(raw_bytes: bytes, media_type: str) -> Graph:
+    """
+    Read a BIBFRAME graph without reaching the network. JSON-LD goes through
+    load_jsonld, which never fetches a context (LC's expanded JSON-LD has
+    none). RDF/XML is read by Python's SAX parser, which leaves external
+    entities alone, and turtle has nothing to fetch.
+    """
+    try:
+        if media_type == "application/ld+json":
+            return load_jsonld(json.loads(raw_bytes))
+        return init_graph().parse(data=raw_bytes, format=FRAME_PARSERS[media_type])
+    except (ValueError, SAXParseException, BadSyntax, ParserError) as exc:
+        raise HTTPException(
+            status_code=422, detail=f"Couldn't read the {media_type}: {exc}"
+        )
+
+
+def _frame_root(graph: Graph, instance: str | None) -> str:
+    """The Instance to frame from: the one named, or the graph's only one."""
+    instances = sorted(
+        str(s)
+        for s in set(graph.subjects(RDF.type, BF.Instance))
+        if isinstance(s, URIRef)
+    )
+    if instance is None:
+        if len(instances) != 1:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    f"The graph describes {len(instances)} Instances with URIs; "
+                    "name the one to frame with ?instance="
+                ),
+            )
+        instance = instances[0]
+    elif instance not in instances:
+        raise HTTPException(
+            status_code=422, detail=f"The graph doesn't describe an Instance {instance}"
+        )
+    # A Work can name its Instances with hasInstance alone, as LC's CBD does
+    # for all but one; framing follows instanceOf from the root, so the
+    # inverse is added, as Blue Core's loader does when it saves.
+    for work, has_instance in graph.subject_objects(BF.hasInstance):
+        graph.add((has_instance, BF.instanceOf, work))
+    # bibframe-json's bounded shape is an Instance with its Work, so without
+    # one there is nothing to frame it as.
+    if (URIRef(instance), BF.instanceOf, None) not in graph:
+        raise HTTPException(
+            status_code=422, detail=f"The Instance {instance} has no instanceOf"
+        )
+    return instance
+
+
+@endpoints.post(
+    "/frame",
+    dependencies=[Depends(BCP(KeycloakRole.CREATE, READ_ONLY_ROLES))],
+    operation_id="frame",
+    summary="Frame BIBFRAME as a bibframe-json bounded description",
+    response_class=Response,
+    openapi_extra=_raw_body_openapi(
+        FRAME_RAW_TYPES,
+        "A BIBFRAME graph holding an Instance and its Work, such as LC's "
+        "`.cbd.rdf` for an Instance, as JSON-LD, RDF/XML or turtle, in a "
+        "multipart `file` field or as the raw body.",
+    ),
+)
+async def frame(
+    request: Request,
+    file: UploadFile = File(None),
+    instance: Annotated[
+        str | None,
+        Query(
+            description=(
+                "URI of the Instance at the root of the description. Needed "
+                "only when the graph describes more than one Instance, as LC's "
+                "CBD does when a Work has several."
+            ),
+            examples=["http://id.loc.gov/resources/instances/24010037"],
+        ),
+    ] = None,
+):
+    """
+    Frame a BIBFRAME graph from anywhere as bibframe-json's bounded
+    description: the Instance at the root, its Work under instanceOf. It is
+    the shape `.cbd.jsonld` serves, made by the same framing, so a client
+    that edits bibframe-json can start from another catalog's description
+    without reading RDF itself. Nothing is saved.
+
+    The body's media type is its Content-Type, or the multipart file's.
+    """
+    if file and getattr(file, "filename", None):
+        media_type = (file.content_type or "").split(";")[0].strip().lower()
+        raw_bytes = await file.read()
+    else:
+        _check_declared_size(request)
+        media_type = (
+            (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+        )
+        raw_bytes = await request.body()
+    if media_type not in FRAME_PARSERS:
+        raise HTTPException(
+            status_code=415,
+            detail="Send JSON-LD (application/ld+json), RDF/XML (application/rdf+xml) or turtle (text/turtle).",
+        )
+
+    _check_size(raw_bytes)
+    if not raw_bytes:
+        raise HTTPException(status_code=422, detail="Empty payload.")
+
+    graph = _parse_bibframe(raw_bytes.removeprefix(_UTF8_BOM), media_type)
+    document = frame_bounded(graph, _frame_root(graph, instance))
+    return Response(content=json.dumps(document), media_type="application/ld+json")

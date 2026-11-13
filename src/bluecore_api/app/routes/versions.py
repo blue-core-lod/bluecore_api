@@ -174,14 +174,15 @@ def serialize_version(
     suffix or the Accept header), except that it falls back to JSON-LD rather
     than HTML. Only application/vnd.sinopia+json gets the wrapped schema.
 
-    The serializers are told not to expand: as_version already has.
+    The serializers are told not to expand: as_version already has. Nor to add
+    an ETag, which is for saving the live resource.
     """
     id_part, format = (
         version_id.split(".", 1) if "." in version_id else (version_id, None)
     )
     resource = cast(Hub | Instance | Work, resource_or_404(db, model, uuid))
     as_version(db, resource, version_or_404(db, resource, int(id_part)), expand)
-    resp = serialize(resource, False, format, request, allow_html=False)
+    resp = serialize(resource, False, format, request, allow_html=False, etag=False)
     return resp if resp else as_jsonld(resource, False)
 
 
