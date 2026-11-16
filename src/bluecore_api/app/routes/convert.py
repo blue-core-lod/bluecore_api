@@ -611,7 +611,7 @@ def _parse_bibframe(raw_bytes: bytes, media_type: str) -> Graph:
         if media_type == "application/ld+json":
             return load_jsonld(json.loads(raw_bytes))
         return init_graph().parse(data=raw_bytes, format=FRAME_PARSERS[media_type])
-    except (ValueError, SAXParseException, BadSyntax, ParserError) as exc:
+    except (ValueError, TypeError, SAXParseException, BadSyntax, ParserError) as exc:
         raise HTTPException(
             status_code=422, detail=f"Couldn't read the {media_type}: {exc}"
         )

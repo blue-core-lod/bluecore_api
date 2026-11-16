@@ -156,6 +156,11 @@ def test_refuses_a_media_type_it_does_not_read(client: TestClient):
         ("text/turtle", b"this is not turtle"),
         ("application/rdf+xml", b"<rdf:RDF"),
         ("application/ld+json", b"{not json"),
+        # JSON, but not a JSON-LD object or array of them.
+        ("application/ld+json", b'"a string"'),
+        ("application/ld+json", b"5"),
+        ("application/ld+json", b"[1]"),
+        ("application/ld+json", b"null"),
         # An inline context could reach the network, so it isn't read.
         (
             "application/ld+json",
