@@ -3,6 +3,7 @@ import json
 from bluecore_models.models import Hub, Instance, ResourceBase, Work
 from fastapi import HTTPException, Request, Response
 
+from bluecore_api.app.utils.etag import composite_etag_headers
 from bluecore_api.app.utils.jsonld import load_jsonld_from_model, with_context
 from bluecore_api.app.utils.serialize.cbd import (
     cbd_jsonld,
@@ -45,6 +46,7 @@ def as_cbd_jsonld(doc: ResourceBase, expand: bool) -> Response:
     return Response(
         content=cbd_jsonld(doc),
         media_type="application/ld+json",
+        headers=composite_etag_headers(doc),
     )
 
 
@@ -56,6 +58,7 @@ def as_cbd_xml(doc: ResourceBase, expand: bool) -> Response:
     return Response(
         content=cbd_xml(doc),
         media_type="application/rdf+xml",
+        headers=composite_etag_headers(doc),
     )
 
 

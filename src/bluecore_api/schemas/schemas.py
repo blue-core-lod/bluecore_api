@@ -249,3 +249,29 @@ class VersionSchema(BaseModel):
 
 class VersionListSchema(BaseModel):
     versions: Sequence[VersionSchema]
+
+
+class UsageWorkSchema(BaseModel):
+    uri: str
+    title: str
+    instances: int
+
+
+class UsageSchema(BaseModel):
+    """Where Blue Core uses an entity: the evidence for choosing between similar ones."""
+
+    uri: str
+    # The URIs counted as this entity, such as an LC name's two forms.
+    equivalents: list[str]
+    works: int
+    # Instances that link to it themselves, as with an Instance-level publisher.
+    instances: int
+    # Instances that use it, themselves or through their Work: what a
+    # cataloger calls the records it appears in.
+    records: int
+    # What the Works use it as, by property: {"contribution": 398, "subject": 3}.
+    used_as: dict[str, int]
+    # Roles in the Works' contributions, by role URI.
+    roles: dict[str, int]
+    # The Works most recently changed, for the editor to show or match against.
+    recent_works: list[UsageWorkSchema]
