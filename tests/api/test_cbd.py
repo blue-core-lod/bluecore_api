@@ -11,15 +11,18 @@ from bluecore_models.namespaces import BF
 from bluecore_models.utils.graph import init_graph, load_jsonld
 from fastapi.testclient import TestClient
 from lxml import etree
-from rdflib import RDF, Graph, URIRef
+from rdflib import RDF, BNode, Graph, Literal, URIRef
 from rdflib.compare import isomorphic
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from bluecore_api.app.utils.serialize.cbd import (
     XPATH_NAMESPACES,
+    LossyFraming,
     bounded_description,
     cbd_xml,
+    embed_blank_references,
+    frame_bounded,
     generate_cbd_graph,
     generate_cbd_xml,
     related_works,
@@ -525,6 +528,20 @@ def test_cbd_carries_an_etag_per_resource(
     assert response.headers["Bluecore-Work-ETag"] == work_etag
 
 
+def test_cbd_jsonld_says_why_it_cannot_frame_a_record(
+    client: TestClient, db_session: Session, mocker
+):
+    """A record Blue Core can't write as bibframe-json is a 500 that says so, not a short description."""
+    instance = _saved_lc_cbd(db_session)
+    mocker.patch(
+        "bluecore_api.app.utils.serialize.cbd.frame_bounded",
+        side_effect=LossyFraming("A blank node is reached again from inside itself"),
+    )
+    response = client.get(f"/instances/{instance.uuid}.cbd.jsonld")
+    assert response.status_code == 500
+    assert "blank node" in response.json()["detail"]
+
+
 def test_cbd_work_etag_saves_the_work(client: TestClient, db_session: Session):
     """The Work's ETag from a CBD is good for If-Match, and goes stale after a save."""
     # Through the API, so the Work has a URI in this Blue Core's namespace: a
@@ -553,13 +570,12 @@ def test_cbd_work_etag_saves_the_work(client: TestClient, db_session: Session):
     assert save().status_code == 412
 
 
-def test_bounded_description_drops_references_to_blank_nodes():
+def related_work_with_blank_references() -> dict[str, Any]:
     """
-    An unnamed related Work whose unnamed Instance points back at it: framing
-    embeds the Work once and can only refer to it again by its blank label,
-    which names nothing once the labels are dropped.
+    An unnamed related Work whose unnamed Instance points back at it, as
+    framing writes it: the Work embedded once, then named by its blank label.
     """
-    framed = {
+    return {
         "@id": "http://example.org/instances/1",
         "instanceOf": [
             {
@@ -579,7 +595,6 @@ def test_bounded_description_drops_references_to_blank_nodes():
                                         "instanceOf": ["_:b13"],
                                     }
                                 ],
-                                "sameAs": [{"@id": "_:b13"}],
                             }
                         ],
                     }
@@ -587,11 +602,64 @@ def test_bounded_description_drops_references_to_blank_nodes():
             }
         ],
     }
-    document = without_blank_ids(framed)
 
+
+def test_bounded_description_drops_an_inverse_reference_to_a_blank_node():
+    """
+    The Instance's instanceOf back to the Work it sits under can go, since
+    Blue Core's loader adds it back from hasInstance.
+    """
+    document, dropped = embed_blank_references(related_work_with_blank_references())
+    document = without_blank_ids(document)
+
+    assert dropped == 1
     assert "_:" not in json.dumps(document)
     [work] = document["instanceOf"]
     [relation] = work["relation"]
     [related] = relation["associatedResource"]
-    # Only the references went: the related Work and its Instance remain.
     assert related == {"@type": ["Work"], "hasInstance": [{"@type": ["Instance"]}]}
+
+
+def test_bounded_description_refuses_a_blank_node_inside_itself():
+    """
+    A reference to a blank node from inside it that isn't the inverse of the
+    property holding it can't be written without a label, so it isn't dropped.
+    """
+    framed = related_work_with_blank_references()
+    [related] = framed["instanceOf"][0]["relation"][0]["associatedResource"]
+    related["sameAs"] = [{"@id": "_:b13"}]
+
+    with pytest.raises(LossyFraming):
+        embed_blank_references(framed)
+
+
+def test_framing_describes_a_blank_node_reached_twice_where_each_uses_it():
+    """
+    One unnamed Agent, the agent of a Contribution on both the Instance and the
+    Work: framing describes it once and names it by label after, so it is
+    described again under the Work's Contribution rather than left out.
+    """
+    instance = URIRef("https://bcld.info/instances/1")
+    work = URIRef("https://bcld.info/works/1")
+    graph = init_graph()
+    graph.add((instance, RDF.type, BF.Instance))
+    graph.add((work, RDF.type, BF.Work))
+    graph.add((instance, BF.instanceOf, work))
+    agent = BNode()
+    graph.add((agent, RDF.type, BF.Agent))
+    graph.add((agent, BF.code, Literal("x")))
+    for subject in (instance, work):
+        contribution = BNode()
+        graph.add((subject, BF.contribution, contribution))
+        graph.add((contribution, RDF.type, BF.Contribution))
+        graph.add((contribution, BF.agent, agent))
+
+    document = frame_bounded(graph, str(instance))
+
+    assert "_:" not in json.dumps(document)
+    [work_node] = document["instanceOf"]
+    for contribution in (document["contribution"][0], work_node["contribution"][0]):
+        assert contribution["agent"] == [{"@type": ["Agent"], "code": ["x"]}]
+    # Two Agents with the same description in place of one: bibframe-json can't
+    # say they are the same node, but nothing the graph said is missing.
+    assert len(load_jsonld(document)) == len(graph) + 2

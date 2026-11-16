@@ -39,7 +39,7 @@ from rdflib.exceptions import ParserError
 from rdflib.plugins.parsers.notation3 import BadSyntax
 
 from bluecore_api.app.utils.examples import MARCXML_EXAMPLE
-from bluecore_api.app.utils.serialize.cbd import frame_bounded
+from bluecore_api.app.utils.serialize.cbd import LossyFraming, frame_bounded
 from bluecore_api.app.utils.serializer import accept_media_types
 from bluecore_api.constants import MAX_CONVERT_BYTES, READ_ONLY_ROLES, KeycloakRole
 from bluecore_api.middleware.bluecore_check_permissions import (
@@ -709,5 +709,8 @@ async def frame(
         raise HTTPException(status_code=422, detail="Empty payload.")
 
     graph = _parse_bibframe(raw_bytes.removeprefix(_UTF8_BOM), media_type)
-    document = frame_bounded(graph, _frame_root(graph, instance))
+    try:
+        document = frame_bounded(graph, _frame_root(graph, instance))
+    except LossyFraming as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     return Response(content=json.dumps(document), media_type="application/ld+json")

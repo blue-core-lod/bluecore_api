@@ -9,7 +9,8 @@ from bluecore_models.utils.graph import CONTEXT, terms_for
 from fastapi import HTTPException
 from lxml import etree
 from pyld import jsonld
-from rdflib import Graph, Namespace
+from rdflib import BNode, Graph, Namespace, URIRef
+from rdflib.term import Node
 from sqlalchemy.orm import object_session
 
 from bluecore_api.app.utils.jsonld import load_jsonld_from_model, model_data_as_dict
@@ -259,6 +260,10 @@ def frame_bounded(graph: Graph, instance_uri: str) -> dict[str, Any]:
     bytes. "@embed": "@once" describes a resource the first time it is reached
     and references it after, which keeps the document finite: the Work's
     hasInstance points back to the root by URI.
+
+    Every triple reachable from the Instance is in the document, or the loader
+    adds it back; a graph that can't be written that way raises LossyFraming
+    rather than being served short.
     """
     expanded = json.loads(graph.serialize(format="json-ld"))
     framed = jsonld.frame(
@@ -270,9 +275,135 @@ def frame_bounded(graph: Graph, instance_uri: str) -> dict[str, Any]:
             "@omitDefault": True,
         },
     )
-    document = without_blank_ids(as_arrays(framed))
+    document, dropped = embed_blank_references(as_arrays(framed))
+    if stated_triples(document) + dropped < reachable_triples(graph, instance_uri):
+        raise LossyFraming(f"Framing {instance_uri} left out triples of its graph")
+    document = without_blank_ids(document)
     document["@context"] = bibframe_json.CONTEXT_URL
     return document
+
+
+class LossyFraming(ValueError):
+    """
+    Raised when a graph can't be written as a bounded description without
+    losing triples. bibframe-json has no blank node labels, so a blank node can
+    only be told where it is used, and one inside itself can't be told at all.
+    """
+
+
+# The inverse pairs Blue Core's loader adds back, whichever end a description
+# states (BluecoreGraph._infer in bluecore-models).
+INVERSES = {
+    "hasInstance": "instanceOf",
+    "instanceOf": "hasInstance",
+    "hasExpression": "expressionOf",
+    "expressionOf": "hasExpression",
+}
+
+
+def embed_blank_references(document: dict[str, Any]) -> tuple[dict[str, Any], int]:
+    """
+    Resolve the references framing writes to blank nodes: "@embed": "@once"
+    describes a blank node where it is first reached and names it by its label
+    after, and bibframe-json has no labels for the name to keep.
+
+    - A blank node described elsewhere in the document is described again
+      where it is referred to, as a copy: the same values, though no longer
+      marked as one node, which bibframe-json can't say.
+    - A reference back to the node it sits in, under the inverse of the
+      property that holds it (an unnamed related Work's unnamed Instance,
+      pointing back with instanceOf), goes, with a property it leaves empty.
+      Blue Core's loader adds it back.
+    - Any other reference to a node it sits inside raises LossyFraming.
+
+    Returns the document and how many references went.
+    """
+    described: dict[str, dict[str, Any]] = {}
+
+    def collect(node: Any) -> None:
+        if isinstance(node, list):
+            for item in node:
+                collect(item)
+        elif isinstance(node, dict):
+            if is_blank_label(node.get("@id")) and set(node) != {"@id"}:
+                described.setdefault(node["@id"], node)
+            for value in node.values():
+                collect(value)
+
+    collect(document)
+    dropped = 0
+
+    def resolve(node: Any, path: list[tuple[str | None, str]]) -> Any:
+        # path: each node this one sits inside, with the property holding the next.
+        nonlocal dropped
+        if not isinstance(node, dict) or "@value" in node:
+            return node
+        label = node.get("@id")
+        inside = {outer for outer, _ in path} | {label}
+        result: dict[str, Any] = {}
+        for key, value in node.items():
+            if not isinstance(value, list):
+                result[key] = value
+                continue
+            kept = []
+            for item in value:
+                reference = blank_reference(item)
+                if reference is None:
+                    kept.append(resolve(item, [*path, (label, key)]))
+                elif (
+                    path
+                    and reference == path[-1][0]
+                    and INVERSES.get(key) == path[-1][1]
+                ):
+                    dropped += 1
+                elif reference in inside or reference not in described:
+                    raise LossyFraming(
+                        f"A blank node is reached again from inside itself, under {key}"
+                    )
+                else:
+                    copied = copy.deepcopy(described[reference])
+                    kept.append(resolve(copied, [*path, (label, key)]))
+            if value and not kept:
+                continue
+            result[key] = kept
+        return result
+
+    return resolve(document, []), dropped
+
+
+def stated_triples(node: Any) -> int:
+    """
+    The triples a framed document states: each value of each node's
+    properties, and each of its classes. An RDF list (a subject heading's
+    mads:componentList) is a chain of nodes, each with rdf:first and rdf:rest.
+    """
+    if isinstance(node, list):
+        return sum(stated_triples(item) for item in node)
+    if not isinstance(node, dict) or "@value" in node:
+        return 0
+    if "@list" in node:
+        return 2 * len(node["@list"]) + stated_triples(node["@list"])
+    total = 0
+    for key, value in node.items():
+        if key == "@type":
+            total += len(value)
+        elif not key.startswith("@"):
+            total += len(value) + stated_triples(value)
+    return total
+
+
+def reachable_triples(graph: Graph, root: str) -> int:
+    """The triples framing from root reaches: those of every resource it links to, at any depth."""
+    seen: set[Node] = {URIRef(root)}
+    todo: list[Node] = [URIRef(root)]
+    total = 0
+    while todo:
+        for _, value in graph.predicate_objects(todo.pop()):
+            total += 1
+            if isinstance(value, (URIRef, BNode)) and value not in seen:
+                seen.add(value)
+                todo.append(value)
+    return total
 
 
 # Keywords holding one value by definition, which the array rule doesn't reach.
@@ -306,38 +437,29 @@ def without_blank_ids(node: Any) -> Any:
     """
     Drop the _:b0-style @id framing gives a node that has none. bibframe-json
     forbids an @id on a blank node: it addresses nothing outside the document,
-    and keeping it would make two identical values differ by accident.
-
-    A reference to a blank node goes too, along with a property it leaves
-    empty. Framing writes one when it reaches a blank node it has already
-    embedded, as when an unnamed related Work's unnamed Instance points back
-    at it with instanceOf. Once the node's own label is gone, the reference
-    would name nothing, and a client saving the document back would make it a
-    new, empty node. What it said is the inverse of the property it sits
-    under (instanceOf below hasInstance), which Blue Core's loader adds back.
+    and keeping it would make two identical values differ by accident. By now
+    nothing refers to one (embed_blank_references).
     """
     if isinstance(node, list):
-        return [
-            without_blank_ids(item) for item in node if not is_blank_reference(item)
-        ]
+        return [without_blank_ids(item) for item in node]
     if not isinstance(node, dict):
         return node
-    result: dict[str, Any] = {}
-    for key, value in node.items():
-        if key == "@id" and isinstance(value, str) and value.startswith("_:"):
-            continue
-        kept = without_blank_ids(value)
-        if isinstance(value, list) and value and kept == []:
-            continue
-        result[key] = kept
-    return result
+    return {
+        key: without_blank_ids(value)
+        for key, value in node.items()
+        if not (key == "@id" and is_blank_label(value))
+    }
 
 
-def is_blank_reference(value: Any) -> bool:
-    """A value that only points at a blank node by its label: "_:b13" or {"@id": "_:b13"}."""
+def is_blank_label(value: Any) -> bool:
+    return isinstance(value, str) and value.startswith("_:")
+
+
+def blank_reference(value: Any) -> str | None:
+    """The label a value only points at a blank node by ("_:b13" or {"@id": "_:b13"}), if it does."""
     if isinstance(value, dict) and set(value) == {"@id"}:
         value = value["@id"]
-    return isinstance(value, str) and value.startswith("_:")
+    return value if is_blank_label(value) else None
 
 
 def cbd_jsonld(instance: Instance) -> str:
@@ -345,8 +467,12 @@ def cbd_jsonld(instance: Instance) -> str:
         raise HTTPException(
             status_code=400, detail="CBD serialization is only supported for Instances"
         )
-
-    return json.dumps(bounded_description(instance), indent=2)
+    try:
+        document = bounded_description(instance)
+    except LossyFraming as exc:
+        # Blue Core holds the record, so this is ours to fix, not the client's.
+        raise HTTPException(status_code=500, detail=str(exc))
+    return json.dumps(document, indent=2)
 
 
 def cbd_xml(instance: Instance) -> str:

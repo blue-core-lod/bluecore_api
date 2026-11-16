@@ -191,3 +191,20 @@ def test_does_not_read_external_entities(client: TestClient, tmp_path):
         content=body.encode(),
     )
     assert "the secret" not in resp.text
+
+
+def test_refuses_a_graph_it_cannot_write_without_losing_triples(client: TestClient):
+    """
+    An unnamed Work related to itself: bibframe-json has no blank node labels
+    to say so with, so the description is refused rather than served short.
+    """
+    resp = _post_turtle(
+        client,
+        TWO_RESOURCES
+        + """
+<http://example.org/works/1> bf:relation [ bf:associatedResource _:related ] .
+_:related a bf:Work ; bf:relatedTo _:related .
+""",
+    )
+    assert resp.status_code == 422
+    assert "blank node" in resp.json()["detail"]
