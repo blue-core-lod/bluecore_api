@@ -142,3 +142,16 @@ def test_reports_nothing_for_an_entity_blue_core_does_not_use(client, db_session
 def test_refuses_what_is_not_a_uri(client):
     resp = client.get("/usage/", params={"uri": "Pynchon"}, headers=HEADERS)
     assert resp.status_code == 422
+
+
+def test_reads_a_sample_of_works_for_uses_and_roles(client, db_session, mocker):
+    """Past SCAN_LIMIT, used_as and roles come from a sample; the counts stay complete."""
+    _library(db_session)
+    mocker.patch("bluecore_api.app.routes.usage.SCAN_LIMIT", 1)
+    resp = client.get("/usage/", params={"uri": PYNCHON}, headers=HEADERS)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["works"] == 2
+    assert body["records"] == 4
+    assert body["used_as"] == {"contribution": 1}
+    assert sum(body["roles"].values()) == 1

@@ -20,9 +20,11 @@ from bluecore_api.schemas.schemas import UsageSchema, UsageWorkSchema
 
 endpoints = APIRouter()
 
-# How many Works are read for what they use the entity as. Counts of Works and
-# Instances are always complete; past this, used_as and roles are a sample.
-SCAN_LIMIT = 2000
+# How many Works, the most recently changed, are read for what they use the
+# entity as. Counts of Works and Instances are always complete; past this,
+# used_as and roles are a sample. Each is a full Work read and walked in
+# Python, and the endpoint is public, so the sample stays small.
+SCAN_LIMIT = 200
 RECENT_WORKS = 10
 
 # Properties that say how a Work relates to itself or its record, not how it
