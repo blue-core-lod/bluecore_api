@@ -96,8 +96,8 @@ def test_reorder_instance_types():
 
 def test_cbd(client: TestClient, db_session: Session):
     work = add_work(client, db_session)
-    work_id: int = work.id  # ty: ignore[unresolved-attribute]
     assert work is not None
+    work_id: int = work.id
     admin_metadata: list = work.data["adminMetadata"]  # ty: ignore[invalid-argument-type]
     # derivedFrom is a bare node or a one-element list, depending on which
     # bluecore-models framed the record; accept either.

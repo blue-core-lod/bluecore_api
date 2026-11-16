@@ -357,7 +357,7 @@ def test_nested_bump_to_a_version_that_cant_be_loaded():
 
 def test_template_cache_lists_what_it_could_not_load():
     cache = TemplateCache(db=None)  # ty: ignore[invalid-argument-type]
-    cache._load = lambda ref: NESTED(ref)  # ty: ignore[invalid-assignment]
+    cache._load = lambda ref: NESTED(ref)
 
     for ref in (version(1, 1), MISSING, "pcc:bf2:Title", MISSING):
         cache(ref)
@@ -378,7 +378,7 @@ def test_nested_profiles_parsed_once_per_reference():
         + '<https://bcld.info/works/w1> bf:title _:u . _:u a bf:Title ; bf:mainTitle "M" .'
     )
     cached = TemplateCache(db=None)  # ty: ignore[invalid-argument-type]
-    cached._load = counting  # ty: ignore[invalid-assignment]
+    cached._load = counting
     breaking_changes(old, new, graph, RECORD, cached)
     template_changes(old, new, cached)
 

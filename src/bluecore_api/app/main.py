@@ -278,4 +278,4 @@ def openapi_with_auth_responses():
     return schema
 
 
-base_app.openapi = openapi_with_auth_responses  # ty: ignore
+base_app.openapi = openapi_with_auth_responses
