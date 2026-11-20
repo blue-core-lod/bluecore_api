@@ -1,14 +1,30 @@
 import json
 from collections.abc import Callable, Mapping
 
+from bluecore_models.utils.graph import NEW_RESOURCE
 from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ValidationError
+from rdflib import Graph
 
 from bluecore_api.app.utils.jsonld import check_context, normalize_context
 
 JSONLD_CONTENT_TYPE = "application/ld+json"
 SINOPIA_CONTENT_TYPE = "application/vnd.sinopia+json"
+RDFXML_CONTENT_TYPE = "application/rdf+xml"
+
+
+async def _rdfxml_payload(request: Request) -> dict[str, str]:
+    """
+    An RDF/XML body (Marva's records), read into JSON-LD as the schema's 'data'.
+    rdf:about="" names the resource being created, as an empty @id does.
+    """
+    graph = Graph()
+    try:
+        graph.parse(data=await request.body(), format="xml", publicID=NEW_RESOURCE)
+    except Exception as error:  # noqa: BLE001 -- rdflib raises many kinds for bad XML
+        raise HTTPException(status_code=422, detail=f"Invalid RDF/XML body: {error}")
+    return {"data": graph.serialize(format="json-ld")}
 
 
 async def _request_payload(request: Request) -> tuple[object, str]:
@@ -56,13 +72,19 @@ def deserialize(schema: type[BaseModel]) -> Callable:
     FastAPI dependency parsing a PUT/POST body by Content-Type into 'schema'.
 
     'application/ld+json' bodies are raw JSON-LD and are wrapped as the
-    schema's 'data' string; anything else (the Sinopia 'application/vnd.sinopia+json'
-    body, or 'application/json' for backwards compatibility) is validated against
+    schema's 'data' string; 'application/rdf+xml' bodies (Marva's records) are
+    read into JSON-LD and wrapped the same way; anything else (the Sinopia
+    'application/vnd.sinopia+json' body, or 'application/json' for backwards
+    compatibility) is validated against
     the schema directly. Either way the endpoint receives a normal schema instance
     whose 'data' is a JSON-LD string.
     """
 
     async def dependency(request: Request) -> BaseModel:
+        content_type = request.headers.get("content-type", "").split(";")[0].strip()
+        if content_type == RDFXML_CONTENT_TYPE:
+            return _validate_schema(schema, await _rdfxml_payload(request))
+
         payload, content_type = await _request_payload(request)
 
         # Raw JSON-LD (application/ld+json): the whole body is the graph, so wrap
@@ -105,6 +127,7 @@ def request_body_openapi(
                     "schema": schema.model_json_schema(),
                     "example": {"data": json.dumps(jsonld_example)},
                 },
+                RDFXML_CONTENT_TYPE: {"schema": {"type": "string"}},
             },
         }
     }

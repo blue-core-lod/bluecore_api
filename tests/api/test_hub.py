@@ -883,3 +883,33 @@ def test_get_hub_html_shows_genre_form_and_place_of_origin(client, db_session):
     assert "Series (Publications)" in page
     assert "<h2>Place of Origin</h2>" in page
     assert "West Knigston (R.I.)" in page
+
+
+def test_create_and_update_hub_from_rdfxml(client, db_session):
+    """A Hub sent as RDF/XML (as Marva sends it), named by an empty rdf:about,
+    gets a Blue Core URI and no derivedFrom; then it's saved under that URI."""
+    rdfxml = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+      <bf:Hub rdf:about="{uri}">
+        <bf:title><bf:Title><bf:mainTitle>{title}</bf:mainTitle></bf:Title></bf:title>
+      </bf:Hub>
+    </rdf:RDF>"""
+    headers = {"X-User": "cataloger", "Content-Type": "application/rdf+xml"}
+
+    create_response = client.post(
+        "/hubs/", headers=headers, content=rdfxml.format(uri="", title="First")
+    )
+    assert create_response.status_code == 201
+    hub = create_response.json()
+    assert hub["uri"].startswith("https://bcld.info/hubs/")
+    assert "derivedFrom" not in json.dumps(hub["data"])
+
+    update_response = client.put(
+        f"/hubs/{hub['uri'].split('/')[-1]}",
+        headers=headers,
+        content=rdfxml.format(uri=hub["uri"], title="Second"),
+    )
+    assert update_response.status_code == 200
+    titles = json.dumps(update_response.json()["data"]["title"])
+    assert "Second" in titles
+    assert "First" not in titles
