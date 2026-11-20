@@ -507,6 +507,47 @@ def test_update_work_round_trips_downloaded_jsonld(client, db_session, monkeypat
     assert update_response.status_code == 200
 
 
+def test_create_and_update_work_from_rdfxml(client, db_session):
+    """Marva sends its records as RDF/XML, which is read into JSON-LD and saved."""
+    rdfxml = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+      <bf:Work rdf:about="http://id.loc.gov/resources/works/rdfxml-test">
+        <bf:title><bf:Title><bf:mainTitle xml:lang="en">{title}</bf:mainTitle></bf:Title></bf:title>
+      </bf:Work>
+    </rdf:RDF>"""
+    headers = {"X-User": "cataloger", "Content-Type": "application/rdf+xml"}
+
+    create_response = client.post(
+        "/works/", headers=headers, content=rdfxml.format(title="First")
+    )
+    assert create_response.status_code == 201
+    work_uri = create_response.json()["uri"]
+    assert work_uri.startswith("https://bcld.info/works/")
+
+    update_response = client.put(
+        f"/works/{work_uri.split('/')[-1]}",
+        headers=headers,
+        content=rdfxml.format(title="Second").replace(
+            "http://id.loc.gov/resources/works/rdfxml-test", work_uri
+        ),
+    )
+    assert update_response.status_code == 200
+    title = update_response.json()["data"]["title"][0]["mainTitle"]
+    assert json.dumps(title).count("Second") == 1
+    assert "First" not in json.dumps(title)
+
+
+def test_create_work_from_unreadable_rdfxml(client, db_session):
+    response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Content-Type": "application/rdf+xml"},
+        content="<rdf:RDF",
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"].startswith("Invalid RDF/XML body")
+
+
 def test_get_work_embedding_returns_501(client):
     response = client.get("/works/some-uuid/embeddings")
     assert response.status_code == 501
