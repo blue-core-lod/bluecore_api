@@ -1,4 +1,5 @@
 import pytest
+from marc_bibframe import DEFAULT_BASE_URI
 from pymarc import Field, Record, Subfield
 from pymarc.field import Indicators
 from rdflib import RDF, Graph, URIRef
@@ -437,10 +438,28 @@ async def test_marc2bibframe_default_source_base_uri_is_non_resolvable(client):
     Deliberately not an authority's namespace: the minted URIs name nothing, so
     they should not be mistakable for real Library of Congress identifiers.
     """
-    minted = _minted_subjects(_post_for_turtle(client), "http://example.org/")
-    assert "http://example.org/92005291#Work" in minted
-    assert "http://example.org/92005291#Instance" in minted
+    minted = _minted_subjects(_post_for_turtle(client), "urn:x-marc-bibframe:")
+    assert "urn:x-marc-bibframe:92005291#Work" in minted
+    assert "urn:x-marc-bibframe:92005291#Instance" in minted
     assert not any("id.loc.gov/resources" in uri for uri in minted)
+
+
+@pytest.mark.asyncio
+async def test_marc2bibframe_honors_a_urn_source_base_uri(client):
+    body = _post_for_turtle(client, "?source_base_uri=urn:folio:stanford:")
+    assert "urn:folio:stanford:92005291#Work" in _minted_subjects(
+        body, "urn:folio:stanford:"
+    )
+
+
+@pytest.mark.asyncio
+async def test_marc2bibframe_adds_a_missing_colon_to_a_urn(client):
+    """A urn: base gets ":" rather than "/", so urn:folio:stanford does not
+    mint urn:folio:stanford/92005291#Work."""
+    body = _post_for_turtle(client, "?source_base_uri=urn:folio:stanford")
+    minted = _minted_subjects(body, "urn:folio:stanford")
+    assert "urn:folio:stanford:92005291#Work" in minted
+    assert not any(uri.startswith("urn:folio:stanford/") for uri in minted)
 
 
 @pytest.mark.asyncio
@@ -581,7 +600,7 @@ async def test_bare_record_without_a_collection_wrapper_converts(client):
     graph = Graph()
     graph.parse(data=resp.text, format="json-ld")
     assert (
-        URIRef("http://example.org/999#Work"),
+        URIRef(f"{DEFAULT_BASE_URI}999#Work"),
         RDF.type,
         BF_WORK,
     ) in graph
@@ -648,7 +667,7 @@ async def test_marcxml_with_a_utf8_bom_converts(client):
     # not comparable. A Work and a title prove it was read as MARCXML, which is
     # the whole point -- read as binary MARC it was a 422.
     graph = Graph().parse(data=resp.text, format="json-ld")
-    assert (URIRef("http://example.org/92005291#Work"), RDF.type, BF_WORK) in graph
+    assert (URIRef(f"{DEFAULT_BASE_URI}92005291#Work"), RDF.type, BF_WORK) in graph
     assert "Getting started with Marc" in "".join(
         str(o) for o in graph.objects(predicate=BF_MAIN_TITLE)
     )
@@ -719,7 +738,16 @@ async def test_collection_with_no_records_is_422_not_413(client):
 
 @pytest.mark.parametrize(
     "base",
-    ["", "not a uri", "ftp://example.edu/", "https://", "/catalog/", "example.edu"],
+    [
+        "",
+        "not a uri",
+        "ftp://example.edu/",
+        "https://",
+        "/catalog/",
+        "example.edu",
+        "urn:",
+        "urn::",
+    ],
 )
 @pytest.mark.asyncio
 async def test_source_base_uri_must_be_an_http_uri(client, base):

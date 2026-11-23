@@ -82,19 +82,25 @@ _INVALID_URI_CHARS = frozenset('<>" {}|\\^`') | {chr(c) for c in range(33)}
 
 
 def _base_uri(source_base_uri: str) -> str:
-    """Validate the base URI, and give it a trailing slash.
+    """Validate the base URI, and give it a trailing delimiter.
 
     The transform concatenates the base, the record id and "#fragment", so an
     unchecked value yields URIs that are wrong rather than an error: an empty
     base mints a relative "/92005291#Work", and a space in the base mints
     something rdflib will not serialize.
+
+    The base is either an http(s) URI with a host, which gets a trailing "/",
+    or a urn: with a namespace, which gets a trailing ":" -- marc-bibframe's
+    default, urn:x-marc-bibframe:, is one.
     """
     parsed = urlparse(source_base_uri)
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+    is_http = parsed.scheme in ("http", "https") and bool(parsed.netloc)
+    is_urn = parsed.scheme == "urn" and bool(parsed.path.strip(":"))
+    if not (is_http or is_urn):
         raise HTTPException(
             status_code=422,
             detail=(
-                f"source_base_uri must be an http(s) URI with a host; "
+                f"source_base_uri must be an http(s) URI with a host, or a urn:; "
                 f"got {source_base_uri!r}."
             ),
         )
@@ -114,9 +120,10 @@ def _base_uri(source_base_uri: str) -> str:
             status_code=422,
             detail="source_base_uri must not contain a fragment.",
         )
-    if source_base_uri.endswith("/"):
+    delimiter = ":" if is_urn else "/"
+    if source_base_uri.endswith(delimiter):
         return source_base_uri
-    return source_base_uri + "/"
+    return source_base_uri + delimiter
 
 
 #: Windows tools prepend this to UTF-8 text: Notepad, Excel's "CSV UTF-8", and
@@ -399,8 +406,8 @@ MARC2BIBFRAME_RESPONSES: dict[int | str, dict[str, object]] = {
     ),
     422: _detail_response(
         "Body was empty, held no record, was not well-formed XML, or the "
-        "BIBFRAME transformation failed; or `source_base_uri` was not an "
-        "http(s) URI.",
+        "BIBFRAME transformation failed; or `source_base_uri` was neither an "
+        "http(s) URI nor a urn:.",
         "No MARC record found.",
     ),
 }
@@ -496,7 +503,9 @@ async def marc2bibframe(
                 "form `{source_base_uri}{record id}#{fragment}`, so they are "
                 "scoped to the record they came from and are **not** authority "
                 "URIs: two records describing the same person yield two "
-                "different agent URIs. A trailing slash is added if missing. "
+                "different agent URIs. Either an http(s) URI, which gets a "
+                "trailing slash if missing, or a urn:, which gets a trailing "
+                "colon. "
                 "Named to match the `source_base_uri` parameter of the "
                 "bluecore-workflows `marc_to_bibframe` DAG, and defaulting to "
                 "the same value."
