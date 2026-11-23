@@ -138,7 +138,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
 @base_app.get("/static/{path:path}", include_in_schema=False)
-async def static_files(path: str) -> FileResponse:
+def static_files(path: str) -> FileResponse:
     full_path = os.path.normpath(os.path.join(STATIC_DIR, path))
     if os.path.commonpath([full_path, STATIC_DIR]) != STATIC_DIR or not os.path.isfile(
         full_path
@@ -204,13 +204,13 @@ base_app.add_middleware(
 
 
 @base_app.get("/")
-async def index():
+def index():
     """Public route for API root."""
     return {"message": "Blue Core API"}
 
 
 @base_app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+def favicon():
     """
     Prevents '404 Not Found' when using API in browser;
     204 = no content; cache it so the browser won't ask again soon
@@ -219,7 +219,7 @@ async def favicon():
 
 
 @base_app.get("/context.jsonld")
-async def context_jsonld():
+def context_jsonld():
     # Sinopia rejects both a bare mapping anda non-JSON-LD media type.
     return JSONResponse({"@context": CONTEXT}, media_type="application/ld+json")
 
