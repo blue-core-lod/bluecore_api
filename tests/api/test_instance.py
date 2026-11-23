@@ -572,3 +572,50 @@ def test_get_instance_html_links_a_work_it_names_but_we_do_not_hold(client, db_s
     assert response.status_code == 200
     assert "Instance of" in response.text
     assert f'<a href="{elsewhere}">elsewhere</a>' in response.text
+
+
+def test_create_and_update_instance_from_rdfxml(client, db_session):
+    """An empty rdf:about names the resource being created, as an empty @id does,
+    so Blue Core mints its URI and records no derivedFrom, even when the Work it
+    belongs to, sent with it, links back to it."""
+    work_response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger"},
+        json={
+            "data": json.dumps(
+                {"@context": BIBFRAME_CONTEXT_URL, "@id": "", "@type": "Work"}
+            )
+        },
+    )
+    work_uri = work_response.json()["uri"]
+    rdfxml = f"""<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+      <bf:Work rdf:about="{work_uri}"><bf:hasInstance rdf:resource=""/></bf:Work>
+      <bf:Instance rdf:about=""><bf:instanceOf rdf:resource="{work_uri}"/></bf:Instance>
+    </rdf:RDF>"""
+
+    response = client.post(
+        "/instances/",
+        headers={"X-User": "cataloger", "Content-Type": "application/rdf+xml"},
+        content=rdfxml,
+    )
+
+    assert response.status_code == 201
+    instance = response.json()
+    assert instance["uri"].startswith("https://bcld.info/instances/")
+    assert "derivedFrom" not in json.dumps(instance["data"])
+    assert json.dumps(instance["data"]["instanceOf"]).count(work_uri) == 1
+
+    # then saved again under the URI it was given
+    update_response = client.put(
+        f"/instances/{instance['uri'].split('/')[-1]}",
+        headers={"X-User": "cataloger", "Content-Type": "application/rdf+xml"},
+        content=rdfxml.replace('rdf:about=""', f'rdf:about="{instance["uri"]}"')
+        .replace('rdf:resource=""', f'rdf:resource="{instance["uri"]}"')
+        .replace(
+            "</bf:Instance>",
+            "<bf:editionStatement>2nd ed.</bf:editionStatement></bf:Instance>",
+        ),
+    )
+    assert update_response.status_code == 200
+    assert update_response.json()["data"]["editionStatement"] == ["2nd ed."]
