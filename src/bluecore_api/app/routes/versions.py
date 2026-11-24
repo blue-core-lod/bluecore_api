@@ -190,7 +190,7 @@ def serialize_version(
     response_model=VersionListSchema,
     operation_id="get_hub_versions",
 )
-async def read_hub_versions(
+def read_hub_versions(
     hub_uuid: str,
     db: Session = Depends(get_db),
 ) -> VersionListSchema:
@@ -203,7 +203,7 @@ async def read_hub_versions(
     response_model=HubSchema,
     operation_id="get_hub_version",
 )
-async def read_hub_version(
+def read_hub_version(
     hub_uuid: str,
     version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
     request: Request,
@@ -219,7 +219,7 @@ async def read_hub_version(
     response_model=VersionListSchema,
     operation_id="get_work_versions",
 )
-async def read_work_versions(
+def read_work_versions(
     work_uuid: str,
     db: Session = Depends(get_db),
 ) -> VersionListSchema:
@@ -232,7 +232,7 @@ async def read_work_versions(
     response_model=WorkSchema,
     operation_id="get_work_version",
 )
-async def read_work_version(
+def read_work_version(
     work_uuid: str,
     version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
     request: Request,
@@ -248,7 +248,7 @@ async def read_work_version(
     response_model=VersionListSchema,
     operation_id="get_instance_versions",
 )
-async def read_instance_versions(
+def read_instance_versions(
     instance_uuid: str,
     db: Session = Depends(get_db),
 ) -> VersionListSchema:
@@ -261,7 +261,7 @@ async def read_instance_versions(
     response_model=InstanceSchema,
     operation_id="get_instance_version",
 )
-async def read_instance_version(
+def read_instance_version(
     instance_uuid: str,
     version_id: Annotated[str, SERIALIZABLE_VERSION_ID],
     request: Request,
@@ -277,7 +277,7 @@ async def read_instance_version(
     response_model=VersionListSchema,
     operation_id="get_profile_versions",
 )
-async def read_profile_versions(
+def read_profile_versions(
     profile_uuid: str,
     db: Session = Depends(get_db),
 ) -> VersionListSchema:
@@ -290,7 +290,7 @@ async def read_profile_versions(
     response_model=ProfileSchema,
     operation_id="get_profile_version",
 )
-async def read_profile_version(
+def read_profile_version(
     profile_uuid: str,
     version_id: Annotated[int, VERSION_ID],
     db: Session = Depends(get_db),

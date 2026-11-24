@@ -331,7 +331,7 @@ def create_count_query(
     response_model_exclude_none=True,
     operation_id="search",
 )
-async def search(
+def search(
     db: Session = Depends(get_db),
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
     offset: int = 0,
@@ -375,7 +375,7 @@ async def search(
 
 
 @endpoints.get("/search", response_class=HTMLResponse, include_in_schema=False)
-async def search_html(
+def search_html(
     request: Request,
     db: Session = Depends(get_db),
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),
@@ -453,7 +453,7 @@ async def search_html(
     response_model_exclude_none=True,
     operation_id="search_profile",
 )
-async def search_profile(
+def search_profile(
     db: Session = Depends(get_db),
     q: str = "",
     limit: int = Query(DEFAULT_SEARCH_PAGE_LENGTH, ge=0, le=100),

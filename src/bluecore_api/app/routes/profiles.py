@@ -91,7 +91,7 @@ def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
 
 
 @endpoints.get("/profiles/", operation_id="get_profiles")
-async def read_profiles(
+def read_profiles(
     uri: str | None = None,
     limit: int = Query(10, ge=0, le=100),
     offset: int = Query(0, ge=0),
@@ -122,7 +122,7 @@ async def read_profiles(
     response_model=ProfileSchema,
     operation_id="get_profile",
 )
-async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
+def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
     db_profile = db.query(Profile).filter(Profile.uuid == profile_uuid).first()
     if db_profile is None:
         raise HTTPException(status_code=404, detail=f"Profile {profile_uuid} not found")
@@ -136,7 +136,7 @@ async def read_profile(profile_uuid: str, db: Session = Depends(get_db)):
     status_code=201,
     operation_id="new_profile",
 )
-async def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get_db)):
+def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get_db)):
     profile_uuid = uuid4()
     bluecore_url = BLUECORE_URL.rstrip("/")
     minted_uri = f"{bluecore_url}/profiles/{profile_uuid}"
@@ -159,7 +159,7 @@ async def create_profile(profile: ProfileCreateSchema, db: Session = Depends(get
     dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="update_profile",
 )
-async def update_profile(
+def update_profile(
     profile_uuid: str,
     profile: ProfileUpdateSchema,
     db: Session = Depends(get_db),
@@ -182,7 +182,7 @@ async def update_profile(
     status_code=204,
     operation_id="delete_profile",
 )
-async def delete_profile(
+def delete_profile(
     profile_uuid: str,
     db: Session = Depends(get_db),
 ):
@@ -319,7 +319,7 @@ def _check_proposed_compatibility(
     dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="validate_profile",
 )
-async def validate_profile(
+def validate_profile(
     profile_uuid: str,
     body: ProfileValidateSchema | None = Body(default=None),
     limit: int = Query(10, ge=0, le=100),

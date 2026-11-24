@@ -26,7 +26,7 @@ change_documents = APIRouter()
     response_model_exclude_none=True,
     operation_id="get_instances_feed",
 )
-async def instances_entry_point(
+def instances_entry_point(
     db: Session = Depends(get_db),
 ) -> EntryPointSchema:
     return EntryPoint(
@@ -43,7 +43,7 @@ async def instances_entry_point(
     response_model_exclude_none=True,
     operation_id="get_instances_change_set",
 )
-async def instances_change_set(
+def instances_change_set(
     id: int,
     db: Session = Depends(get_db),
 ) -> ChangeSetSchema:
@@ -62,7 +62,7 @@ async def instances_change_set(
     response_model_exclude_none=True,
     operation_id="get_instance_feed",
 )
-async def works_entry_point(
+def works_entry_point(
     db: Session = Depends(get_db),
 ) -> EntryPointSchema:
     return EntryPoint(
@@ -79,7 +79,7 @@ async def works_entry_point(
     response_model_exclude_none=True,
     operation_id="get_works_change_set",
 )
-async def works_change_set(
+def works_change_set(
     id: int,
     db: Session = Depends(get_db),
 ) -> ChangeSetSchema:

@@ -41,7 +41,7 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
     response_model=InstanceSchema,
     operation_id="get_instance",
 )
-async def read_instance(
+def read_instance(
     instance_uuid: str,
     request: Request,
     expand: bool = False,
@@ -69,7 +69,7 @@ async def read_instance(
     "/instances/{instance_uuid}/embeddings",
     operation_id="get_instance_embedding",
 )
-async def get_instance_embedding(instance_uuid: str):
+def get_instance_embedding(instance_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -79,7 +79,7 @@ async def get_instance_embedding(instance_uuid: str):
     operation_id="new_instance_embedding",
     status_code=201,
 )
-async def create_instance_embedding(instance_uuid: str):
+def create_instance_embedding(instance_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -91,7 +91,7 @@ async def create_instance_embedding(instance_uuid: str):
     operation_id="new_instance",
     openapi_extra=request_body_openapi(InstanceCreateSchema, INSTANCE_EXAMPLE),
 )
-async def create_instance(
+def create_instance(
     instance: InstanceCreateSchema = Depends(deserialize(InstanceCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
@@ -122,7 +122,7 @@ async def create_instance(
     operation_id="update_instance",
     openapi_extra=request_body_openapi(InstanceUpdateSchema, INSTANCE_EXAMPLE),
 )
-async def update_instance(
+def update_instance(
     instance_uuid: str,
     instance: InstanceUpdateSchema = Depends(deserialize(InstanceUpdateSchema)),
     db: Session = Depends(get_db),
@@ -159,7 +159,7 @@ async def update_instance(
     status_code=204,
     operation_id="delete_instance",
 )
-async def delete_instance(
+def delete_instance(
     instance_uuid: str,
     db: Session = Depends(get_db),
 ):

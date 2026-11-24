@@ -1,3 +1,4 @@
+import base64
 import json
 import pathlib
 import re
@@ -1131,3 +1132,25 @@ def test_get_work_html_reads_contribution_from_the_model(client, db_session, moc
     assert "King, Stephen" in page
     assert 'href="http://id.loc.gov/vocabulary/relators/aut"' in page
     model_builder.assert_called_once()
+
+
+def test_create_work_records_the_requesting_user(client):
+    # create_work is a plain def, so it runs in a worker thread while
+    # set_user_context sets CURRENT_USERNAME on the event loop. The version
+    # only gets its author if the context var is copied into that thread.
+    claims = {
+        "sub": "8f3c1a2e-4b5d-4c6d-8e7f-0a1b2c3d4e5f",
+        "preferred_username": "jgreben",
+    }
+    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")
+    token = f"header.{payload}.signature"
+
+    created = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Authorization": f"Bearer {token}"},
+        json={"data": orig_graph.serialize(format="json-ld")},
+    )
+    assert created.status_code == 201
+
+    versions = client.get(f"/works/{created.json()['uuid']}/versions").json()
+    assert versions["versions"][0]["user"] == "jgreben"

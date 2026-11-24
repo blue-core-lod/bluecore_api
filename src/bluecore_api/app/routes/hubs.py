@@ -36,7 +36,7 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
 @endpoints.get("/hubs/{hub_uuid}", response_model=HubSchema, operation_id="get_hub")
-async def read_hub(
+def read_hub(
     hub_uuid: str, request: Request, expand: bool = False, db: Session = Depends(get_db)
 ):
     uuid, format = (
@@ -61,7 +61,7 @@ async def read_hub(
     "/hubs/{hub_uuid}/embeddings",
     operation_id="get_hub_embedding",
 )
-async def get_hub_embedding(hub_uuid: str):
+def get_hub_embedding(hub_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -71,7 +71,7 @@ async def get_hub_embedding(hub_uuid: str):
     operation_id="new_hub_embedding",
     status_code=201,
 )
-async def create_hub_embedding(hub_uuid: str):
+def create_hub_embedding(hub_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -83,7 +83,7 @@ async def create_hub_embedding(hub_uuid: str):
     operation_id="create_hub",
     openapi_extra=request_body_openapi(HubCreateSchema, HUB_EXAMPLE),
 )
-async def create_hub(
+def create_hub(
     hub: HubCreateSchema = Depends(deserialize(HubCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
@@ -103,7 +103,7 @@ async def create_hub(
     operation_id="update_hub",
     openapi_extra=request_body_openapi(HubUpdateSchema, HUB_EXAMPLE),
 )
-async def update_hub(
+def update_hub(
     hub_uuid: str,
     hub: HubUpdateSchema = Depends(deserialize(HubUpdateSchema)),
     db: Session = Depends(get_db),
@@ -128,7 +128,7 @@ async def update_hub(
     status_code=204,
     operation_id="delete_hub",
 )
-async def delete_hub(
+def delete_hub(
     hub_uuid: str,
     db: Session = Depends(get_db),
 ):
