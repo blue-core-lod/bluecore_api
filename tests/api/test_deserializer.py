@@ -7,7 +7,11 @@ from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 
-from bluecore_api.app.utils.deserializer import JSONLD_CONTENT_TYPE, deserialize
+from bluecore_api.app.utils.deserializer import (
+    JSONLD_CONTENT_TYPE,
+    RDFXML_CONTENT_TYPE,
+    deserialize,
+)
 from bluecore_api.constants import CONTEXT_URL
 
 
@@ -118,3 +122,34 @@ async def test_deserialize_invalid_jsonld_data_raises_unprocessable_entity():
 
     assert error.value.status_code == 422
     assert "Invalid JSON-LD data" in error.value.detail
+
+
+@pytest.mark.asyncio
+async def test_deserialize_rdfxml_reads_it_into_jsonld_data():
+    request = request_with_body(
+        b"""<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+            xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+          <bf:Work rdf:about="https://example.com/work"/>
+        </rdf:RDF>""",
+        RDFXML_CONTENT_TYPE,
+    )
+
+    parsed = await deserialize(DataOnlySchema)(request)
+
+    assert json.loads(parsed.data) == [
+        {
+            "@id": "https://example.com/work",
+            "@type": ["http://id.loc.gov/ontologies/bibframe/Work"],
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_deserialize_invalid_rdfxml_raises_unprocessable_entity():
+    request = request_with_body(b"<rdf:RDF", RDFXML_CONTENT_TYPE + "; charset=utf-8")
+
+    with pytest.raises(HTTPException) as error:
+        await deserialize(DataOnlySchema)(request)
+
+    assert error.value.status_code == 422
+    assert "Invalid RDF/XML body" in error.value.detail

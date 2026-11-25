@@ -41,7 +41,7 @@ def _generate_links(slice_size: int, limit: int, offset: int) -> dict[str, str]:
 
 
 @endpoints.get("/resources/", operation_id="get_other_resources")
-async def read_other_resources(
+def read_other_resources(
     uri: str | None = None,
     limit: int = 10,
     offset: int = 0,
@@ -74,7 +74,7 @@ async def read_other_resources(
     response_model=OtherResourceSchema,
     operation_id="get_resource",
 )
-async def read_other_resource(resource_id: int, db: Session = Depends(get_db)):
+def read_other_resource(resource_id: int, db: Session = Depends(get_db)):
     db_other_resource = (
         db.query(OtherResource).filter(OtherResource.id == resource_id).first()
     )
@@ -94,7 +94,7 @@ async def read_other_resource(resource_id: int, db: Session = Depends(get_db)):
     status_code=201,
     operation_id="new_other_resource",
 )
-async def create_other_resource(
+def create_other_resource(
     resource: OtherResourceCreateSchema, db: Session = Depends(get_db)
 ):
     time_now = datetime.now(UTC)
@@ -117,7 +117,7 @@ async def create_other_resource(
     dependencies=[Depends(BCP(KeycloakRole.UPDATE, READ_ONLY_ROLES))],
     operation_id="update_other_resource",
 )
-async def update_other_resource(
+def update_other_resource(
     resource_id: int,
     other_resource: OtherResourceUpdateSchema,
     db: Session = Depends(get_db),
@@ -147,7 +147,7 @@ async def update_other_resource(
     status_code=204,
     operation_id="delete_other_resource",
 )
-async def delete_other_resource(
+def delete_other_resource(
     resource_id: int,
     db: Session = Depends(get_db),
 ):

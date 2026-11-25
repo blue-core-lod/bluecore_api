@@ -1,3 +1,4 @@
+import base64
 import json
 import pathlib
 import re
@@ -505,6 +506,47 @@ def test_update_work_round_trips_downloaded_jsonld(client, db_session, monkeypat
     )
 
     assert update_response.status_code == 200
+
+
+def test_create_and_update_work_from_rdfxml(client, db_session):
+    """Marva sends its records as RDF/XML, which is read into JSON-LD and saved."""
+    rdfxml = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:bf="http://id.loc.gov/ontologies/bibframe/">
+      <bf:Work rdf:about="http://id.loc.gov/resources/works/rdfxml-test">
+        <bf:title><bf:Title><bf:mainTitle xml:lang="en">{title}</bf:mainTitle></bf:Title></bf:title>
+      </bf:Work>
+    </rdf:RDF>"""
+    headers = {"X-User": "cataloger", "Content-Type": "application/rdf+xml"}
+
+    create_response = client.post(
+        "/works/", headers=headers, content=rdfxml.format(title="First")
+    )
+    assert create_response.status_code == 201
+    work_uri = create_response.json()["uri"]
+    assert work_uri.startswith("https://bcld.info/works/")
+
+    update_response = client.put(
+        f"/works/{work_uri.split('/')[-1]}",
+        headers=headers,
+        content=rdfxml.format(title="Second").replace(
+            "http://id.loc.gov/resources/works/rdfxml-test", work_uri
+        ),
+    )
+    assert update_response.status_code == 200
+    title = update_response.json()["data"]["title"][0]["mainTitle"]
+    assert json.dumps(title).count("Second") == 1
+    assert "First" not in json.dumps(title)
+
+
+def test_create_work_from_unreadable_rdfxml(client, db_session):
+    response = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Content-Type": "application/rdf+xml"},
+        content="<rdf:RDF",
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"].startswith("Invalid RDF/XML body")
 
 
 def test_get_work_embedding_returns_501(client):
@@ -1090,3 +1132,25 @@ def test_get_work_html_reads_contribution_from_the_model(client, db_session, moc
     assert "King, Stephen" in page
     assert 'href="http://id.loc.gov/vocabulary/relators/aut"' in page
     model_builder.assert_called_once()
+
+
+def test_create_work_records_the_requesting_user(client):
+    # create_work is a plain def, so it runs in a worker thread while
+    # set_user_context sets CURRENT_USERNAME on the event loop. The version
+    # only gets its author if the context var is copied into that thread.
+    claims = {
+        "sub": "8f3c1a2e-4b5d-4c6d-8e7f-0a1b2c3d4e5f",
+        "preferred_username": "jgreben",
+    }
+    payload = base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")
+    token = f"header.{payload}.signature"
+
+    created = client.post(
+        "/works/",
+        headers={"X-User": "cataloger", "Authorization": f"Bearer {token}"},
+        json={"data": orig_graph.serialize(format="json-ld")},
+    )
+    assert created.status_code == 201
+
+    versions = client.get(f"/works/{created.json()['uuid']}/versions").json()
+    assert versions["versions"][0]["user"] == "jgreben"

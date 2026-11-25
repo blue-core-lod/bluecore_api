@@ -12,6 +12,6 @@ API_VERSION = version("bluecore-api")
 
 
 @endpoints.get("/health", operation_id="health", response_model=HealthSchema)
-async def health() -> HealthSchema:
+def health() -> HealthSchema:
     """Report that the API is up, along with the running version."""
     return HealthSchema(status="ok", version=API_VERSION)

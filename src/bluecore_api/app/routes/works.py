@@ -34,7 +34,7 @@ BLUECORE_URL = os.environ.get("BLUECORE_URL", "https://bcld.info/")
 
 
 @endpoints.get("/works/{work_uuid}", response_model=WorkSchema, operation_id="get_work")
-async def read_work(
+def read_work(
     work_uuid: str,
     request: Request,
     expand: bool = False,
@@ -60,7 +60,7 @@ async def read_work(
     "/works/{work_uuid}/embeddings",
     operation_id="get_work_embedding",
 )
-async def get_work_embedding(work_uuid: str):
+def get_work_embedding(work_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -70,7 +70,7 @@ async def get_work_embedding(work_uuid: str):
     operation_id="new_work_embedding",
     status_code=201,
 )
-async def create_work_embedding(work_uuid: str):
+def create_work_embedding(work_uuid: str):
     raise HTTPException(status_code=501, detail="Embeddings not implemented")
 
 
@@ -82,7 +82,7 @@ async def create_work_embedding(work_uuid: str):
     operation_id="get_works",
     openapi_extra=request_body_openapi(WorkCreateSchema, WORK_EXAMPLE),
 )
-async def create_work(
+def create_work(
     work: WorkCreateSchema = Depends(deserialize(WorkCreateSchema)),
     db: Session = Depends(get_db),
     session_maker=Depends(get_session_maker),
@@ -102,7 +102,7 @@ async def create_work(
     operation_id="update_work",
     openapi_extra=request_body_openapi(WorkUpdateSchema, WORK_EXAMPLE),
 )
-async def update_work(
+def update_work(
     work_uuid: str,
     work: WorkUpdateSchema = Depends(deserialize(WorkUpdateSchema)),
     db: Session = Depends(get_db),
@@ -127,7 +127,7 @@ async def update_work(
     status_code=204,
     operation_id="delete_work",
 )
-async def delete_work(
+def delete_work(
     work_uuid: str,
     db: Session = Depends(get_db),
 ):
