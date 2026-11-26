@@ -31,8 +31,10 @@ from bluecore_api.app.routes.instances import endpoints as instance_routes
 from bluecore_api.app.routes.other_resources import endpoints as resource_routes
 from bluecore_api.app.routes.profiles import endpoints as profile_routes
 from bluecore_api.app.routes.search import endpoints as search_routes
+from bluecore_api.app.routes.usage import endpoints as usage_routes
 from bluecore_api.app.routes.versions import endpoints as version_routes
 from bluecore_api.app.routes.works import endpoints as work_routes
+from bluecore_api.app.utils.etag import PreconditionFailed
 from bluecore_api.change_documents.routes import change_documents
 from bluecore_api.middleware.keycloak_auth import (
     BypassKeycloakForGet,
@@ -101,6 +103,7 @@ base_app.include_router(resource_routes, tags=["Resources"])
 base_app.include_router(profile_routes, tags=["Profiles"])
 base_app.include_router(version_routes, tags=["Versions"])
 base_app.include_router(search_routes, tags=["Search"])
+base_app.include_router(usage_routes, tags=["Usage"])
 base_app.include_router(change_documents, tags=["Change Documents"])
 base_app.include_router(batch_endpoints, tags=["Batches"])
 base_app.include_router(export_routes, tags=["Export"])
@@ -199,8 +202,28 @@ base_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allows for any local client to connect
     allow_methods=["*"],
+    # "*" already admits If-Match on a preflight, since credentials aren't allowed.
     allow_headers=["*"],
+    # Browsers hide every response header outside the CORS safelist from
+    # cross-origin scripts unless it is listed here, and an editor needs to read
+    # ETag to send it back in If-Match. A CBD carries one per resource instead.
+    expose_headers=["ETag", "Bluecore-Instance-ETag", "Bluecore-Work-ETag"],
 )
+
+
+@base_app.exception_handler(PreconditionFailed)
+async def precondition_failed(request: Request, exc: PreconditionFailed):
+    """
+    A PUT or DELETE whose If-Match no longer matches: someone else changed the
+    resource since the client read it. The body names the resource and carries
+    its current ETag (also sent as the ETag header) so the client can say what
+    happened, re-read the resource, and decide what to do with its changes.
+    """
+    return JSONResponse(
+        status_code=412,
+        content={"detail": str(exc), "uri": exc.uri, "etag": exc.etag},
+        headers={"ETag": exc.etag},
+    )
 
 
 @base_app.get("/")
